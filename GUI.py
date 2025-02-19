@@ -1,8 +1,15 @@
 import dearpygui.dearpygui as dpg
+import numpy as np
 import BRAVO 
 import DataHandling as DH # type: ignore
 
+#-----------------------------------------GENERAL----------------------------------------
 app_state = {"windows": {}}
+
+def show_metadata():
+    print('metadata')
+
+#-----------------------------------COMBINED ANALISYS-------------------------------------
 
 def create_multiple_window():
     window_id = len(app_state["windows"])  # Unique ID
@@ -14,14 +21,32 @@ def create_multiple_window():
         for file in files:
             app_state["windows"][window_id]["Files"].append(
                 {"name": file, "path": files[file]})
-            print(app_state["windows"][window_id]["Files"])
+        dpg.set_item_label(f"window_{window_id}", f"Combined {window_id}")
+        update_file_list(window_id)
+    
+    def remove_file_callback(sender,app_data,user_data):
+        window_id, file_index = user_data
+        del app_state['windows'][window_id]['Files'][file_index]
+        update_file_list(window_id)
 
+    def update_file_list(window_id):
+        dpg.delete_item(f"file_list_group_{window_id}", children_only = True)
 
-        file_list_text = "\n".join(file["path"] for file in app_state["windows"][window_id]["Files"]) if files else "No file selected"
-        dpg.set_value(f"file_list_{window_id}", file_list_text)
-
-        dpg.configure_item(f"open_file_btn_{window_id}", show=True)
-        dpg.configure_item(f"join_files_btn_{window_id}", show=True)
+        files = app_state['windows'][window_id]['Files']
+        if not files:
+            if not dpg.does_item_exist(f"file_list_{window_id}"):
+                dpg.add_text('No file selected', parent=f"file_list_group_{window_id}", tag =f"file_list_{window_id}")
+            
+            dpg.configure_item(f"open_file_btn_{window_id}", show=False)
+            dpg.configure_item(f"mode_list_group_{window_id}", show=False)
+            dpg.configure_item(f"modes_{window_id}", show = False)
+        else:
+            dpg.configure_item(f"file_list_{window_id}", show=False)
+            for idx, file in enumerate(files):
+                with dpg.group(horizontal=True, parent=f"file_list_group_{window_id}"):
+                    dpg.add_text(file['name'])
+                    dpg.add_button(label='X',width=20, height=20, callback=remove_file_callback, user_data=(window_id,idx))
+            dpg.configure_item(f"open_file_btn_{window_id}", show=True)
 
     def create_file_dialog(window_id):
         """Creates a file dialog for a given window."""
@@ -42,42 +67,56 @@ def create_multiple_window():
     def open_file_callback(sender, app_data, user_data):
         window_id = user_data  
         files = app_state["windows"][window_id]["Files"]
-        file_path = files[0]['path']
-        Data = DH.getData(file_path)
+
+        dpg.delete_item(f"mode_list_group_{window_id}", children_only = True)
+
+        all_modes = []
+        if not files:
+            dpg.configure_item(f"modes_{window_id}", show = False)
+            dpg.configure_item(f"mode_list_group_{window_id}", show = False)
+        else:
+            
+            for idx, file in enumerate(files):
+
+                file_path = file['path']
+                Data = DH.getData(file_path)
+            
+                file['Data'] = Data
+                file['Modes'] = DH.getModes(Data)
+                if file['Modes'] == ['None. Recording is Damaged!']:
+                    remove_file_callback('','',user_data=(window_id,idx))
+                    dpg.add_text(f"File {file['name']} was removed due to being damaged!", parent = f"mode_list_group_{window_id}",show=True)
+                    dpg.add_text("Try to load again!", parent = f"mode_list_group_{window_id}",show=True)
+                    update_file_list(window_id)
+                else:
+                    modes = file['Modes']
+                    for mode in modes:
+                        all_modes.append(mode)
+            modes = np.unique(all_modes)
+            if modes.size>0:
+                dpg.set_value(f"modes_{window_id}", modes)
+                dpg.configure_item(f"modes_{window_id}", show = True)
+
+            for mode in modes:
+                dpg.add_button(label=mode, tag=f"mode_{mode}_btn_{window_id}", show=True, parent =f"mode_list_group_{window_id}" )
+            dpg.configure_item(f"mode_list_group_{window_id}", show = True)
+
         
-
-        app_state['windows'][window_id]['Data'] = Data
-        app_state['windows'][window_id]['Modes'] = DH.getModes(Data)
-
-        modes = app_state['windows'][window_id]['Modes']
-        dpg.set_value(f"modes_{window_id}", modes)
-        dpg.configure_item(f"modes_{window_id}", show=True)
-        dpg.set_item_label(f"window_{window_id}", f"Combined {window_id}")
-
-    def join_file_callback(sender, app_data, user_data):
-        window_id = user_data  # Get window-specific ID
-        files = app_state["windows"][window_id]["Files"]
-        for i in range(len(files)):
-            file_path = files[i]['path']
-            Data = DH.getData(file_path)
-            app_state["windows"][window_id]["Files"][i]['Data'] = Data
-
-        jsons = []
-        for i in range(len(files)):
-            jsons.append(app_state["windows"][window_id]["Files"][i]['Data'])
-        merged = BRAVO.concatenateJSONs(jsons)
-        print(DH.getModes(merged))
-
-
     with dpg.window(label=f"Window {window_id + 1}", width=400, height=300, tag=f"window_{window_id}"):
-        dpg.add_button(label="File Selector", callback=lambda: dpg.show_item(f"file_dialog_{window_id}"))
+        dpg.add_button(label="Add File", callback=lambda: dpg.show_item(f"file_dialog_{window_id}"))
         dpg.add_text("No file selected", tag=f"file_list_{window_id}")
-        dpg.add_button(label="Open File", callback=open_file_callback,
+
+        with dpg.group(tag=f"file_list_group_{window_id}"): pass
+
+        with dpg.group(tag = f"mode_list_group_{window_id}"): pass        
+
+        dpg.add_text('', tag=f"modes_{window_id}", show=False) #Modes in 
+        dpg.add_button(label="Load Files", callback=open_file_callback,
                        tag=f"open_file_btn_{window_id}", show=False, user_data=window_id)
-        dpg.add_button(label="Join Files", tag=f"join_files_btn_{window_id}", show=False, user_data=window_id,callback=join_file_callback)
-        
+            
     create_file_dialog(window_id)
 
+#-----------------------------------INDIVIDUAL ANALISYS-----------------------------------
 def create_individual_window():
     """Dynamically creates a new independent window."""
     window_id = len(app_state["windows"])  # Unique ID
@@ -101,11 +140,8 @@ def create_individual_window():
                     for full_path, file_name in files.items()
                 ]
 
-                # Print full paths for debugging
-                print([file["path"] for file in app_state["windows"][window_id]["Files"]])
-
                 # Update text display with full paths
-                file_list_text = "\n".join(file["path"] for file in app_state["windows"][window_id]["Files"]) if files else "No file selected"
+                file_list_text = "\n".join(file["name"] for file in app_state["windows"][window_id]["Files"]) if files else "No file selected"
                 dpg.set_value(f"file_list_{window_id}", file_list_text)
 
                 dpg.configure_item(f"open_file_btn_{window_id}", show=True)
@@ -150,6 +186,9 @@ def create_individual_window():
         dpg.add_text('', tag=f"modes_{window_id}", show=False) #Modes in 
 
     create_file_dialog(window_id)  # Create a file dialog for this window
+
+
+#---------------------------------------MAIN WINDOW---------------------------------------
 
 dpg.create_context()
 

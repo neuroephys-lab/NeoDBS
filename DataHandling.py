@@ -677,10 +677,6 @@ def concatenateJSONs(JSONs):
     return CompiledJSON
 
 
-file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-10-10\\Report_Json_Session_Report_20241125T160706.json"
-data = getData(file_path)
-
-
 '''
 data2 = getData(file_path1)
 
