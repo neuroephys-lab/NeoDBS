@@ -1,27 +1,29 @@
 import dearpygui.dearpygui as dpg
-
-def create_button_theme():
-    with dpg.theme(tag="button_theme"):
-        with dpg.theme_component(dpg.mvButton):
-            dpg.add_theme_color(dpg.mvThemeCol_Button, (0, 150, 255))  # Blue
-            dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (0, 200, 255))  # Lighter blue
-            dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 15, 10)  # Large padding
-
-def apply_theme_to_all_buttons():
-    for button in dpg.get_all_items():
-        if dpg.get_item_type(button) == "mvButton":  # Check if item is a button
-            dpg.bind_item_theme(button, "button_theme")
+from math import sin
 
 dpg.create_context()
-create_button_theme()
 
-with dpg.window(label="Auto Theme All Buttons"):
-    for i in range(5):
-        dpg.add_button(label=f"Button {i+1}")  # Add buttons dynamically
-    
-    dpg.add_button(label="Apply Theme to All Buttons", callback=apply_theme_to_all_buttons)
+# creating data
+sindatax = []
+sindatay = []
+for i in range(0, 500):
+    sindatax.append(i / 1000)
+    sindatay.append(0.5 + 0.5 * sin(50 * i / 1000))
 
-dpg.create_viewport(title="Loop Styling", width=400, height=300)
+with dpg.window(label="Tutorial"):
+    # create plot
+    with dpg.plot(label="Line Series", height=400, width=400):
+        # optionally create legend
+        dpg.add_plot_legend()
+
+        # REQUIRED: create x and y axes
+        dpg.add_plot_axis(dpg.mvXAxis, label="x")
+        dpg.add_plot_axis(dpg.mvYAxis, label="y", tag="y_axis")
+
+        # series belong to a y axis
+        dpg.add_line_series(sindatax, sindatay, label="0.5 + 0.5 * sin(x)", parent="y_axis")
+
+dpg.create_viewport(title='Custom Title', width=800, height=600)
 dpg.setup_dearpygui()
 dpg.show_viewport()
 dpg.start_dearpygui()

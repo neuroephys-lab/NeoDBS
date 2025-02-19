@@ -91,29 +91,33 @@ def create_multiple_window():
                 else:
                     modes = file['Modes']
                     for mode in modes:
-                        all_modes.append(mode)
-            modes = np.unique(all_modes)
-            if modes.size>0:
-                dpg.set_value(f"modes_{window_id}", modes)
-                dpg.configure_item(f"modes_{window_id}", show = True)
+                        if mode != ['None. Recording is Damaged!']:
+                            all_modes.append(mode)
+                        else: pass
 
-            for mode in modes:
-                dpg.add_button(label=mode, tag=f"mode_{mode}_btn_{window_id}", show=True, parent =f"mode_list_group_{window_id}" )
-            dpg.configure_item(f"mode_list_group_{window_id}", show = True)
+            for mode in np.unique(all_modes):
+                dpg.add_button(label = mode, parent=f"mode_list_group_{window_id}",callback=open_tab_mode ,user_data=(mode,window_id),show=True)
 
-        
+        dpg.configure_item(f"mode_list_group_{window_id}", show = True)
+   
+    def open_tab_mode(sender,app_data,user_data): 
+        mode, window_id = user_data
+        dpg.add_tab(label=mode, tag=f"tab_{mode}_{window_id}",parent=f"tab_bar_window_{window_id}")
+                    
     with dpg.window(label=f"Window {window_id + 1}", width=400, height=300, tag=f"window_{window_id}"):
         dpg.add_button(label="Add File", callback=lambda: dpg.show_item(f"file_dialog_{window_id}"))
         dpg.add_text("No file selected", tag=f"file_list_{window_id}")
 
         with dpg.group(tag=f"file_list_group_{window_id}"): pass
-
-        with dpg.group(tag = f"mode_list_group_{window_id}"): pass        
-
+        
         dpg.add_text('', tag=f"modes_{window_id}", show=False) #Modes in 
         dpg.add_button(label="Load Files", callback=open_file_callback,
                        tag=f"open_file_btn_{window_id}", show=False, user_data=window_id)
-            
+        
+        with dpg.group(horizontal=True,tag = f"mode_list_group_{window_id}"): pass
+   
+        with dpg.tab_bar(tag=f"tab_bar_window_{window_id}"): pass
+
     create_file_dialog(window_id)
 
 #-----------------------------------INDIVIDUAL ANALISYS-----------------------------------
@@ -162,6 +166,28 @@ def create_individual_window():
             dpg.add_file_extension(".*")
             dpg.add_file_extension("*.json", color=(0, 255, 0, 255), custom_text="[JSON File]")
 
+    def open_tab_mode(sender, app_data, user_data): 
+        mode, window_id = user_data
+        tab_tag = f"tab_{mode}_{window_id}"
+
+        # Create the tab
+        dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")
+        
+        # Get the data and signal
+        Data = app_state['windows'][window_id]['Data']
+        x, y = DH.getSignal(Data, mode)
+
+        # Create the plot container
+        with dpg.group(parent=tab_tag):  # Make sure we are using a valid container
+            with dpg.plot(label=f"{mode} Signal", parent=tab_tag):
+                dpg.add_plot_legend()
+                dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
+                dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
+
+                # Add the line series
+                dpg.add_line_series(x, y, label=f"{mode} Signal", parent=f"y_axis_{tab_tag}")
+        
+    
     def open_file_callback(sender, app_data, user_data):
         window_id = user_data  # Get window-specific ID
         files = app_state["windows"][window_id]["Files"]
@@ -174,9 +200,20 @@ def create_individual_window():
         app_state['windows'][window_id]['Modes'] = DH.getModes(Data)
 
         modes = app_state['windows'][window_id]['Modes']
-        dpg.set_value(f"modes_{window_id}", modes)
-        dpg.configure_item(f"modes_{window_id}", show=True)
-        dpg.set_item_label(f"window_{window_id}", files[0]['name'])
+        if modes != ['None. Recording is Damaged!']:
+            dpg.set_value(f"modes_{window_id}", 'Recording modes present in the file:')
+            dpg.configure_item(f"modes_{window_id}", show=True)
+            dpg.set_item_label(f"window_{window_id}", files[0]['name'])
+            
+        else: 
+            modes = []
+            dpg.set_value(f"modes_{window_id}", 'Recording is Damaged! Choose another file!')
+
+        for mode in modes:
+            dpg.add_button(label = mode, parent=f"mode_list_group_{window_id}",callback=open_tab_mode ,user_data=(mode,window_id),show=True)
+            
+        dpg.configure_item(f"mode_list_group_{window_id}", show = True)
+
 
     with dpg.window(label=f"Window {window_id + 1}", width=400, height=300, tag=f"window_{window_id}"):
         dpg.add_button(label="File Selector", callback=lambda: dpg.show_item(f"file_dialog_{window_id}"))
@@ -185,6 +222,9 @@ def create_individual_window():
                        tag=f"open_file_btn_{window_id}", show=False, user_data=window_id)
         dpg.add_text('', tag=f"modes_{window_id}", show=False) #Modes in 
 
+        with dpg.group(horizontal=True,tag = f"mode_list_group_{window_id}"): pass  
+        with dpg.tab_bar(tag=f"tab_bar_window_{window_id}"): pass 
+            
     create_file_dialog(window_id)  # Create a file dialog for this window
 
 
@@ -195,6 +235,7 @@ dpg.create_context()
 with dpg.window(label="Main Window", width=300, height=150, tag="Main"):
     dpg.add_button(label="Individual Analysis", callback=create_individual_window)
     dpg.add_button(label="Combined Analysis", callback=create_multiple_window)
+
 
 dpg.create_viewport(title="NeoDBS", width=1000, height=600)
 dpg.setup_dearpygui()

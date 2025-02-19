@@ -72,6 +72,15 @@ A DPG app will have an overall structure as follows:
 '''
 print('DEMO')
 
+dpg.create_context()
+dpg.create_viewport(title='Custom Title', width=600, height=600)
+
+demo.show_demo()
+
+dpg.setup_dearpygui()
+dpg.show_viewport()
+dpg.start_dearpygui()
+dpg.destroy_context()
 '''
 DEMO 
 
