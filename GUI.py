@@ -170,21 +170,18 @@ def create_individual_window():
         mode, window_id = user_data
         tab_tag = f"tab_{mode}_{window_id}"
 
-        # Create the tab
         dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")
         
-        # Get the data and signal
         Data = app_state['windows'][window_id]['Data']
-        x, y = DH.getSignal(Data, mode)
+        x, y, date, duration = DH.getSignal(Data, mode)
 
-        # Create the plot container
         with dpg.group(parent=tab_tag):  # Make sure we are using a valid container
+            dpg.add_text(f"Recording date: {date}")
+            dpg.add_text(f"Recording duration: {duration} s")
             with dpg.plot(label=f"{mode} Signal", parent=tab_tag):
                 dpg.add_plot_legend()
                 dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                 dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
-
-                # Add the line series
                 dpg.add_line_series(x, y, label=f"{mode} Signal", parent=f"y_axis_{tab_tag}")
         
     
@@ -194,7 +191,8 @@ def create_individual_window():
         print(files)
         file_path = files[0]['path']
         Data = DH.getData(file_path)
-        
+        date = DH.getSessionDate(Data)
+        dpg.add_text(f"Session date: {date}\n", parent=f"mode_list_group_{window_id}", show=True)
 
         app_state['windows'][window_id]['Data'] = Data
         app_state['windows'][window_id]['Modes'] = DH.getModes(Data)

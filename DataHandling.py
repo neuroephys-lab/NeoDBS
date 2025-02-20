@@ -162,6 +162,9 @@ def checkMissingData(dictionary):
 def getTimeTicksMs(TickInS,GlobalPacketSizes,Fs):
     return np.round(np.arange(start=TickInS[0],stop=TickInS[-1]+ (GlobalPacketSizes[-1]-1)/Fs ,step=1/Fs),3)
 
+def getSessionDate(Data): 
+    return utl.parse_datetime(Data['Device']['SessionDate'])
+
 def getSessionDuration(Data):
     return utl.parse_datetime(Data['Device']['SessionEndDate'])-utl.parse_datetime(Data['Device']['SessionDate'])
 
@@ -334,11 +337,11 @@ def getElectrodes(list):
             Electrodes.append([Electrode, ElectrodeState,ElectrodeAmplitude,ElectrodeFraction])
     return Electrodes
 
-def getStimulationParameters(dictionary, group_name, time = 'Final'):
+def getStimulationParameters(dictionary, group_name, time = 'Initial'):
 
     group_name = 'GroupIdDef.GROUP_' + group_name
-    left = 0
-    right = 1
+    #left = 0
+    #right = 1
     if time == 'Final':
         time_ = 'FinalStimStatus'
     else:
@@ -513,17 +516,13 @@ def getSignal(dictionary,mode):
             flag = 1
 
         case 'Timeline': #dont need to check date, only hemisphere
-            recs = dictionary['Device']['DiagnosticData']['LFPTrendLogs']
+            recs = dictionary[mode]['LFPTrendLogs']
             keys = list(recs.keys())
             for i in range(len(keys)): print(i,' - ', utl.after_point(keys[i]))
             hemisphere = input('What HEMISPHERE you want to analyze?')
             rec = recs[keys[int(hemisphere)]]
             total_duration = getRecordingDuration(mode,rec)
-            '''
-            raw = []
-            for sample in rec:
-                print(sample)
-                raw.append(sample['LFP'])'''
+            print(total_duration)
             Fs = 1/600
             time_array = np.arange(0,total_duration,Fs)
 
@@ -557,9 +556,10 @@ def getSignal(dictionary,mode):
                 raw = rec['TimeDomainData']
                 total_duration = getRecordingDuration(mode,rec)
                 time_array = np.arange(0,total_duration,1/Fs)
-                print('DATE: ',rec['FirstPacketDateTime'])
+                date = utl.parse_datetime(rec['FirstPacketDateTime'])
+                print('DATE: ',date)
 
-    signal = [time_array,raw[:len(time_array)]]
+    signal = [time_array,raw[:len(time_array)],date, total_duration]
 
     return signal
 
