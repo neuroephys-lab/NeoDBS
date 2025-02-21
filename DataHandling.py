@@ -93,6 +93,11 @@ def getModes(Data):
 
     return modes
 
+def getStimStatus(Data):
+    initial = utl.after_point(Data['Device']['Stimulation']['InitialStimStatus'])
+    final = utl.after_point(Data['Device']['Stimulation']['FinalStimStatus'])
+    return (initial,final)
+
 def checkMissingData(dictionary):
 
     '''
@@ -163,7 +168,9 @@ def getTimeTicksMs(TickInS,GlobalPacketSizes,Fs):
     return np.round(np.arange(start=TickInS[0],stop=TickInS[-1]+ (GlobalPacketSizes[-1]-1)/Fs ,step=1/Fs),3)
 
 def getSessionDate(Data): 
-    return utl.parse_datetime(Data['Device']['SessionDate'])
+    if Data['Device']['SessionDate']:
+        return utl.parse_datetime(Data['Device']['SessionDate'])
+    else: return "No date stored!"
 
 def getSessionDuration(Data):
     return utl.parse_datetime(Data['Device']['SessionEndDate'])-utl.parse_datetime(Data['Device']['SessionDate'])
@@ -558,8 +565,13 @@ def getSignal(dictionary,mode):
                 time_array = np.arange(0,total_duration,1/Fs)
                 date = utl.parse_datetime(rec['FirstPacketDateTime'])
                 print('DATE: ',date)
-
-    signal = [time_array,raw[:len(time_array)],date, total_duration]
+        
+        if len(time_array)<len(raw): #while there is no correct missing data function complete
+            raw = raw[:len(time_array)]
+        else:
+            time_array = time_array[:len(raw)]
+        
+    signal = [time_array,raw,date, total_duration]
 
     return signal
 

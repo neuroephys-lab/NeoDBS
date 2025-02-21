@@ -174,6 +174,7 @@ def create_individual_window():
         
         Data = app_state['windows'][window_id]['Data']
         x, y, date, duration = DH.getSignal(Data, mode)
+        print(f"X: {len(x)} | Y: {len(y)} | Date: {date} | Duration: {duration}")
 
         with dpg.group(parent=tab_tag):  # Make sure we are using a valid container
             dpg.add_text(f"Recording date: {date}")
@@ -192,7 +193,13 @@ def create_individual_window():
         file_path = files[0]['path']
         Data = DH.getData(file_path)
         date = DH.getSessionDate(Data)
-        dpg.add_text(f"Session date: {date}\n", parent=f"mode_list_group_{window_id}", show=True)
+        session_duration = DH.getSessionDuration(Data)
+        initial_stim_status, final_stim_status = DH.getStimStatus(Data)
+
+        dpg.add_text(f"Session date: {date}\n", parent=f"session_parameteres_{window_id}", show=True)
+        dpg.add_text(f"Session duration: {session_duration}\n", parent=f"session_parameteres_{window_id}", show=True)
+        dpg.add_text(f"Initial Stimulation: {initial_stim_status}", parent=f"session_parameteres_{window_id}", show=True)
+        dpg.add_text(f"Final Stimulation: {final_stim_status}", parent=f"session_parameteres_{window_id}", show=True)
 
         app_state['windows'][window_id]['Data'] = Data
         app_state['windows'][window_id]['Modes'] = DH.getModes(Data)
@@ -219,7 +226,7 @@ def create_individual_window():
         dpg.add_button(label="Open File", callback=open_file_callback,
                        tag=f"open_file_btn_{window_id}", show=False, user_data=window_id)
         dpg.add_text('', tag=f"modes_{window_id}", show=False) #Modes in 
-
+        with dpg.group(tag = f"session_parameteres_{window_id}"): pass
         with dpg.group(horizontal=True,tag = f"mode_list_group_{window_id}"): pass  
         with dpg.tab_bar(tag=f"tab_bar_window_{window_id}"): pass 
             
