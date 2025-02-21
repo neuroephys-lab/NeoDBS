@@ -184,47 +184,58 @@ def create_individual_window():
                 dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                 dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
                 dpg.add_line_series(x, y, label=f"{mode} Signal", parent=f"y_axis_{tab_tag}")
-        
-    
+            
     def open_file_callback(sender, app_data, user_data):
         window_id = user_data  # Get window-specific ID
         files = app_state["windows"][window_id]["Files"]
         print(files)
         file_path = files[0]['path']
         Data = DH.getData(file_path)
-        date = DH.getSessionDate(Data)
-        session_duration = DH.getSessionDuration(Data)
-        initial_stim_status, final_stim_status = DH.getStimStatus(Data)
-
-        dpg.add_text(f"Session date: {date}\n", parent=f"session_parameteres_{window_id}", show=True)
-        dpg.add_text(f"Session duration: {session_duration}\n", parent=f"session_parameteres_{window_id}", show=True)
-        dpg.add_text(f"Initial Stimulation: {initial_stim_status}", parent=f"session_parameteres_{window_id}", show=True)
-        dpg.add_text(f"Final Stimulation: {final_stim_status}", parent=f"session_parameteres_{window_id}", show=True)
 
         app_state['windows'][window_id]['Data'] = Data
         app_state['windows'][window_id]['Modes'] = DH.getModes(Data)
 
-        modes = app_state['windows'][window_id]['Modes']
-        if modes != ['None. Recording is Damaged!']:
-            dpg.set_value(f"modes_{window_id}", 'Recording modes present in the file:')
+        
+        if app_state['windows'][window_id]['Modes'] == ['None. Recording is Damaged!']: 
+            dpg.set_value(f"modes_{window_id}", 'Recording is damaged! Choose another file.')
             dpg.configure_item(f"modes_{window_id}", show=True)
-            dpg.set_item_label(f"window_{window_id}", files[0]['name'])
-            
-        else: 
-            modes = []
-            dpg.set_value(f"modes_{window_id}", 'Recording is Damaged! Choose another file!')
+        else:
 
-        for mode in modes:
-            dpg.add_button(label = mode, parent=f"mode_list_group_{window_id}",callback=open_tab_mode ,user_data=(mode,window_id),show=True)
             
-        dpg.configure_item(f"mode_list_group_{window_id}", show = True)
+            date = DH.getSessionDate(Data)
+            session_duration = DH.getSessionDuration(Data)
+            initial_stim_status, final_stim_status = DH.getStimStatus(Data)
+            #left, right = DH.getStimulationParameters(Data,'A')
+            
+            
+            dpg.add_text(f"Session date: {date}", parent=f"session_parameteres_{window_id}", show=True)
+            dpg.add_text(f"Session duration: {session_duration}", parent=f"session_parameteres_{window_id}", show=True)
+            dpg.add_text(f"Initial Stimulation: {initial_stim_status}", parent=f"session_parameteres_{window_id}", show=True)
+            dpg.add_text(f"Final Stimulation: {final_stim_status}", parent=f"session_parameteres_{window_id}", show=True)
+            #dpg.add_text(f"Stimulation parameters: {left['Electrodes']}", parent=f"session_parameteres_{window_id}", show=True)
+
+            
+            modes = app_state['windows'][window_id]['Modes']
+            if modes != ['None. Recording is Damaged!']:
+                dpg.set_value(f"modes_{window_id}", 'Recording modes present in the file:')
+                dpg.configure_item(f"modes_{window_id}", show=True)
+                dpg.set_item_label(f"window_{window_id}", files[0]['name'])
+                
+            else: 
+                modes = []
+                dpg.set_value(f"modes_{window_id}", 'Recording is Damaged! Choose another file!')
+
+            for mode in modes:
+                dpg.add_button(label = mode, parent=f"mode_list_group_{window_id}",callback=open_tab_mode ,user_data=(mode,window_id),show=True)
+                
+            dpg.configure_item(f"mode_list_group_{window_id}", show = True)
 
 
     with dpg.window(label=f"Window {window_id + 1}", width=400, height=300, tag=f"window_{window_id}"):
         dpg.add_button(label="File Selector", callback=lambda: dpg.show_item(f"file_dialog_{window_id}"))
         dpg.add_text("No file selected", tag=f"file_list_{window_id}")
         dpg.add_button(label="Open File", callback=open_file_callback,
-                       tag=f"open_file_btn_{window_id}", show=False, user_data=window_id)
+                    tag=f"open_file_btn_{window_id}", show=False, user_data=window_id)
         dpg.add_text('', tag=f"modes_{window_id}", show=False) #Modes in 
         with dpg.group(tag = f"session_parameteres_{window_id}"): pass
         with dpg.group(horizontal=True,tag = f"mode_list_group_{window_id}"): pass  

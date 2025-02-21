@@ -3,9 +3,28 @@ import matplotlib.pyplot as plt
 import numpy as np
 import utils as utl
 
-file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-12-19\\Report_Json_Session_Report_20250212T121933.json"
+file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2025-01-23\\Report_Json_Session_Report_20250212T122919.json"
 
 Data = DH.getData(file_path)
+ 
+print(Data['Survey']['LfpMontageTimeDomain'][0]['FirstPacketDateTime'])
+
+#DH.getSignal(Data,'Survey')
+
+
+#2025-01-23T11:14:07.000Z
+#dict_keys(['Pass', 'GlobalSequences', 'GlobalPacketSizes', 'TicksInMses', 
+# 'Channel', 'Gain', 'FirstPacketDateTime', 'SampleRateInHz', 'TimeDomainData'])
+
+'''
+mine = DH.checkMissingData(Data)
+
+print('----------MINE--------------')
+for m in mine: print(m)
+
+plt.figure()
+plt.plot(time,signal)
+plt.show()
 
 missing = DH.checkMissingData(Data)
 
@@ -52,7 +71,7 @@ def checkMissingPackage(Data):
                 Data["IndefiniteStreaming"][nStream]["Missing"] = np.concatenate((Data["IndefiniteStreaming"][nStream]["Missing"][:startIndex],np.ones((PacketSize)),Data["IndefiniteStreaming"][nStream]["Missing"][startIndex:]))
                 #Data["IndefiniteStreaming"][nStream]["Time"] = np.array(range(len(Data["IndefiniteStreaming"][nStream]["TimeDomainData"]))) / Data["IndefiniteStreaming"][nStream]["SamplingRateinHz"]
                 #print(f"Warning: Missing sequence occured for Stream #{nStream}, Data insertion complete. Check ['Missing'] field.")
-    '''       
+    ###       
     if "StreamingTD" in Data.keys() and "StreamingPower" in Data.keys():
         if len(Data["StreamingTD"]) != len(Data["StreamingPower"]):
             raise Warning("Number of stream in Time-domain does not match number of stream in Power channel")
@@ -126,7 +145,7 @@ def checkMissingPackage(Data):
                 TimeShift = np.round(TimeShift,2)
             Data["StreamingPower"][nStream]["Time"] += TimeShift
             #print(f"Warning: Missing sequence occured for Stream #{nStream}, Data insertion complete. Check ['Missing'] field.")
-            '''
+            ###
     
 
 #bravo = checkMissingPackage(Data)
@@ -140,11 +159,3 @@ for i in range(len(Data['Indefinite']['IndefiniteStreaming'])):
 plt.show()
 
 '''
-mine = DH.checkMissingData(Data)
-
-print('----------MINE--------------')
-for m in mine: print(m)
-
-plt.figure()
-plt.plot(time,signal)
-plt.show()'''

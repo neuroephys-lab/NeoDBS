@@ -173,7 +173,14 @@ def getSessionDate(Data):
     else: return "No date stored!"
 
 def getSessionDuration(Data):
-    return utl.parse_datetime(Data['Device']['SessionEndDate'])-utl.parse_datetime(Data['Device']['SessionDate'])
+    
+    if Data['Device']['SessionEndDate'] and Data['Device']['SessionDate']:
+        end = utl.parse_datetime(Data['Device']['SessionEndDate'])
+        beginning = utl.parse_datetime(Data['Device']['SessionDate'])
+
+        print(beginning , '-->', end)
+        return end - beginning
+    else: return "No date stored!"
 
 '''
 def getRecordingDuration(dictionary):
@@ -365,7 +372,17 @@ def getStimulationParameters(dictionary, group_name, time = 'Initial'):
     Electrodes = getElectrodes(stim['SensingChannel'][0]['ElectrodeState'])
     PulseWidth = stim['SensingChannel'][0]['PulseWidthInMicroSecond']
 
-    Left = [StimStatus,StimFreq,StimCurr,PulseWidth,AmplitudeType,BrainSenseStatus,Channel,Electrodes]
+    Left = {
+        'StimStatus': StimStatus,
+        'StimFreq': StimFreq,
+        'StimCurr': StimCurr,
+        'PulseWidth': PulseWidth,
+        'AmplitudeType': AmplitudeType,
+        'BrainSenseStatus': BrainSenseStatus,
+        'Channel': Channel,
+        'Electrodes': Electrodes
+    }
+    
 
     StimCurr = stim['SensingChannel'][1]['SuspendAmplitudeInMilliAmps' ]
     BrainSenseStatus = stim['SensingChannel'][1]['BrainSensingStatus']
@@ -373,7 +390,16 @@ def getStimulationParameters(dictionary, group_name, time = 'Initial'):
     Electrodes = getElectrodes(stim['SensingChannel'][1]['ElectrodeState'])
     PulseWidth = stim['SensingChannel'][1]['PulseWidthInMicroSecond']
 
-    Right = [StimStatus,StimFreq,StimCurr,PulseWidth,AmplitudeType,BrainSenseStatus,Channel,Electrodes]
+    Right = {
+        'StimStatus': StimStatus,
+        'StimFreq': StimFreq,
+        'StimCurr': StimCurr,
+        'PulseWidth': PulseWidth,
+        'AmplitudeType': AmplitudeType,
+        'BrainSenseStatus': BrainSenseStatus,
+        'Channel': Channel,
+        'Electrodes': Electrodes
+    }
 
     Stimulation = [Left, Right]
 
@@ -533,15 +559,39 @@ def getSignal(dictionary,mode):
             Fs = 1/600
             time_array = np.arange(0,total_duration,Fs)
 
-        case 'Events': print(mode) 
+        case 'Events': 
+            print(mode) 
+
 
         case 'Indefinite': 
             recs  = dictionary[mode]['IndefiniteStreaming']
             flag = 1
 
         case _: #SenseChannelTests or CalibrationTests
-            recs = dictionary['Survey'][mode]
-            flag = 1
+            recs = dictionary['Survey']
+            flag = 2
+
+            types = list(recs.keys())
+            for i in range(len(types)): print(i,' - ', types[i])
+            type = int(input('Which RECORDING would you like to analyze? (number)'))
+            type = types[type]
+            recs= recs[type]
+
+            dates = []
+            channels = []
+
+            for rec in recs: dates.append(rec['FirstPacketDateTime'])
+            dates = np.unique(dates)
+                            
+            for i in range(len(dates)): print(i,' - ', dates[i])
+            d = int(input('Which RECORDING would you like to analyze? (number)'))
+
+            for rec in recs:
+                if rec['FirstPacketDateTime'] == dates[d]:
+                    channels.append(rec['Channel'])
+
+            for i in range(len(channels)): print(i,' - ', channels[i])
+            c = int(input('Which CHANNEL would you like to analyze? (number)'))
 
     if flag ==1: #Streaming (TD) + Indefinite + Survey: SenseChannelTests or CalibrationTests
         dates = []
@@ -554,15 +604,22 @@ def getSignal(dictionary,mode):
             
         for i in range(len(dates)): print(i,' - ', dates[i])
         d = int(input('Which RECORDING would you like to analyze? (number)'))
+
         for i in range(len(channels)): print(i,' - ', channels[i])
         c = int(input('Which CHANNEL would you like to analyze? (number)'))
         
+    if flag!=0:
         for rec in recs:
+            print(rec['FirstPacketDateTime'], ':',dates[d])
+            print(rec['Channel'],': ' ,channels[c])
             if rec['FirstPacketDateTime'] == dates[d] and rec['Channel']==channels[c]:
                 Fs = rec['SampleRateInHz']
                 raw = rec['TimeDomainData']
                 total_duration = getRecordingDuration(mode,rec)
+                print(total_duration)
+
                 time_array = np.arange(0,total_duration,1/Fs)
+                
                 date = utl.parse_datetime(rec['FirstPacketDateTime'])
                 print('DATE: ',date)
         
@@ -571,6 +628,7 @@ def getSignal(dictionary,mode):
         else:
             time_array = time_array[:len(raw)]
         
+    
     signal = [time_array,raw,date, total_duration]
 
     return signal
