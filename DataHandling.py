@@ -538,6 +538,85 @@ def getRealTime(mode, recording):
         else: Warning('Unable to convert for lack of data!')
         return Times
 
+def chooseRecordingDates(dictionary, mode):
+    dates = []
+    types = None
+    keys = {}
+
+    match mode:
+        case 'Streaming': #ver se quero plottar estimulação - é à parte
+            recs  = dictionary[mode]['BrainSenseTimeDomain']
+            for rec in recs: dates.append(rec['FirstPacketDateTime'])
+            dates = np.unique(dates)
+            keys = {'Dates': dates}
+
+        case 'Timeline': #dont need to check date, only hemisphere
+            recs = dictionary[mode]['LFPTrendLogs']['HemisphereLocationDef.Left']
+            for rec in recs: dates.append(rec)
+            dates = np.unique(dates)
+            keys = {'Dates': dates}
+            
+        case 'Events': #ver isto
+            recs = dictionary[mode]['LfpFrequencySnapshotEvents']
+            events_paths = utl.find_key_path(recs, 'LfpFrequencySnapshotEvents')
+            for path in events_paths:
+                event = utl.access_by_path(recs, utl.parse_path(path))
+                first = event['DateTime']
+                '''event = event['LfpFrequencySnapshotEvents']
+                date = event['HemisphereLocationDef.Left']['DateTime']
+                print(first,' | ', date)'''
+                dates.append(first)
+            dates = np.unique(dates)    
+            keys = {'Dates': dates}
+                           
+
+        case 'Indefinite': 
+            recs  = dictionary[mode]['IndefiniteStreaming']
+            for rec in recs: dates.append(rec['FirstPacketDateTime'])
+            dates = np.unique(dates)
+            keys = {'Dates': dates}
+
+        case _: #SenseChannelTests or CalibrationTests
+            recs = dictionary['Survey']
+            types = list(recs.keys())
+            paths = utl.find_key_path(recs,'FirstPacketDateTime')
+            for path in paths:
+                path = utl.parse_path(path)
+                rec = utl.access_by_path(recs,path)
+                date = rec['FirstPacketDateTime']
+                dates.append(date)
+            #vai ser necessário se as datas pertencem ao modo-type
+            keys = {'Dates': dates,
+                    'Types': types}
+            
+    return keys
+
+def getModeSignals(dictionary, mode):
+    match mode:
+        case 'Streaming': #✅
+            recs  = dictionary[mode]['BrainSenseTimeDomain']
+
+        case 'Timeline': #✅dont need to check date, only hemisphere
+            recs = dictionary[mode]['LFPTrendLogs']
+            
+        case 'Events': 
+            recs = []
+            temp = dictionary[mode]['LfpFrequencySnapshotEvents']
+            paths = utl.find_key_path(temp,'LfpFrequencySnapshotEvents')
+            for path in paths:
+                path = utl.parse_path(path)
+                event = utl.access_by_path(temp,path)
+                recs.append(event)
+
+        case 'Indefinite': #✅
+            recs  = dictionary[mode]['IndefiniteStreaming']
+            
+
+        case _: #SenseChannelTests or CalibrationTests
+            recs = dictionary['Survey'][mode]
+
+    return recs
+
 def getSignal(dictionary,mode):
     '''
     Checkar primeiro data e depois ir buscar canal, porque canais repetem-se e datas não

@@ -1,15 +1,15 @@
 import DataHandling as DH
-import matplotlib.pyplot as plt
-import numpy as np
-import utils as utl
 
-file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2025-01-23\\Report_Json_Session_Report_20250212T122919.json"
+file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
 
 Data = DH.getData(file_path)
- 
-print(Data['Survey']['LfpMontageTimeDomain'][0]['FirstPacketDateTime'])
 
-#DH.getSignal(Data,'Survey')
+recs = DH.getModeSignals(Data,'Events')
+for rec in recs: print(recs['EventName'],':', rec['DateTime'])
+
+        
+
+#['Survey', 'Events', 'Timeline']
 
 
 #2025-01-23T11:14:07.000Z

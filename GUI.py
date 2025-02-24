@@ -173,6 +173,12 @@ def create_individual_window():
         dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")
         
         Data = app_state['windows'][window_id]['Data']
+
+        
+
+
+
+
         x, y, date, duration = DH.getSignal(Data, mode)
         print(f"X: {len(x)} | Y: {len(y)} | Date: {date} | Duration: {duration}")
 
