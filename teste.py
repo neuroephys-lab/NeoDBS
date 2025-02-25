@@ -6,16 +6,21 @@ file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_
 
 Data = DH.getData(file_path)
 
-signals = DH.getSignals(Data,'Indefinite')
+signals = DH.getSignals(Data,'Timeline')
 
 plt.figure()
 for signal in signals:
-    x = signal['X']
-    y = signal['Y']
-    plt.plot(x,y,label=f"Channel {signal['Channel']}")
+    plt.title('Timeline')
+    for side in ['Left','Right']:   
+        sign = signal[side]
+        date = utl.parse_datetime(signal['Date'])
+        label = f"{side} - day {date.day}/{date.month}"
+        x = sign['X']
+        y = sign['Y']
+        plt.plot(sign['X'],sign['Y'],label=label)
+
 
 plt.legend()
-plt.grid(True)
 plt.show()
 
 

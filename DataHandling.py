@@ -250,6 +250,13 @@ def getRecordingDuration(dictionary):
     return Time
 '''
 
+def getLogDuration(log):
+    TickI = utl.parse_datetime(log[-1]['DateTime']).timestamp()   
+    TickF = utl.parse_datetime(log[0]['DateTime']).timestamp()  
+    temp_time = (TickF - TickI)/1000
+
+    return temp_time
+
 def getRecordingDuration(mode, recording):
 
     match mode:
@@ -684,6 +691,7 @@ def getSignals(Data, mode):
                     signal[day] = {'Left': {'X': [], 'Y': []}, 'Right': {'X': [], 'Y': []}}
 
                 LFP = [log['LFP'] for log in logs]
+                #time = [utl.convert_to_timestamp(log['DateTime']) for log in logs]
                 time = [log['DateTime'] for log in logs]
 
                 hemisphere = 'Left' if utl.after_point(side) == 'Left' else 'Right'

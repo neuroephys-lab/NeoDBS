@@ -2,7 +2,7 @@ import dearpygui.dearpygui as dpg
 import numpy as np
 import BRAVO 
 import DataHandling as DH # type: ignore
-import functools
+import utils as utl
 
 #-----------------------------------------GENERAL----------------------------------------
 app_state = {"windows": {}}
@@ -10,6 +10,34 @@ app_state = {"windows": {}}
 def show_metadata():
     print('metadata')
 
+def toggleVisibility(signal_tags, parent):
+    # Create a group for visibility controls
+    with dpg.group(parent=parent):
+        dpg.add_text("Choose signals:")
+        checkboxes = {}
+        
+        def toggle_all(sender, app_data):
+            for tag, checkbox in checkboxes.items():
+                dpg.set_value(checkbox, app_data)
+                dpg.configure_item(tag, show=app_data)
+
+        dpg.add_checkbox(label="Select All", default_value=True, callback=toggle_all)
+
+        # Create checkboxes for each plot
+        for series_tag, visible in signal_tags.items():
+            series_config = dpg.get_item_configuration(series_tag)
+            label = series_config.get('label', series_tag.split('_')[-1])
+
+            def toggle_visibility(sender, app_data, user_data):
+                dpg.configure_item(user_data, show=app_data)
+
+                if not app_data:
+                    dpg.set_value(f"{parent}_select_all", False)
+
+            checkbox = dpg.add_checkbox(label=label, default_value=visible,
+                                        callback=toggle_visibility, user_data=series_tag)
+            checkboxes[series_tag] = checkbox
+           
 #-----------------------------------COMBINED ANALISYS-------------------------------------
 
 def create_multiple_window():
@@ -189,7 +217,6 @@ def create_individual_window():
                     dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
                     dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
 
-                    # Plot each signal and store its tag
                     for idx, signal in enumerate(signals):
                         x = signal['X']
                         y = signal['Y']
@@ -200,31 +227,71 @@ def create_individual_window():
                         dpg.add_line_series(x, y, label=f"{channel} ({date})", parent=f"y_axis_{tab_tag}", tag=series_tag)
                         signal_tags[series_tag] = True  # Track visibility
 
-                # Create checkboxes to toggle visibility
-                with dpg.group():
-                    dpg.add_text("Toggle signals:")
-                    for series_tag, visible in signal_tags.items():
-                        series_config = dpg.get_item_configuration(series_tag)
-                        label = series_config.get('label', series_tag.split('_')[-1])
-
-                        def toggle_visibility(sender, app_data, user_data):
-                            dpg.configure_item(user_data, show=app_data)
-                        
-                        dpg.add_checkbox(label=label, default_value=visible,
-                                        callback=toggle_visibility, user_data=series_tag)
+                toggleVisibility(signal_tags,tab_tag)
         
+        if mode == 'Events':
+            with dpg.group(parent=tab_tag):
+                dpg.add_text(f"Total events: {len(signals)}")
 
+                with dpg.plot(label=f"{mode} Signals", height=400, width=-1, tag=plot_tag):
+                    dpg.add_plot_legend()
+                    dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag=f"x_axis_{tab_tag}")
+                    dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (dB)", tag=f"y_axis_{tab_tag}")
 
+                    for idx, signal in enumerate(signals):
+                        date = utl.parse_datetime(signal['DateInitial'])
+
+                        for side in ['Left', 'Right']:
+                            sign = signal[side]
+                            label = f"{side} - day {date.day}/{date.month} | {date.minute} | {signal['EventName']}"
+                            x = sign['X']
+                            y = sign['Y']
+                            
+                            # Create a unique series tag for each side
+                            series_tag = f"{tab_tag}_series_{idx}_{side.lower()}"
+                            
+                            # Add the line series for each side
+                            dpg.add_line_series(x, y, label=label, parent=f"y_axis_{tab_tag}", tag=series_tag)
+                            signal_tags[series_tag] = True  # Track visibility
+
+                    # Ensure visibility toggle works for both sides
+                    toggleVisibility(signal_tags,parent=tab_tag)
             
         if mode == 'Timeline':
-            with dpg.group(parent=tab_tag):  # Make sure we are using a valid container
-                dpg.add_text(f"Recording date: {date}")
-                dpg.add_text(f"Recording duration: {duration} s")
-                with dpg.plot(label=f"{mode} Signal", parent=tab_tag):
+            with dpg.group(parent=tab_tag):
+                dpg.add_text(f"Total days: {len(signals)}")
+
+                with dpg.plot(label=f"{mode} Signals", height=400, width=-1, tag=plot_tag):
                     dpg.add_plot_legend()
-                    dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
-                    dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
-                    dpg.add_line_series(x, y, label=f"{mode} Signal", parent=f"y_axis_{tab_tag}")
+                    dpg.add_plot_axis(dpg.mvXAxis, label="Time", tag=f"x_axis_{tab_tag}")
+                    dpg.add_plot_axis(dpg.mvYAxis, label="Mean LFP Power (dB)", tag=f"y_axis_{tab_tag}")
+
+                    for idx, signal in enumerate(signals):
+                        date = utl.parse_datetime(signal['Date'])
+
+                        for side in ['Left','Right']:   
+                            sign = signal[side]
+                            date = utl.parse_datetime(signal['Date'])
+                            label = f"{side} - day {date.day}/{date.month}"
+                        
+                            try:
+                                x = [utl.convert_to_timestamp(val) for val in sign['X']]
+                                y = [float(val) for val in sign['Y']]
+                            except ValueError as e:
+                                print(f"Error converting data for {label}: {e}")
+                                continue  # Skip this plot if conversion fails'''
+
+
+                            # Create a unique series tag for each side
+                            series_tag = f"{tab_tag}_series_{idx}_{side.lower()}"
+                            
+                            # Add the line series for each side
+                            dpg.add_line_series(x, y, label=label, parent=f"y_axis_{tab_tag}", tag=series_tag)
+                            signal_tags[series_tag] = True  # Track visibility
+
+                    # Ensure visibility toggle works for both sides
+                    toggleVisibility(signal_tags,parent=tab_tag)
+
             
     def open_file_callback(sender, app_data, user_data):
         window_id = user_data  # Get window-specific ID

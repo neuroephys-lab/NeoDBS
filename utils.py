@@ -38,6 +38,13 @@ def parse_path(path):
     
     return path_parts
 
+def convert_to_timestamp(date_str):
+    try:
+        return datetime.fromisoformat(date_str.replace("Z", "")).timestamp()
+    except ValueError:
+        print(f"Invalid date format: {date_str}")
+        return None
+
 def access_by_path(dictionary, path_parts):
     """Access the dictionary by the provided list of keys/indices."""
     value = dictionary
