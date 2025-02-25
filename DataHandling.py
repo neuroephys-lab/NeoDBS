@@ -599,7 +599,7 @@ def getModeSignals(dictionary, mode):
         case 'Timeline': #✅dont need to check date, only hemisphere
             recs = dictionary[mode]['LFPTrendLogs']
             
-        case 'Events': 
+        case 'Events': #✅
             recs = []
             temp = dictionary[mode]['LfpFrequencySnapshotEvents']
             paths = utl.find_key_path(temp,'LfpFrequencySnapshotEvents')
@@ -607,15 +607,93 @@ def getModeSignals(dictionary, mode):
                 path = utl.parse_path(path)
                 event = utl.access_by_path(temp,path)
                 recs.append(event)
+            '''
+            Usage:
+            recs = DH.getModeSignals(Data,'Events')
+            for rec in recs: print(rec['EventName'],':',rec['LfpFrequencySnapshotEvents']['HemisphereLocationDef.Right']['DateTime'])
+            '''
 
         case 'Indefinite': #✅
             recs  = dictionary[mode]['IndefiniteStreaming']
             
 
-        case _: #SenseChannelTests or CalibrationTests
+        case _: #✅ #só falta o LFPMontage
             recs = dictionary['Survey'][mode]
 
     return recs
+
+def getSignals(Data, mode):
+    recs = getModeSignals(Data, mode)
+
+    signals = []
+    if mode != 'Timeline' and mode != 'Events':
+        for rec in recs: 
+
+            Fs = rec['SampleRateInHz']
+            total_duration = getRecordingDuration(mode,rec)
+            time_array = np.arange(0,total_duration,1/Fs)
+            raw = rec['TimeDomainData']
+
+            if len(time_array)<len(raw): #while there is no correct missing data function complete
+                raw = raw[:len(time_array)]
+            else:
+                time_array = time_array[:len(raw)]
+
+            dict = {
+                'Date': utl.parse_datetime(rec['FirstPacketDateTime']),
+                'Channel': rec['Channel'],
+                'Y' : raw,
+                'X': time_array,
+            }
+            signals.append(dict)
+    elif mode=='Events':
+        signals = []
+        for rec in recs: 
+
+            left_side = rec['LfpFrequencySnapshotEvents']['HemisphereLocationDef.Left']
+            right_side = rec['LfpFrequencySnapshotEvents']['HemisphereLocationDef.Right']
+            
+            left = {
+                'Channel': left_side['SenseID'],
+                'X': left_side['Frequency'],
+                'Y': left_side['FFTBinData']
+            }
+
+            right = {
+                'Channel': right_side['SenseID'],
+                'X': right_side['Frequency'],
+                'Y': right_side['FFTBinData']
+            }
+
+            dict = {
+                'EventName': rec['EventName'],
+                'EventID': rec['EventID'],
+                'DateInitial': rec['DateTime'],
+                'DateFinal': rec['LfpFrequencySnapshotEvents']['HemisphereLocationDef.Left']['DateTime'],
+                'Left': left,
+                'Right': right
+            }
+
+            signals.append(dict)
+
+    elif mode=='Timeline': #falta adicionar canal
+        signal = {}
+        for side in recs:
+            for day, logs in recs[side].items():
+                if day not in signal:
+                    signal[day] = {'Left': {'X': [], 'Y': []}, 'Right': {'X': [], 'Y': []}}
+
+                LFP = [log['LFP'] for log in logs]
+                time = [log['DateTime'] for log in logs]
+
+                hemisphere = 'Left' if utl.after_point(side) == 'Left' else 'Right'
+                signal[day][hemisphere]['X'].extend(time)
+                signal[day][hemisphere]['Y'].extend(LFP)
+
+        signals = [{'Date': day, 'Left': data['Left'], 'Right': data['Right']} for day, data in signal.items()]
+
+
+    return signals
 
 def getSignal(dictionary,mode):
     '''
@@ -689,18 +767,13 @@ def getSignal(dictionary,mode):
         
     if flag!=0:
         for rec in recs:
-            print(rec['FirstPacketDateTime'], ':',dates[d])
-            print(rec['Channel'],': ' ,channels[c])
             if rec['FirstPacketDateTime'] == dates[d] and rec['Channel']==channels[c]:
                 Fs = rec['SampleRateInHz']
                 raw = rec['TimeDomainData']
                 total_duration = getRecordingDuration(mode,rec)
-                print(total_duration)
-
                 time_array = np.arange(0,total_duration,1/Fs)
-                
                 date = utl.parse_datetime(rec['FirstPacketDateTime'])
-                print('DATE: ',date)
+                
         
         if len(time_array)<len(raw): #while there is no correct missing data function complete
             raw = raw[:len(time_array)]

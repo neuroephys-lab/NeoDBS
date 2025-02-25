@@ -2,6 +2,7 @@ import dearpygui.dearpygui as dpg
 import numpy as np
 import BRAVO 
 import DataHandling as DH # type: ignore
+import functools
 
 #-----------------------------------------GENERAL----------------------------------------
 app_state = {"windows": {}}
@@ -174,22 +175,56 @@ def create_individual_window():
         
         Data = app_state['windows'][window_id]['Data']
 
+        signals = DH.getSignals(Data,mode)
+
+        plot_tag = f"plot_{tab_tag}"
+        signal_tags = {}
+
+        if mode in ['Streaming', 'Survey', 'Indefinite']:
+            with dpg.group(parent=tab_tag):
+                dpg.add_text(f"Total recordings: {len(signals)}")
+
+                with dpg.plot(label=f"{mode} Signals", height=400, width=-1, tag=plot_tag):
+                    dpg.add_plot_legend()
+                    dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
+                    dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
+
+                    # Plot each signal and store its tag
+                    for idx, signal in enumerate(signals):
+                        x = signal['X']
+                        y = signal['Y']
+                        date = signal['Date']
+                        channel = signal.get('Channel', f'Channel {idx + 1}')
+                        
+                        series_tag = f"{tab_tag}_series_{idx}"
+                        dpg.add_line_series(x, y, label=f"{channel} ({date})", parent=f"y_axis_{tab_tag}", tag=series_tag)
+                        signal_tags[series_tag] = True  # Track visibility
+
+                # Create checkboxes to toggle visibility
+                with dpg.group():
+                    dpg.add_text("Toggle signals:")
+                    for series_tag, visible in signal_tags.items():
+                        series_config = dpg.get_item_configuration(series_tag)
+                        label = series_config.get('label', series_tag.split('_')[-1])
+
+                        def toggle_visibility(sender, app_data, user_data):
+                            dpg.configure_item(user_data, show=app_data)
+                        
+                        dpg.add_checkbox(label=label, default_value=visible,
+                                        callback=toggle_visibility, user_data=series_tag)
         
 
 
-
-
-        x, y, date, duration = DH.getSignal(Data, mode)
-        print(f"X: {len(x)} | Y: {len(y)} | Date: {date} | Duration: {duration}")
-
-        with dpg.group(parent=tab_tag):  # Make sure we are using a valid container
-            dpg.add_text(f"Recording date: {date}")
-            dpg.add_text(f"Recording duration: {duration} s")
-            with dpg.plot(label=f"{mode} Signal", parent=tab_tag):
-                dpg.add_plot_legend()
-                dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
-                dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
-                dpg.add_line_series(x, y, label=f"{mode} Signal", parent=f"y_axis_{tab_tag}")
+            
+        if mode == 'Timeline':
+            with dpg.group(parent=tab_tag):  # Make sure we are using a valid container
+                dpg.add_text(f"Recording date: {date}")
+                dpg.add_text(f"Recording duration: {duration} s")
+                with dpg.plot(label=f"{mode} Signal", parent=tab_tag):
+                    dpg.add_plot_legend()
+                    dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
+                    dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
+                    dpg.add_line_series(x, y, label=f"{mode} Signal", parent=f"y_axis_{tab_tag}")
             
     def open_file_callback(sender, app_data, user_data):
         window_id = user_data  # Get window-specific ID

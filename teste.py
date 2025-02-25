@@ -1,15 +1,68 @@
 import DataHandling as DH
+import matplotlib.pyplot as plt
+import utils as utl
 
 file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
 
 Data = DH.getData(file_path)
 
-recs = DH.getModeSignals(Data,'Events')
-for rec in recs: print(recs['EventName'],':', rec['DateTime'])
+signals = DH.getSignals(Data,'Indefinite')
 
-        
+plt.figure()
+for signal in signals:
+    x = signal['X']
+    y = signal['Y']
+    plt.plot(x,y,label=f"Channel {signal['Channel']}")
 
-#['Survey', 'Events', 'Timeline']
+plt.legend()
+plt.grid(True)
+plt.show()
+
+
+'''
+plt.legend()
+plt.grid(True)
+plt.show()
+
+signals = []
+for side in recs:
+    print(side)
+    for day in recs[side].keys():
+        print(day)
+        LFP = []
+        time = []
+        logs = recs[side][day]
+        for log in logs:
+            LFP.append(log['LFP'])
+            time.append(log['DateTime']) 
+        if utl.after_point(side) == 'Left':
+            left= {
+                'X': time,
+                'Y': LFP
+            }
+        else:
+            right= {
+                'X': time,
+                'Y': LFP
+            }
+    signal = {
+        'Date': day,
+        'Left': left,
+        'Right': right
+    }
+
+    signals.append(signal)
+
+signals = DH.getSignals(Data,'Events')
+
+plt.figure()
+for signal in signals:
+    x = signal['Raw']['X']
+    y = signal['Raw']['Y']
+    plt.plot(x,y,label=f"Signal {signals.index(signal) +1}")
+plt.legend()
+plt.grid(True)
+plt.show()'''
 
 
 #2025-01-23T11:14:07.000Z
