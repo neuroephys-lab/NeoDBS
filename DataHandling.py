@@ -39,13 +39,15 @@ def getData(file_path):
             'BatteryReminder', 'MostRecentInSessionSignalCheck', 
             'Impedance', 'GroupHistory', 'PatientEvents']
 
-    survey_keys = ['SenseChannelTests', 'CalibrationTests','LFPMontage', 'LfpMontageTimeDomain']
+    setup_keys = ['SenseChannelTests', 'CalibrationTests']
+    survey_keys = ['LFPMontage', 'LfpMontageTimeDomain']
     streaming_keys = ['BrainSenseTimeDomain', 'BrainSenseLfp']
     indefinite_keys = ['IndefiniteStreaming']
     timeline_keys= ['LFPTrendLogs']
     
 
     Device = {key: raw_data[key] for key in device_keys if key in raw_data} #dict com info só DEVICE
+    Setup = {key: raw_data[key] for key in setup_keys if key in raw_data} #dict com info só SETUP
     Survey = {key: raw_data[key] for key in survey_keys if key in raw_data} #dict com info só SURVEY
     Streaming = {key: raw_data[key] for key in streaming_keys if key in raw_data} #dict com info só STREAMING
     Indefinite = {key: raw_data[key] for key in indefinite_keys if key in raw_data} #dict com info só INDEFINITE
@@ -73,6 +75,7 @@ def getData(file_path):
     Data = {
         'Device': Device,
         'Survey': Survey,
+        'Setup': Setup,
         'Streaming': Streaming,
         'Indefinite': Indefinite, 
         'Events': Events,
@@ -260,17 +263,6 @@ def getLogDuration(log):
 def getRecordingDuration(mode, recording):
 
     match mode:
-        case 'Survey':
-            if 'TicksInMses' in recording.keys():
-                Ticks = utl.string2numbers(recording['TicksInMses'])
-                Fs = recording['SampleRateInHz']
-                if len(Ticks)==0:
-                    GlobalPacketSizes = utl.string2numbers(recording['GlobalPacketSizes'][1:-1])
-                    temp_time = sum(GlobalPacketSizes)/Fs
-                else:
-                    Ticks = (Ticks - Ticks[0])/1000
-                    temp_time = Ticks[-1]
-
         case 'Streaming': 
             Ticks = utl.string2numbers(recording['TicksInMses'])
             temp_time = (Ticks[0] - Ticks[-1])/1000
@@ -293,6 +285,17 @@ def getRecordingDuration(mode, recording):
             else:
                 Ticks = (Ticks - Ticks[0])/1000
                 temp_time = Ticks[-1]
+
+        case _: #Survey - SenseChannel OR CalibrationTest
+            if 'TicksInMses' in recording.keys():
+                Ticks = utl.string2numbers(recording['TicksInMses'])
+                Fs = recording['SampleRateInHz']
+                if len(Ticks)==0:
+                    GlobalPacketSizes = utl.string2numbers(recording['GlobalPacketSizes'][1:-1])
+                    temp_time = sum(GlobalPacketSizes)/Fs
+                else:
+                    Ticks = (Ticks - Ticks[0])/1000
+                    temp_time = Ticks[-1]
 
     return np.abs(np.round(temp_time,1))
 
@@ -623,6 +626,8 @@ def getModeSignals(dictionary, mode):
         case 'Indefinite': #✅
             recs  = dictionary[mode]['IndefiniteStreaming']
             
+        case 'Setup':
+            recs = dictionary[mode]['SenseChannelTests'], dictionary[mode]['CalibrationTests']
 
         case _: #✅ #só falta o LFPMontage
             recs = dictionary['Survey'][mode]
@@ -633,26 +638,40 @@ def getSignals(Data, mode):
     recs = getModeSignals(Data, mode)
 
     signals = []
-    if mode != 'Timeline' and mode != 'Events':
-        for rec in recs: 
 
-            Fs = rec['SampleRateInHz']
-            total_duration = getRecordingDuration(mode,rec)
-            time_array = np.arange(0,total_duration,1/Fs)
-            raw = rec['TimeDomainData']
+    def get(rec):
+        Fs = rec['SampleRateInHz']
+        total_duration = getRecordingDuration(mode,rec)
+        time_array = np.arange(0,total_duration,1/Fs)
+        raw = rec['TimeDomainData']
 
-            if len(time_array)<len(raw): #while there is no correct missing data function complete
-                raw = raw[:len(time_array)]
-            else:
-                time_array = time_array[:len(raw)]
+        if len(time_array)<len(raw): #while there is no correct missing data function complete
+            raw = raw[:len(time_array)]
+        else:
+            time_array = time_array[:len(raw)]
 
-            dict = {
-                'Date': utl.parse_datetime(rec['FirstPacketDateTime']),
-                'Channel': rec['Channel'],
-                'Y' : raw,
-                'X': time_array,
-            }
-            signals.append(dict)
+        dict = {
+            'Date': utl.parse_datetime(rec['FirstPacketDateTime']),
+            'Channel': rec['Channel'],
+            'Y' : raw,
+            'X': time_array
+        }
+        return dict
+    
+    if mode=='Setup':
+
+        #Stimulation OFF = Sense
+        #Stimulation ON = Calibration
+        sense = []
+        calibration = []
+
+        for rec in recs[0]: sense.append(get(rec))
+        for rec in recs[1]: calibration.append(get(rec))
+        signals = sense, calibration
+
+    if mode =='Streaming' or mode=='Indefinite':
+        for rec in recs: signals.append(get(rec))
+
     elif mode=='Events':
         signals = []
         for rec in recs: 
@@ -688,15 +707,17 @@ def getSignals(Data, mode):
         for side in recs:
             for day, logs in recs[side].items():
                 if day not in signal:
-                    signal[day] = {'Left': {'X': [], 'Y': []}, 'Right': {'X': [], 'Y': []}}
+                    signal[day] = {'Left': {'X': [], 'Y': [], 'Stim': []}, 'Right': {'X': [], 'Y': [], 'Stim': []}}
 
                 LFP = [log['LFP'] for log in logs]
                 #time = [utl.convert_to_timestamp(log['DateTime']) for log in logs]
                 time = [log['DateTime'] for log in logs]
+                stim = [log['AmplitudeInMilliAmps'] for log in logs]
 
                 hemisphere = 'Left' if utl.after_point(side) == 'Left' else 'Right'
                 signal[day][hemisphere]['X'].extend(time)
                 signal[day][hemisphere]['Y'].extend(LFP)
+                signal[day][hemisphere]['Stim'].extend(stim)
 
         signals = [{'Date': day, 'Left': data['Left'], 'Right': data['Right']} for day, data in signal.items()]
 

@@ -208,7 +208,37 @@ def create_individual_window():
         plot_tag = f"plot_{tab_tag}"
         signal_tags = {}
 
-        if mode in ['Streaming', 'Survey', 'Indefinite']:
+        def plot_td(signals, parent):
+            for idx, signal in enumerate(signals):
+                x = signal['X']
+                y = signal['Y']
+                date = signal['Date']
+                channel = signal['Channel']
+                
+                series_tag = f"{tab_tag}_series_{idx}"
+                dpg.add_line_series(x, y, label=f"{channel} ({date})", parent=parent, tag=series_tag)
+                signal_tags[series_tag] = True  # Track visibility
+            
+        if mode =='Setup' :
+            with dpg.group(parent=tab_tag):
+                #dpg.add_text(f"Total recordings: {len(signals)}")
+
+                with dpg.plot(label=f"{mode} Signals", height=400, width=-1, tag=plot_tag):
+                    dpg.add_plot_legend()
+                    dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
+                    dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
+
+                    sense, calibration = signals
+
+                    parent = f"y_axis_{tab_tag}"
+                    plot_td(sense, parent)
+                    toggleVisibility(signal_tags,tab_tag)
+
+                    plot_td(calibration, parent)
+                    toggleVisibility(signal_tags,tab_tag)
+
+
+        if mode in ['Streaming', 'Indefinite']:
             with dpg.group(parent=tab_tag):
                 dpg.add_text(f"Total recordings: {len(signals)}")
 
@@ -217,15 +247,7 @@ def create_individual_window():
                     dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
                     dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
 
-                    for idx, signal in enumerate(signals):
-                        x = signal['X']
-                        y = signal['Y']
-                        date = signal['Date']
-                        channel = signal.get('Channel', f'Channel {idx + 1}')
-                        
-                        series_tag = f"{tab_tag}_series_{idx}"
-                        dpg.add_line_series(x, y, label=f"{channel} ({date})", parent=f"y_axis_{tab_tag}", tag=series_tag)
-                        signal_tags[series_tag] = True  # Track visibility
+                    plot_td(signals)
 
                 toggleVisibility(signal_tags,tab_tag)
         
@@ -263,8 +285,12 @@ def create_individual_window():
 
                 with dpg.plot(label=f"{mode} Signals", height=400, width=-1, tag=plot_tag):
                     dpg.add_plot_legend()
-                    dpg.add_plot_axis(dpg.mvXAxis, label="Time", tag=f"x_axis_{tab_tag}")
-                    dpg.add_plot_axis(dpg.mvYAxis, label="Mean LFP Power (dB)", tag=f"y_axis_{tab_tag}")
+                    x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time", tag=f"x_axis_{tab_tag}")
+                    y_left = dpg.add_plot_axis(dpg.mvYAxis, label="Mean LFP Power (dB)", tag=f"y_axis_{tab_tag}_left")
+                    #y_right = dpg.add_plot_axis(dpg.mvYAxis, label="Stimulation Amplitude (mA)", tag=f"y_axis_{tab_tag}_right")
+
+                    dpg.set_axis_limits_auto(y_left)
+                    #dpg.set_axis_limits_auto(y_right)
 
                     for idx, signal in enumerate(signals):
                         date = utl.parse_datetime(signal['Date'])
@@ -272,22 +298,27 @@ def create_individual_window():
                         for side in ['Left','Right']:   
                             sign = signal[side]
                             date = utl.parse_datetime(signal['Date'])
-                            label = f"{side} - day {date.day}/{date.month}"
+                            label_left = f"{side} - day {date.day}/{date.month}"
+                            label_right = f"{side} - stim"
                         
                             try:
                                 x = [utl.convert_to_timestamp(val) for val in sign['X']]
                                 y = [float(val) for val in sign['Y']]
+                                #stim = [float(val) for val in sign['Stim']]
                             except ValueError as e:
                                 print(f"Error converting data for {label}: {e}")
                                 continue  # Skip this plot if conversion fails'''
 
 
-                            # Create a unique series tag for each side
-                            series_tag = f"{tab_tag}_series_{idx}_{side.lower()}"
-                            
-                            # Add the line series for each side
-                            dpg.add_line_series(x, y, label=label, parent=f"y_axis_{tab_tag}", tag=series_tag)
+                            # LFP power
+                            series_tag = f"{tab_tag}_series_{idx}_{side.lower()}_left"
+                            dpg.add_line_series(x, y, label=label_left, parent=y_left, tag=series_tag)
                             signal_tags[series_tag] = True  # Track visibility
+                            '''
+                            # Stimulation
+                            series_tag = f"{tab_tag}_series_{idx}_{side.lower()}_right"
+                            dpg.add_line_series(x, stim, label=label_right, parent=y_right, tag=series_tag)
+                            signal_tags[series_tag] = True  # Track visibility'''
 
                     # Ensure visibility toggle works for both sides
                     toggleVisibility(signal_tags,parent=tab_tag)

@@ -1,73 +1,67 @@
 import DataHandling as DH
 import matplotlib.pyplot as plt
 import utils as utl
+import numpy as np
 
 file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
 
 Data = DH.getData(file_path)
 
-signals = DH.getSignals(Data,'Timeline')
+recs = DH.getSignals(Data,'Setup')
 
 plt.figure()
-for signal in signals:
-    plt.title('Timeline')
-    for side in ['Left','Right']:   
-        sign = signal[side]
-        date = utl.parse_datetime(signal['Date'])
-        label = f"{side} - day {date.day}/{date.month}"
-        x = sign['X']
-        y = sign['Y']
-        plt.plot(sign['X'],sign['Y'],label=label)
 
+i = 0
+for rec in recs:
+    sense, calibration = recs
+    for c in sense:
+        x = c['X']
+        y = c['Y']
+        plt.plot(x,y,label=f"sense {c['Channel']} - {c['Date']}")
+        i+=1
+    for c in calibration:
+        x = c['X']
+        y = c['Y']
+        plt.plot(x,y,label=f"Calibration {c['Channel']} - {c['Date']}")
+        i+=1
 
+print(i)
 plt.legend()
 plt.show()
 
 
 '''
-plt.legend()
-plt.grid(True)
-plt.show()
+signals = DH.getSignals(Data,'CalibrationTests')
 
-signals = []
-for side in recs:
-    print(side)
-    for day in recs[side].keys():
-        print(day)
-        LFP = []
-        time = []
-        logs = recs[side][day]
-        for log in logs:
-            LFP.append(log['LFP'])
-            time.append(log['DateTime']) 
-        if utl.after_point(side) == 'Left':
-            left= {
-                'X': time,
-                'Y': LFP
-            }
-        else:
-            right= {
-                'X': time,
-                'Y': LFP
-            }
-    signal = {
-        'Date': day,
-        'Left': left,
-        'Right': right
-    }
-
-    signals.append(signal)
-
-signals = DH.getSignals(Data,'Events')
-
-plt.figure()
+plt.figure('Calibration')
 for signal in signals:
-    x = signal['Raw']['X']
-    y = signal['Raw']['Y']
-    plt.plot(x,y,label=f"Signal {signals.index(signal) +1}")
+    x = signal['X']
+    y = signal['Y']
+    plt.plot(x,y,label=f"{signal['Channel']}")
 plt.legend()
-plt.grid(True)
-plt.show()'''
+
+signals = DH.getSignals(Data,'SenseChannelTests')
+
+plt.figure('SenseChannelTests')
+for signal in signals:
+    x = signal['X']
+    y = signal['Y']
+    plt.plot(x,y,label=f"{signal['Channel']}")
+
+signals = DH.getSignals(Data,'Indefinite')
+plt.legend()
+
+plt.figure('Indefinite')
+for signal in signals:
+    x = signal['X']
+    y = signal['Y']
+    plt.plot(x,y,label=f"{signal['Channel']}")
+
+plt.legend()
+
+
+plt.show()
+'''
 
 
 #2025-01-23T11:14:07.000Z
