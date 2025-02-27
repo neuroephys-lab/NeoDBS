@@ -91,8 +91,16 @@ def getModes(Data):
             if Data[key]!={} and key!='Device':
                 modes.append(key)
     else: 
+        if 'Device' in Data.keys():
+            print(f"Modes present in Recording: {modes}")
+            modes.append('Damaged')
+            for key in list(Data.keys()):
+                print(key)
+                if Data[key]!={} and key!='Device':
+                    modes.append(key)
+    if modes == ['Damaged']:
+        modes = []
         modes.append('None. Recording is Damaged!')
-    print(f"Modes present in Recording: {modes}")
 
     return modes
 
@@ -101,71 +109,6 @@ def getStimStatus(Data):
     final = utl.after_point(Data['Device']['Stimulation']['FinalStimStatus'])
     return (initial,final)
 
-def checkMissingData(dictionary):
-
-    '''
-    Check missing data in the whole of dictionary, either full json file or just a recording or mode
-    Return boolean matrix of missing data and the paths
-    '''
-    
-    GlobalPacketSizes = 0
-    Fs = 250
-
-    check = []
-
-    modes = getModes(dictionary)
-
-    for mode in modes:
-        if mode== 'Streaming' or mode== 'Indefinite' or mode == 'Survey': #Streaming, Survey
-                key_paths = utl.find_key_path(dictionary[mode], 'TicksInMses')
-
-                for path in key_paths:
-                    path_parts = utl.parse_path(path)
-                    signal = utl.access_by_path(dictionary[mode],path_parts)
-                    if 'TicksInMses' in signal.keys() and 'GlobalPacketSizes' in signal.keys() and 'SampleRateInHz' in signal.keys():
-                        TickInS = utl.string2numbers(signal['TicksInMses'])
-                        GlobalPacketSizes = utl.string2numbers(signal['GlobalPacketSizes'][1:-1]) #take out [ ]
-                        Fs = signal['SampleRateInHz']
-
-                        if len(TickInS)!=0:
-                            TickInS = (TickInS - TickInS[0])/1000 #convert from ms to s, and start from 0
-                            if TickInS[-1]>sum(GlobalPacketSizes)/Fs:
-                                #print('WARNING: MISSING PACKETS IN Path: ' + path)
-                                check.append(path)
-                                Warning(f"Missing packets in {mode}")
-                            else: pass                    
-                        else: 
-                            #print('WARNING: No required keys or data in Path: ' + path)
-                            check.append(path)
-                            Warning(f"Missing keys or data in {mode}")
-
-                    else: 
-                        #print("ERROR: No required keys or data.")
-                        check.append(path)
-                        Warning(f"Missing keys or data in {mode}")
-        
-        if mode == 'Timeline':
-
-            key_paths = utl.find_key_path(dictionary[mode],'DateTime')
-            new_paths = []
-            for path in key_paths: new_paths.append(f"['{mode}']" + path + "['DateTime']")
-            
-            for i in  range(len(new_paths)-1):
-                path1 = utl.parse_path(new_paths[i+1])
-                path2 = utl.parse_path(new_paths[i])
-
-                time1 = utl.parse_datetime(utl.access_by_path(dictionary,path1))
-                time2 = utl.parse_datetime(utl.access_by_path(dictionary,path2))
-                delta = time2-time1
-                minutes = np.round(delta.seconds/60,3)
-                remainder = minutes%10
-                if minutes >10 and remainder==0: #check if difference in time is bigger than 10 and multiple of ten, meaning lost a packet
-                    print(new_paths[i])
-                    check.append(new_paths[i])
-                    Warning(f"Missing packets in {mode}")
-                    
-
-    return check
 
 def getTimeTicksMs(TickInS,GlobalPacketSizes,Fs):
     return np.round(np.arange(start=TickInS[0],stop=TickInS[-1]+ (GlobalPacketSizes[-1]-1)/Fs ,step=1/Fs),3)
@@ -183,7 +126,7 @@ def getSessionDuration(Data):
 
         print(beginning , '-->', end)
         return end - beginning
-    else: return "No date stored!"
+    else: return "No dates stored!"
 
 '''
 def getRecordingDuration(dictionary):
@@ -629,8 +572,8 @@ def getModeSignals(dictionary, mode):
         case 'Setup':
             recs = dictionary[mode]['SenseChannelTests'], dictionary[mode]['CalibrationTests']
 
-        case _: #✅ #só falta o LFPMontage
-            recs = dictionary['Survey'][mode]
+        case 'Survey': #✅ #só falta o LFPMontage
+            recs = dictionary[mode]['LfpMontageTimeDomain']
 
     return recs
 
@@ -669,7 +612,7 @@ def getSignals(Data, mode):
         for rec in recs[1]: calibration.append(get(rec))
         signals = sense, calibration
 
-    if mode =='Streaming' or mode=='Indefinite':
+    if mode in ['Streaming','Indefinite','Survey']:
         for rec in recs: signals.append(get(rec))
 
     elif mode=='Events':

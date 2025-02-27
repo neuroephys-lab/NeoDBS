@@ -1,12 +1,63 @@
-import DataHandling as DH
+'''import DataHandling as DH
 import matplotlib.pyplot as plt
 import utils as utl
 import numpy as np
+import Preprocessing as pre'''
+import matplotlib.pyplot as plt
+import DataHandling as DH
 
-file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
+file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-12-19\\Report_Json_Session_Report_20250212T121933.json"
+
 
 Data = DH.getData(file_path)
 
+recs = Data['Survey']['LfpMontageTimeDomain']
+
+plt.figure()
+for rec in recs:
+    print(rec)
+    x = rec['X']
+    y = rec['Y']
+    plt.plot(x,y,label = rec['Channel'])
+
+plt.legend()
+#plt.show()
+
+'''
+recent = Data['Device']['MostRecentInSessionSignalCheck'] #PSD - Survey da sessão 
+if recent:
+    plt.figure()
+    for stream in recent:
+        channel = stream['Channel']
+        x = stream['SignalFrequencies']
+        y = stream['SignalPsdValues']
+        peak_x = stream['PeakFrequencies']
+        peak_y = stream['PeakValues']
+        plt.plot(x,y,label=utl.after_point(channel))
+        plt.scatter(peak_x,peak_y)
+
+    plt.legend()
+
+survey = DH.getSignals(Data,'LFPTimeDomain')
+
+if survey:
+    plt.figure()
+    for stream in survey:
+        channel = stream['Channel']
+        x = stream['SignalFrequencies']
+        y = stream['SignalPsdValues']
+        peak_x = stream['PeakFrequencies']
+        peak_y = stream['PeakValues']
+        plt.plot(x,y,label=utl.after_point(channel))
+        plt.scatter(peak_x,peak_y)
+
+    plt.legend()
+    
+plt.show()'''
+
+#space
+print()
+'''
 recs = DH.getSignals(Data,'Setup')
 
 plt.figure()
@@ -29,8 +80,6 @@ print(i)
 plt.legend()
 plt.show()
 
-
-'''
 signals = DH.getSignals(Data,'CalibrationTests')
 
 plt.figure('Calibration')

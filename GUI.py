@@ -30,9 +30,11 @@ def toggleVisibility(signal_tags, parent):
 
             def toggle_visibility(sender, app_data, user_data):
                 dpg.configure_item(user_data, show=app_data)
-
-                if not app_data:
-                    dpg.set_value(f"{parent}_select_all", False)
+                item_id = f"{parent}_select_all"
+                if dpg.does_item_exist(item_id):  # Check if the item exists
+                    dpg.set_value(item_id, False)
+                else:
+                    pass
 
             checkbox = dpg.add_checkbox(label=label, default_value=visible,
                                         callback=toggle_visibility, user_data=series_tag)
@@ -238,7 +240,7 @@ def create_individual_window():
                     toggleVisibility(signal_tags,tab_tag)
 
 
-        if mode in ['Streaming', 'Indefinite']:
+        if mode in ['Streaming', 'Indefinite','Survey']:
             with dpg.group(parent=tab_tag):
                 dpg.add_text(f"Total recordings: {len(signals)}")
 
@@ -246,8 +248,9 @@ def create_individual_window():
                     dpg.add_plot_legend()
                     dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
                     dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
-
-                    plot_td(signals)
+                    
+                    parent = f"y_axis_{tab_tag}"
+                    plot_td(signals,parent)
 
                 toggleVisibility(signal_tags,tab_tag)
         
