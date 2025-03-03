@@ -36,10 +36,10 @@ def getData(file_path):
             'RechargeCount', 'NonRechargeBatteryStatus', 
             'GroupUsagePercentage', 'LeadConfiguration', 
             'Stimulation', 'Groups', 
-            'BatteryReminder', 'MostRecentInSessionSignalCheck', 
+            'BatteryReminder', 
             'Impedance', 'GroupHistory', 'PatientEvents']
 
-    setup_keys = ['SenseChannelTests', 'CalibrationTests']
+    setup_keys = ['SenseChannelTests', 'CalibrationTests', 'MostRecentInSessionSignalCheck'] #'MostRecentInSessionSignalCheck'
     survey_keys = ['LFPMontage', 'LfpMontageTimeDomain']
     streaming_keys = ['BrainSenseTimeDomain', 'BrainSenseLfp']
     indefinite_keys = ['IndefiniteStreaming']
@@ -92,10 +92,9 @@ def getModes(Data):
                 modes.append(key)
     else: 
         if 'Device' in Data.keys():
-            print(f"Modes present in Recording: {modes}")
+            Warning(f"Damaged with recordings!")
             modes.append('Damaged')
             for key in list(Data.keys()):
-                print(key)
                 if Data[key]!={} and key!='Device':
                     modes.append(key)
     if modes == ['Damaged']:
@@ -587,7 +586,7 @@ def getSignals(Data, mode):
         total_duration = getRecordingDuration(mode,rec)
         time_array = np.arange(0,total_duration,1/Fs)
         raw = rec['TimeDomainData']
-
+        print(len(raw),'|',len(time_array))
         if len(time_array)<len(raw): #while there is no correct missing data function complete
             raw = raw[:len(time_array)]
         else:

@@ -6,12 +6,56 @@ import Preprocessing as pre'''
 import matplotlib.pyplot as plt
 import DataHandling as DH
 
-file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-12-19\\Report_Json_Session_Report_20250212T121933.json"
+import os
+import json
 
+# Set the base directory where JSON files are located
+base_directory = "C:\\Users\\OCD\\Desktop\\DATA\\RN"  # Change this to your folder path
+
+file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-10-09\\Report_Json_Session_Report_20241125T140406.json"
+
+def run_json_files(directory):
+    """Recursively find and execute JSON files."""
+    for root, _, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".json"):
+                json_path = os.path.join(root, file)
+                try:
+                    with open(json_path, "r", encoding="utf-8") as f:
+                        
+                        Data = DH.getData(json_path)
+                        modes = DH.getModes(Data)
+                        
+                        if 'Survey' in modes:
+                            print("---------------------------")
+                            print(json_path)
+                            if Data['Device']['MostRecentInSessionSignalCheck']:
+                                print('Most Recent Exists')
+                                print(Data['Device']['MostRecentInSessionSignalCheck'][0]['SignalPsdValues'])
+                            if Data['Device']['Impedance']:
+                                print('Impedance Exists')
+
+                except Exception as e:
+                    print(f"Error processing {json_path}: {e}")
 
 Data = DH.getData(file_path)
 
-recs = Data['Survey']['LfpMontageTimeDomain']
+psd = Data['Setup']['MostRecentInSessionSignalCheck']
+for i in range(len(psd)):
+    print(psd[i]['Channel'])
+
+'''
+file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-12-19\\Report_Json_Session_Report_20250212T121933.json"
+
+#Setup: Impedance + MostRecentInSessionSignalCheck
+#Survey: Impedance only
+
+Data = DH.getData(file_path)
+
+print(Data['Device']['Impedance' ][-1]['Hemisphere'][1]['SessionImpedance'].keys())
+
+
+#plt.show()
 
 plt.figure()
 for rec in recs:
@@ -21,9 +65,7 @@ for rec in recs:
     plt.plot(x,y,label = rec['Channel'])
 
 plt.legend()
-#plt.show()
 
-'''
 recent = Data['Device']['MostRecentInSessionSignalCheck'] #PSD - Survey da sessão 
 if recent:
     plt.figure()
