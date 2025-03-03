@@ -586,7 +586,6 @@ def getSignals(Data, mode):
         total_duration = getRecordingDuration(mode,rec)
         time_array = np.arange(0,total_duration,1/Fs)
         raw = rec['TimeDomainData']
-        print(len(raw),'|',len(time_array))
         if len(time_array)<len(raw): #while there is no correct missing data function complete
             raw = raw[:len(time_array)]
         else:

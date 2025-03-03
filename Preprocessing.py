@@ -4,7 +4,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 
-def zscoreRemoval(signal):
+def zscoreRemoval(signal,n):
     '''
     Signal - dict with 'X' and 'Y' keys
     returns:
@@ -18,16 +18,12 @@ def zscoreRemoval(signal):
     y = np.array(signal['Y'])
     
 
-    threshold = 5*np.std(x)
-    mask = np.abs(x-np.mean(x)) < threshold
+    threshold = n*np.std(y)
+    mask = np.abs(y-np.mean(y)) < threshold
     
     removed_x = x[~mask]  # Values where mask is False
     removed_y = y[~mask]
     
-    if removed_x.size > 0:  # Print only if there are outliers
-        print("\nOutliers removed:")
-        for i in range(len(removed_x)):
-            print(f"X: {removed_x[i]}, Y: {removed_y[i]}")
 
     filtered_x = x[mask]
     filtered_y = y[mask]

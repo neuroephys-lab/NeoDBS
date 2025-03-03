@@ -5,14 +5,14 @@ import numpy as np
 import Preprocessing as pre'''
 import matplotlib.pyplot as plt
 import DataHandling as DH
+import Preprocessing as pre
 
 import os
-import json
 
 # Set the base directory where JSON files are located
 base_directory = "C:\\Users\\OCD\\Desktop\\DATA\\RN"  # Change this to your folder path
 
-file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-10-09\\Report_Json_Session_Report_20241125T140406.json"
+file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-12-19\\Report_Json_Session_Report_20250212T121933.json"
 
 def run_json_files(directory):
     """Recursively find and execute JSON files."""
@@ -40,11 +40,68 @@ def run_json_files(directory):
 
 Data = DH.getData(file_path)
 
-psd = Data['Setup']['MostRecentInSessionSignalCheck']
-for i in range(len(psd)):
-    print(psd[i]['Channel'])
+indefinite = DH.getSignals(Data,'Indefinite')
+
+
+for stream in indefinite:
+    date = stream['Date']
+    channel = stream['Channel']
+    x = stream['X']
+    y = stream['Y']
+
+    new, _ = pre.zscoreRemoval(stream,5)
+    new_x, new_y = new['X'], new['Y']
+
+    if _['X'] != []:
+        print('removed: ', channel , '|', date)
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))  # 1 row, 2 columns
+
+        # Plot raw signal in the first subplot
+        ax1.plot(x, y, label=f"{channel}_raw")
+        ax1.set_title(f"{channel} - Raw Signal")
+        ax1.set_xlabel("Time (s)")
+        ax1.set_ylabel("LFP (µV)")
+        ax1.legend()
+
+        # Plot cleaned signal in the second subplot
+        ax2.plot(new_x, new_y, label=f"{channel}_cleaned", color='orange')
+        #ax2.plot(_['X'], _['Y'], label=f"{channel}_removed", color='blue')
+        ax2.set_title(f"{channel} - Cleaned Signal")
+        ax2.set_xlabel("Time (s)")
+        ax2.set_ylabel("LFP (µV)")
+        ax2.legend()
+
+        # Adjust layout
+        plt.tight_layout()
+        plt.show()
+        
+        
+
+
 
 '''
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))  # 1 row, 2 columns
+
+# Plot raw signal in the first subplot
+ax1.plot(x, y, label=f"{channel}_raw")
+ax1.set_title(f"{channel} - Raw Signal")
+ax1.set_xlabel("Time (s)")
+ax1.set_ylabel("LFP (µV)")
+ax1.legend()
+
+# Plot cleaned signal in the second subplot
+ax2.plot(new_x, new_y, label=f"{channel}_cleaned", color='orange')
+ax2.set_title(f"{channel} - Cleaned Signal")
+ax2.set_xlabel("Time (s)")
+ax2.set_ylabel("LFP (µV)")
+ax2.legend()
+
+# Adjust layout
+plt.tight_layout()
+plt.show()
+
+
 file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-12-19\\Report_Json_Session_Report_20250212T121933.json"
 
 #Setup: Impedance + MostRecentInSessionSignalCheck
