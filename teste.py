@@ -6,13 +6,14 @@ import Preprocessing as pre'''
 import matplotlib.pyplot as plt
 import DataHandling as DH
 import Preprocessing as pre
-
+import utils as utl
+from datetime import datetime
 import os
 
 # Set the base directory where JSON files are located
 base_directory = "C:\\Users\\OCD\\Desktop\\DATA\\RN"  # Change this to your folder path
 
-file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-12-19\\Report_Json_Session_Report_20250212T121933.json"
+file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
 
 def run_json_files(directory):
     """Recursively find and execute JSON files."""
@@ -24,63 +25,99 @@ def run_json_files(directory):
                     with open(json_path, "r", encoding="utf-8") as f:
                         
                         Data = DH.getData(json_path)
-                        modes = DH.getModes(Data)
-                        
-                        if 'Survey' in modes:
-                            print("---------------------------")
+                        print("--------------")                     
+                        if 'Impedance' in Data['Device'].keys() and Data['Device']['Impedance']:
                             print(json_path)
-                            if Data['Device']['MostRecentInSessionSignalCheck']:
-                                print('Most Recent Exists')
-                                print(Data['Device']['MostRecentInSessionSignalCheck'][0]['SignalPsdValues'])
-                            if Data['Device']['Impedance']:
-                                print('Impedance Exists')
+                            print(Data['Device']['SessionDate'])
+                            print(Data['Device']['Impedance'][0].keys())
 
+                        elif Data['Device']['Impedance'] == []:
+                            print(json_path) 
+                            print('NOOOO:', Data['Device']['SessionDate'])
+                             
                 except Exception as e:
                     print(f"Error processing {json_path}: {e}")
 
+def show_cut_signals(signals):
+    i=0
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(12, 6))
+    axes = [ax1,ax2,ax3]
+
+    for stream in signals:
+        if i <3:
+            channel = stream['Channel']
+            date = stream['Date']
+
+            new = DH.cutSignal(stream)
+            x = new['X']
+            y = new['Y']
+
+            print(len(x),' : ',len(y))
+
+            axes[i].plot(x, y, label=f"{channel}_raw")
+            axes[i].set_title(f"{channel} - Raw Signal")
+            axes[i].set_xlabel("Time (s)")
+            axes[i].set_ylabel("LFP (µV)")
+            axes[i].legend()
+
+            i+=1
+
+    plt.tight_layout()
+    plt.show()
+
 Data = DH.getData(file_path)
+timeline = DH.getSignals(Data, 'Timeline')
 
-indefinite = DH.getSignals(Data,'Indefinite')
+arrays = []
+for time in timeline:
+    date = time['Left']['X'][-1]
+    x = []
 
+    for val in time['Left']['X']:
+        date = utl.parse_datetime(val)
+        new_date = datetime(year=1900, month=1, day=1, hour=date.hour, minute=date.minute)
+        x.append(new_date)
 
-for stream in indefinite:
-    date = stream['Date']
-    channel = stream['Channel']
-    x = stream['X']
-    y = stream['Y']
+    arrays.append(x)
 
-    new, _ = pre.zscoreRemoval(stream,5)
-    new_x, new_y = new['X'], new['Y']
+max = -1
+flag = -1
+for i, xx in enumerate(arrays):
+    if len(xx)>max: 
+        max == len(xx)
+        flag = i
 
-    if _['X'] != []:
-        print('removed: ', channel , '|', date)
+x = arrays[flag]
+plt.figure()
+for time in timeline:
+    for side in ['Left', 'Right']:
+        sign = time[side]
+        y = [float(val) for val in sign['Y']]
+        '''if len(y)<len(x): 
+            x = x[:len(y)]
+        else: y = y[:len(x)]'''
+        print(x)
+        plt.plot(x,y,label = f"{time['Date']}-{side}")
+plt.legend()
+plt.show()
 
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))  # 1 row, 2 columns
+'''left = [utl.convert_to_timestamp(val) for val in time['Left']['X']]
+right = [utl.convert_to_timestamp(val) for val in time['Right']['X']]
 
-        # Plot raw signal in the first subplot
-        ax1.plot(x, y, label=f"{channel}_raw")
-        ax1.set_title(f"{channel} - Raw Signal")
-        ax1.set_xlabel("Time (s)")
-        ax1.set_ylabel("LFP (µV)")
-        ax1.legend()
+raw_left = time['Left']['X']
+raw_right = time['Right']['X']
 
-        # Plot cleaned signal in the second subplot
-        ax2.plot(new_x, new_y, label=f"{channel}_cleaned", color='orange')
-        #ax2.plot(_['X'], _['Y'], label=f"{channel}_removed", color='blue')
-        ax2.set_title(f"{channel} - Cleaned Signal")
-        ax2.set_xlabel("Time (s)")
-        ax2.set_ylabel("LFP (µV)")
-        ax2.legend()
+print(left[0],'|',raw_left[0],'------>',left[-1],'|',raw_left[-1])
+print(right[0],'|',raw_right[0],'------>',right[-1],'|',raw_right[-1])'''
 
-        # Adjust layout
-        plt.tight_layout()
-        plt.show()
         
-        
-
-
+    
 
 '''
+
+for recent in Data['Setup']['MostRecentInSessionSignalCheck']:
+    print(recent['Channel'])
+
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))  # 1 row, 2 columns
 
 # Plot raw signal in the first subplot

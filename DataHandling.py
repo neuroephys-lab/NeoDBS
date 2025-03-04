@@ -36,10 +36,10 @@ def getData(file_path):
             'RechargeCount', 'NonRechargeBatteryStatus', 
             'GroupUsagePercentage', 'LeadConfiguration', 
             'Stimulation', 'Groups', 
-            'BatteryReminder', 
-            'Impedance', 'GroupHistory', 'PatientEvents']
+            'BatteryReminder', 'Impedance', 
+            'GroupHistory', 'PatientEvents']
 
-    setup_keys = ['SenseChannelTests', 'CalibrationTests', 'MostRecentInSessionSignalCheck'] #'MostRecentInSessionSignalCheck'
+    setup_keys = ['SenseChannelTests', 'CalibrationTests', 'MostRecentInSessionSignalCheck'] #
     survey_keys = ['LFPMontage', 'LfpMontageTimeDomain']
     streaming_keys = ['BrainSenseTimeDomain', 'BrainSenseLfp']
     indefinite_keys = ['IndefiniteStreaming']
@@ -85,18 +85,27 @@ def getData(file_path):
     return Data
 
 def getModes(Data):
-    modes = []
-    if 'Device' not in Data.keys() or Data['Device']['AbnormalEnd'] == False: #check if recording was successfully terminated
-        for key in list(Data.keys()):
-            if Data[key]!={} and key!='Device':
+
+    def add_mode(Data):
+        for key, value in Data.items():
+            if key != 'Device' and value:  # Ensure it's not empty
+                if (
+                    key == 'Setup'
+                    and set(value.keys()) == {'MostRecentInSessionSignalCheck'}  # Ensure it's the only key
+                    and (not value['MostRecentInSessionSignalCheck'] or isinstance(value['MostRecentInSessionSignalCheck'], list) and len(value['MostRecentInSessionSignalCheck']) == 0)
+                ):
+                    continue  # Skip appending 'Setup'
                 modes.append(key)
+
+    modes = []
+    if 'Device' not in Data or Data['Device'].get('AbnormalEnd') is False:  # Check if recording was successfully terminated
+        add_mode(Data)
+       
     else: 
         if 'Device' in Data.keys():
             Warning(f"Damaged with recordings!")
             modes.append('Damaged')
-            for key in list(Data.keys()):
-                if Data[key]!={} and key!='Device':
-                    modes.append(key)
+            add_mode(Data)
     if modes == ['Damaged']:
         modes = []
         modes.append('None. Recording is Damaged!')
@@ -664,6 +673,38 @@ def getSignals(Data, mode):
 
 
     return signals
+
+def cutSignal(signal, initial=0, end=-1):
+    # Ensure 'X' and 'Y' exist and have the same length
+    if 'X' not in signal or 'Y' not in signal:
+        raise ValueError("Signal must contain both 'X' and 'Y' keys.")
+
+    length = len(signal['X'])  # Assuming 'X' and 'Y' have the same length
+
+    # Check if the given bounds exist in the original signal
+    if end ==-1 or end>length: end=length
+
+    if initial < 0 or initial >= length:
+        raise IndexError(f"Bounds out of range: initial={initial}, end={end}, signal length={length}")
+
+    # Ensure valid slicing
+    initial = max(0, min(initial, length))
+    end = max(0, min(end, length))
+
+    if initial >= end:
+        return {'X': [], 'Y': []}  # Return empty signal if range is invalid
+
+    # Create new signal with sliced values
+    new = {
+        'X': signal['X'][initial:end],
+        'Y': signal['Y'][initial:end],
+    }
+
+    # Add 'Stim' only if it exists in the original signal
+    if 'Stim' in signal and isinstance(signal['Stim'], list) and len(signal['Stim']) == length:
+        new['Stim'] = signal['Stim'][initial:end]
+
+    return new
 
 def getSignal(dictionary,mode):
     '''

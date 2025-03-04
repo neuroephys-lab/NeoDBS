@@ -102,6 +102,23 @@ def checkMissingData(dictionary):
                     print(new_paths[i])
                     check.append(new_paths[i])
                     Warning(f"Missing packets in {mode}")
-                    
+
+            timelines = DH.getSignals(dictionary,mode)
+            for time in timelines:
+                date = time['Date']
+                path = utl.find_key_path(dictionary,date)
+
+                left = len(time['Left']['X'])
+                right = len(time['Right']['X'])
+                if left != 144 or right != 144: #24*60/10 = 144 samples per day
+                    print('Day not complete')
+
+                    diff = utl.parse_datetime(time['Left']['X'][0]) - utl.parse_datetime(time['Left']['X'][-1])
+                    packs = np.round(diff.total_seconds()/600,0)
+                    if packs < left:
+                        Warning(f'Missing packets in {mode}: {left-packs}')
+                        check.append(path)
+
+        if mode == 'Events': print('Still not done')  #check event logs, session date time, and lfpfrequencysnapshots  
 
     return check

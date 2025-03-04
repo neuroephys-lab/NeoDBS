@@ -2,6 +2,12 @@ import numpy as np
 from datetime import datetime
 import re
 
+def find_in_string(string, expression):
+    if expression in string:
+        return True
+    else:
+        return False
+
 def find_key_path(dictionary, target_key, path=""):
     """Recursively finds and prints the path of a key in a nested dictionary (including lists)."""
     key_paths = []  # Collect key paths in a list

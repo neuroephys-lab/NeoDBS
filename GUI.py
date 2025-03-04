@@ -10,12 +10,12 @@ app_state = {"windows": {}}
 def show_metadata():
     print('metadata')
 
-def toggleVisibility(signal_tags, parent):
+def toggleVisibility(signal_tags, parent, group):
     # Create a group for visibility controls
-    with dpg.group(parent=parent):
+    with dpg.group(parent=group):
         dpg.add_text("Choose signals:")
         checkboxes = {}
-        
+            
         def toggle_all(sender, app_data):
             for tag, checkbox in checkboxes.items():
                 dpg.set_value(checkbox, app_data)
@@ -23,23 +23,43 @@ def toggleVisibility(signal_tags, parent):
 
         dpg.add_checkbox(label="Select All", default_value=True, callback=toggle_all)
 
-        # Create checkboxes for each plot
-        for series_tag, visible in signal_tags.items():
-            series_config = dpg.get_item_configuration(series_tag)
-            label = series_config.get('label', series_tag.split('_')[-1])
+        with dpg.child_window(autosize_x=True, height=100, border=True):
+            
+            # Create checkboxes for each plot
+            for series_tag, visible in signal_tags.items():
+                series_config = dpg.get_item_configuration(series_tag)
+                label = series_config.get('label', series_tag.split('_')[-1])
 
-            def toggle_visibility(sender, app_data, user_data):
-                dpg.configure_item(user_data, show=app_data)
-                item_id = f"{parent}_select_all"
-                if dpg.does_item_exist(item_id):  # Check if the item exists
-                    dpg.set_value(item_id, False)
-                else:
-                    pass
+                def toggle_visibility(sender, app_data, user_data):
+                    dpg.configure_item(user_data, show=app_data)
+                    item_id = f"{parent}_select_all"
+                    if dpg.does_item_exist(item_id):  # Check if the item exists
+                        dpg.set_value(item_id, False)
+                    else:
+                        pass
+                    
 
-            checkbox = dpg.add_checkbox(label=label, default_value=visible,
-                                        callback=toggle_visibility, user_data=series_tag)
-            checkboxes[series_tag] = checkbox
-           
+                checkbox = dpg.add_checkbox(label=label, default_value=visible,
+                                            callback=toggle_visibility, user_data=series_tag)
+                checkboxes[series_tag] = checkbox
+
+def toggleType(signal_tags, parent, user_data):
+    # `user_data` will be the type to filter by (e.g., "day", "hemisphere", "event")
+    type_filter = user_data  # This is the type (like "day", "hemisphere", or "event")
+    
+    with dpg.group(parent=parent):
+        # Create a checkbox to toggle all matching series at once
+        def toggle_filtered_series(sender, app_data):
+            for series_tag in signal_tags:
+                series_label = str(dpg.get_item_label(series_tag))
+
+                if type_filter.lower() in series_label.lower():  # Check if the label contains the type
+                    #dpg.set_value(series_tag, app_data)  # Show/Hide based on checkbox state
+                    dpg.configure_item(series_tag, show=app_data)  # Actually toggle visibility
+            active_series = getActiveSeries(signal_tags)
+
+        dpg.add_checkbox(label=f"Toggle {type_filter}", default_value=True, callback=toggle_filtered_series)
+         
 def add_filter_buttons():
     print('Filter buttons')
 
@@ -63,6 +83,111 @@ def plot_td(signals, parent, tab_tag, signal_tags):
 
         '''dpg.add_line_series(x, y, label=f"{channel} ({date})", parent=parent, tag=series_tag)
         signal_tags[series_tag] = True  # Track visibility'''
+
+def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
+
+    dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")
+    dpg.add_text(f"Total events: {len(signals)}", parent=tab_tag)
+    with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True ):
+        
+        with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
+            dpg.add_plot_legend()
+            dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag=f"x_axis_{tab_tag}")
+            dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (dB)", tag=f"y_axis_{tab_tag}")
+
+            for idx, signal in enumerate(signals):
+                date = utl.parse_datetime(signal['DateInitial'])
+
+                for side in ['Left', 'Right']:
+                    sign = signal[side]
+                    label = f"day {date.day}/{date.month} | {date.minute} | {side} | {signal['EventName']}"
+                    x = sign['X']
+                    y = sign['Y']
+                    
+                    # Create a unique series tag for each side
+                    series_tag = f"{tab_tag}_series_{idx}_{side.lower()}"
+                    
+                    # Add the line series for each side
+                    dpg.add_line_series(x, y, label=label, parent=f"y_axis_{tab_tag}", tag=series_tag)
+                    signal_tags[series_tag] = True  # Track visibility
+    
+        types = []
+        for signal in signals: 
+            types.append(signal['EventName'])
+            date = utl.parse_datetime(signal['DateInitial'])
+            date = f"day {date.day}/{date.month}"
+            types.append(date)
+
+        types = np.unique(types).tolist()
+
+        types.append('Left')
+        types.append('Right')
+        
+        with dpg.group(label = f"{tab_tag}_buttons", parent=f"{tab_tag}_group"):
+            for types in types:
+                print(types)
+                toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=types) #check Obsessions
+
+            # Ensure visibility toggle works for both sides
+            toggleVisibility(signal_tags,parent=tab_tag, group=f"{tab_tag}_buttons")
+        
+def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
+    dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")
+    dpg.add_text(f"Total days: {len(signals)}", parent=tab_tag)
+
+    with dpg.group(label = f"{tab_tag}_group" , parent=tab_tag, horizontal=True):
+        
+        with dpg.plot(label=f"{mode} Signals", height=400, width=500, tag=plot_tag):
+            dpg.add_plot_legend()
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time", tag=f"x_axis_{tab_tag}")
+            y_left = dpg.add_plot_axis(dpg.mvYAxis, label="Mean LFP Power (dB)", tag=f"y_axis_{tab_tag}_left")
+            #y_right = dpg.add_plot_axis(dpg.mvYAxis, label="Stimulation Amplitude (mA)", tag=f"y_axis_{tab_tag}_right")
+
+            dpg.set_axis_limits_auto(y_left)
+            #dpg.set_axis_limits_auto(y_right)
+
+            for idx, signal in enumerate(signals):
+                date = utl.parse_datetime(signal['Date'])
+
+                for side in ['Left','Right']:   
+                    sign = signal[side]
+                    date = utl.parse_datetime(signal['Date'])
+                    label_left = f"{side} - day {date.day}/{date.month}"
+                    label_right = f"{side} - stim"
+                
+                    try:
+                        x = [utl.convert_to_timestamp(val) for val in sign['X']]
+                        y = [float(val) for val in sign['Y']]
+                        #stim = [float(val) for val in sign['Stim']]
+                    except ValueError as e:
+                        print(f"Error converting data for {label_left}: {e}")
+                        continue  # Skip this plot if conversion fails'''
+
+
+                    # LFP power
+                    series_tag = f"{tab_tag}_series_{idx}_{side.lower()}_left"
+                    dpg.add_line_series(x, y, label=label_left, parent=y_left, tag=series_tag)
+                    signal_tags[series_tag] = True  # Track visibility
+                    '''
+                    # Stimulation
+                    series_tag = f"{tab_tag}_series_{idx}_{side.lower()}_right"
+                    dpg.add_line_series(x, stim, label=label_right, parent=y_right, tag=series_tag)
+                    signal_tags[series_tag] = True  # Track visibility'''
+
+        # Ensure visibility toggle works for both sides
+        toggleVisibility(signal_tags,parent=tab_tag, group = f"{tab_tag}_group")
+
+def getActiveSeries(signal_tags):
+    active_tags = []
+
+    for tag, visible in signal_tags.items():
+        info = dpg.get_item_configuration(tag)
+        if info['show'] == True: 
+            active_tags.append(tag)
+
+    #print(len(active_tags) , ' + ', len(signal_tags)-len(active_tags) ,' = ', len(active_tags))
+    return active_tags
+
 #-----------------------------------COMBINED ANALISYS-------------------------------------
 
 def create_multiple_window():
@@ -220,12 +345,13 @@ def create_individual_window():
             dpg.add_file_extension(".*")
             dpg.add_file_extension("*.json", color=(0, 255, 0, 255), custom_text="[JSON File]")
 
-    def open_tab_mode(sender, app_data, user_data): 
+    def open_tab_mode(sender, app_data, user_data): #create tab
         mode, window_id = user_data
         tab_tag = f"tab_{mode}_{window_id}"
 
-        #dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")
-        
+        if dpg.does_item_exist(tab_tag): #check if its already created
+            return
+
         Data = app_state['windows'][window_id]['Data']
 
         signals = DH.getSignals(Data,mode)
@@ -243,7 +369,7 @@ def create_individual_window():
                 plot_tag = f"plt_{tab_tag_off}"
                 
                 # Group for Plots (Stacked Vertically)
-                with dpg.group():
+                with dpg.group(label = f"{tab_tag}_group"):
                     # First plot (Stimulation OFF)
                     with dpg.plot(label=f"{mode} SETUP - Stimulation OFF", height=400, width=-1, tag=f"{plot_tag}"):
                         dpg.add_plot_legend()
@@ -253,7 +379,7 @@ def create_individual_window():
                         parent = f"y_axis_{tab_tag_off}"
                         plot_td(sense, parent, tab_tag_off, signal_tags)
 
-                toggleVisibility(signal_tags, tab_tag_off)  # Place buttons next to the plots
+                toggleVisibility(signal_tags, tab_tag_off, group = f"{tab_tag}_group")  # Place buttons next to the plots
 
             tab_tag_on = tab_tag + "_ON"
             dpg.add_tab(label='Setup ON', tag=tab_tag_on, parent=f"tab_bar_window_{window_id}")
@@ -275,9 +401,9 @@ def create_individual_window():
                 
         if mode in ['Streaming', 'Indefinite','Survey']:
             dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")
-            with dpg.group(parent=tab_tag):
-                dpg.add_text(f"Total recordings: {len(signals)}")
-
+            dpg.add_text(f"Total recordings: {len(signals)}", parent=tab_tag)
+            with dpg.group(parent=tab_tag, label = f"{tab_tag}_group"):
+                
                 with dpg.plot(label=f"{mode} Signals", height=400, width=-1, tag=plot_tag):
                     dpg.add_plot_legend()
                     dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
@@ -287,129 +413,66 @@ def create_individual_window():
                     plot_td(signals,parent,tab_tag, signal_tags)
 
                 with dpg.group():
-                    toggleVisibility(signal_tags, tab_tag)
+                    toggleVisibility(signal_tags, tab_tag, group = f"{tab_tag}_group")
         
-        if mode == 'Events':
-            dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")
-            with dpg.group(parent=tab_tag):
-                dpg.add_text(f"Total events: {len(signals)}")
-
-                with dpg.plot(label=f"{mode} Signals", height=400, width=-1, tag=plot_tag):
-                    dpg.add_plot_legend()
-                    dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag=f"x_axis_{tab_tag}")
-                    dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (dB)", tag=f"y_axis_{tab_tag}")
-
-                    for idx, signal in enumerate(signals):
-                        date = utl.parse_datetime(signal['DateInitial'])
-
-                        for side in ['Left', 'Right']:
-                            sign = signal[side]
-                            label = f"{side} - day {date.day}/{date.month} | {date.minute} | {signal['EventName']}"
-                            x = sign['X']
-                            y = sign['Y']
-                            
-                            # Create a unique series tag for each side
-                            series_tag = f"{tab_tag}_series_{idx}_{side.lower()}"
-                            
-                            # Add the line series for each side
-                            dpg.add_line_series(x, y, label=label, parent=f"y_axis_{tab_tag}", tag=series_tag)
-                            signal_tags[series_tag] = True  # Track visibility
-
-                    # Ensure visibility toggle works for both sides
-                    toggleVisibility(signal_tags,parent=tab_tag)
+        if mode == 'Events': event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
             
-        if mode == 'Timeline':
-            dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")
-            with dpg.group(parent=tab_tag):
-                dpg.add_text(f"Total days: {len(signals)}")
-
-                with dpg.plot(label=f"{mode} Signals", height=400, width=-1, tag=plot_tag):
-                    dpg.add_plot_legend()
-                    x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time", tag=f"x_axis_{tab_tag}")
-                    y_left = dpg.add_plot_axis(dpg.mvYAxis, label="Mean LFP Power (dB)", tag=f"y_axis_{tab_tag}_left")
-                    #y_right = dpg.add_plot_axis(dpg.mvYAxis, label="Stimulation Amplitude (mA)", tag=f"y_axis_{tab_tag}_right")
-
-                    dpg.set_axis_limits_auto(y_left)
-                    #dpg.set_axis_limits_auto(y_right)
-
-                    for idx, signal in enumerate(signals):
-                        date = utl.parse_datetime(signal['Date'])
-
-                        for side in ['Left','Right']:   
-                            sign = signal[side]
-                            date = utl.parse_datetime(signal['Date'])
-                            label_left = f"{side} - day {date.day}/{date.month}"
-                            label_right = f"{side} - stim"
-                        
-                            try:
-                                x = [utl.convert_to_timestamp(val) for val in sign['X']]
-                                y = [float(val) for val in sign['Y']]
-                                #stim = [float(val) for val in sign['Stim']]
-                            except ValueError as e:
-                                print(f"Error converting data for {label}: {e}")
-                                continue  # Skip this plot if conversion fails'''
-
-
-                            # LFP power
-                            series_tag = f"{tab_tag}_series_{idx}_{side.lower()}_left"
-                            dpg.add_line_series(x, y, label=label_left, parent=y_left, tag=series_tag)
-                            signal_tags[series_tag] = True  # Track visibility
-                            '''
-                            # Stimulation
-                            series_tag = f"{tab_tag}_series_{idx}_{side.lower()}_right"
-                            dpg.add_line_series(x, stim, label=label_right, parent=y_right, tag=series_tag)
-                            signal_tags[series_tag] = True  # Track visibility'''
-
-                    # Ensure visibility toggle works for both sides
-                    toggleVisibility(signal_tags,parent=tab_tag)
-          
-    def open_file_callback(sender, app_data, user_data):
+        if mode == 'Timeline': timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+               
+    def open_file_callback(sender, app_data, user_data): #open file
         window_id = user_data  # Get window-specific ID
         files = app_state["windows"][window_id]["Files"]
-        print(files)
         file_path = files[0]['path']
-        Data = DH.getData(file_path)
 
-        app_state['windows'][window_id]['Data'] = Data
-        app_state['windows'][window_id]['Modes'] = DH.getModes(Data)
+        #check if its not opening the same file
+        previous_file_path = app_state['windows'][window_id].get('PreviousFilePath', None)
+        if file_path == previous_file_path: 
+            return 
+        else: #show modes and buttons
 
-        
-        if app_state['windows'][window_id]['Modes'] == ['None. Recording is Damaged!']: 
-            dpg.set_value(f"modes_{window_id}", 'Recording is damaged! Choose another file.')
-            dpg.configure_item(f"modes_{window_id}", show=True)
-        else:
+            Data = DH.getData(file_path)
 
-            
-            date = DH.getSessionDate(Data)
-            session_duration = DH.getSessionDuration(Data)
-            initial_stim_status, final_stim_status = DH.getStimStatus(Data)
-            #left, right = DH.getStimulationParameters(Data,'A')
-            
-            
-            dpg.add_text(f"Session date: {date}", parent=f"session_parameteres_{window_id}", show=True)
-            dpg.add_text(f"Session duration: {session_duration}", parent=f"session_parameteres_{window_id}", show=True)
-            dpg.add_text(f"Initial Stimulation: {initial_stim_status}", parent=f"session_parameteres_{window_id}", show=True)
-            dpg.add_text(f"Final Stimulation: {final_stim_status}", parent=f"session_parameteres_{window_id}", show=True)
-            #dpg.add_text(f"Stimulation parameters: {left['Electrodes']}", parent=f"session_parameteres_{window_id}", show=True)
+            app_state['windows'][window_id]['Data'] = Data
+            app_state['windows'][window_id]['Modes'] = DH.getModes(Data)
 
             
-            modes = app_state['windows'][window_id]['Modes']
-            if modes != ['None. Recording is Damaged!']:
-                dpg.set_value(f"modes_{window_id}", 'Recording modes present in the file:')
+            if app_state['windows'][window_id]['Modes'] == ['None. Recording is Damaged!']: 
+                dpg.set_value(f"modes_{window_id}", 'Recording is damaged! Choose another file.')
                 dpg.configure_item(f"modes_{window_id}", show=True)
-                dpg.set_item_label(f"window_{window_id}", files[0]['name'])
+            else:
+
                 
-            else: 
-                modes = []
-                dpg.set_value(f"modes_{window_id}", 'Recording is Damaged! Choose another file!')
+                date = DH.getSessionDate(Data)
+                session_duration = DH.getSessionDuration(Data)
+                initial_stim_status, final_stim_status = DH.getStimStatus(Data)
+                #left, right = DH.getStimulationParameters(Data,'A')
+                dpg.delete_item(item=f"session_parameteres_{window_id}",children_only=True)
+                dpg.delete_item(item=f"mode_list_group_{window_id}",children_only=True)
+                 
+                dpg.add_text(f"Session date: {date}", parent=f"session_parameteres_{window_id}", show=True)
+                dpg.add_text(f"Session duration: {session_duration}", parent=f"session_parameteres_{window_id}", show=True)
+                dpg.add_text(f"Initial Stimulation: {initial_stim_status}", parent=f"session_parameteres_{window_id}", show=True)
+                dpg.add_text(f"Final Stimulation: {final_stim_status}", parent=f"session_parameteres_{window_id}", show=True)
+                #dpg.add_text(f"Stimulation parameters: {left['Electrodes']}", parent=f"session_parameteres_{window_id}", show=True)
 
-            for mode in modes:
-                dpg.add_button(label = mode, parent=f"mode_list_group_{window_id}",callback=open_tab_mode ,user_data=(mode,window_id),show=True)
                 
-            dpg.configure_item(f"mode_list_group_{window_id}", show = True)
+                modes = app_state['windows'][window_id]['Modes']
+                if modes != ['None. Recording is Damaged!']:
+                    dpg.set_value(f"modes_{window_id}", 'Recording modes present in the file:')
+                    dpg.configure_item(f"modes_{window_id}", show=True)
+                    dpg.set_item_label(f"window_{window_id}", files[0]['name'])
+                    
+                else: 
+                    modes = []
+                    dpg.set_value(f"modes_{window_id}", 'Recording is Damaged! Choose another file!')
 
+                for mode in modes:
+                    dpg.add_button(label = mode, parent=f"mode_list_group_{window_id}",callback=open_tab_mode ,user_data=(mode,window_id),show=True)
+                    
+                dpg.configure_item(f"mode_list_group_{window_id}", show = True)
+                app_state['windows'][window_id]['PreviousFilePath'] = file_path
 
-    with dpg.window(label=f"Window {window_id + 1}", width=400, height=300, tag=f"window_{window_id}"):
+    with dpg.window(label=f"Window {window_id + 1}", width=400, height=300, tag=f"window_{window_id}"): #individual window 
         dpg.add_button(label="File Selector", callback=lambda: dpg.show_item(f"file_dialog_{window_id}"))
         dpg.add_text("No file selected", tag=f"file_list_{window_id}")
         dpg.add_button(label="Open File", callback=open_file_callback,
@@ -420,16 +483,15 @@ def create_individual_window():
         with dpg.tab_bar(tag=f"tab_bar_window_{window_id}"): pass 
             
     create_file_dialog(window_id)  # Create a file dialog for this window
-
+    
 
 #---------------------------------------MAIN WINDOW---------------------------------------
 
 dpg.create_context()
 
-with dpg.window(label="Main Window", width=300, height=150, tag="Main"):
+with dpg.window(label="Main Window", width=300, height=150, tag="Main"): #Main Window
     dpg.add_button(label="Individual Analysis", callback=create_individual_window)
     dpg.add_button(label="Combined Analysis", callback=create_multiple_window)
-
 
 dpg.create_viewport(title="NeoDBS", width=1000, height=600)
 dpg.setup_dearpygui()
