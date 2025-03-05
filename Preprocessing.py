@@ -36,6 +36,24 @@ def zscoreRemoval(signal,n):
 #def MAD based removal
 # def wavelet denoising 
 
+def MeanSignal(signals):
+    yy=[signal['Y'] for signal in signals]
+    
+    mean_signal = np.mean(yy, axis=0)
+    return mean_signal
+
+
+def MeanEvents(signals):
+    #for events, only mean(y)
+    yy = []
+    for signal in signals:
+        for side in ['Left', 'Right']: #verificar isto para quando se selecionar só um lado
+            sign = signal[side]
+            yy.append(sign['Y'])
+
+    mean_signal = np.mean(yy, axis=0)
+    return mean_signal
+
 def checkMissingData(dictionary):
 
     '''

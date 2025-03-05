@@ -72,3 +72,41 @@ def parse_datetime(string):
     except ValueError:
         # Fallback for cases without milliseconds
         return datetime.strptime(string, "%Y-%m-%dT%H:%M:%SZ")
+
+def find_closest_index(new_time, target_hour, target_minute):
+    """Finds the index of the sample in new_time closest to the given hour and minute.
+       Returns None if the target time is out of bounds.
+    """
+    # Convert target hour and minute to a datetime object (same date as new_time[0])
+    target_time = datetime(new_time[0].year, new_time[0].month, new_time[0].day, target_hour, target_minute)
+
+    # Check if the target time is within bounds
+    if target_time < new_time[0] or target_time > new_time[-1]:
+        return None  # Return None if the target time is out of range
+
+    # Compute absolute time differences
+    time_diffs = [abs((t - target_time).total_seconds()) for t in new_time]
+
+    # Get the index of the smallest difference
+    closest_idx = np.argmin(time_diffs)
+    
+    return closest_idx
+
+def read_event_file(filename):
+    """Reads a text file and returns a list of (hour, minute, event) tuples."""
+    events = []
+    
+    with open(filename, 'r', encoding='utf-8') as file:
+        for line in file:
+            line = line.strip()  # Remove extra spaces/newlines
+            if not line:
+                continue  # Skip empty lines
+            
+            try:
+                time_part, event = line.split(", ")  # Split time and event
+                hour, minute = map(int, time_part.split(":"))  # Extract hour & minute
+                events.append((hour, minute, event))  # Store as tuple
+            except ValueError:
+                print(f"Skipping invalid line: {line}")  # Handle potential formatting errors
+    
+    return events

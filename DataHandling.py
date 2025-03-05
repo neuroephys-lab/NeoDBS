@@ -117,7 +117,6 @@ def getStimStatus(Data):
     final = utl.after_point(Data['Device']['Stimulation']['FinalStimStatus'])
     return (initial,final)
 
-
 def getTimeTicksMs(TickInS,GlobalPacketSizes,Fs):
     return np.round(np.arange(start=TickInS[0],stop=TickInS[-1]+ (GlobalPacketSizes[-1]-1)/Fs ,step=1/Fs),3)
 
@@ -593,7 +592,7 @@ def getSignals(Data, mode):
     def get(rec):
         Fs = rec['SampleRateInHz']
         total_duration = getRecordingDuration(mode,rec)
-        time_array = np.arange(0,total_duration,1/Fs)
+        time_array = np.arange(0,total_duration,1/Fs) #in seconds
         raw = rec['TimeDomainData']
         if len(time_array)<len(raw): #while there is no correct missing data function complete
             raw = raw[:len(time_array)]
