@@ -1,8 +1,8 @@
 import json
 import numpy as np
-import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 import utils as utl # type: ignore
+import re
 
 
 '''
@@ -20,7 +20,35 @@ file1 = open(file_path,'r',encoding='utf-8')
 json2 = json.load(file)
 '''
 
+def info_electrodes(data):
+    '''
+    Inês Pereira - up202107421@edu.fe.up.pt
 
+    Return information of the active electrodes from TIMELINE mode
+    
+    '''
+    GroupHistory=data['Device']['GroupHistory']
+    days_hemisphere_right = list(data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'].keys())
+    for dic in GroupHistory:
+        if dic['SessionDate'][0:10]==days_hemisphere_right[0][0:10]:
+                Groups=dic["Groups"]
+                #print(Groups[1])
+                for di in Groups:
+                    if di.get("ActiveGroup")==True:
+                        Group_id=di["GroupId"][-1]
+                        ProgramSettings=di["ProgramSettings"]
+                        Rate_in_hertz=ProgramSettings["RateInHertz"]
+                        SensingChannel=ProgramSettings['SensingChannel']
+                        Pulse_width_in_microseconds=SensingChannel[0]["PulseWidthInMicroSecond"]
+                        Suspend_amplitude_in_miliamps=SensingChannel[0]["SuspendAmplitudeInMilliAmps"]
+                        Stimulation_electrodes_1=SensingChannel[0]["ElectrodeState"]
+                        Stimulation_electrodes=[]
+
+                        for d in Stimulation_electrodes_1:
+                            Stimulation_electrodes.append(re.split('\.|_',d['Electrode'])[-1]+'-'+d["ElectrodeStateResult"].split('.')[-1])
+                        Sensing_electrodes=SensingChannel[0]["Channel"]
+                        Sensing_electrodes=Sensing_electrodes.split('.')[-1]
+    return Group_id, Rate_in_hertz, Pulse_width_in_microseconds, Suspend_amplitude_in_miliamps, Stimulation_electrodes, Sensing_electrodes
 
 def getData(file_path):
 

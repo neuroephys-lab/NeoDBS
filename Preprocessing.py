@@ -2,7 +2,181 @@ import DataHandling as DH
 import utils as utl
 import numpy as np
 from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
+import inspect
+
+#-----------------------------------------NeoDBS-------------------------------------------------
+
+#------------------ Easy Access to Scipy.signal---------------------
+'''
+Matlab-style IIR filter design
+'''
+iir_filter_design_functions = ['butter','buttord','cheby1','cheb1ord','cheby2','cheb2ord','ellip',
+                               'ellipord','bessel','iirnotch','iirpeak', 'iircomb']
+
+
+def get_functions(module):
+    """Retrieve all callable functions from a module."""
+
+    functions = {name: obj for name, obj in inspect.getmembers(module, inspect.isfunction)}
+    return functions
+
+def dict_to_arg(param_dict, module, func_name):
+    # Convert saved parameters (strings) into appropriate types
+    required_params = get_required_params(module,func_name)
+
+    default_kwargs = get_default_kwargs(module,func_name)
+
+    converted_params = {}
+    for key, value in param_dict.items():
+        if key in required_params or key in default_kwargs:  # Ensure it's a valid argument
+            try:
+                converted_params[key] = eval(value) if value.strip() else None
+            except:
+                converted_params[key] = value  # Keep as string if eval fails
+    return converted_params
+
+def call_function2(module, func_name, *args, **kwargs):
+    """Call a function from a module by name, print its documentation, and handle exceptions."""
+    functions = get_functions(module)
+    
+    if func_name not in functions:
+        print(f"Function '{func_name}' not found in {module.__name__}")
+        return None
+
+    func = functions[func_name]
+
+    # Print function documentation
+    print(f"\nDocumentation for '{func_name}':\n")
+    #print(func.__doc__ if func.__doc__ else "No documentation available.")
+    print("\n" + "="*80 + "\n")
+
+    # Get function signature
+    sig = inspect.signature(func)
+    
+    # Extract required parameters (no defaults)
+    required_params = [
+        param.name for param in sig.parameters.values()
+        if param.default is inspect.Parameter.empty and param.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.POSITIONAL_ONLY)
+    ]
+    
+    # Extract keyword default parameters
+    default_kwargs = {
+        param.name: param.default for param in sig.parameters.values()
+        if param.default is not inspect.Parameter.empty and param.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
+    }
+
+    try:
+        return func(*args, **kwargs)
+    except Exception as e:
+        print(f"Error calling {func_name}: {e}")
+
+        if args:
+            print("Error occurred even with provided arguments. Not retrying.")
+            return None  # If the user provided arguments, don't retry
+
+        if required_params:
+            print(f"Cannot retry because required positional arguments are missing: {required_params}")
+            return None  # Can't call the function without required positional args
+        
+        if default_kwargs:
+            print("Retrying with default keyword arguments...")
+            try:
+                return func(**default_kwargs)
+            except Exception as e2:
+                print(f"Error with default parameters as well: {e2}")
+                return None
+        else:
+            print("No default parameters available.")
+            return None
+
+
+def call_function(module, func_name, param_dict):
+    """Call a function from a module using saved parameters."""
+    functions = get_functions(module)
+    
+    if func_name not in functions:
+        print(f"Function '{func_name}' not found in {module.__name__}")
+        return None
+
+    func = functions[func_name]
+    sig = inspect.signature(func)
+    
+    # Extract required positional arguments
+    required_params = [
+        param.name for param in sig.parameters.values()
+        if param.default is inspect.Parameter.empty and param.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.POSITIONAL_ONLY)
+    ]
+
+    # Extract keyword default parameters
+    default_kwargs = {
+        param.name: param.default for param in sig.parameters.values()
+        if param.default is not inspect.Parameter.empty and param.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
+    }
+
+    # Convert saved parameters (strings) into appropriate types
+    converted_params = {}
+    for key, value in param_dict.items():
+        if key in required_params or key in default_kwargs:  # Ensure it's a valid argument
+            try:
+                converted_params[key] = eval(value) if value.strip() else None
+            except:
+                converted_params[key] = value  # Keep as string if eval fails
+
+    # Split into positional and keyword arguments
+    args = [converted_params[param] for param in required_params if param in converted_params]
+    kwargs = {k: v for k, v in converted_params.items() if k not in required_params}
+
+    try:
+        return func(*args, **kwargs)
+    except Exception as e:
+        print(f"Error calling {func_name}: {e}")
+        return None
+
+
+def get_required_params(module,func_name):
+    functions = get_functions(module)
+    
+    if func_name not in functions:
+        print(f"Function '{func_name}' not found in {module.__name__}")
+        return None
+
+    func = functions[func_name]
+    sig = inspect.signature(func)
+
+    required_params = {}
+    
+    for name, param in sig.parameters.items():
+        if param.default is inspect.Parameter.empty:
+            required_params[name] = None  # No default value
+        else:
+            required_params[name] = param.default  # Default value exists
+
+    return required_params
+
+def get_default_kwargs(module,func_name):
+
+    functions = get_functions(module)
+    
+    if func_name not in functions:
+        print(f"Function '{func_name}' not found in {module.__name__}")
+        return None
+
+    func = functions[func_name]
+    sig = inspect.signature(func)
+    
+    default_kwargs = {
+        param.name: param.default for param in sig.parameters.values()
+        if param.default is not inspect.Parameter.empty and param.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
+    }
+
+    return default_kwargs
+
+
+#----------------------------- NeoDBS signal processing functions------------------
+
+#def MAD based removal
+# def wavelet denoising 
+
 
 def zscoreRemoval(signal,n):
     '''
@@ -33,15 +207,11 @@ def zscoreRemoval(signal,n):
 
     return cleaned, removed  # Convert back to lists if needed
 
-#def MAD based removal
-# def wavelet denoising 
-
 def MeanSignal(signals):
     yy=[signal['Y'] for signal in signals]
     
     mean_signal = np.mean(yy, axis=0)
     return mean_signal
-
 
 def MeanEvents(signals):
     #for events, only mean(y)
@@ -55,6 +225,7 @@ def MeanEvents(signals):
     return mean_signal
 
 def checkMissingData(dictionary):
+
 
     '''
     Check missing data in the whole of dictionary, either full json file or just a recording or mode
@@ -140,3 +311,16 @@ def checkMissingData(dictionary):
         if mode == 'Events': print('Still not done')  #check event logs, session date time, and lfpfrequencysnapshots  
 
     return check
+
+
+# -------------------------------------- BRAVO -------------------------------------
+
+def rangeSelection(array, minMax, type="exclusive"):
+    if type=="exclusive":
+        return np.bitwise_and(array < minMax[1], array > minMax[0])
+    else:
+        return np.bitwise_and(array <= minMax[1], array >= minMax[0])
+
+def removeOutlier(data, method="zscore", zlim=3):
+    if method == "zscore":
+        return data[rangeSelection(data, [np.mean(data)-np.std(data)*zlim,np.mean(data)+np.std(data)*zlim])]

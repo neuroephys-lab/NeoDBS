@@ -9,8 +9,29 @@ import Preprocessing as pre
 def show_metadata():
     print('metadata')
 
-def add_filter_buttons():
-    print('Filter buttons')
+
+def print_me(sender, app_data):
+    print(f"Menu item {sender} clicked!")
+
+def add_menu_bar(tab_tag):
+    if dpg.does_item_exist(tab_tag):
+        with dpg.group(parent=tab_tag, horizontal=True, width=600):
+
+            with dpg.collapsing_header(label="Filters", default_open=False, parent=tab_tag):
+                dpg.add_button(label="Default Filtering",width=-1)
+                dpg.add_button(label="Personalized Filtering",width=-1)
+
+            # "Features" menu simulation
+            with dpg.collapsing_header(label="Features", default_open=False, parent=tab_tag):
+                dpg.add_button(label="Default Feature Extraction",width=-1)
+                dpg.add_button(label="Personalized Feature Extraction",width=-1)
+
+            # "Correlation" menu simulation
+            with dpg.collapsing_header(label="Correlation", default_open=False, parent=tab_tag):
+                dpg.add_button(label="Statistical Analysis",width=-1)
+                dpg.add_button(label="Machine Learning Analysis",width=-1)
+    else:
+        print(f"Tab {tab_tag} does not exist yet.")
 
 def toggleVisibility(signal_tags, parent, group, user_data):
     # Create a group for visibility controls
@@ -145,9 +166,15 @@ def getMeanActiveSeries(window_id,tab_tag,signal_tags):
 
 def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     app_state['windows'][window_id]['Data'][tab_tag]['Signals'] = {'left': [], 'right': []}
-    dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")
+
+    dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")   
     dpg.add_text(f"Total events: {len(signals)}", parent=tab_tag, label = f"{tab_tag}_text_recordings")
-    with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True ):
+    
+    #with dpg.child_window(parent=tab_tag, tag = f"{tab_tag}_child"):
+
+    add_menu_bar(tab_tag)
+
+    with dpg.group(label = f"{tab_tag}_group", parent=tab_tag, horizontal=True ):
         
         with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
             dpg.add_plot_legend()
@@ -193,7 +220,7 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         types.append('Left')
         types.append('Right')
         
-        with dpg.group(label = f"{tab_tag}_buttons", parent=f"{tab_tag}_group"):
+        with dpg.group(label = f"{tab_tag}_buttons"):
             for types in types:
                 toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(types, window_id, tab_tag)) #check Obsessions
 
@@ -207,7 +234,7 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")
     dpg.add_text(f"Total days: {len(signals)}", parent=tab_tag)
-
+    add_menu_bar(tab_tag)
     with dpg.group(label = f"{tab_tag}_group" , parent=tab_tag, horizontal=True):
         
         with dpg.plot(label=f"{mode} Signals", height=400, width=500, tag=plot_tag):
@@ -270,6 +297,7 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             
     tab_tag_off = tab_tag + "_OFF"
     dpg.add_tab(label='Setup OFF', tag=tab_tag_off, parent=f"tab_bar_window_{window_id}")
+    add_menu_bar(tab_tag)
     with dpg.group(parent=tab_tag_off, horizontal=True):  # STIM OFF
         
         plot_tag = f"plt_{tab_tag_off}"
@@ -277,7 +305,7 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         # Group for Plots (Stacked Vertically)
         with dpg.group(label = f"{tab_tag}_group"):
             # First plot (Stimulation OFF)
-            with dpg.plot(label=f"{mode} SETUP - Stimulation OFF", height=400, width=-1, tag=f"{plot_tag}"):
+            with dpg.plot(label=f"{mode} SETUP - Stimulation OFF", height=400, width=600, tag=f"{plot_tag}"):
                 dpg.add_plot_legend()
                 dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag_off}")
                 dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µV)", tag=f"y_axis_{tab_tag_off}")
@@ -294,7 +322,7 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         plot_tag = f"plt_{tab_tag_on}"
         with dpg.group():
             # Second plot (Stimulation ON)
-            with dpg.plot(label=f"{mode} SETUP - Stimulation ON", height=400, width=-1, tag=f"{plot_tag}"):
+            with dpg.plot(label=f"{mode} SETUP - Stimulation ON", height=400, width=600, tag=f"{plot_tag}"):
                 dpg.add_plot_legend()
                 dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag_on}")
                 dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µV)", tag=f"y_axis_{tab_tag_on}")
@@ -306,9 +334,10 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")
     dpg.add_text(f"Total recordings: {len(signals)}", parent=tab_tag)
-    with dpg.group(parent=tab_tag, label = f"{tab_tag}_group"):
+    add_menu_bar(tab_tag)
+    with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
         
-        with dpg.plot(label=f"{mode} Signals", height=400, width=-1, tag=plot_tag):
+        with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
             dpg.add_plot_legend()
             dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
             dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
@@ -323,9 +352,10 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")
     dpg.add_text(f"Total recordings: {len(signals)}", parent=tab_tag)
+    add_menu_bar(tab_tag)
     with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
 
-        with dpg.plot(label=f"{mode} Signals", height=400, width=-1, tag=plot_tag):
+        with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
             dpg.add_plot_legend()
             dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
             dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
@@ -334,15 +364,16 @@ def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             plot_td(signals,parent,tab_tag,signal_tags)
             print(signal_tags)
 
-        with dpg.group():
+        with dpg.group(parent=f"{tab_tag}_group"):
             toggleVisibility(signal_tags, tab_tag, group = f"{tab_tag}_group",user_data=window_id)
 
 def indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}")
     dpg.add_text(f"Total recordings: {len(signals)}", parent=tab_tag)
-    with dpg.group(parent=tab_tag, label = f"{tab_tag}_group"):
+    add_menu_bar(tab_tag)
+    with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
         
-        with dpg.plot(label=f"{mode} Signals", height=400, width=-1, tag=plot_tag):
+        with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
             dpg.add_plot_legend()
             dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
             dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
@@ -513,6 +544,11 @@ def create_individual_window():
 
     def open_tab_mode(sender, app_data, user_data): #create tab
         mode, window_id = user_data
+        
+        dpg.configure_item(item=f"open_file_btn_{window_id}",show=False)
+        dpg.configure_item(item=f"file_selector_{window_id}",show=False)
+        
+         
         tab_tag = f"tab_{mode}_{window_id}"
 
         if dpg.does_item_exist(tab_tag): #check if its already created
@@ -532,6 +568,8 @@ def create_individual_window():
             case 'Survey': survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
                 
             case 'Streaming': streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+                
+            case 'Indefinite': indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
         
             case 'Events': event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
             
@@ -591,7 +629,7 @@ def create_individual_window():
                 app_state['windows'][window_id]['PreviousFilePath'] = file_path
 
     with dpg.window(label=f"Window {window_id + 1}", width=400, height=300, tag=f"window_{window_id}"): #individual window 
-        dpg.add_button(label="File Selector", callback=lambda: dpg.show_item(f"file_dialog_{window_id}"))
+        dpg.add_button(label="File Selector", callback=lambda: dpg.show_item(f"file_dialog_{window_id}"), tag = f"file_selector_{window_id}")
         dpg.add_text("No file selected", tag=f"file_list_{window_id}")
         dpg.add_button(label="Open File", callback=open_file_callback,
                     tag=f"open_file_btn_{window_id}", show=False, user_data=window_id)

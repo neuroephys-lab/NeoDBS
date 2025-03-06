@@ -1,34 +1,43 @@
 import dearpygui.dearpygui as dpg
-from math import sin
 
+# Callback function for menu items
+def print_me(sender, app_data):
+    print(f"Menu item {sender} clicked!")
+
+# Initialize Dear PyGui context
 dpg.create_context()
 
-sindatax = []
-sindatay = []
-for i in range(0, 100):
-    sindatax.append(i / 100)
-    sindatay.append(0.5 + 0.5 * sin(50 * i / 100))
+# Create a global menu bar at the viewport level (top of the application window)
+with dpg.viewport_menu_bar():
+    with dpg.menu(label="File"):
+        dpg.add_menu_item(label="Save", callback=print_me)
+        dpg.add_menu_item(label="Save As", callback=print_me)
 
-with dpg.window(label="Tutorial", width=400, height=400):
-    with dpg.plot(label="Multi Axes Plot", height=400, width=-1):
-        dpg.add_plot_legend()
+# Create the main window with a menu bar inside
+with dpg.window(label="Main Window", width=800, height=600):
+    # Add a menu bar inside the main window
+    with dpg.menu_bar():
+        with dpg.menu(label="File"):
+            dpg.add_menu_item(label="Open", callback=print_me)
+            dpg.add_menu_item(label="Close", callback=print_me)
+        
+        with dpg.menu(label="Edit"):
+            dpg.add_menu_item(label="Undo", callback=print_me)
+            dpg.add_menu_item(label="Redo", callback=print_me)
+    
+    # Create a child window inside the main window
+    with dpg.child_window(label="Child Window", width=400, height=300):
+        dpg.add_text("This is a child window with no menu bar.")
+        # You can also add another menu bar inside this child window
+        with dpg.menu_bar():
+            with dpg.menu(label="Child Options"):
+                dpg.add_menu_item(label="Option 1", callback=print_me)
+                dpg.add_menu_item(label="Option 2", callback=print_me)
+    
+    dpg.add_text("This is the main window content.")
 
-        # create x axis
-        dpg.add_plot_axis(dpg.mvXAxis, label="x")
-
-        # create y axis 1
-        dpg.add_plot_axis(dpg.mvYAxis, label="y1")
-        dpg.add_line_series(sindatax, sindatay, label="y1 lines", parent=dpg.last_item())
-
-        # create y axis 2
-        dpg.add_plot_axis(dpg.mvYAxis2, label="y2")
-        dpg.add_stem_series(sindatax, sindatay, label="y2 stem", parent=dpg.last_item())
-
-        # create y axis 3
-        dpg.add_plot_axis(dpg.mvYAxis3, label="y3 scatter")
-        dpg.add_scatter_series(sindatax, sindatay, label="y3", parent=dpg.last_item())
-
-dpg.create_viewport(title='Custom Title', width=800, height=600)
+# Create the viewport and show the window
+dpg.create_viewport(title="Window with Menu Bar Example", width=800, height=600)
 dpg.setup_dearpygui()
 dpg.show_viewport()
 dpg.start_dearpygui()
