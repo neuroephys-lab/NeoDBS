@@ -200,12 +200,12 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     app_state['windows'][window_id]['Data'][tab_tag]['Signals'][side.lower()][idx] = sign
 
                     # Add the line series for each side
-                    dpg.add_line_series(x, y, label=label, parent=f"y_axis_{tab_tag}", tag=series_tag)
+                    dpg.add_line_series(x, y, label=label, parent=f"y_axis_{tab_tag}", tag=series_tag)#, fill=[1.0, 0, 0, 0.5]) --> define transparency?
                     signal_tags[series_tag] = True  # Track visibility
 
             
             mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
-            dpg.add_scatter_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag}", tag=f"{tab_tag}_mean")
+            dpg.add_shade_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag}", tag=f"{tab_tag}_mean")
             #dpg.add_theme_style(dpg.mvPlotStyleVar_MarkerSize, 2, category=dpg.mvThemeCat_Plots,parent=f"{tab_tag}_mean")
 
         types = []
