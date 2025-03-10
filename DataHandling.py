@@ -633,6 +633,7 @@ def getSignals(Data, mode):
             'Y' : raw,
             'X': time_array
         }
+        
         return dict
     
     if mode=='Setup':

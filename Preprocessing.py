@@ -89,7 +89,6 @@ def call_function2(module, func_name, *args, **kwargs):
             print("No default parameters available.")
             return None
 
-
 def call_function(module, func_name, param_dict):
     """Call a function from a module using saved parameters."""
     functions = get_functions(module)
@@ -131,7 +130,6 @@ def call_function(module, func_name, param_dict):
     except Exception as e:
         print(f"Error calling {func_name}: {e}")
         return None
-
 
 def get_required_params(module,func_name):
     functions = get_functions(module)
