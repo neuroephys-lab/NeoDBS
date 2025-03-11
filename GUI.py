@@ -15,13 +15,14 @@ def print_me(sender, app_data):
     print(f"Menu item {sender} clicked!")
 
 #--- Add common buttons
-def add_filters_buttons(tab_tag):
+def add_filters_buttons(tab_tag,signal_tags):
     if dpg.does_item_exist(tab_tag):
         with dpg.group(parent=tab_tag, horizontal=True, width=600):
-
-            with dpg.collapsing_header(label="Filters", default_open=False, parent=tab_tag):
-                dpg.add_button(label="Default Filtering",width=-1)
-                dpg.add_button(label="Custom Filtering",width=-1)
+            with dpg.collapsing_header(label="Filters", default_open=False, parent=tab_tag, tag = f"{tab_tag}_filters"):
+                dpg.add_button(label="Default Filtering",width=-1,callback=DefaultFilter, user_data=(tab_tag,signal_tags), tag = f"{tab_tag}_default_filter")
+                with dpg.tooltip(f"{tab_tag}_default_filter"):
+                    dpg.add_text("5th Order Butterworth Filter [0,100] Hz and Removal of Cardiac Component")
+                dpg.add_button(label="Custom Filtering",width=-1, callback=add_combo_filters, user_data=tab_tag)
     else:
         print(f"Tab {tab_tag} does not exist yet.")
 
@@ -64,6 +65,22 @@ def add_menu_bar(tab_tag):
                 dpg.add_button(label="Machine Learning Analysis",width=-1)
     else:
         print(f"Tab {tab_tag} does not exist yet.")
+
+def add_combo_filters(sender, app_data, user_data):
+    tab_tag = user_data
+
+    filters = ['butter','buttord','cheby1','cheb1ord','cheby2','cheb2ord','ellip',
+                               'ellipord','bessel','iirnotch','iirpeak', 'iircomb']
+    dpg.add_spacer(parent=f"{tab_tag}_filters")
+    with dpg.group(horizontal=True,parent=f"{tab_tag}_filters"):
+        dpg.add_combo(label='IIR Filters',items = filters, parent=f"{tab_tag}_filters", tag = f"{tab_tag}_combo_filters")
+        dpg.add_button(labe = 'Send',callback = printt)
+
+        def printt():
+            filter = dpg.get_value(f"{tab_tag}_combo_filters")
+            print(filter)
+
+
 
 #--- Toggle buttons
 def toggleVisibility(signal_tags, parent, group, user_data):
@@ -226,7 +243,7 @@ def plot_td(signals, parent, tab_tag, signal_tags):
     
     for idx, signal in enumerate(signals):
         x = signal['X']
-        y = signal['Y']
+        y = np.ascontiguousarray(signal['Y'])
         date = signal['Date']
         channel = signal['Channel']
         
@@ -241,6 +258,25 @@ def plot_td(signals, parent, tab_tag, signal_tags):
 
         '''dpg.add_line_series(x, y, label=f"{channel} ({date})", parent=parent, tag=series_tag)
         signal_tags[series_tag] = True  # Track visibility'''
+
+def update_plot_td(tab_tag, signal_tags, title = None):
+    active_series = getActiveSeries(signal_tags)
+    window_id = extract_window_id(tab_tag)
+    plot_tag = f"plot_{tab_tag}"
+
+    previous = dpg.get_item_label(item=plot_tag)
+    if title != None: dpg.set_item_label(item=plot_tag,label=f"{previous} - {title}")
+
+    for serie in active_series:
+        signal = getSignalbyIdx(window_id,tab_tag,serie)
+        x = signal['X']
+        y = signal['Y']
+        if dpg.does_item_exist(serie):
+            dpg.set_value(serie, [x, y])  # Update existing series data
+        else:
+            #dpg.add_line_series(x, y, label=f"{series}", parent=f"y_axis_{tab_tag}", tag=serie)
+            print('No existing series: ', serie)
+        signal_tags[serie] = True  # Track visibility
 
 #--- Extract signal/identifiers
 def extract_idx_from_series_tag(series_tag: str) -> int:
@@ -301,6 +337,11 @@ def getSignalbyIdxSide(window_id,tab_tag,series_tag):
     idx = extract_idx_from_series_tag(series_tag)
     side = extract_side_from_series_tag(series_tag)
     return app_state['windows'][window_id]['Data'][tab_tag]['Signals'][side][idx]
+
+def updateSignalbyIdx(value,tab_tag,series_tag):
+    window_id = extract_window_id(tab_tag)
+    idx = extract_idx_from_series_tag(series_tag)
+    app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx] = value
 
 def enforce_min_max(sender, app_data, user_data):
     """Ensure max is always at least 10 units greater than min, and min is never below 0."""
@@ -373,15 +414,32 @@ def cut_signals(sender,app_data,user_data):
         app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['X'] = signal['X'][min_idx:max_idx]
         app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Y'] = signal['Y'][min_idx:max_idx]
       
-def StandardFilter(tab_tag, signal_tags):
+def DefaultFilter(sender,app_data,user_data):
     '''
-    Apply standard ()
+    Standard filtration = 5th order Butterworth bandpass filter 1-100 Hz + Removal of cardiac component 
+    Remove cardiac component - Fixed peak finder method - BRAVO adapted
     '''
+    tab_tag, signal_tags = user_data
+
     active_series = getActiveSeries(signal_tags)
     window_id = extract_window_id(tab_tag)
-    for serie in active_series:
-        signal = getSignalbyIdx(window_id,tab_tag,serie)
 
+    cleaned_signals = []
+    for series in active_series:
+        idx = extract_idx_from_series_tag(series)
+        signal = getSignalbyIdx(window_id,tab_tag,series)
+        clean, _ = pre.removeCardiacComponent(signal)
+        app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Y'] = np.ascontiguousarray(clean)
+        cleaned_signals.append(clean)
+
+    title = 'Standard Filter'
+    update_plot_td(tab_tag,signal_tags, title)
+
+def CustomFilter(sender,app_data,user_data):
+    tab_tag, signal_tags = user_data
+
+    active_series = getActiveSeries(signal_tags)
+    window_id = extract_window_id(tab_tag)
 
 #--------------------------------------MODE TABS-----------------------------------------
 '''For now ONLY individual analysis'''
@@ -393,7 +451,7 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     
     #with dpg.child_window(parent=tab_tag, tag = f"{tab_tag}_child"):
 
-    add_filters_buttons(tab_tag)
+    add_filters_buttons(tab_tag,signal_tags)
 
     with dpg.group(label = f"{tab_tag}_group", parent=tab_tag, horizontal=True ):
         
@@ -443,7 +501,7 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     dpg.add_text(f"Total days: {len(signals)}", parent=tab_tag)
-    add_filters_buttons(tab_tag)
+    add_filters_buttons(tab_tag,signal_tags)
     with dpg.group(label = f"{tab_tag}_group" , parent=tab_tag, horizontal=True):
         
         with dpg.plot(label=f"{mode} Signals", height=400, width=500, tag=plot_tag):
@@ -530,7 +588,7 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     plot_td(sense, parent, tab_tag_off, signal_tags)
 
             toggleDisplay(sense, signal_tags, window_id, tab_tag)
-        add_filters_buttons(tab_tag_off)
+        add_filters_buttons(tab_tag_off,signal_tags)
         add_features_buttons(tab_tag_off)
         add_correlation_buttons(tab_tag_off)
 
@@ -552,7 +610,7 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     plot_td(calibration, parent, tab_tag_on, signal_tags)
 
             toggleDisplay(calibration, signal_tags, window_id, tab_tag)
-        add_filters_buttons(tab_tag_on)
+        add_filters_buttons(tab_tag_on,signal_tags)
         add_features_buttons(tab_tag_on)
         add_correlation_buttons(tab_tag_on)
 
@@ -576,7 +634,7 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             plot_td(signals,parent,tab_tag,signal_tags)
 
         toggleDisplay(signals, signal_tags, window_id, tab_tag)
-    add_filters_buttons(tab_tag)
+    add_filters_buttons(tab_tag,signal_tags)
     add_features_buttons(tab_tag)
     add_correlation_buttons(tab_tag)
 
@@ -600,7 +658,7 @@ def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
         toggleDisplay(signals, signal_tags, window_id, tab_tag)
             
-    add_filters_buttons(tab_tag)
+    add_filters_buttons(tab_tag,signal_tags)
     add_features_buttons(tab_tag)
     add_correlation_buttons(tab_tag)
 
@@ -624,7 +682,7 @@ def indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             dpg.add_spacer(height=10)  # Optional: Adds some spacing
             dpg.add_button(label='Segment Signal', show=True)
         
-    add_filters_buttons(tab_tag)
+    add_filters_buttons(tab_tag,signal_tags)
     add_features_buttons(tab_tag)
     add_correlation_buttons(tab_tag)
 

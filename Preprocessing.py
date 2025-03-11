@@ -3,6 +3,7 @@ import utils as utl
 import numpy as np
 from datetime import datetime, timedelta
 import inspect
+from scipy import signal, optimize
 
 #-----------------------------------------NeoDBS-------------------------------------------------
 
@@ -322,3 +323,57 @@ def rangeSelection(array, minMax, type="exclusive"):
 def removeOutlier(data, method="zscore", zlim=3):
     if method == "zscore":
         return data[rangeSelection(data, [np.mean(data)-np.std(data)*zlim,np.mean(data)+np.std(data)*zlim])]
+
+def removeCardiacComponent(raw, filterMethod="Fixed Peak Find"):
+    stream = raw['Y']
+    fs = 250
+    #Filtrar bandpass butter
+    [b,a] = signal.butter(5, np.array([1,100])*2/fs, 'bp', output='ba')
+    filtered = signal.filtfilt(b, a, stream)
+    buttered = filtered.copy()
+
+    #filterMethod = "Kurtosis"
+    PredictedSignal = signal.wiener(filtered, mysize=125)
+    filtered -= PredictedSignal
+
+    if filterMethod == "Fixed Peak Find":
+        # Cardiac Filter
+        posPeaks,_ = signal.find_peaks(filtered, prominence=[10,200], distance=fs*0.5)
+        PosCardiacVariability = np.std(np.diff(posPeaks))
+        negPeaks,_ = signal.find_peaks(-filtered, prominence=[10,200], distance=fs*0.5)
+        NegCardiacVariability = np.std(np.diff(negPeaks))
+
+        if PosCardiacVariability < NegCardiacVariability:
+            peaks = posPeaks
+        else:
+            peaks = negPeaks
+        CardiacRate = int(np.mean(np.diff(peaks)))
+
+        PrePeak = int(CardiacRate*0.25)
+        PostPeak = int(CardiacRate*0.65)
+        EKGMatrix = np.zeros((len(peaks)-2,PrePeak+PostPeak))
+        for j in range(1,len(peaks)-1):
+            if peaks[j]+PostPeak < len(filtered) and peaks[j]-PrePeak > 0:
+                EKGMatrix[j-1,:] = filtered[peaks[j]-PrePeak:peaks[j]+PostPeak]
+
+        EKGTemplate = np.mean(EKGMatrix,axis=0)
+        EKGTemplate = EKGTemplate / (np.max(EKGTemplate)-np.min(EKGTemplate))
+
+        def EKGTemplateFunc(xdata, amplitude, offset):
+            return EKGTemplate * amplitude + offset
+
+        for j in range(len(peaks)):
+            if peaks[j]-PrePeak < 0:
+                pass
+            elif peaks[j]+PostPeak >= len(filtered) :
+                pass
+            else:
+                sliceSelection = np.arange(peaks[j]-PrePeak,peaks[j]+PostPeak)
+                params, covmat = optimize.curve_fit(EKGTemplateFunc, sliceSelection, filtered[sliceSelection])
+                filtered[sliceSelection] = filtered[sliceSelection] - EKGTemplateFunc(sliceSelection, *params)
+                ecg = EKGTemplateFunc(sliceSelection, *params)
+
+        #wavelet = waveletTimeFrequency(filtered, freq=np.arange(0.5,100.5,0.5), ma=int(fs/2), fs=fs)
+        #sfft = defaultSpectrogram(stream, window=1.0, overlap=0.5, frequency_resolution=0.5, fs=fs)
+
+        return filtered, buttered
