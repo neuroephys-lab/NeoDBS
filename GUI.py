@@ -136,7 +136,7 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag):
     days = [] #by date
     for signal in signals: 
         date = signal['Date']
-        date = f"{date.hour}:{date.minute:02d}"
+        date = f"{date.hour:02d}:{date.minute:02d}"
         days.append(date)
         
     days = np.unique(days).tolist()
@@ -216,12 +216,14 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons_side", user_data=(day, window_id, tab_tag))
 
+#--- Plot functions
 def plot_td(signals, parent, tab_tag, signal_tags):
     '''
     Plot Time Domain signals (Streaming, Indefinite, Setup, Survey)
     '''
     extra =  len(signal_tags)
-
+    window_id = extract_window_id(tab_tag)
+    
     for idx, signal in enumerate(signals):
         x = signal['X']
         y = signal['Y']
@@ -233,6 +235,7 @@ def plot_td(signals, parent, tab_tag, signal_tags):
         if not dpg.does_item_exist(series_tag):
             dpg.add_line_series(x, y, label=f"{channel} ({date})", parent=parent, tag=series_tag)
             signal_tags[series_tag] = True  # Track visibility
+            app_state['windows'][window_id]['Data'][tab_tag]['Signals'].append(signal)
         else:
             print(f"Skipping duplicate series: {series_tag}")
 
@@ -241,11 +244,11 @@ def plot_td(signals, parent, tab_tag, signal_tags):
 
 #--- Extract signal/identifiers
 def extract_idx_from_series_tag(series_tag: str) -> int:
-    match = re.search(r'_series_(\d+)_', series_tag)
+    match = re.search(r'_series_(\d+)(?:_|$)', series_tag)  # Match _series_<number> with or without trailing underscore
     if match:
         return int(match.group(1))  # Extract and return the idx as an integer
     else:
-        raise ValueError("Invalid series_tag format")
+        raise ValueError(f"Invalid series_tag format: {series_tag}")
     
 def extract_side_from_series_tag(series_tag: str) -> int:
     match = re.search(r'_(left|right)$', series_tag.lower())  # Match 'left' or 'right' at the end
@@ -262,6 +265,14 @@ def extract_channel_from_series_tag(series_tag: str) -> str:
     else:
         raise ValueError("Invalid series_tag format or missing side")
 
+def extract_window_id(tab_tag: str) -> int:
+    """Extracts window_id as an integer from a tab_tag formatted as 'tab_{mode}_{window_id}'."""
+    match = re.match(r"tab_[^_]+_(\d+)$", tab_tag)  # Ensure window_id is numeric
+    if match:
+        return int(match.group(1))  # Convert extracted value to an integer
+    else:
+        raise ValueError(f"Invalid tab_tag format: {tab_tag}")
+
 def getActiveSeries(signal_tags):
     active_tags = []
 
@@ -273,6 +284,15 @@ def getActiveSeries(signal_tags):
     #print(len(active_tags) , ' + ', len(signal_tags)-len(active_tags) ,' = ', len(active_tags))
     return active_tags
 
+def getInactiveSeries(signal_tags):
+    active_tags = []
+
+    for tag, visible in signal_tags.items():
+        info = dpg.get_item_configuration(tag)
+        if info['show'] == False: 
+            active_tags.append(tag)
+    return active_tags
+
 def getSignalbyIdx(window_id,tab_tag,series_tag):
     idx = extract_idx_from_series_tag(series_tag)
     return app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]
@@ -282,45 +302,11 @@ def getSignalbyIdxSide(window_id,tab_tag,series_tag):
     side = extract_side_from_series_tag(series_tag)
     return app_state['windows'][window_id]['Data'][tab_tag]['Signals'][side][idx]
 
-def segment_signal(tab_tag, signal_tags):
-    time.sleep(0.1)
-    dpg.add_spacer(height=10)
-    dpg.add_text('SEGMENTATION: minimum of 10s')
-    dpg.add_checkbox(label='Use only visible signals:', default_value=False,show=True, tag=f"{tab_tag}_flag_signals")
-    flag = dpg.get_value(item=f"{tab_tag}_flag_signals")
-    mmax = int(dpg.get_axis_limits(axis=f"x_axis_{tab_tag}")[1])
-    with dpg.group(horizontal=True):
-        dpg.add_input_int(label='Min', tag=f"{tab_tag}_min", width=90, default_value=0, callback=enforce_min_max, user_data=(f"{tab_tag}_min", f"{tab_tag}_max"))
-        dpg.add_input_int(label='Max', tag=f"{tab_tag}_max", width=90, default_value=mmax, callback=enforce_min_max, user_data=(f"{tab_tag}_min", f"{tab_tag}_max"))
-        dpg.add_button(label='Segment Signal', show=True, callback=cut_signals,user_data=(tab_tag, flag,signal_tags))
-
-def cut_signals(sender,app_data,user_data):   
-    tab_tag, flag,signal_tags = user_data
-    min_value = dpg.get_value(f"{tab_tag}_min")
-    max_value = dpg.get_value(f"{tab_tag}_max")
-
-    min_idx = min_value * 250
-    max_idx = max_value*250
-
-    if flag == False:
-        dpg.set_value(f"{tab_tag}_all", True)  # Set the checkbox state
-        callback = dpg.get_item_callback(f"{tab_tag}_all")
-        if callback:
-            callback(f"{tab_tag}_all", True)  # Simulate a user click
-    
-    #signals = getActiveSeries(signal_tags)
-
-    dpg.set_axis_limits(axis=f"x_axis_{tab_tag}", ymin=min_value, ymax=max_value)
-    
-    
-    
-    
-
 def enforce_min_max(sender, app_data, user_data):
     """Ensure max is always at least 10 units greater than min, and min is never below 0."""
     min_tag, max_tag = user_data  # Extract tag references
     min_value = max(0, dpg.get_value(min_tag))  # Ensure min is at least 0
-    max_value = dpg.get_value(max_tag)
+    max_value = absolute_max = dpg.get_value(max_tag)
 
     if sender == min_tag:
         if min_value >= max_value - 10:  # If min is too close to max
@@ -334,10 +320,14 @@ def enforce_min_max(sender, app_data, user_data):
             max_value = 10
         elif max_value <= min_value + 10:  # Ensure min stays 10 below max
             min_value = max_value - 10
+        elif max_value > absolute_max:
+            max_value = absolute_max    
+
+
         dpg.set_value(min_tag, min_value)
         dpg.set_value(max_tag, max_value)
 
-#--- Calculate with signal
+#--- Process with signal
 def getMeanActiveSeries(window_id,tab_tag,signal_tags):
     active_tags = getActiveSeries(signal_tags)
     active_signals = []
@@ -346,6 +336,51 @@ def getMeanActiveSeries(window_id,tab_tag,signal_tags):
         active_signals.append(active)
     mean_power = pre.MeanSignal(active_signals)
     return mean_power
+
+def segment_signal(tab_tag, signal_tags):
+    time.sleep(0.1)
+    dpg.add_spacer(height=10)
+    dpg.add_text('SEGMENTATION: minimum of 10s')
+    dpg.add_checkbox(label='Use only visible signals:', default_value=False,show=True, tag=f"{tab_tag}_flag_signals")
+    mmax = int(dpg.get_axis_limits(axis=f"x_axis_{tab_tag}")[1])
+    with dpg.group(horizontal=True):
+        dpg.add_input_int(label='Min', tag=f"{tab_tag}_min", width=90, default_value=0, callback=enforce_min_max, user_data=(f"{tab_tag}_min", f"{tab_tag}_max"))
+        dpg.add_input_int(label='Max', tag=f"{tab_tag}_max", width=90, default_value=mmax, callback=enforce_min_max, user_data=(f"{tab_tag}_min", f"{tab_tag}_max"))
+        dpg.add_button(label='Segment Signal', show=True, callback=cut_signals,user_data=(tab_tag, signal_tags))
+
+def cut_signals(sender,app_data,user_data):   
+    tab_tag, signal_tags = user_data
+    window_id = extract_window_id(tab_tag)
+    active_series = getActiveSeries(signal_tags)
+    flag = dpg.get_value(item=f"{tab_tag}_flag_signals")
+    min_value = dpg.get_value(f"{tab_tag}_min")
+    max_value = dpg.get_value(f"{tab_tag}_max")
+
+    min_idx = min_value*250
+    max_idx = max_value*250
+
+    if flag == False: #Activate all signals if unchecked
+        dpg.set_value(f"{tab_tag}_all", True)  # Set the checkbox state
+        callback = dpg.get_item_callback(f"{tab_tag}_all")
+        if callback:
+            callback(f"{tab_tag}_all", True)  
+
+    #cut all active signals
+    dpg.set_axis_limits(axis=f"x_axis_{tab_tag}", ymin=min_value, ymax=max_value)
+    for serie in active_series:
+        idx = extract_idx_from_series_tag(serie)
+        signal = app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]
+        app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['X'] = signal['X'][min_idx:max_idx]
+        app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Y'] = signal['Y'][min_idx:max_idx]
+      
+def StandardFilter(tab_tag, signal_tags):
+    '''
+    Apply standard ()
+    '''
+    active_series = getActiveSeries(signal_tags)
+    window_id = extract_window_id(tab_tag)
+    for serie in active_series:
+        signal = getSignalbyIdx(window_id,tab_tag,serie)
 
 
 #--------------------------------------MODE TABS-----------------------------------------
@@ -481,7 +516,6 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         #SENSE CHANNEL TEST - STIMULATION OFF
         tab_tag_off = tab_tag + "_OFF"
         dpg.add_tab(label='Setup OFF', tag=tab_tag_off, parent=f"tab_bar_window_{window_id}", closable=True)
-        add_filters_buttons(tab_tag_off)
         with dpg.group(parent=tab_tag_off, horizontal=True):  # STIM OFF
             signal_tags = {}
             plot_tag = f"plt_{tab_tag_off}"
@@ -496,7 +530,7 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     plot_td(sense, parent, tab_tag_off, signal_tags)
 
             toggleDisplay(sense, signal_tags, window_id, tab_tag)
-
+        add_filters_buttons(tab_tag_off)
         add_features_buttons(tab_tag_off)
         add_correlation_buttons(tab_tag_off)
 
@@ -504,7 +538,6 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         #CALIBRATION TEST - STIMULATION OFF
         tab_tag_on = tab_tag + "_ON"
         dpg.add_tab(label='Setup ON', tag=tab_tag_on, parent=f"tab_bar_window_{window_id}", closable=True)
-        add_filters_buttons(tab_tag_on)
         with dpg.group(parent=tab_tag_on, horizontal=True):  # STIM ON
             signal_tags = {}
             plot_tag = f"plt_{tab_tag_on}"
@@ -519,7 +552,7 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     plot_td(calibration, parent, tab_tag_on, signal_tags)
 
             toggleDisplay(calibration, signal_tags, window_id, tab_tag)
-            
+        add_filters_buttons(tab_tag_on)
         add_features_buttons(tab_tag_on)
         add_correlation_buttons(tab_tag_on)
 
@@ -532,7 +565,6 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     dpg.add_text(f"Total recordings: {len(signals)}", parent=tab_tag)
-    add_filters_buttons(tab_tag)
     with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
         
         with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
@@ -544,20 +576,18 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             plot_td(signals,parent,tab_tag,signal_tags)
 
         toggleDisplay(signals, signal_tags, window_id, tab_tag)
-
+    add_filters_buttons(tab_tag)
     add_features_buttons(tab_tag)
     add_correlation_buttons(tab_tag)
 
 def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     dpg.add_text(f"Total recordings: {len(signals)}", parent=tab_tag)
-
     rdate = signals[0]['Date']
     dpg.add_text(f"Day: {rdate.day}/{rdate.month}/{rdate.year}", parent=tab_tag)
     channel = extract_channel_from_series_tag(signals[0]['Channel'])
     dpg.add_text(f"Channel: {channel.upper()}", parent=tab_tag)
 
-    add_filters_buttons(tab_tag)
     with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
 
         with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
@@ -570,8 +600,7 @@ def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
         toggleDisplay(signals, signal_tags, window_id, tab_tag)
             
-            
-
+    add_filters_buttons(tab_tag)
     add_features_buttons(tab_tag)
     add_correlation_buttons(tab_tag)
 
@@ -579,7 +608,6 @@ def indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     dpg.add_text(f"Total recordings: {len(signals)}", parent=tab_tag, tag = f'{tab_tag}_info')
-    add_filters_buttons(tab_tag)
     with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
         
         with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
@@ -596,7 +624,7 @@ def indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             dpg.add_spacer(height=10)  # Optional: Adds some spacing
             dpg.add_button(label='Segment Signal', show=True)
         
-
+    add_filters_buttons(tab_tag)
     add_features_buttons(tab_tag)
     add_correlation_buttons(tab_tag)
 
@@ -776,6 +804,7 @@ def create_individual_window():
         app_state['windows'][window_id]['Data'][tab_tag]= {'Signals': []}
 
         signals = DH.getSignals(Data,mode)
+
 
         plot_tag = f"plot_{tab_tag}"
         signal_tags = {}
