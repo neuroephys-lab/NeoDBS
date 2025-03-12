@@ -6,6 +6,7 @@ import utils as utl
 import Preprocessing as pre
 import time
 
+unchecked_channels = {}
 #-----------------------------------------UTILS----------------------------------------
 def show_metadata(data):
     info_electrodes = DH.info_electrodes(data)
@@ -22,7 +23,7 @@ def add_filters_buttons(tab_tag,signal_tags):
                 dpg.add_button(label="Default Filtering",width=-1,callback=DefaultFilter, user_data=(tab_tag,signal_tags), tag = f"{tab_tag}_default_filter")
                 with dpg.tooltip(f"{tab_tag}_default_filter"):
                     dpg.add_text("5th Order Butterworth Filter [0,100] Hz and Removal of Cardiac Component")
-                dpg.add_button(label="Custom Filtering",width=-1, callback=add_combo_filters, user_data=tab_tag)
+                dpg.add_button(label="Custom Filtering",width=-1, callback=add_combo_filters, user_data=(tab_tag,signal_tags))
     else:
         print(f"Tab {tab_tag} does not exist yet.")
 
@@ -67,20 +68,14 @@ def add_menu_bar(tab_tag):
         print(f"Tab {tab_tag} does not exist yet.")
 
 def add_combo_filters(sender, app_data, user_data):
-    tab_tag = user_data
+    tab_tag,signal_tags = user_data
 
     filters = ['butter','buttord','cheby1','cheb1ord','cheby2','cheb2ord','ellip',
                                'ellipord','bessel','iirnotch','iirpeak', 'iircomb']
+
     dpg.add_spacer(parent=f"{tab_tag}_filters")
     with dpg.group(horizontal=True,parent=f"{tab_tag}_filters"):
-        dpg.add_combo(label='IIR Filters',items = filters, parent=f"{tab_tag}_filters", tag = f"{tab_tag}_combo_filters")
-        dpg.add_button(labe = 'Send',callback = printt)
-
-        def printt():
-            filter = dpg.get_value(f"{tab_tag}_combo_filters")
-            print(filter)
-
-
+        dpg.add_combo(label='IIR Filters',callback = CustomFilter, user_data=(tab_tag,signal_tags),items = filters, parent=f"{tab_tag}_filters", tag = f"{tab_tag}_combo_filters",width=200)
 
 #--- Toggle buttons
 def toggleVisibility(signal_tags, parent, group, user_data):
@@ -96,7 +91,7 @@ def toggleVisibility(signal_tags, parent, group, user_data):
                 dpg.set_value(checkbox, app_data)
                 dpg.configure_item(tag, show=app_data)
 
-                if dpg.does_item_exist(f"{tab_tag}_mean"):
+                if dpg.does_item_exist(f"{tab_tag}_mean"): #only in events for now
                     mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
                     current = dpg.get_value(f"{tab_tag}_mean")
                     dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
@@ -127,26 +122,57 @@ def toggleVisibility(signal_tags, parent, group, user_data):
                                             callback=toggle_visibility, user_data=series_tag)
                 checkboxes[series_tag] = checkbox
 
+def toggleType2(signal_tags, parent, user_data):
+    type_filter, window_id, tab_tag = user_data  # Extract relevant info
+
+    # Initialize storage for this type if not already present
+    if type_filter not in unchecked_channels:
+        unchecked_channels[type_filter] = set()
+
+    with dpg.group(parent=parent):
+        # Toggle all channels matching the type
+        def toggle_filtered_series(sender, app_data):
+            for series_tag in signal_tags:
+                series_label = str(dpg.get_item_label(series_tag))
+
+                if type_filter.lower() in series_label.lower():  # Match type
+                    if app_data:  # Checking type box: Show only non-manually-unchecked
+                        if series_tag not in unchecked_channels[type_filter]:
+                            dpg.configure_item(series_tag, show=True)
+                            dpg.set_value(f"{series_tag}_checkbox", True)  # Sync checkbox
+                    else:  # Unchecking type box: Hide all
+                        dpg.configure_item(series_tag, show=False)
+                        unchecked_channels[type_filter].add(series_tag)  # Mark as manually unchecked
+                        dpg.set_value(f"{series_tag}_checkbox", False)  # Sync checkbox
+
+            # Update the mean power calculation if applicable
+            if dpg.does_item_exist(f"{tab_tag}_mean"):
+                mean_power = getMeanActiveSeries(window_id, tab_tag, signal_tags)
+                current = dpg.get_value(f"{tab_tag}_mean")
+                dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
+
+        # Add type-level checkbox
+        dpg.add_checkbox(label=f"{type_filter}", default_value=True, callback=toggle_filtered_series, tag=f"{tab_tag}_{type_filter}_checkbox")
+
 def toggleType(signal_tags, parent, user_data):
-    # `user_data` will be the type to filter by (e.g., "day", "hemisphere", "event")
     type_filter, window_id, tab_tag = user_data  # This is the type (like "day", "hemisphere", or "event")
     
     with dpg.group(parent=parent):
         # Create a checkbox to toggle all matching series at once
         def toggle_filtered_series(sender, app_data):
+            inactive_tags = getInactiveSeries(signal_tags)
             for series_tag in signal_tags:
                 series_label = str(dpg.get_item_label(series_tag))
 
                 if type_filter.lower() in series_label.lower():  # Check if the label contains the type
-                    #dpg.set_value(series_tag, app_data)  # Show/Hide based on checkbox state
-                    dpg.configure_item(series_tag, show=app_data)  # Actually toggle visibility
-
+                    dpg.configure_item(series_tag, show=app_data)
+                      
             if dpg.does_item_exist(f"{tab_tag}_mean"):
                 mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
                 current = dpg.get_value(f"{tab_tag}_mean")
                 dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
 
-        dpg.add_checkbox(label=f"{type_filter}", default_value=True, callback=toggle_filtered_series)
+        dpg.add_checkbox(label=f"{type_filter}", default_value=True, callback=toggle_filtered_series,tag = f"{tab_tag}_{type_filter}_checkbox")
 
 def toggleDisplay(signals, signal_tags, window_id, tab_tag):
 
@@ -277,6 +303,7 @@ def update_plot_td(tab_tag, signal_tags, title = None):
             #dpg.add_line_series(x, y, label=f"{series}", parent=f"y_axis_{tab_tag}", tag=serie)
             print('No existing series: ', serie)
         signal_tags[serie] = True  # Track visibility
+    dpg.set_axis_limits_auto(f"x_axis_{tab_tag}")
 
 #--- Extract signal/identifiers
 def extract_idx_from_series_tag(series_tag: str) -> int:
@@ -302,8 +329,11 @@ def extract_channel_from_series_tag(series_tag: str) -> str:
         raise ValueError("Invalid series_tag format or missing side")
 
 def extract_window_id(tab_tag: str) -> int:
-    """Extracts window_id as an integer from a tab_tag formatted as 'tab_{mode}_{window_id}'."""
-    match = re.match(r"tab_[^_]+_(\d+)$", tab_tag)  # Ensure window_id is numeric
+    """
+    Extracts window_id as an integer from a tab_tag formatted as 'tab_{mode}_{window_id}' 
+    or 'tab_{mode}_{window_id}_{suffix}'.
+    """
+    match = re.match(r"tab_[^_]+_(\d+)(?:_.+)?$", tab_tag)  # Capture window_id, ignore optional suffix
     if match:
         return int(match.group(1))  # Convert extracted value to an integer
     else:
@@ -382,7 +412,7 @@ def segment_signal(tab_tag, signal_tags):
     time.sleep(0.1)
     dpg.add_spacer(height=10)
     dpg.add_text('SEGMENTATION: minimum of 10s')
-    dpg.add_checkbox(label='Use only visible signals:', default_value=False,show=True, tag=f"{tab_tag}_flag_signals")
+    dpg.add_checkbox(label='Use only visible signals:', default_value=True,show=True, tag=f"{tab_tag}_flag_signals")
     mmax = int(dpg.get_axis_limits(axis=f"x_axis_{tab_tag}")[1])
     with dpg.group(horizontal=True):
         dpg.add_input_int(label='Min', tag=f"{tab_tag}_min", width=90, default_value=0, callback=enforce_min_max, user_data=(f"{tab_tag}_min", f"{tab_tag}_max"))
@@ -406,14 +436,17 @@ def cut_signals(sender,app_data,user_data):
         if callback:
             callback(f"{tab_tag}_all", True)  
 
-    #cut all active signals
     dpg.set_axis_limits(axis=f"x_axis_{tab_tag}", ymin=min_value, ymax=max_value)
+
     for serie in active_series:
         idx = extract_idx_from_series_tag(serie)
         signal = app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]
         app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['X'] = signal['X'][min_idx:max_idx]
         app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Y'] = signal['Y'][min_idx:max_idx]
-      
+    
+    time.sleep(0.1)
+    update_plot_td(tab_tag,signal_tags,' Segment')
+
 def DefaultFilter(sender,app_data,user_data):
     '''
     Standard filtration = 5th order Butterworth bandpass filter 1-100 Hz + Removal of cardiac component 
@@ -424,13 +457,11 @@ def DefaultFilter(sender,app_data,user_data):
     active_series = getActiveSeries(signal_tags)
     window_id = extract_window_id(tab_tag)
 
-    cleaned_signals = []
     for series in active_series:
         idx = extract_idx_from_series_tag(series)
         signal = getSignalbyIdx(window_id,tab_tag,series)
         clean, _ = pre.removeCardiacComponent(signal)
         app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Y'] = np.ascontiguousarray(clean)
-        cleaned_signals.append(clean)
 
     title = 'Standard Filter'
     update_plot_td(tab_tag,signal_tags, title)
@@ -438,8 +469,74 @@ def DefaultFilter(sender,app_data,user_data):
 def CustomFilter(sender,app_data,user_data):
     tab_tag, signal_tags = user_data
 
-    active_series = getActiveSeries(signal_tags)
     window_id = extract_window_id(tab_tag)
+
+    param_container = dpg.add_child_window(parent=f"{tab_tag}_filters", width=200, height=300)  # Space to add inputs dynamically
+    parameter_values = {}
+    input_fields = {}
+    
+    def create_input_fields(sender, app_data):
+
+        
+        """Dynamically create input fields for selected function."""
+        #global parameter_values, input_fields
+        
+        dpg.delete_item(param_container, children_only=True)  # Clear previous inputs
+        params = pre.get_required_params(app_data)
+        
+        if not params:
+            dpg.add_text("No parameters found", parent=param_container)
+            return
+        dpg.add_text("Required parameters: ", parent=param_container)
+        parameter_values.clear()  # Reset parameter storage
+        input_fields.clear()  # Reset input field storage
+
+        for param, default in params.items():
+            if param == 'fs': default = 250
+
+            input_id = dpg.add_input_text(
+                label=param, 
+                default_value=str(default) if default is not None else "",
+                parent=param_container
+            )
+            input_fields[param] = input_id  # Store input field reference
+
+        # Add save button
+        dpg.add_button(label="Save Parameters", callback=save_parameters, parent=param_container, user_data = app_data)
+
+    def save_parameters(sender, app_data, user_data):
+        """Saves input values to the dictionary and prints them."""
+        parameter_values.clear()  # Reset before saving
+
+        for param, input_id in input_fields.items():
+            value = dpg.get_value(input_id)
+            parameter_values[param] = value
+
+        if not dpg.does_item_exist(f"{tab_tag}_plot_filtered"): 
+            dpg.add_button(label="Plot filtered signal", callback=apply_filt, parent=param_container, user_data=user_data, tag=f"{tab_tag}_plot_filtered")
+            
+    def apply_filt(sender, app_data, user_data):
+        func = user_data
+        print(func)
+        tags = getActiveSeries(signal_tags)
+        
+        # Assuming call_function takes the filter function and the user-provided parameters
+        args = pre.call_function(func, parameter_values)
+
+        for tag in tags:
+            stream = getSignalbyIdx(window_id,tab_tag,tag)
+            idx = extract_idx_from_series_tag(tag)
+            x = stream['X']
+            y = stream['Y']
+            filtered = pre.call_function2('filtfilt', *args, y)
+            app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Y'] = np.ascontiguousarray(filtered)
+
+        title = f'Custom Filter: {func}'
+        update_plot_td(tab_tag,signal_tags, title)
+
+    create_input_fields(sender,app_data)
+
+
 
 #--------------------------------------MODE TABS-----------------------------------------
 '''For now ONLY individual analysis'''
@@ -449,10 +546,6 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)   
     dpg.add_text(f"Total events: {len(signals)}", parent=tab_tag, label = f"{tab_tag}_text_recordings")
     
-    #with dpg.child_window(parent=tab_tag, tag = f"{tab_tag}_child"):
-
-    add_filters_buttons(tab_tag,signal_tags)
-
     with dpg.group(label = f"{tab_tag}_group", parent=tab_tag, horizontal=True ):
         
         with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
@@ -501,7 +594,6 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     dpg.add_text(f"Total days: {len(signals)}", parent=tab_tag)
-    add_filters_buttons(tab_tag,signal_tags)
     with dpg.group(label = f"{tab_tag}_group" , parent=tab_tag, horizontal=True):
         
         with dpg.plot(label=f"{mode} Signals", height=400, width=500, tag=plot_tag):
@@ -960,7 +1052,7 @@ with dpg.theme(tag="mean_plot_theme"):
         dpg.add_theme_style(dpg.mvPlotStyleVar_Marker, dpg.mvPlotMarker_Square, category=dpg.mvThemeCat_Plots)
         dpg.add_theme_style(dpg.mvPlotStyleVar_MarkerSize, 2, category=dpg.mvThemeCat_Plots)
 
-with dpg.window(label="Main Window", width=300, height=150, tag="Main"): #Main Window
+with dpg.window(label="NeoDBS", width=300, height=150, tag="Main"): #Main Window
     dpg.add_button(label="Individual Analysis", callback=create_individual_window)
     dpg.add_button(label="Combined Analysis", callback=create_multiple_window)
 

@@ -3,7 +3,8 @@ import utils as utl
 import numpy as np
 from datetime import datetime, timedelta
 import inspect
-from scipy import signal, optimize
+from scipy import optimize
+from scipy import signal as ss
 
 #-----------------------------------------NeoDBS-------------------------------------------------
 
@@ -15,13 +16,18 @@ iir_filter_design_functions = ['butter','buttord','cheby1','cheb1ord','cheby2','
                                'ellipord','bessel','iirnotch','iirpeak', 'iircomb']
 
 
-def get_functions(module):
-    """Retrieve all callable functions from a module."""
+def get_functions(module = ss):
 
-    functions = {name: obj for name, obj in inspect.getmembers(module, inspect.isfunction)}
+    """Retrieve all callable functions from a module, handling errors gracefully."""
+    functions = {}
+    for name, obj in inspect.getmembers(module, inspect.isfunction):
+        try:
+            functions[name] = obj  # Attempt to retrieve function
+        except Exception as e:
+            print(f"Skipping function {name} due to error: {e}")
     return functions
 
-def dict_to_arg(param_dict, module, func_name):
+def dict_to_arg(param_dict, func_name, module = ss):
     # Convert saved parameters (strings) into appropriate types
     required_params = get_required_params(module,func_name)
 
@@ -36,9 +42,10 @@ def dict_to_arg(param_dict, module, func_name):
                 converted_params[key] = value  # Keep as string if eval fails
     return converted_params
 
-def call_function2(module, func_name, *args, **kwargs):
+def call_function2(func_name, *args, **kwargs):
     """Call a function from a module by name, print its documentation, and handle exceptions."""
-    functions = get_functions(module)
+    module = ss
+    functions = get_functions()
     
     if func_name not in functions:
         print(f"Function '{func_name}' not found in {module.__name__}")
@@ -46,11 +53,7 @@ def call_function2(module, func_name, *args, **kwargs):
 
     func = functions[func_name]
 
-    # Print function documentation
-    print(f"\nDocumentation for '{func_name}':\n")
-    #print(func.__doc__ if func.__doc__ else "No documentation available.")
-    print("\n" + "="*80 + "\n")
-
+    
     # Get function signature
     sig = inspect.signature(func)
     
@@ -90,13 +93,18 @@ def call_function2(module, func_name, *args, **kwargs):
             print("No default parameters available.")
             return None
 
-def call_function(module, func_name, param_dict):
+def call_function(func_name, param_dict, module = ss):
     """Call a function from a module using saved parameters."""
     functions = get_functions(module)
     
     if func_name not in functions:
         print(f"Function '{func_name}' not found in {module.__name__}")
         return None
+    '''
+    # Print function documentation
+    print(f"\nDocumentation for '{func_name}':\n")
+    print(func.__doc__ if func.__doc__ else "No documentation available.")
+    print("\n" + "="*80 + "\n")'''
 
     func = functions[func_name]
     sig = inspect.signature(func)
@@ -132,7 +140,9 @@ def call_function(module, func_name, param_dict):
         print(f"Error calling {func_name}: {e}")
         return None
 
-def get_required_params(module,func_name):
+def get_required_params(func_name, module = ss):
+
+    
     functions = get_functions(module)
     
     if func_name not in functions:
@@ -152,7 +162,7 @@ def get_required_params(module,func_name):
 
     return required_params
 
-def get_default_kwargs(module,func_name):
+def get_default_kwargs(func_name,module = ss):
 
     functions = get_functions(module)
     
@@ -328,50 +338,56 @@ def removeCardiacComponent(raw, filterMethod="Fixed Peak Find"):
     stream = raw['Y']
     fs = 250
     #Filtrar bandpass butter
-    [b,a] = signal.butter(5, np.array([1,100])*2/fs, 'bp', output='ba')
-    filtered = signal.filtfilt(b, a, stream)
+    [b,a] = ss.butter(5, np.array([1,100])*2/fs, 'bp', output='ba')
+    filtered = ss.filtfilt(b, a, stream)
     buttered = filtered.copy()
 
     #filterMethod = "Kurtosis"
-    PredictedSignal = signal.wiener(filtered, mysize=125)
+    PredictedSignal = ss.wiener(filtered, mysize=125)
     filtered -= PredictedSignal
 
     if filterMethod == "Fixed Peak Find":
         # Cardiac Filter
-        posPeaks,_ = signal.find_peaks(filtered, prominence=[10,200], distance=fs*0.5)
+        peaks = []
+        posPeaks,_ = ss.find_peaks(filtered, prominence=[10,200], distance=fs*0.5)
         PosCardiacVariability = np.std(np.diff(posPeaks))
-        negPeaks,_ = signal.find_peaks(-filtered, prominence=[10,200], distance=fs*0.5)
+        negPeaks,_ = ss.find_peaks(-filtered, prominence=[10,200], distance=fs*0.5)
         NegCardiacVariability = np.std(np.diff(negPeaks))
 
         if PosCardiacVariability < NegCardiacVariability:
             peaks = posPeaks
         else:
             peaks = negPeaks
-        CardiacRate = int(np.mean(np.diff(peaks)))
 
-        PrePeak = int(CardiacRate*0.25)
-        PostPeak = int(CardiacRate*0.65)
-        EKGMatrix = np.zeros((len(peaks)-2,PrePeak+PostPeak))
-        for j in range(1,len(peaks)-1):
-            if peaks[j]+PostPeak < len(filtered) and peaks[j]-PrePeak > 0:
-                EKGMatrix[j-1,:] = filtered[peaks[j]-PrePeak:peaks[j]+PostPeak]
+        if len(peaks) != 0:
+            CardiacRate = int(np.mean(np.diff(peaks)))
 
-        EKGTemplate = np.mean(EKGMatrix,axis=0)
-        EKGTemplate = EKGTemplate / (np.max(EKGTemplate)-np.min(EKGTemplate))
+            PrePeak = int(CardiacRate*0.25)
+            PostPeak = int(CardiacRate*0.65)
+            EKGMatrix = np.zeros((len(peaks)-2,PrePeak+PostPeak))
+            for j in range(1,len(peaks)-1):
+                if peaks[j]+PostPeak < len(filtered) and peaks[j]-PrePeak > 0:
+                    EKGMatrix[j-1,:] = filtered[peaks[j]-PrePeak:peaks[j]+PostPeak]
 
-        def EKGTemplateFunc(xdata, amplitude, offset):
-            return EKGTemplate * amplitude + offset
+            EKGTemplate = np.mean(EKGMatrix,axis=0)
+            EKGTemplate = EKGTemplate / (np.max(EKGTemplate)-np.min(EKGTemplate))
 
-        for j in range(len(peaks)):
-            if peaks[j]-PrePeak < 0:
-                pass
-            elif peaks[j]+PostPeak >= len(filtered) :
-                pass
-            else:
-                sliceSelection = np.arange(peaks[j]-PrePeak,peaks[j]+PostPeak)
-                params, covmat = optimize.curve_fit(EKGTemplateFunc, sliceSelection, filtered[sliceSelection])
-                filtered[sliceSelection] = filtered[sliceSelection] - EKGTemplateFunc(sliceSelection, *params)
-                ecg = EKGTemplateFunc(sliceSelection, *params)
+            def EKGTemplateFunc(xdata, amplitude, offset):
+                return EKGTemplate * amplitude + offset
+
+            for j in range(len(peaks)):
+                if peaks[j]-PrePeak < 0:
+                    pass
+                elif peaks[j]+PostPeak >= len(filtered) :
+                    pass
+                else:
+                    sliceSelection = np.arange(peaks[j]-PrePeak,peaks[j]+PostPeak)
+                    params, covmat = optimize.curve_fit(EKGTemplateFunc, sliceSelection, filtered[sliceSelection])
+                    filtered[sliceSelection] = filtered[sliceSelection] - EKGTemplateFunc(sliceSelection, *params)
+                    ecg = EKGTemplateFunc(sliceSelection, *params)
+
+        else:
+            print('No cardiac component identified')
 
         #wavelet = waveletTimeFrequency(filtered, freq=np.arange(0.5,100.5,0.5), ma=int(fs/2), fs=fs)
         #sfft = defaultSpectrogram(stream, window=1.0, overlap=0.5, frequency_resolution=0.5, fs=fs)

@@ -1,101 +1,87 @@
-import dearpygui.dearpygui as dpg
-import Preprocessing as pre
-import scipy.signal as ss
 import DataHandling as DH
+import dearpygui.dearpygui as dpg
 import numpy as np
 
-file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-10-14\\Report_Json_Session_Report_20241125T162143.json"
+file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-12-05\\Report_Json_Session_Report_20250212T121745.json"
 Data = DH.getData(file_path)
-stream = DH.getSignals(Data, 'Streaming')[0]
-
-iir_filter_design_functions = ['butter','buttord','cheby1','cheb1ord','cheby2','cheb2ord','ellip',
-                               'ellipord','bessel','iirnotch','iirpeak', 'iircomb']
-
-'''all_functions = pre.get_functions(ss)
-iir_filter_design_functions = list(all_functions.keys())
-'''
-# Dictionary to store user inputs
-parameter_values = {}
-input_fields = {}  # Store input field IDs
+events = DH.getSignals(Data, 'Events')
 
 
 dpg.create_context()
 
-with dpg.window(label="IIR Filter Designer", width=600, height=500):
-    dpg.add_text("Select a filter function:")
-    param_container = dpg.add_child_window(width=-1, height=300)  # Space to add inputs dynamically
+hover_text = dpg.generate_uuid()  # Unique ID for tooltip text
+tooltip_window = dpg.generate_uuid()  # Unique ID for tooltip window
 
-    def create_input_fields(sender, app_data):
-        """Dynamically create input fields for selected function."""
-        global parameter_values, input_fields
-        
-        dpg.delete_item(param_container, children_only=True)  # Clear previous inputs
-        params = pre.get_required_params(ss, app_data)
-        
-        if not params:
-            dpg.add_text("No parameters found", parent=param_container)
-            return
-        dpg.add_text("Required parameters: ", parent=param_container)
-        parameter_values.clear()  # Reset parameter storage
-        input_fields.clear()  # Reset input field storage
+def check_hover(sender, app_data):
+    """Detects if the cursor is near a peak and updates the tooltip."""
+    mouse_x, mouse_y = dpg.get_mouse_pos(local=False)  # Get absolute mouse position
 
-        for param, default in params.items():
-            input_id = dpg.add_input_text(
-                label=param, 
-                default_value=str(default) if default is not None else "",
-                parent=param_container
-            )
-            input_fields[param] = input_id  # Store input field reference
+    for event in events:
+        for side in ["Left", "Right"]:
+            stream = event[side]
+            peak_idx = np.argmax(stream["Y"])  # Find peak index
+            peak_f = stream["X"][peak_idx]  # Frequency at peak
+            peak_power = stream["Y"][peak_idx]  # Power at peak
 
-        # Add save button
-        dpg.add_button(label="Save Parameters", callback=save_parameters, parent=param_container, user_data = app_data)
+            # Convert data point to screen space
+            peak_pos = dpg.get_plot_mouse_pos()  # Get mouse pos relative to plot
+            plot_x, plot_y = peak_pos[0], peak_pos[1]
 
-    def save_parameters(sender, app_data, user_data):
-        """Saves input values to the dictionary and prints them."""
-        global parameter_values
-        parameter_values.clear()  # Reset before saving
+            # Check if mouse is close to peak
+            if abs(plot_x - peak_f) < 3 and abs(plot_y - peak_power) < 3:
+                dpg.set_value(hover_text, f"Peak Power: {peak_power:.2f} dB\nFrequency: {peak_f:.2f} Hz")
+                dpg.configure_item(tooltip_window, show=True)
+                dpg.set_item_pos(tooltip_window, mouse_x + 10, mouse_y + 10)  # Move tooltip to cursor
+                return
 
-        for param, input_id in input_fields.items():
-            value = dpg.get_value(input_id)
-            parameter_values[param] = value
+    dpg.configure_item(tooltip_window, show=False)  # Hide if not hovering a peak
 
-        print("Saved Parameters:", parameter_values)
-        dpg.add_button(label="Plot filtered signal", callback=apply_filt, parent=param_container, user_data=user_data)
+# Create the plot
+with dpg.window(label="Tutorial", tag="plot_window"):
+    with dpg.plot(label="Events", height=-1, width=-1):
+        dpg.add_plot_legend()
+        dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag="x_axis")
+        dpg.add_plot_axis(dpg.mvYAxis, label="Power (dB)", tag="y_axis")
 
-    def apply_filt(sender, app_data, user_data):
-        func = user_data
-        print(func)
-        
-        # Assuming call_function takes the filter function and the user-provided parameters
-        args = pre.call_function(ss, func, parameter_values)
-        x = stream['X']
-        y = stream['Y']
+        for event in events:
+            for side in ["Left", "Right"]:
+                stream = event[side]
+                peak_idx = np.argmax(stream["Y"])
+                peak_f = stream["X"][peak_idx]
+                peak_power = stream["Y"][peak_idx]
 
-        filtered = pre.call_function2(ss, 'filtfilt', *args, y)
+                dpg.add_line_series(stream["X"], stream["Y"], label=f"{event['EventName']} {side}", parent="y_axis")
+                dpg.add_scatter_series([peak_f], [peak_power], label=f"{side} Peak", parent="y_axis")
 
-        # Use the main thread for plotting
-        plot_filtered_signal(x, y, filtered)
+# Tooltip (hidden by default)
+with dpg.window(label="Peak Info", show=False, tag=tooltip_window, no_title_bar=True, no_resize=True, no_move=True):
+    dpg.add_text("", tag=hover_text)
 
-    def plot_filtered_signal(x, y, filtered):
-        with dpg.plot(label=f"Signals", height=400, width=600, parent =param_container ):
-            dpg.add_plot_legend()
-            dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag="x_axis")
-            dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (dB)", tag="y_axis")
-            print(f"{len(x)} | {len(y)} | {len(filtered)}")
-            dpg.add_line_series(x, y, label="Raw", parent="y_axis")
-            dpg.add_line_series(x, np.ascontiguousarray(filtered), label=f"Filtered", parent="y_axis")
+# Add a mouse move handler to check hover dynamically
+with dpg.handler_registry():
+    dpg.add_mouse_move_handler(callback=check_hover)
 
-            
-    # Dropdown list for filters
-    dpg.add_listbox(
-        items=iir_filter_design_functions, 
-        label="Filters", 
-        callback=create_input_fields
-    )
-
-dpg.create_viewport(title='Temporario', width=800, height=600)
+dpg.create_viewport(title="FEATURES", width=800, height=600)
 dpg.setup_dearpygui()
 dpg.show_viewport()
 dpg.start_dearpygui()
 dpg.destroy_context()
 
+'''dpg.create_context()
+
+with dpg.window(label="Tutorial"):
+    # create plot
+    with dpg.plot(label="Events", height=400, width=400):
+        # optionally create legend
+        dpg.add_plot_legend()
+
+        # REQUIRED: create x and y axes
+        dpg.add_plot_axis(dpg.mvXAxis, label="x")
+        dpg.add_plot_axis(dpg.mvYAxis, label="y", tag="y_axis")
+
+
+dpg.create_viewport(title='FEATURES', width=800, height=600)
+dpg.setup_dearpygui()
+dpg.show_viewport()
+dpg.start_dearpygui()
+dpg.destroy_context()'''
