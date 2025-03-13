@@ -4,6 +4,7 @@ import re
 import DataHandling as DH # type: ignore
 import utils as utl
 import Preprocessing as pre
+import Features as ft
 import time
 
 unchecked_channels = {}
@@ -259,6 +260,10 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons_side", user_data=(day, window_id, tab_tag))
 
+        dpg.add_button(label='Normalize',callback=NormalizePowerSeries, user_data=(signal_tags,tab_tag),parent=f"{tab_tag}_buttons")
+        
+          
+
 #--- Plot functions
 def plot_td(signals, parent, tab_tag, signal_tags):
     '''
@@ -304,6 +309,27 @@ def update_plot_td(tab_tag, signal_tags, title = None):
             print('No existing series: ', serie)
         signal_tags[serie] = True  # Track visibility
     dpg.set_axis_limits_auto(f"x_axis_{tab_tag}")
+
+def update_plot_fd(tab_tag, signal_tags, title = None):
+    active_series = getActiveSeries(signal_tags)
+    window_id = extract_window_id(tab_tag)
+    plot_tag = f"plot_{tab_tag}"
+
+    previous = dpg.get_item_label(item=plot_tag)
+    if title != None: dpg.set_item_label(item=plot_tag,label=f"{previous} - {title}")
+
+    for serie in active_series:
+        signal = getSignalbyIdxSide(window_id,tab_tag,serie)
+        x = signal['X']
+        y = signal['Y']
+        if dpg.does_item_exist(serie):
+            dpg.set_value(serie, [x, y])  # Update existing series data
+        else:
+            #dpg.add_line_series(x, y, label=f"{series}", parent=f"y_axis_{tab_tag}", tag=serie)
+            print('No existing series: ', serie)
+        signal_tags[serie] = True  # Track visibility
+    dpg.set_axis_limits_auto(f"x_axis_{tab_tag}")
+    dpg.set_axis_limits_auto(f"y_axis_{tab_tag}")
 
 #--- Extract signal/identifiers
 def extract_idx_from_series_tag(series_tag: str) -> int:
@@ -536,6 +562,23 @@ def CustomFilter(sender,app_data,user_data):
 
     create_input_fields(sender,app_data)
 
+def NormalizePowerSeries(sender,app_data,user_data):
+    signal_tags,tab_tag = user_data
+    series = getActiveSeries(signal_tags)
+    window_id = extract_window_id(tab_tag)
+    for serie in series:
+        idx = extract_idx_from_series_tag(serie)
+        side = extract_side_from_series_tag(serie)
+        norm = pre.log_normalization_db(app_state['windows'][window_id]['Data'][tab_tag]['Signals'][side][idx])
+        app_state['windows'][window_id]['Data'][tab_tag]['Signals'][side][idx]['Y'] = norm
+
+    time.sleep(0.1)
+    update_plot_fd(tab_tag,signal_tags,'Log Normalized')
+
+    if dpg.does_item_exist(f"{tab_tag}_mean"):
+        mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+        current = dpg.get_value(f"{tab_tag}_mean")
+        dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
 
 
 #--------------------------------------MODE TABS-----------------------------------------
@@ -574,20 +617,13 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     # Add the line series for each side
                     dpg.add_line_series(x, y, label=label, parent=f"y_axis_{tab_tag}", tag=series_tag)#, fill=[1.0, 0, 0, 0.5]) --> define transparency?
                     signal_tags[series_tag] = True  # Track visibility
-
             
             mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
             dpg.add_scatter_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag}", tag=f"{tab_tag}_mean")
             #dpg.add_theme_style(dpg.mvPlotStyleVar_MarkerSize, 2, category=dpg.mvThemeCat_Plots,parent=f"{tab_tag}_mean")
 
         toggleDisplay2(signals,signal_tags,window_id,tab_tag)
-
-            
-        '''Se quiser atualizar o texto (?)'''
-        #active = getActiveSeries(signal_tags)
-        #print(active)
-        #dpg.set_value(item=f"{tab_tag}_text_recordings", value=f"Total events: {len(active)}")
-
+          
     add_features_buttons(tab_tag)
     add_correlation_buttons(tab_tag)  
 
@@ -653,6 +689,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     dpg.add_text('By hemisphere: ')
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag)) #check hemisphere
+            #dpg.add_button(label='Normalize',callback=NormalizePowerSeries, user_data=(signal_tags,tab_tag),parent=f"{tab_tag}_buttons")
 
             
     
@@ -940,8 +977,7 @@ def create_individual_window():
         
         dpg.configure_item(item=f"open_file_btn_{window_id}",show=False)
         dpg.configure_item(item=f"file_selector_{window_id}",show=False)
-        
-         
+
         tab_tag = f"tab_{mode}_{window_id}"
 
         if dpg.does_item_exist(tab_tag): #check if its already created
@@ -954,7 +990,6 @@ def create_individual_window():
         app_state['windows'][window_id]['Data'][tab_tag]= {'Signals': []}
 
         signals = DH.getSignals(Data,mode)
-
 
         plot_tag = f"plot_{tab_tag}"
         signal_tags = {}
@@ -972,7 +1007,7 @@ def create_individual_window():
             
             case 'Timeline': timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
 
-        dpg.set_item_width(item=f"window_{window_id}",width=1000)
+        dpg.set_item_width(item=f"window_{window_id}",width=800)
         dpg.set_item_height(item=f"window_{window_id}",height=600)
                
     def open_file_callback(sender, app_data, user_data): #open file
