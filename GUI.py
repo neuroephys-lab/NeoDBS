@@ -21,19 +21,22 @@ def add_filters_buttons(tab_tag,signal_tags):
     if dpg.does_item_exist(tab_tag):
         with dpg.group(parent=tab_tag, horizontal=True, width=600):
             with dpg.collapsing_header(label="Filters", default_open=False, parent=tab_tag, tag = f"{tab_tag}_filters"):
-                dpg.add_button(label="Default Filtering",width=-1,callback=DefaultFilter, user_data=(tab_tag,signal_tags), tag = f"{tab_tag}_default_filter")
+                with dpg.group(horizontal=True):
+                    dpg.add_input_intx(label='Frequencies',size=2,min_value=1,max_value=100,default_value=[0,100], max_clamped=True, min_clamped=True, tag = f"{tab_tag}_default_wn")
+                    dpg.add_button(label="Default Filtering",callback=DefaultFilter, user_data=(tab_tag,signal_tags), tag = f"{tab_tag}_default_filter")
+
                 with dpg.tooltip(f"{tab_tag}_default_filter"):
-                    dpg.add_text("5th Order Butterworth Filter [0,100] Hz and Removal of Cardiac Component")
+                    dpg.add_text("5th Order Butterworth Filter and Removal of Cardiac Component")
                 dpg.add_button(label="Custom Filtering",width=-1, callback=add_combo_filters, user_data=(tab_tag,signal_tags))
     else:
         print(f"Tab {tab_tag} does not exist yet.")
 
-def add_features_buttons(tab_tag):
+def add_features_buttons(tab_tag, signal_tags):
     if dpg.does_item_exist(tab_tag):
-        with dpg.group(parent=tab_tag, horizontal=True, width=600):
+        with dpg.group(parent=tab_tag, horizontal=True, width=600,tag=f"{tab_tag}_features_group"):
             # "Features" menu simulation
-            with dpg.collapsing_header(label="Features", default_open=False, parent=tab_tag):
-                dpg.add_button(label="Default Feature Extraction",width=-1)
+            with dpg.collapsing_header(label="Features", default_open=False, parent=tab_tag,tag = f"{tab_tag}_default_features"):
+                dpg.add_button(label="Default Feature Extraction",width=-1,callback=DefaultFeatures,user_data=(tab_tag,signal_tags))
                 dpg.add_button(label="Personalized Feature Extraction",width=-1)
     else:
         print(f"Tab {tab_tag} does not exist yet.")
@@ -71,8 +74,8 @@ def add_menu_bar(tab_tag):
 def add_combo_filters(sender, app_data, user_data):
     tab_tag,signal_tags = user_data
 
-    filters = ['butter','buttord','cheby1','cheb1ord','cheby2','cheb2ord','ellip',
-                               'ellipord','bessel','iirnotch','iirpeak', 'iircomb']
+    filters = ['butter','cheby1','cheby2','ellip',
+                'bessel','iirnotch','iirpeak', 'iircomb']
 
     dpg.add_spacer(parent=f"{tab_tag}_filters")
     with dpg.group(horizontal=True,parent=f"{tab_tag}_filters"):
@@ -262,7 +265,6 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
 
         dpg.add_button(label='Normalize',callback=NormalizePowerSeries, user_data=(signal_tags,tab_tag),parent=f"{tab_tag}_buttons")
         
-          
 
 #--- Plot functions
 def plot_td(signals, parent, tab_tag, signal_tags):
@@ -365,6 +367,17 @@ def extract_window_id(tab_tag: str) -> int:
     else:
         raise ValueError(f"Invalid tab_tag format: {tab_tag}")
 
+def extract_mode(tab_tag: str) -> str:
+    """
+    Extracts the mode from a tab_tag formatted as 'tab_{mode}_{window_id}' 
+    or 'tab_{mode}_{window_id}_{suffix}'.
+    """
+    match = re.match(r"tab_([^_]+)_\d+(?:_.+)?$", tab_tag)  # Capture mode, ignore optional suffix
+    if match:
+        return match.group(1)  # Return the extracted mode
+    else:
+        raise ValueError(f"Invalid tab_tag format: {tab_tag}")
+
 def getActiveSeries(signal_tags):
     active_tags = []
 
@@ -384,6 +397,25 @@ def getInactiveSeries(signal_tags):
         if info['show'] == False: 
             active_tags.append(tag)
     return active_tags
+
+def getActiveSignals(tab_tag,signal_tags):
+    window_id = extract_window_id(tab_tag)
+    active_series = getActiveSeries(signal_tags)
+    signals = []
+    for serie in active_series:
+        try:
+            signal = getSignalbyIdx(window_id, tab_tag, serie)
+            if signal is None:  # If `getSignalbyIdx` returns None
+                signal = getSignalbyIdxSide(window_id, tab_tag, serie)
+        except KeyError:  # Catch missing key issues
+            signal = getSignalbyIdxSide(window_id, tab_tag, serie)
+        except Exception as e:  # Catch any other unexpected error
+            print(f"Unexpected error for {tab_tag}, {serie}: {e}")
+            signal = None  # Handle gracefully
+
+        signals.append(signal)
+
+    return signals
 
 def getSignalbyIdx(window_id,tab_tag,series_tag):
     idx = extract_idx_from_series_tag(series_tag)
@@ -483,10 +515,12 @@ def DefaultFilter(sender,app_data,user_data):
     active_series = getActiveSeries(signal_tags)
     window_id = extract_window_id(tab_tag)
 
+    band = dpg.get_value(item=f"{tab_tag}_default_wn")[:2]
+
     for series in active_series:
         idx = extract_idx_from_series_tag(series)
         signal = getSignalbyIdx(window_id,tab_tag,series)
-        clean, _ = pre.removeCardiacComponent(signal)
+        clean, _ = pre.removeCardiacComponent(signal, band)
         app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Y'] = np.ascontiguousarray(clean)
 
     title = 'Standard Filter'
@@ -535,8 +569,15 @@ def CustomFilter(sender,app_data,user_data):
         parameter_values.clear()  # Reset before saving
 
         for param, input_id in input_fields.items():
-            value = dpg.get_value(input_id)
-            parameter_values[param] = value
+            values = dpg.get_value(input_id)
+            if values is str and ',' in values:
+                try:
+                    # Split the string at the comma and convert each part to a float
+                    values = np.array([float(val) for val in values.split(',')])
+                except ValueError:
+                    print(f"Invalid input for parameter {param}. Please enter valid numbers separated by commas.")
+                    return  # If parsing fails, exit early
+            parameter_values[param] = values
 
         if not dpg.does_item_exist(f"{tab_tag}_plot_filtered"): 
             dpg.add_button(label="Plot filtered signal", callback=apply_filt, parent=param_container, user_data=user_data, tag=f"{tab_tag}_plot_filtered")
@@ -548,6 +589,8 @@ def CustomFilter(sender,app_data,user_data):
         
         # Assuming call_function takes the filter function and the user-provided parameters
         args = pre.call_function(func, parameter_values)
+
+        
 
         for tag in tags:
             stream = getSignalbyIdx(window_id,tab_tag,tag)
@@ -579,6 +622,39 @@ def NormalizePowerSeries(sender,app_data,user_data):
         mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
         current = dpg.get_value(f"{tab_tag}_mean")
         dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
+
+def DefaultFeatures(sender, app_data, user_data):
+    tab_tag, signal_tags = user_data
+    mode = extract_mode(tab_tag)
+
+    if mode == 'Events':
+        power = getActiveSignals(tab_tag, signal_tags)
+        features = ft.mean_power_all_bands(power)
+
+        with dpg.group(parent=f"{tab_tag}_default_features"):
+            
+            with dpg.group(width=-1, horizontal=True):
+                # Define the table tag
+                table_tag = f"{tab_tag}_features_table"
+
+                # If the table doesn't exist, create it with initial columns
+                if not dpg.does_item_exist(table_tag):
+                    with dpg.table(header_row=True, borders_innerH=True, borders_innerV=True, borders_outerH=True, borders_outerV=True, tag=table_tag):
+                        dpg.add_table_column(label="Trial", width=100)                          
+                        for band in features.keys():
+                            dpg.add_table_column(label=band, width=100)
+
+                        with dpg.table_row():
+                            dpg.add_input_text(default_value="Start Trial")
+                            for band, value in features.items():
+                                dpg.add_text(f"{value:.2f}")
+
+                else:
+                    
+                    with dpg.table_row(parent=table_tag):
+                        dpg.add_input_text(default_value="New Trial")                          
+                        for band, value in features.items():
+                            dpg.add_text(f"{value:.2f}")
 
 
 #--------------------------------------MODE TABS-----------------------------------------
@@ -624,7 +700,7 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
         toggleDisplay2(signals,signal_tags,window_id,tab_tag)
           
-    add_features_buttons(tab_tag)
+    add_features_buttons(tab_tag, signal_tags)
     add_correlation_buttons(tab_tag)  
 
 def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
@@ -693,7 +769,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
             
     
-    add_features_buttons(tab_tag)
+    add_features_buttons(tab_tag, signal_tags)
     add_correlation_buttons(tab_tag)
 
 def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
@@ -702,10 +778,12 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     def setup_off_tab():
         #SENSE CHANNEL TEST - STIMULATION OFF
         tab_tag_off = tab_tag + "_OFF"
+        app_state['windows'][window_id]['Data'][tab_tag_off]= {'Signals': []}
+
         dpg.add_tab(label='Setup OFF', tag=tab_tag_off, parent=f"tab_bar_window_{window_id}", closable=True)
         with dpg.group(parent=tab_tag_off, horizontal=True):  # STIM OFF
             signal_tags = {}
-            plot_tag = f"plt_{tab_tag_off}"
+            plot_tag = f"plot_{tab_tag_off}"
             with dpg.group():
                 # First plot (Stimulation OFF)
                 with dpg.plot(label=f"{mode} SETUP - Stimulation OFF", height=400, width=600, tag=f"{plot_tag}"):
@@ -716,18 +794,20 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     parent = f"y_axis_{tab_tag_off}"
                     plot_td(sense, parent, tab_tag_off, signal_tags)
 
-            toggleDisplay(sense, signal_tags, window_id, tab_tag)
+            toggleDisplay(sense, signal_tags, window_id, tab_tag_off)
         add_filters_buttons(tab_tag_off,signal_tags)
-        add_features_buttons(tab_tag_off)
+        add_features_buttons(tab_tag_off, signal_tags)
         add_correlation_buttons(tab_tag_off)
 
     def setup_on_tab():
         #CALIBRATION TEST - STIMULATION OFF
         tab_tag_on = tab_tag + "_ON"
+        app_state['windows'][window_id]['Data'][tab_tag_on]= {'Signals': []}
+
         dpg.add_tab(label='Setup ON', tag=tab_tag_on, parent=f"tab_bar_window_{window_id}", closable=True)
         with dpg.group(parent=tab_tag_on, horizontal=True):  # STIM ON
             signal_tags = {}
-            plot_tag = f"plt_{tab_tag_on}"
+            plot_tag = f"plot_{tab_tag_on}"
             with dpg.group():
                 # Second plot (Stimulation ON)
                 with dpg.plot(label=f"{mode} SETUP - Stimulation ON", height=400, width=600, tag=f"{plot_tag}"):
@@ -738,9 +818,9 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     parent = f"y_axis_{tab_tag_on}"
                     plot_td(calibration, parent, tab_tag_on, signal_tags)
 
-            toggleDisplay(calibration, signal_tags, window_id, tab_tag)
+            toggleDisplay(calibration, signal_tags, window_id, tab_tag_on)
         add_filters_buttons(tab_tag_on,signal_tags)
-        add_features_buttons(tab_tag_on)
+        add_features_buttons(tab_tag_on, signal_tags)
         add_correlation_buttons(tab_tag_on)
 
 
@@ -764,7 +844,7 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
         toggleDisplay(signals, signal_tags, window_id, tab_tag)
     add_filters_buttons(tab_tag,signal_tags)
-    add_features_buttons(tab_tag)
+    add_features_buttons(tab_tag, signal_tags)
     add_correlation_buttons(tab_tag)
 
 def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
@@ -788,7 +868,7 @@ def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         toggleDisplay(signals, signal_tags, window_id, tab_tag)
             
     add_filters_buttons(tab_tag,signal_tags)
-    add_features_buttons(tab_tag)
+    add_features_buttons(tab_tag, signal_tags)
     add_correlation_buttons(tab_tag)
 
 def indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
@@ -812,7 +892,7 @@ def indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             dpg.add_button(label='Segment Signal', show=True)
         
     add_filters_buttons(tab_tag,signal_tags)
-    add_features_buttons(tab_tag)
+    add_features_buttons(tab_tag, signal_tags)
     add_correlation_buttons(tab_tag)
 
 #-----------------------------------COMBINED ANALISYS-------------------------------------

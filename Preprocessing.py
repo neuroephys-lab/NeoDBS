@@ -100,11 +100,6 @@ def call_function(func_name, param_dict, module = ss):
     if func_name not in functions:
         print(f"Function '{func_name}' not found in {module.__name__}")
         return None
-    '''
-    # Print function documentation
-    print(f"\nDocumentation for '{func_name}':\n")
-    print(func.__doc__ if func.__doc__ else "No documentation available.")
-    print("\n" + "="*80 + "\n")'''
 
     func = functions[func_name]
     sig = inspect.signature(func)
@@ -377,11 +372,18 @@ def removeOutlier(data, method="zscore", zlim=3):
     if method == "zscore":
         return data[rangeSelection(data, [np.mean(data)-np.std(data)*zlim,np.mean(data)+np.std(data)*zlim])]
 
-def removeCardiacComponent(raw, filterMethod="Fixed Peak Find"):
+def removeCardiacComponent(raw, band, filterMethod="Fixed Peak Find"):
+
+    a,b = band
+    if a == 0: a = 1
+    if b == 0: b = 100
+
+    band = np.array([a,b])
+
     stream = raw['Y']
     fs = 250
     #Filtrar bandpass butter
-    [b,a] = ss.butter(5, np.array([1,100])*2/fs, 'bp', output='ba')
+    [b,a] = ss.butter(5, band*2/fs, 'bp', output='ba')
     filtered = ss.filtfilt(b, a, stream)
     buttered = filtered.copy()
 
