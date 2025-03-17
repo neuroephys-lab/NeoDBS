@@ -473,8 +473,8 @@ def segment_signal(tab_tag, signal_tags):
     dpg.add_checkbox(label='Use only visible signals:', default_value=True,show=True, tag=f"{tab_tag}_flag_signals")
     mmax = int(dpg.get_axis_limits(axis=f"x_axis_{tab_tag}")[1])
     with dpg.group(horizontal=True):
-        dpg.add_input_int(label='Min', tag=f"{tab_tag}_min", width=90, default_value=0, callback=enforce_min_max, user_data=(f"{tab_tag}_min", f"{tab_tag}_max"))
-        dpg.add_input_int(label='Max', tag=f"{tab_tag}_max", width=90, default_value=mmax, callback=enforce_min_max, user_data=(f"{tab_tag}_min", f"{tab_tag}_max"))
+        dpg.add_input_int(label='Start', tag=f"{tab_tag}_min", width=90, default_value=0, callback=enforce_min_max, user_data=(f"{tab_tag}_min", f"{tab_tag}_max"))
+        dpg.add_input_int(label='End', tag=f"{tab_tag}_max", width=90, default_value=mmax, callback=enforce_min_max, user_data=(f"{tab_tag}_min", f"{tab_tag}_max"))
         dpg.add_button(label='Segment Signal', show=True, callback=cut_signals,user_data=(tab_tag, signal_tags))
 
 def cut_signals(sender,app_data,user_data):   
@@ -589,7 +589,6 @@ def CustomFilter(sender,app_data,user_data):
         
         # Assuming call_function takes the filter function and the user-provided parameters
         args = pre.call_function(func, parameter_values)
-
         
 
         for tag in tags:
@@ -626,36 +625,84 @@ def NormalizePowerSeries(sender,app_data,user_data):
 def DefaultFeatures(sender, app_data, user_data):
     tab_tag, signal_tags = user_data
     mode = extract_mode(tab_tag)
+    signals = getActiveSignals(tab_tag, signal_tags)
 
     if mode == 'Events':
-        power = getActiveSignals(tab_tag, signal_tags)
+
+        power = []
+        for signal in signals:
+            p = signal['Y']
+            mask = signal['X'] <= 100  
+            f_filtered = signal['X'][mask]  
+            p_filtered = p[mask]  
+            p = p_filtered*100/np.max(p_filtered)
+            pwr = {'X':f_filtered,
+                'Y':p}
+            power.append(pwr)
+            
         features = ft.mean_power_all_bands(power)
 
-        with dpg.group(parent=f"{tab_tag}_default_features"):
+    elif mode != 'Timeline':
+        #calcular PSD --> testar e ver o melhor aspeto
+        power = []
+        if not dpg.does_item_exist(f"{tab_tag}_df_plot"):
             
-            with dpg.group(width=-1, horizontal=True):
-                # Define the table tag
-                table_tag = f"{tab_tag}_features_table"
-
-                # If the table doesn't exist, create it with initial columns
-                if not dpg.does_item_exist(table_tag):
-                    with dpg.table(header_row=True, borders_innerH=True, borders_innerV=True, borders_outerH=True, borders_outerV=True, tag=table_tag):
-                        dpg.add_table_column(label="Trial", width=100)                          
-                        for band in features.keys():
-                            dpg.add_table_column(label=band, width=100)
-
-                        with dpg.table_row():
-                            dpg.add_input_text(default_value="Start Trial")
-                            for band, value in features.items():
-                                dpg.add_text(f"{value:.2f}")
-
-                else:
+            with dpg.group(parent=f"{tab_tag}_default_features",tag =f"{tab_tag}_df_plot"):
+                with dpg.plot(parent=f"{tab_tag}_df_plot", width=-1, label="Medtronic PSD"):
+                    dpg.add_plot_legend()
                     
-                    with dpg.table_row(parent=table_tag):
-                        dpg.add_input_text(default_value="New Trial")                          
-                        for band, value in features.items():
-                            dpg.add_text(f"{value:.2f}")
 
+                # REQUIRED: create x and y axes
+                    dpg.add_plot_axis(dpg.mvXAxis, label="x")
+                    dpg.add_plot_axis(dpg.mvYAxis, label="y", tag=f"{tab_tag}_df_y_axis")
+        else:
+            dpg.delete_item(f"{tab_tag}_df_y_axis",children_only=True)
+
+        for signal in signals:
+            medtronic = ft.MedtronicPSD(signal['Y'])
+            p = medtronic['Power']
+
+            mask = medtronic['Frequency'] <= 100  
+            f_filtered = medtronic['Frequency'][mask]  
+            p_filtered = p[mask]  
+            p_filtered = p_filtered*100/np.max(p_filtered)
+            pwr = {'X':f_filtered,
+                'Y':p_filtered}
+            power.append(pwr)
+            dpg.add_line_series(f_filtered,p, label=f"{signal['Channel']} Medtronic", parent=f"{tab_tag}_df_y_axis")
+
+        features = ft.mean_power_all_bands(power)
+            #criar plot
+
+    with dpg.group(parent=f"{tab_tag}_default_features"):
+            
+            
+        table_tag = f"{tab_tag}_features_table"
+
+        # If the table doesn't exist, create it with initial columns
+        if not dpg.does_item_exist(table_tag):
+            dpg.add_text('Relative Band Power')
+            with dpg.table(header_row=True, borders_innerH=True, borders_innerV=True, borders_outerH=True, borders_outerV=True, tag=table_tag,label='Relative Band Power'):
+                dpg.add_table_column(label="Trial", width=100)                          
+                for band in features.keys():
+                    dpg.add_table_column(label=band, width=100)
+
+                with dpg.table_row():
+                    dpg.add_input_text(default_value="Start Trial")
+                    for band, value in features.items():
+                        dpg.add_text(f"{value:.2f}")
+
+        else:
+            
+            with dpg.table_row(parent=table_tag):
+                dpg.add_input_text(default_value="New Trial")                          
+                for band, value in features.items():
+                    dpg.add_text(f"{value:.2f}")
+
+def CustomFeatures():
+    print('Custom Features')
+
+    #Welch: defaults are enough
 
 #--------------------------------------MODE TABS-----------------------------------------
 '''For now ONLY individual analysis'''
