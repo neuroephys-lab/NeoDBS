@@ -121,6 +121,23 @@ def MedtronicPSD(data, fs=250):
 def getIndices(length, window, overlap):
     return np.array(range(0, length+1-window, window-overlap))
 
+def spectrogram(signal, fs = 250): #incomplete/ should receive the 
+    if len(signal) < 5000:
+        nperseg = int(min(256, len(signal) / 2))
+        noverlap = int(nperseg / 2)
+    else:
+        nperseg = 1024
+        noverlap = nperseg / 2
+
+
+    frequencies, times, Sxx = spectrogram(signal, fs=fs,nperseg=nperseg, noverlap=noverlap, window='hamming', scaling='density')
+    Sxx_log = 10 * np.log10(Sxx + 1e-10)  # Convert to dB scale
+
+    Sxx_log = np.flipud(Sxx_log)
+
+    return frequencies, times, Sxx_log
+
+
 def autoregressiveSpectrogram(data, window=2.0, overlap=1.0, frequency_resolution=0.5, fs=100, order=50):
     configuration = {"Window": window, "Overlap": overlap}
     window = int(window * fs)

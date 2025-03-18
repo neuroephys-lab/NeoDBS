@@ -36,6 +36,8 @@ with dpg.item_handler_registry() as item_handler_registry:
     dpg.add_item_resize_handler(callback=resize_plots)
 dpg.bind_item_handler_registry(window, item_handler_registry)
 
+
+
 dpg.create_viewport(title='Plots with colormap sizing', width=1200, height=600)
 dpg.setup_dearpygui()
 dpg.show_viewport()

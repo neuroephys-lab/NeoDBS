@@ -35,9 +35,9 @@ def add_features_buttons(tab_tag, signal_tags):
     if dpg.does_item_exist(tab_tag):
         with dpg.group(parent=tab_tag, horizontal=True, width=600,tag=f"{tab_tag}_features_group"):
             # "Features" menu simulation
-            with dpg.collapsing_header(label="Features", default_open=False, parent=tab_tag,tag = f"{tab_tag}_default_features"):
+            with dpg.collapsing_header(label="Features", default_open=False, parent=tab_tag,tag = f"{tab_tag}_features"):
                 dpg.add_button(label="Default Feature Extraction",width=-1,callback=DefaultFeatures,user_data=(tab_tag,signal_tags))
-                dpg.add_button(label="Personalized Feature Extraction",width=-1)
+                dpg.add_button(label="Personalized Feature Extraction",width=-1,callback=add_combo_features,user_data=(tab_tag, signal_tags))
     else:
         print(f"Tab {tab_tag} does not exist yet.")
 
@@ -80,6 +80,17 @@ def add_combo_filters(sender, app_data, user_data):
     dpg.add_spacer(parent=f"{tab_tag}_filters")
     with dpg.group(horizontal=True,parent=f"{tab_tag}_filters"):
         dpg.add_combo(label='IIR Filters',callback = CustomFilter, user_data=(tab_tag,signal_tags),items = filters, parent=f"{tab_tag}_filters", tag = f"{tab_tag}_combo_filters",width=200)
+
+def add_combo_features(sender, app_data, user_data):
+    tab_tag,signal_tags = user_data
+
+    features = ['periodogram','welch','spectrogram']
+
+    dpg.add_spacer(parent=f"{tab_tag}_features")
+    with dpg.group(horizontal=True,parent=f"{tab_tag}_features", tag = f"{tab_tag}_custom_features"):
+        dpg.add_combo(label='Spectral Analysis',callback = CustomFeatures, user_data=(tab_tag,signal_tags),items = features, parent=f"{tab_tag}_features", tag = f"{tab_tag}_combo_features",width=200)
+
+
 
 #--- Toggle buttons
 def toggleVisibility(signal_tags, parent, group, user_data):
@@ -295,13 +306,17 @@ def plot_td(signals, parent, tab_tag, signal_tags):
 def update_plot_td(tab_tag, signal_tags, title = None):
     active_series = getActiveSeries(signal_tags)
     window_id = extract_window_id(tab_tag)
+    mode = extract_mode(tab_tag)
     plot_tag = f"plot_{tab_tag}"
 
     previous = dpg.get_item_label(item=plot_tag)
     if title != None: dpg.set_item_label(item=plot_tag,label=f"{previous} - {title}")
 
     for serie in active_series:
-        signal = getSignalbyIdx(window_id,tab_tag,serie)
+        if mode == 'Events':
+            signal = getSignalbyIdxSide(window_id,tab_tag,serie)
+        else:
+            signal = getSignalbyIdx(window_id,tab_tag,serie)
         x = signal['X']
         y = signal['Y']
         if dpg.does_item_exist(serie):
@@ -588,7 +603,7 @@ def CustomFilter(sender,app_data,user_data):
         tags = getActiveSeries(signal_tags)
         
         # Assuming call_function takes the filter function and the user-provided parameters
-        args = pre.call_function(func, parameter_values)
+        args = pre.call_function(func, parameter_values) #calculates the parameters of the filter
         
 
         for tag in tags:
@@ -615,7 +630,7 @@ def NormalizePowerSeries(sender,app_data,user_data):
         app_state['windows'][window_id]['Data'][tab_tag]['Signals'][side][idx]['Y'] = norm
 
     time.sleep(0.1)
-    update_plot_fd(tab_tag,signal_tags,'Log Normalized')
+    update_plot_td(tab_tag,signal_tags,'Log Normalized')
 
     if dpg.does_item_exist(f"{tab_tag}_mean"):
         mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
@@ -647,7 +662,7 @@ def DefaultFeatures(sender, app_data, user_data):
         power = []
         if not dpg.does_item_exist(f"{tab_tag}_df_plot"):
             
-            with dpg.group(parent=f"{tab_tag}_default_features",tag =f"{tab_tag}_df_plot"):
+            with dpg.group(parent=f"{tab_tag}_features",tag =f"{tab_tag}_df_plot"):
                 with dpg.plot(parent=f"{tab_tag}_df_plot", width=-1, label="Medtronic PSD"):
                     dpg.add_plot_legend()
                     
@@ -674,7 +689,7 @@ def DefaultFeatures(sender, app_data, user_data):
         features = ft.mean_power_all_bands(power)
             #criar plot
 
-    with dpg.group(parent=f"{tab_tag}_default_features"):
+    with dpg.group(parent=f"{tab_tag}_features"):
             
             
         table_tag = f"{tab_tag}_features_table"
@@ -699,10 +714,127 @@ def DefaultFeatures(sender, app_data, user_data):
                 for band, value in features.items():
                     dpg.add_text(f"{value:.2f}")
 
-def CustomFeatures():
-    print('Custom Features')
+def CustomFeatures(sender,app_data,user_data):
+    tab_tag, signal_tags = user_data
 
-    #Welch: defaults are enough
+    window_id = extract_window_id(tab_tag)
+    parameter_values = {}
+    input_fields = {}  # Store input field IDs
+    param_container = dpg.add_child_window(parent=f"{tab_tag}_custom_features", width=200, height=300)  # Space to add inputs dynamically
+
+    def create_input_fields(sender, app_data):
+        """Dynamically create input fields for selected function."""
+        
+        dpg.delete_item(param_container, children_only=True)  # Clear previous inputs
+        params = pre.get_required_params(app_data)
+                
+        if not params:
+            dpg.add_text("No parameters found", parent=param_container)
+            return
+        dpg.add_text("Required parameters: ", parent=param_container)
+
+        parameter_values.clear()  # Reset parameter storage
+        input_fields.clear()  # Reset input field storage
+        
+
+        for param, default in params.items():
+            if param == 'fs': default = 250
+            if param == 'x': pass
+            input_id = dpg.add_input_text(
+                label=param, 
+                default_value=str(default) if default is not None else "",
+                parent=param_container
+            )
+            input_fields[param] = input_id  # Store input field reference
+
+        # Add save button
+        dpg.add_button(label="Save Parameters", callback=save_parameters, parent=param_container, user_data = app_data)
+
+    def save_parameters(sender, app_data, user_data):
+        """Saves input values to the dictionary and prints them."""
+        parameter_values.clear()  # Reset before saving
+
+        for param, input_id in input_fields.items():
+            value = dpg.get_value(input_id)
+            parameter_values[param] = value
+
+        print("Saved Parameters:", parameter_values)
+        dpg.add_button(label="Plot filtered signal", callback=apply_filt, parent=param_container, user_data=user_data)
+
+    def apply_filt(sender, app_data, user_data):
+        func = user_data
+
+        tags = getActiveSeries(signal_tags)
+
+        for tag in tags:
+            stream = getSignalbyIdx(window_id,tab_tag,tag)
+            idx = extract_idx_from_series_tag(tag)
+            x = stream['X']
+            y = stream['Y']
+            parameter_values['x'] = np.array(y)
+            signal = pre.call_function(func, parameter_values)
+            app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx][func] = signal
+
+
+        parameter_values['x'] = np.array(y)
+        
+        # Assuming call_function takes the filter function and the user-provided parameters
+        signal = pre.call_function(func, parameter_values)
+        if signal:
+            if func == 'spectrogram': 
+                if dpg.does_item_exist(f"{tab_tag}_spec"):
+                    dpg.delete_item(f"{tab_tag}_spec", children_only=True)
+                    plot_filtered_signal(x, y, signal)
+                else:
+                    plot_spectrogram(signal)
+            else:
+                if not dpg.does_item_exist(f"{tab_tag}_psd_medtronic"):
+                    plot_filtered_signal(x, y, signal)
+                else:
+                    dpg.delete_item(f"{tab_tag}_psd_medtronic", children_only=True)
+                    plot_filtered_signal(x, y, signal)
+                
+    def plot_filtered_signal(x, y, filtered):
+        with dpg.plot(label=f"Spectral Analysis", height=400, width=600, parent =f"{tab_tag}_custom_features", tag = f"{tab_tag}_psd_medtronic"):
+            dpg.add_plot_legend()
+            dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag="xx")
+            dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (dB)", tag="yy")
+            mask = filtered[0] <= 100
+            freqs = filtered[0][mask]
+            psd = filtered[1][mask]
+            dpg.add_line_series(np.ascontiguousarray(freqs),np.ascontiguousarray(psd), label=f"Filtered", parent="yy")
+
+    def plot_spectrogram(signal):
+        frequencies, times, Sxx = signal
+        Sxx_log = 10 * np.log10(Sxx + 1e-10)  # Convert to dB scale
+        Sxx_log = np.flipud(Sxx_log)
+
+        with dpg.group(horizontal=True,parent = f"{tab_tag}_custom_features", tag = f"{tab_tag}_spec"):
+            # Spectrogram (Heatmap) with Colormap
+            with dpg.plot(label="Spectrogram", width=600, height=300, tag = f"{tab_tag}_spec_plot",parent =f"{tab_tag}_spec"):
+                dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"{tab_tag}_x_axis_spec")
+                dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)", tag=f"{tab_tag}_y_axis_spec")
+
+                label_pairs = ()
+                for i in np.arange(0, Sxx_log.shape[0], 0.1):
+                    label_pairs += ((f"{i*len(times):.0f}", i),)
+                dpg.set_axis_ticks(f"{tab_tag}_x_axis_spec", label_pairs)
+
+                freq_pairs = ()
+                for i in np.arange(0, Sxx_log.shape[1],0.1):
+                    freq_pairs += ((f"{i*max(frequencies):.0f}", i),)
+                dpg.set_axis_ticks(f"{tab_tag}_y_axis_spec", freq_pairs)
+
+                dpg.add_heat_series(Sxx_log.flatten(), rows=Sxx_log.shape[0], cols=Sxx_log.shape[1],
+                                            scale_min=Sxx_log.min(), scale_max=Sxx_log.max(), 
+                                            parent=f"{tab_tag}_y_axis_spec", format="")
+                
+            dpg.add_colormap_scale(tag="colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Hot,
+                                            min_scale = np.min(Sxx_log), max_scale=np.max(Sxx_log), height=300)
+            dpg.bind_colormap(f"{tab_tag}_spec_plot", dpg.mvPlotColormap_Hot)
+       
+     
+    create_input_fields(sender,app_data)
 
 #--------------------------------------MODE TABS-----------------------------------------
 '''For now ONLY individual analysis'''
