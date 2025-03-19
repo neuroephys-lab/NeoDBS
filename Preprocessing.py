@@ -404,7 +404,8 @@ def removeCardiacComponent(raw, band, filterMethod="Fixed Peak Find"):
         else:
             peaks = negPeaks
 
-        if len(peaks) != 0:
+        if len(peaks)>1:
+            if None in peaks: print('None')
             CardiacRate = int(np.mean(np.diff(peaks)))
 
             PrePeak = int(CardiacRate*0.25)
