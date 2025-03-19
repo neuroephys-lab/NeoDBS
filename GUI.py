@@ -418,12 +418,17 @@ def extract_mode(tab_tag: str) -> str:
 def getActiveSeries(signal_tags):
     active_tags = []
 
-    for tag, visible in signal_tags.items():
+    if type(signal_tags) == dict:
+        tags = signal_tags.keys()
+    elif type(signal_tags) == list:
+
+        tags = signal_tags.copy()
+
+    for tag in tags:
         info = dpg.get_item_configuration(tag)
         if info['show'] == True: 
             active_tags.append(tag)
 
-    #print(len(active_tags) , ' + ', len(signal_tags)-len(active_tags) ,' = ', len(active_tags))
     return active_tags
 
 def getInactiveSeries(signal_tags):
@@ -497,8 +502,13 @@ def enforce_min_max(sender, app_data, user_data):
 def getMeanActiveSeries(window_id,tab_tag,signal_tags):
     active_tags = getActiveSeries(signal_tags)
     active_signals = []
+    mode = extract_mode(tab_tag)
     for tag in active_tags:
-        active = getSignalbyIdxSide(window_id,tab_tag,tag)
+        if mode =='Events':
+            active = getSignalbyIdxSide(window_id,tab_tag,tag)
+        else:
+            active = getSignalbyIdx(window_id,tab_tag,tag)
+
         active_signals.append(active)
     mean_power = pre.MeanSignal(active_signals)
     return mean_power
@@ -794,49 +804,55 @@ def CustomFeatures(sender,app_data,user_data):
             if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
                 dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar")
 
-            if not dpg.does_item_exist(tab_label):
-                with dpg.tab(label=f"{func}", parent=f"{tab_tag}_features_bar", tag=tab_label):
-                    dpg.add_text(f"{func} plot")
-                    plt_tag = f"{tab_tag}_{func}_plot"
-                    if dpg.does_item_exist(plt_tag):
-                        dpg.delete_item(plt_tag, children_only=True)
-                    
-                    if func == 'spectrogram':
-                        plot_spectrogram(signal, tags, func)
-                    else:
-                        plot_filtered_signal(tags, func)
-                        dpg.add_button(label='Normalize')
+            if dpg.does_item_exist(tab_label):
+                dpg.delete_item(f"{tab_label}_plot")
+            else:
+                dpg.add_tab(label=f"{func}", parent=f"{tab_tag}_features_bar", tag=tab_label)  
+
+            if func == 'spectrogram':
+                plot_spectrogram(signal, tags, func)
+            else:
+                plot_filtered_signal(tags, func)
+                #dpg.add_button(label='Normalize', parent = tab_label)
                                      
     def plot_filtered_signal(tags, func):
         tab_label = f"{tab_tag}_{func}"
-        with dpg.plot(label=f"Spectral Analysis - {func}", height=400, width=600, parent = tab_label, tag = f"{tab_tag}_{func}_plot"):
-            dpg.bind_colormap(f"{tab_tag}_{func}_plot", 0)
-            dpg.add_plot_legend()
-            dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag=f"{tab_tag}_{func}_plot_x")
-            dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (dB)", tag=f"{tab_tag}_{func}_plot_y")
-            
-            power = []
-            for tag in tags:
-                stream = getSignalbyIdx(window_id,tab_tag,tag)
-                idx = extract_idx_from_series_tag(tag)
-                x = stream['X']
-                y = stream['Y']
-                channel = stream['Channel']
-                parameter_values['x'] = np.array(y)
-                signal = pre.call_function(func, parameter_values)
-                app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx][func] = signal
 
-                signal = pre.call_function(func, parameter_values)
-                if signal:  
-                    mask = signal[0] <= 100
-                    freqs = np.ascontiguousarray(signal[0][mask])
-                    psd = np.ascontiguousarray(signal[1][mask])
-                    dpg.add_line_series(freqs,psd, label=channel, parent=f"{tab_tag}_{func}_plot_y", tag = f"{channel}_{func}")
-                    pwr = {'X':freqs,
-                        'Y':psd}
+        with dpg.group(horizontal=True, parent = tab_label,tag=f"{tab_label}_plot_group"):
+            with dpg.plot(label=f"Spectral Analysis - {func}", height=400, width=600, tag = f"{tab_tag}_{func}_plot"):
+                dpg.bind_colormap(f"{tab_tag}_{func}_plot", 0)
+                dpg.add_plot_legend()
+                dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag=f"{tab_tag}_{func}_plot_x")
+                dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (dB)", tag=f"{tab_tag}_{func}_plot_y")
+                
+                power = []
+                for tag in tags:
+                    stream = getSignalbyIdx(window_id,tab_tag,tag)
+                    idx = extract_idx_from_series_tag(tag)
+                    y = stream['Y']
+                    channel = stream['Channel']
+                    parameter_values['x'] = np.array(y)
+                    signal = pre.call_function(func, parameter_values)
+                    app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx][func] = signal
 
-        table_tag = f"{tab_label}_table"
-        features = ft.mean_power_all_bands(power)
+                    signal = pre.call_function(func, parameter_values)
+                    if signal:  
+                        mask = signal[0] <= 100
+                        freqs = np.ascontiguousarray(signal[0][mask])
+                        psd = np.ascontiguousarray(signal[1][mask])
+                        series_label = channel
+                        dpg.add_line_series(freqs,psd, label=series_label, parent=f"{tab_tag}_{func}_plot_y", tag = f"{tab_tag}_{channel}_{func}")
+
+                        pwr = {'X':freqs,
+                            'Y':psd}
+                        power.append(pwr)
+
+                mean = np.mean([p['Y'] for p in power], axis=0)
+                dpg.add_line_series(freqs, mean, label="Mean Power", parent=f"{tab_tag}_{func}_plot_y", tag=f"{tab_tag}_{func}_mean")
+
+            table_tag = f"{tab_label}_table"
+            features = ft.mean_power_all_bands(power)
+
         create_table(tab_label,table_tag,features)
 
     def plot_spectrogram(signal, tags, func):
@@ -864,7 +880,7 @@ def CustomFeatures(sender,app_data,user_data):
             global_min = min(global_min, Sxx_log.min())
             global_max = max(global_max, Sxx_log.max())     
 
-        with dpg.group(horizontal=True, parent=f"{tab_tag}_{func}", tag=f"{tab_tag}_spec"):
+        with dpg.group(horizontal=True, parent=f"{tab_tag}_{func}", tag=f"{tab_tag}_{func}_plot"):
 
             dpg.add_colormap_scale(tag=f"{tab_tag}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
                                                 min_scale = global_min, max_scale=global_max, height=400*num_rows)
@@ -1029,8 +1045,6 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag)) #check hemisphere
             #dpg.add_button(label='Normalize',callback=NormalizePowerSeries, user_data=(signal_tags,tab_tag),parent=f"{tab_tag}_buttons")
 
-            
-    
     add_features_buttons(tab_tag, signal_tags)
     add_correlation_buttons(tab_tag)
 
@@ -1354,8 +1368,8 @@ def create_individual_window():
             
             case 'Timeline': timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
 
-        dpg.set_item_width(item=f"window_{window_id}",width=800)
-        dpg.set_item_height(item=f"window_{window_id}",height=600)
+        dpg.set_item_width(item=f"window_{window_id}",width=-1)
+        dpg.set_item_height(item=f"window_{window_id}",height=-1)
                
     def open_file_callback(sender, app_data, user_data): #open file
         window_id = user_data  # Get window-specific ID
