@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import inspect
 from scipy import optimize
 from scipy import signal as ss
-
+import mne.time_frequency as mtf
 #-----------------------------------------NeoDBS-------------------------------------------------
 
 #------------------ Easy Access to Scipy.signal---------------------
@@ -27,7 +27,7 @@ def get_functions(module = ss):
             print(f"Skipping function {name} due to error: {e}")
     return functions
 
-def dict_to_arg(param_dict, func_name, module = ss):
+def dict_to_arg(param_dict, func_name, module = 'ss'):
     # Convert saved parameters (strings) into appropriate types
     required_params = get_required_params(module,func_name)
 
@@ -93,8 +93,12 @@ def call_function2(func_name, *args, **kwargs):
             print("No default parameters available.")
             return None
 
-def call_function(func_name, param_dict, module = ss):
+def call_function(func_name, param_dict, module = 'ss'):
     """Call a function from a module using saved parameters."""
+    match module:
+        case 'ss': module = ss
+        case 'mtf': module = mtf
+
     functions = get_functions(module)
     
     if func_name not in functions:
@@ -121,13 +125,22 @@ def call_function(func_name, param_dict, module = ss):
     for key, value in param_dict.items():
         if key in required_params or key in default_kwargs:  # Ensure it's a valid argument
             try:
-                converted_params[key] = eval(value) if value.strip() else None
-            except:
+                # Ensure empty strings become None, and evaluate only if value is not empty
+                if value.strip() == "":
+                    converted_params[key] = None
+                elif value.lower() == "none":
+                    converted_params[key] = None
+                elif value.lower() == "inf":
+                    converted_params[key] = float("inf")
+                else:
+                    converted_params[key] = eval(value)  # Convert numbers and lists
+            except Exception:
                 converted_params[key] = value  # Keep as string if eval fails
 
     # Split into positional and keyword arguments
     args = [converted_params[param] for param in required_params if param in converted_params]
     kwargs = {k: v for k, v in converted_params.items() if k not in required_params}
+
 
     try:
         return func(*args, **kwargs)
@@ -135,9 +148,11 @@ def call_function(func_name, param_dict, module = ss):
         print(f"Error calling {func_name}: {e}")
         return None
 
-def get_required_params(func_name, module = ss):
+def get_required_params(func_name, module = 'ss'):
 
-    
+    match module:
+        case 'ss': module = ss
+        case 'mtf': module = mtf
     functions = get_functions(module)
     
     if func_name not in functions:

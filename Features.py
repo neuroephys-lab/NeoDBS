@@ -1,16 +1,96 @@
 import numpy as np
 #from spectrum import pyule
 
+bands = {
+            'Delta': [0,4],
+            'Theta': [4,8],
+            'Alpha': [8,12],
+            'Beta': [12,30],
+            'Gamma': [30,100]
+        }
+
 def peak_power(stream):
     '''
     Receives a stream with PSD values
     '''
-    peak_idx = np.argmax(stream["Y"])
-    peak_f = stream["X"][peak_idx]
-    peak_power = stream["Y"][peak_idx]
+    if 'X' in stream.keys():
+        f = 'X'
+        p = 'Y'
+    elif 'Frequency'in stream.keys():
+        f = 'Frequency'
+        p = 'Power'
 
-    return [peak_f, peak_power]
+    if len(stream[p]) > 0:
+
+        peak_idx = np.argmax(stream[p])
+        peak_f = stream[f][peak_idx]
+        peak_power = stream[p][peak_idx]
+
+        return [peak_f, peak_power]
+    else: return [0, 0]
+
+def peak_per_band(stream):
+    temp = {}
+    peaks = {}
+    if 'X' in stream.keys():
+        f = 'X'
+        p = 'Y'
+    elif 'Frequency'in stream.keys():
+        f = 'Frequency'
+        p = 'Power'
+
+    for _, band in bands.items():
+        a,b = band
+        freq_array = np.array(stream[f])
+        mask = (freq_array >= a) & (freq_array <= b)
+        power = np.array(stream[p])[mask]
+        temp[p] = power
+        temp[f] = freq_array[mask]
+        
+        peaks[_] = peak_power(temp)
+
+    return peaks
+
+def std_dev_band(stream, band):
+    a,b = band
+    freq_array = np.array(stream['Frequency'])
+    mask = (freq_array >= a) & (freq_array <= b)
+    power = np.array(stream['Power'])[mask]
+
+    return np.std(power)
+   
+def std_dev_streams(streams):
     
+    if 'X' in streams[0].keys():
+        f = 'X'
+        p = 'Y'
+    elif 'Frequency'in streams[0].keys():
+        f = 'Frequency'
+        p = 'Power'
+    else:
+        raise ValueError("Invalid stream format: Expected keys 'X' or 'Frequency'.")
+    
+    band_powers = {name: [] for name in bands}
+
+    for stream in streams:
+        freq_array = np.array(stream[f])
+        power_array = np.array(stream[p])
+
+        for name, (a, b) in bands.items():
+            mask = (freq_array >= a) & (freq_array <= b)
+            band_powers[name].append(power_array[mask])
+
+    # Calculate standard deviation for each band
+    std_devs = {}
+    for name, power_list in band_powers.items():
+        if power_list:  
+            stacked_powers = np.vstack(power_list)
+            std_devs[name] = np.std(stacked_powers)  
+        else:
+            std_devs[name] = None  # No data for this band
+
+    return std_devs   
+
 def mean_power_band(log,band):
     #events
     power = []
@@ -18,8 +98,13 @@ def mean_power_band(log,band):
     fi,ff = band
 
     temp = []
-    freq = log['X']
-    pwr = log['Y']
+    if 'X' in log.keys():
+        freq = log['X']
+        pwr = log['Y']
+    if 'Frequency' in log.keys():
+        freq = log['Frequency']
+        pwr = log['Power']
+
     for idx, f in enumerate(freq):
         if fi<=f<=ff: temp.append(pwr[idx])
     if temp:
@@ -31,8 +116,8 @@ def mean_power_all_bands(stream):
 
     d,t,a,b,g = [],[],[],[],[]
 
-    for event in stream:
-
+    if np.size(stream) == 1: 
+        event = stream
         delta = mean_power_band(event,[0,4])
         d.append(delta)
         theta = mean_power_band(event,[4,8])
@@ -44,13 +129,36 @@ def mean_power_all_bands(stream):
         gamma = mean_power_band(event,[30,100])
         g.append(gamma)
 
-    power = {
-        'Delta': np.mean(d),
-        'Theta': np.mean(t),
-        'Alpha': np.mean(a),
-        'Beta': np.mean(b),
-        'Gamma': np.mean(g)
-    }
+        power = {
+            'Delta': d,
+            'Theta': t,
+            'Alpha': a,
+            'Beta': b,
+            'Gamma': g
+        }
+
+    else:
+    
+        for event in stream:
+
+            delta = mean_power_band(event,[0,4])
+            d.append(delta)
+            theta = mean_power_band(event,[4,8])
+            t.append(theta)
+            alpha = mean_power_band(event,[8,12])
+            a.append(alpha)
+            beta = mean_power_band(event,[12,30])
+            b.append(beta)
+            gamma = mean_power_band(event,[30,100])
+            g.append(gamma)
+
+        power = {
+            'Delta': np.mean(d),
+            'Theta': np.mean(t),
+            'Alpha': np.mean(a),
+            'Beta': np.mean(b),
+            'Gamma': np.mean(g)
+        }
 
     return power
 
@@ -82,7 +190,8 @@ def wave(frequency = 10, sampling_rate = 1000, duration = 1, amplitude = 1):
     # Generate the sine wave signal
     signal = amplitude * np.sin(2 * np.pi * frequency * t)
 
-    return t, signal
+    return np.array(t), np.array(signal)
+
 
 #----------- BRAVO ------------------------------------------------------------
 def MedtronicPSD(data, fs=250): 
@@ -116,7 +225,7 @@ def MedtronicPSD(data, fs=250):
 
         maxIndex += packets[i % 4]  
 
-    return {"Frequency": freq[:100], "Power": np.mean(power,axis=1)[:100]} #, "StdErr": stats.sem(power,axis=1)[:100]} 
+    return {"Frequency": freq[:100], "Power": np.mean(power[:100],axis=1)} #, "StdErr": stats.sem(power,axis=1)[:100]} 
 
 def getIndices(length, window, overlap):
     return np.array(range(0, length+1-window, window-overlap))
@@ -136,7 +245,6 @@ def spectrogram(signal, fs = 250): #incomplete/ should receive the
     Sxx_log = np.flipud(Sxx_log)
 
     return frequencies, times, Sxx_log
-
 
 def autoregressiveSpectrogram(data, window=2.0, overlap=1.0, frequency_resolution=0.5, fs=100, order=50):
     configuration = {"Window": window, "Overlap": overlap}
