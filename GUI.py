@@ -350,25 +350,39 @@ def update_plot_fd(tab_tag, signal_tags, title = None):
 def create_table(tab_label,table_tag,features):
     with dpg.group(parent=tab_label):
                         
-        #table_tag = f"{tab_tag}_df_table"
-
         if not dpg.does_item_exist(table_tag):
-            dpg.add_text('Relative Band Power')
             with dpg.table(header_row=True, borders_innerH=True, borders_innerV=True, borders_outerH=True, borders_outerV=True, tag=table_tag,label='Relative Band Power'):
                 dpg.add_table_column(label="Trial", width=100)                          
                 for band in features.keys():
                     dpg.add_table_column(label=band, width=100)
 
-                with dpg.table_row():
-                    dpg.add_input_text(default_value="Start Trial")
+                with dpg.table_row(parent=table_tag):
+                    dpg.add_input_text(default_value="Start Trial")                          
                     for band, value in features.items():
-                        dpg.add_text(f"{value:.2f}")
+                        if isinstance(value, (list, np.ndarray)):  # Check if value is a list or NumPy array
+                            if len(value) == 1:  # Single-element array
+                                dpg.add_text(f"{float(value[0]):.2f}")  # Convert to float for clean display
+                            else:  # Multiple values
+                                rounded_values = [float(v) for v in np.round(value, 2)]  # Convert each np.float64 to float
+                                dpg.add_text(f"{rounded_values}")  # Display clean list
+                        else:  # Single number case
+                            dpg.add_text(f"{float(value):.2f}")  # Ensure it's a clean float
 
         else:
             with dpg.table_row(parent=table_tag):
                 dpg.add_input_text(default_value="New Trial")                          
                 for band, value in features.items():
-                    dpg.add_text(f"{value:.2f}")
+                    if isinstance(value, (list, np.ndarray)):  # Check if value is a list or NumPy array
+                        if len(value) == 1:  # Single-element array
+                            dpg.add_text(f"{float(value[0]):.2f}")  # Convert to float for clean display
+                        else:  # Multiple values
+                            rounded_values = [float(v) for v in np.round(value, 2)]  # Convert each np.float64 to float
+                            dpg.add_text(f"{rounded_values}")  # Display clean list
+                    else:  # Single number case
+                        dpg.add_text(f"{float(value):.2f}")  # Ensure it's a clean float
+
+
+
 
 #--- Extract signal/identifiers
 def extract_idx_from_series_tag(series_tag: str) -> int:
@@ -857,29 +871,35 @@ def CustomFeatures(sender,app_data,user_data):
                         power.append(p)
 
                         dpg.add_line_series(freqs,psd, label=series_label, parent=f"{tab_tag}_{func}_plot_y", tag = f"{tab_tag}_{channel}_{func}")
-                        
+                                                
                 
                 mean = np.mean([p['Y'] for p in power], axis=0)
                 dpg.add_line_series(freqs, mean, label="Mean Power", parent=f"{tab_tag}_{func}_plot_y", tag=f"{tab_tag}_{func}_mean")
                 dpg.set_axis_limits(f"{tab_tag}_{func}_plot_x",min(freqs),max(freqs))
                 dpg.set_axis_limits(f"{tab_tag}_{func}_plot_y",min(psd),max(psd))
-
-            
+                
 
             table_tag = f"{tab_label}_table"
-            features = ft.mean_power_all_bands(power)
+            features = ft.mean_power_all_bands(power)          
 
-        create_table(tab_label,table_tag,features)
+        if not dpg.does_item_exist(f"{tab_tag}_{func}_power"): #once the first is created all are
+            dpg.add_collapsing_header(label = 'Mean Power', tag =f"{tab_tag}_{func}_power", parent = tab_label) #adicionar normalize dentro de cada collapsing header
+            dpg.add_collapsing_header(label = 'Peak Features', tag =f"{tab_tag}_{func}_peak", parent = tab_label)
+            #dpg.add_collapsing_header(label = 'Area Under Curve', tag =f"{tab_tag}_{func}_auc", parent = tab_label)
+
+        create_table(f"{tab_tag}_{func}_power",f"{tab_label}_table_power",features)
+        for p in power:
+            picos = ft.peak_per_band(p)
+            create_table(f"{tab_tag}_{func}_peak",f"{tab_label}_table_peak",picos)
+        #create_table(f"{tab_tag}_{func}_auc",table_tag,features)
+
         time.sleep(0.1)
         dpg.set_axis_limits_auto(f"{tab_tag}_{func}_plot_x")
         dpg.set_axis_limits_auto(f"{tab_tag}_{func}_plot_y")
 
     def plot_spectrogram(signal, tags, func):
         tab_label = f"{tab_tag}_{func}"
-        frequencies, times, Sxx = signal
-        Sxx_log = 10 * np.log10(Sxx + 1e-10)  # Convert to dB scale
-        Sxx_log = np.flipud(Sxx_log)
-
+        
         num_plots = len(tags)
         num_cols = 2
         num_rows = (num_plots + 1) // num_cols  # Determine the required rows for the grid

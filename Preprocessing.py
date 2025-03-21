@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import inspect
 from scipy import optimize
 from scipy import signal as ss
+import scipy.integrate as si
 import mne.time_frequency as mtf
 #-----------------------------------------NeoDBS-------------------------------------------------
 
@@ -16,7 +17,12 @@ iir_filter_design_functions = ['butter','buttord','cheby1','cheb1ord','cheby2','
                                'ellipord','bessel','iirnotch','iirpeak', 'iircomb']
 
 
-def get_functions(module = ss):
+def get_functions(module = 'ss'):
+
+    match module:
+        case 'ss': module = ss
+        case 'mtf': module = mtf
+        case 'si': module = si
 
     """Retrieve all callable functions from a module, handling errors gracefully."""
     functions = {}
@@ -98,6 +104,7 @@ def call_function(func_name, param_dict, module = 'ss'):
     match module:
         case 'ss': module = ss
         case 'mtf': module = mtf
+        case 'si': module = si
 
     functions = get_functions(module)
     
@@ -153,6 +160,7 @@ def get_required_params(func_name, module = 'ss'):
     match module:
         case 'ss': module = ss
         case 'mtf': module = mtf
+        case 'si': module = si
     functions = get_functions(module)
     
     if func_name not in functions:
@@ -172,9 +180,14 @@ def get_required_params(func_name, module = 'ss'):
 
     return required_params
 
-def get_default_kwargs(func_name,module = ss):
+def get_default_kwargs(func_name,module = 'ss'):
 
     functions = get_functions(module)
+
+    match module:
+        case 'ss': module = ss
+        case 'mtf': module = mtf
+        case 'si': module = si
     
     if func_name not in functions:
         print(f"Function '{func_name}' not found in {module.__name__}")

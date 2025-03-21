@@ -1,54 +1,70 @@
+#AUC
+
 
 import Features as ft
 import dearpygui.dearpygui as dpg
 import DataHandling as DH
 import numpy as np
 import Preprocessing as pre
+from scipy.signal import square
 
 file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-10-14\\Report_Json_Session_Report_20241125T162143.json"
 Data = DH.getData(file_path)
 stream = DH.getSignals(Data, 'Streaming')[0]
 
 #t, signal = ft.wave(frequency=20, sampling_rate=250, duration=10, amplitude=0.2)
+
 signal = np.array(stream['Y'])
 
-#multitaper, freqs = mtf.psd_array_multitaper(signal,250)
-parameters = {'x': signal,
-              'sfreq': '250'}
 
-params = pre.get_required_params('psd_array_multitaper', module='mtf')
+medtronic = ft.MedtronicPSD(signal)
 
-
-parameters = {}
-for name, param in params.items():
-
-    if param == None:
-        value = input(f"{name}: ")
-    else:
-        value = param
-
-    parameters[name] =value
-
-parameters['x'] = signal
-parameters['sfreq'] = '250'
-
-print(parameters)
-
-
-multitaper, freqs = pre.call_function('psd_array_multitaper', param_dict=parameters, module='mtf')
+bands = {
+            'Delta': [0,4],
+            'Theta': [4,8],
+            'Alpha': [8,12],
+            'Beta': [12,30],
+            'Gamma': [30,100]
+        }
 
 dpg.create_context()
 
-with dpg.window(label="main", width=600, height=500):
-    with dpg.plot():
+with dpg.window(label="main", width=-1, height=-1):
+    with dpg.plot( width=-1, height=-1, tag = 'plot'):
         dpg.add_plot_legend()
-        dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag="x_axis")
-        dpg.add_plot_axis(dpg.mvYAxis, label="PSD", tag="y_axis")
+        dpg.add_plot_axis(dpg.mvXAxis, label="Time", tag="x_axis")
+        dpg.add_plot_axis(dpg.mvYAxis, label="AUC", tag="y_axis")
+        dpg.add_shade_series(medtronic['Frequency'], medtronic['Power'], label='Raw', parent="y_axis")
+        i=0
 
-        mask = freqs <=100
+        for function in ['trapezoid','simpson']: #'simpson','trapezoid','cumulative_simpson','cumulative_trapezoid'
+            i+=1
 
-        dpg.add_line_series(freqs[mask], multitaper[mask], label='Multitaper', parent="y_axis")
+            params = pre.get_required_params(function, module='si')
+            parameters = {}
+            for name, param in params.items():
+                if param == None:
+                    value = input(f"{name}: ")
+                else:
+                    value = param
+                parameters[name] =value
+            for _, band in bands.items():
+                a, b = band
+                freq_array = medtronic['Frequency']
+                mask = (freq_array >= a) & (freq_array <= b)
+                
+                parameters['y'] = medtronic['Power'][mask]
+                f = freq_array[mask]
+
+                if len(f) == 0:
+                    print(f"Warning: No data in band {band}")
+                    continue
+
+                auc = pre.call_function(function, param_dict=parameters, module='si')
+                print(auc)
         
+
+
 
     
 dpg.create_viewport(title='Temporario', width=800, height=600)
