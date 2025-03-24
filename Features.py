@@ -115,9 +115,9 @@ def mean_power_band(log,band):
 def mean_power_all_bands(stream):
 
     d,t,a,b,g = [],[],[],[],[]
-
-    if np.size(stream) == 1: 
-        event = stream
+    
+    '''if len(stream) == 1: 
+        event = stream[0]
         delta = mean_power_band(event,[0,4])
         d.append(delta)
         theta = mean_power_band(event,[4,8])
@@ -137,28 +137,28 @@ def mean_power_all_bands(stream):
             'Gamma': g
         }
 
-    else:
+    else:'''
     
-        for event in stream:
+    for event in stream:
 
-            delta = mean_power_band(event,[0,4])
-            d.append(delta)
-            theta = mean_power_band(event,[4,8])
-            t.append(theta)
-            alpha = mean_power_band(event,[8,12])
-            a.append(alpha)
-            beta = mean_power_band(event,[12,30])
-            b.append(beta)
-            gamma = mean_power_band(event,[30,100])
-            g.append(gamma)
+        delta = mean_power_band(event,[0,4])
+        d.append(delta)
+        theta = mean_power_band(event,[4,8])
+        t.append(theta)
+        alpha = mean_power_band(event,[8,12])
+        a.append(alpha)
+        beta = mean_power_band(event,[12,30])
+        b.append(beta)
+        gamma = mean_power_band(event,[30,100])
+        g.append(gamma)
 
-        power = {
-            'Delta': np.mean(d),
-            'Theta': np.mean(t),
-            'Alpha': np.mean(a),
-            'Beta': np.mean(b),
-            'Gamma': np.mean(g)
-        }
+    power = {
+        'Delta': np.mean(d),
+        'Theta': np.mean(t),
+        'Alpha': np.mean(a),
+        'Beta': np.mean(b),
+        'Gamma': np.mean(g)
+    }
 
     return power
 

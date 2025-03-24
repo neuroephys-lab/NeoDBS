@@ -837,7 +837,7 @@ def CustomFeatures(sender,app_data,user_data):
         with dpg.group(horizontal=True, parent = tab_label,tag=f"{tab_label}_plot_group"):
             with dpg.plot(label=f"Spectral Analysis - {func}", height=400, width=600, tag = f"{tab_tag}_{func}_plot"):
                 dpg.bind_colormap(f"{tab_tag}_{func}_plot", 0)
-                dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
+                dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
                 dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag=f"{tab_tag}_{func}_plot_x")
                 dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (dB)", tag=f"{tab_tag}_{func}_plot_y")
                 
@@ -871,16 +871,18 @@ def CustomFeatures(sender,app_data,user_data):
                         power.append(p)
 
                         dpg.add_line_series(freqs,psd, label=series_label, parent=f"{tab_tag}_{func}_plot_y", tag = f"{tab_tag}_{channel}_{func}")
-                                                
-                
-                mean = np.mean([p['Y'] for p in power], axis=0)
-                dpg.add_line_series(freqs, mean, label="Mean Power", parent=f"{tab_tag}_{func}_plot_y", tag=f"{tab_tag}_{func}_mean")
+                print(len(power))                             
+                if len(power)>1:
+                    mean = np.mean([p['Y'] for p in power], axis=0)
+                    dpg.add_line_series(freqs, mean, label="Mean Power", parent=f"{tab_tag}_{func}_plot_y", tag=f"{tab_tag}_{func}_mean")
                 dpg.set_axis_limits(f"{tab_tag}_{func}_plot_x",min(freqs),max(freqs))
                 dpg.set_axis_limits(f"{tab_tag}_{func}_plot_y",min(psd),max(psd))
                 
 
             table_tag = f"{tab_label}_table"
-            features = ft.mean_power_all_bands(power)          
+            print(power)
+            features = ft.mean_power_all_bands(power)  
+                    
 
         if not dpg.does_item_exist(f"{tab_tag}_{func}_power"): #once the first is created all are
             dpg.add_collapsing_header(label = 'Mean Power', tag =f"{tab_tag}_{func}_power", parent = tab_label) #adicionar normalize dentro de cada collapsing header
@@ -893,7 +895,7 @@ def CustomFeatures(sender,app_data,user_data):
             create_table(f"{tab_tag}_{func}_peak",f"{tab_label}_table_peak",picos)
         #create_table(f"{tab_tag}_{func}_auc",table_tag,features)
 
-        time.sleep(0.1)
+        time.sleep(0.2)
         dpg.set_axis_limits_auto(f"{tab_tag}_{func}_plot_x")
         dpg.set_axis_limits_auto(f"{tab_tag}_{func}_plot_y")
 

@@ -6,6 +6,7 @@ import inspect
 from scipy import optimize
 from scipy import signal as ss
 import scipy.integrate as si
+import scipy.signal.windows as ssw
 import mne.time_frequency as mtf
 #-----------------------------------------NeoDBS-------------------------------------------------
 
@@ -23,6 +24,7 @@ def get_functions(module = 'ss'):
         case 'ss': module = ss
         case 'mtf': module = mtf
         case 'si': module = si
+        case 'ssw': module = ssw
 
     """Retrieve all callable functions from a module, handling errors gracefully."""
     functions = {}
@@ -105,6 +107,7 @@ def call_function(func_name, param_dict, module = 'ss'):
         case 'ss': module = ss
         case 'mtf': module = mtf
         case 'si': module = si
+        case 'ssw': module = ssw
 
     functions = get_functions(module)
     
@@ -161,6 +164,7 @@ def get_required_params(func_name, module = 'ss'):
         case 'ss': module = ss
         case 'mtf': module = mtf
         case 'si': module = si
+        case 'ssw': module = ssw
     functions = get_functions(module)
     
     if func_name not in functions:
@@ -188,6 +192,7 @@ def get_default_kwargs(func_name,module = 'ss'):
         case 'ss': module = ss
         case 'mtf': module = mtf
         case 'si': module = si
+        case 'ssw': module = ssw
     
     if func_name not in functions:
         print(f"Function '{func_name}' not found in {module.__name__}")
