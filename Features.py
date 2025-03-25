@@ -113,52 +113,21 @@ def mean_power_band(log,band):
     return np.mean(power) if power else np.nan 
 
 def mean_power_all_bands(stream):
-
-    d,t,a,b,g = [],[],[],[],[]
+    """Computes mean power for frequency bands over a stream of events."""
     
-    '''if len(stream) == 1: 
-        event = stream[0]
-        delta = mean_power_band(event,[0,4])
-        d.append(delta)
-        theta = mean_power_band(event,[4,8])
-        t.append(theta)
-        alpha = mean_power_band(event,[8,12])
-        a.append(alpha)
-        beta = mean_power_band(event,[12,30])
-        b.append(beta)
-        gamma = mean_power_band(event,[30,100])
-        g.append(gamma)
+    # Ensure stream is iterable
+    if not isinstance(stream, (list, tuple, np.ndarray)):  
+        stream = [stream]  # Convert single event to a list
 
-        power = {
-            'Delta': d,
-            'Theta': t,
-            'Alpha': a,
-            'Beta': b,
-            'Gamma': g
-        }
+    power_values = {band: [] for band in bands}
 
-    else:'''
-    
+    # Process each event
     for event in stream:
+        for band, freq_range in bands.items():
+            power_values[band].append(mean_power_band(event, freq_range))
 
-        delta = mean_power_band(event,[0,4])
-        d.append(delta)
-        theta = mean_power_band(event,[4,8])
-        t.append(theta)
-        alpha = mean_power_band(event,[8,12])
-        a.append(alpha)
-        beta = mean_power_band(event,[12,30])
-        b.append(beta)
-        gamma = mean_power_band(event,[30,100])
-        g.append(gamma)
-
-    power = {
-        'Delta': np.mean(d),
-        'Theta': np.mean(t),
-        'Alpha': np.mean(a),
-        'Beta': np.mean(b),
-        'Gamma': np.mean(g)
-    }
+    # Compute mean power for each band
+    power = {band: np.mean(values) if values else 0 for band, values in power_values.items()}
 
     return power
 

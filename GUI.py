@@ -8,6 +8,9 @@ import Features as ft
 import time
 
 unchecked_channels = {}
+#----------------------------------------GLOBAL-----------------------------
+
+bands = ft.bands
 #-----------------------------------------UTILS----------------------------------------
 def show_metadata(data):
     info_electrodes = DH.info_electrodes(data)
@@ -84,7 +87,7 @@ def add_combo_filters(sender, app_data, user_data):
 def add_combo_features(sender, app_data, user_data):
     tab_tag,signal_tags = user_data
 
-    features = ['periodogram','welch','multitaper','spectrogram']
+    features = ['periodogram','welch','multitaper','spectrogram', 'dpss']
 
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_custom_features"):
@@ -347,7 +350,7 @@ def update_plot_fd(tab_tag, signal_tags, title = None):
     dpg.set_axis_limits_auto(f"x_axis_{tab_tag}")
     dpg.set_axis_limits_auto(f"y_axis_{tab_tag}")
 
-def create_table(tab_label,table_tag,features):
+def create_table(tab_label,table_tag,features, trial_label = "New Trial"):
     with dpg.group(parent=tab_label):
                         
         if not dpg.does_item_exist(table_tag):
@@ -357,7 +360,7 @@ def create_table(tab_label,table_tag,features):
                     dpg.add_table_column(label=band, width=100)
 
                 with dpg.table_row(parent=table_tag):
-                    dpg.add_input_text(default_value="Start Trial")                          
+                    dpg.add_input_text(default_value=trial_label, width=-1)                          
                     for band, value in features.items():
                         if isinstance(value, (list, np.ndarray)):  # Check if value is a list or NumPy array
                             if len(value) == 1:  # Single-element array
@@ -370,7 +373,7 @@ def create_table(tab_label,table_tag,features):
 
         else:
             with dpg.table_row(parent=table_tag):
-                dpg.add_input_text(default_value="New Trial")                          
+                dpg.add_input_text(default_value=trial_label, width=-1)                          
                 for band, value in features.items():
                     if isinstance(value, (list, np.ndarray)):  # Check if value is a list or NumPy array
                         if len(value) == 1:  # Single-element array
@@ -381,9 +384,36 @@ def create_table(tab_label,table_tag,features):
                     else:  # Single number case
                         dpg.add_text(f"{float(value):.2f}")  # Ensure it's a clean float
 
+def fill_params(func, replace, module):
 
 
+    params = pre.get_required_params(func, module)
 
+    parameters = {}
+    for name, param in params.items():            
+        if param == None:
+            value = ""
+        
+        else:
+            value = param
+
+        parameters[name] =value
+
+    if func == 'dpss':
+        parameters['NW'] = 3
+        parameters['Kmax'] = int(parameters['NW'])*2 -1
+        #parameters['M'] = len(stream['X'])
+        
+
+    if replace != {}:
+        for name, value in replace.items():
+            parameters[name] = value
+    
+    return parameters
+
+def replace_params(original,replace):
+    return original.update(replace)
+    
 #--- Extract signal/identifiers
 def extract_idx_from_series_tag(series_tag: str) -> int:
     match = re.search(r'_series_(\d+)(?:_|$)', series_tag)  # Match _series_<number> with or without trailing underscore
@@ -762,7 +792,24 @@ def CustomFeatures(sender,app_data,user_data):
     def create_input_fields(sender, app_data):
         """Dynamically create input fields for selected function."""
 
-        if app_data == 'multitaper':
+        if app_data == 'dpss':
+            windows = pre.get_required_params(app_data, module = 'ssw')
+            welch = pre.get_required_params('welch')
+            
+            params = windows | welch #join dictionaries  
+
+            replace = {
+                'x': '---',
+                'M': '---',
+                'fs': 250,
+                'window': 'skip',
+                'NW': 3, #min1
+                'Kmax': 5
+            }     
+
+            params.update(replace)  
+
+        elif app_data == 'multitaper':
             app_data = 'psd_array_multitaper'
             params = pre.get_required_params(app_data, module='mtf')
         else: params = pre.get_required_params(app_data)        
@@ -778,12 +825,13 @@ def CustomFeatures(sender,app_data,user_data):
         for param, default in params.items():            
             if param == 'x':  default = '---'
             if param == 'fs' or param =='sfreq': default = 250
-            input_id = dpg.add_input_text(
-                label=param, 
-                default_value= default if default is not None else " ",
-                parent=param_container
-            )
-            input_fields[param] = input_id  # Store input field reference
+            if param != 'window':
+                input_id = dpg.add_input_text(
+                    label=param, 
+                    default_value= default if default is not None else " ",
+                    parent=param_container
+                )
+                input_fields[param] = input_id  # Store input field reference
 
         # Add save button
         dpg.add_button(label="Save Parameters", callback=save_parameters, parent=param_container, user_data = app_data)
@@ -810,7 +858,20 @@ def CustomFeatures(sender,app_data,user_data):
         parameter_values['x'] = np.array(stream['Y'])
 
         if func == 'psd_array_multitaper': 
+            
             signal = pre.call_function(func, parameter_values, module='mtf')
+        elif func == 'dpss':
+            parameter_values['M'] = len(np.array(stream['Y']))
+            power_combined =[]
+            windows = pre.call_function(func, parameter_values, module = 'ssw')
+            for order, taper in enumerate(windows):
+                parameter_values['window'] = taper
+                freq, psd = pre.call_function('welch',param_dict=parameter_values,module='ss')
+                power_combined.append(psd)
+                #power_sum = np.abs(psd).mean()
+
+            signal = freq, np.mean(power_combined, axis=-2)
+
         else: 
             signal = pre.call_function(func, parameter_values)
 
@@ -835,13 +896,14 @@ def CustomFeatures(sender,app_data,user_data):
         tab_label = f"{tab_tag}_{func}"
 
         with dpg.group(horizontal=True, parent = tab_label,tag=f"{tab_label}_plot_group"):
-            with dpg.plot(label=f"Spectral Analysis - {func}", height=400, width=600, tag = f"{tab_tag}_{func}_plot"):
-                dpg.bind_colormap(f"{tab_tag}_{func}_plot", 0)
+            with dpg.plot(label=f"Spectral Analysis - {func}", height=400, width=600, tag = f"{tab_label}_plot"):
+                dpg.bind_colormap(f"{tab_label}_plot", 0)
                 dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
-                dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag=f"{tab_tag}_{func}_plot_x")
-                dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (dB)", tag=f"{tab_tag}_{func}_plot_y")
+                dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag=f"{tab_label}_plot_x")
+                dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (dB)", tag=f"{tab_label}_plot_y")
                 
-                power = []
+                power, channels = [], []
+                power_band = {}
                 for tag in tags:
                     stream = getSignalbyIdx(window_id,tab_tag,tag)
                     idx = extract_idx_from_series_tag(tag)
@@ -850,6 +912,18 @@ def CustomFeatures(sender,app_data,user_data):
                     parameter_values['x'] = np.array(y)
                     if func == 'psd_array_multitaper': 
                         signal = pre.call_function(func, parameter_values, module='mtf')
+                    elif func == 'dpss':
+                        parameter_values['M'] = len(y)
+                        power_combined =[]
+                        windows = pre.call_function(func, parameter_values, module = 'ssw')
+                        for order, taper in enumerate(windows):
+                            parameter_values['window'] = taper
+                            freq, psd = pre.call_function('welch',param_dict=parameter_values,module='ss')
+                            power_combined.append(psd)
+                            #power_sum = np.abs(psd).mean()
+
+                        signal = freq, np.mean(power_combined, axis=-2)
+                        
                     else: 
                         signal = pre.call_function(func, parameter_values)
                     app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx][func] = signal
@@ -868,36 +942,42 @@ def CustomFeatures(sender,app_data,user_data):
 
                         p = {'X': freqs,
                              'Y': psd}
+                        
                         power.append(p)
+                        channels.append(channel)
+                        power_band[channel] = ft.mean_power_all_bands(p)
 
-                        dpg.add_line_series(freqs,psd, label=series_label, parent=f"{tab_tag}_{func}_plot_y", tag = f"{tab_tag}_{channel}_{func}")
-                print(len(power))                             
+                        dpg.add_line_series(freqs,psd, label=series_label, parent=f"{tab_label}_plot_y", tag = f"{tab_tag}_{channel}_{func}")
+
                 if len(power)>1:
                     mean = np.mean([p['Y'] for p in power], axis=0)
-                    dpg.add_line_series(freqs, mean, label="Mean Power", parent=f"{tab_tag}_{func}_plot_y", tag=f"{tab_tag}_{func}_mean")
-                dpg.set_axis_limits(f"{tab_tag}_{func}_plot_x",min(freqs),max(freqs))
-                dpg.set_axis_limits(f"{tab_tag}_{func}_plot_y",min(psd),max(psd))
+                    dpg.add_line_series(freqs, mean, label="Mean Power", parent=f"{tab_label}_plot_y", tag=f"{tab_label}_mean")
+                dpg.set_axis_limits(f"{tab_label}_plot_x",min(freqs),max(freqs))
+                dpg.set_axis_limits(f"{tab_label}_plot_y",min(psd),max(psd))
                 
-
-            table_tag = f"{tab_label}_table"
-            print(power)
             features = ft.mean_power_all_bands(power)  
                     
 
-        if not dpg.does_item_exist(f"{tab_tag}_{func}_power"): #once the first is created all are
-            dpg.add_collapsing_header(label = 'Mean Power', tag =f"{tab_tag}_{func}_power", parent = tab_label) #adicionar normalize dentro de cada collapsing header
-            dpg.add_collapsing_header(label = 'Peak Features', tag =f"{tab_tag}_{func}_peak", parent = tab_label)
-            #dpg.add_collapsing_header(label = 'Area Under Curve', tag =f"{tab_tag}_{func}_auc", parent = tab_label)
+        if not dpg.does_item_exist(f"{tab_label}_mean_power"): #once the first is created all are
+            dpg.add_collapsing_header(label = 'Power Band', tag =f"{tab_label}_power", parent = tab_label)
+            dpg.add_collapsing_header(label = 'Mean Power', tag =f"{tab_label}_mean_power", parent = tab_label) #adicionar normalize dentro de cada collapsing header
+            dpg.add_collapsing_header(label = 'Peak Features', tag =f"{tab_label}_peak", parent = tab_label)
+            
+            #dpg.add_collapsing_header(label = 'Area Under Curve', tag =f"{tab_label}_auc", parent = tab_label)
+        for ch, values in power_band.items():
+            create_table(f"{tab_label}_power",f"{tab_label}_table_power", values, trial_label=ch)
 
-        create_table(f"{tab_tag}_{func}_power",f"{tab_label}_table_power",features)
-        for p in power:
+        create_table(f"{tab_label}_mean_power",f"{tab_label}_table_mean_power",features)
+        for p, ch in zip(power,channels):
             picos = ft.peak_per_band(p)
-            create_table(f"{tab_tag}_{func}_peak",f"{tab_label}_table_peak",picos)
-        #create_table(f"{tab_tag}_{func}_auc",table_tag,features)
+            create_table(f"{tab_label}_peak",f"{tab_label}_table_peak",picos, trial_label=ch)
+
+        
+        #create_table(f"{tab_label}_auc",table_tag,features)
 
         time.sleep(0.2)
-        dpg.set_axis_limits_auto(f"{tab_tag}_{func}_plot_x")
-        dpg.set_axis_limits_auto(f"{tab_tag}_{func}_plot_y")
+        dpg.set_axis_limits_auto(f"{tab_label}_plot_x")
+        dpg.set_axis_limits_auto(f"{tab_label}_plot_y")
 
     def plot_spectrogram(signal, tags, func):
         tab_label = f"{tab_tag}_{func}"
@@ -922,7 +1002,7 @@ def CustomFeatures(sender,app_data,user_data):
             global_min = min(global_min, Sxx_log.min())
             global_max = max(global_max, Sxx_log.max())     
 
-        with dpg.group(horizontal=True, parent=f"{tab_tag}_{func}", tag=f"{tab_label}_plot_group"):
+        with dpg.group(horizontal=True, parent=f"{tab_label}", tag=f"{tab_label}_plot_group"):
 
             dpg.add_colormap_scale(tag=f"{tab_tag}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
                                                 min_scale = global_min, max_scale=global_max, height=400*num_rows)
@@ -944,7 +1024,7 @@ def CustomFeatures(sender,app_data,user_data):
 
                     # Create a new subplot for each heat series
                     
-                    with dpg.plot(label=f"Spectrogram - {channel}", width=-1, height=-1, tag = f"{tab_tag}_{func}_{channel}"):
+                    with dpg.plot(label=f"Spectrogram - {channel}", width=-1, height=-1, tag = f"{tab_label}_{channel}"):
                         x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                         y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
 
@@ -966,7 +1046,7 @@ def CustomFeatures(sender,app_data,user_data):
                                                 parent=y_axis, format="")
                                                 
                         
-                        dpg.bind_colormap(f"{tab_tag}_{func}_{channel}", dpg.mvPlotColormap_Jet)
+                        dpg.bind_colormap(f"{tab_label}_{channel}", dpg.mvPlotColormap_Jet)
 
             def link(sender, app_data):
                 dpg.configure_item(f"{tab_tag}_subplots", link_all_x=app_data, link_all_y=app_data)
@@ -1433,6 +1513,7 @@ def create_individual_window():
             if app_state['windows'][window_id]['Modes'] == ['None. Recording is Damaged!']: 
                 dpg.set_value(f"modes_{window_id}", 'Recording is damaged! Choose another file.')
                 dpg.configure_item(f"modes_{window_id}", show=True)
+                modes = []
             else:
 
                 
@@ -1443,10 +1524,12 @@ def create_individual_window():
                 dpg.delete_item(item=f"session_parameteres_{window_id}",children_only=True)
                 dpg.delete_item(item=f"mode_list_group_{window_id}",children_only=True)
                  
+                
                 dpg.add_text(f"Session date: {date}", parent=f"session_parameteres_{window_id}", show=True)
                 dpg.add_text(f"Session duration: {session_duration}", parent=f"session_parameteres_{window_id}", show=True)
                 dpg.add_text(f"Initial Stimulation: {initial_stim_status}", parent=f"session_parameteres_{window_id}", show=True)
                 dpg.add_text(f"Final Stimulation: {final_stim_status}", parent=f"session_parameteres_{window_id}", show=True)
+                dpg.configure_item(f"session_parameteres_{window_id}", show=True)
                 #dpg.add_text(f"Stimulation parameters: {left['Electrodes']}", parent=f"session_parameteres_{window_id}", show=True)
 
                 
@@ -1456,9 +1539,6 @@ def create_individual_window():
                     dpg.configure_item(f"modes_{window_id}", show=True)
                     dpg.set_item_label(f"window_{window_id}", files[0]['name'])
                     
-                else: 
-                    modes = []
-                    dpg.set_value(f"modes_{window_id}", 'Recording is Damaged! Choose another file!')
 
                 for mode in modes:
                     dpg.add_button(label = mode, parent=f"mode_list_group_{window_id}",callback=open_tab_mode ,user_data=(mode,window_id),show=True)
@@ -1471,8 +1551,8 @@ def create_individual_window():
         dpg.add_text("No file selected", tag=f"file_list_{window_id}")
         dpg.add_button(label="Open File", callback=open_file_callback,
                     tag=f"open_file_btn_{window_id}", show=False, user_data=window_id)
+        with dpg.child_window(tag = f"session_parameteres_{window_id}", height=100, show=False): pass
         dpg.add_text('', tag=f"modes_{window_id}", show=False) #Modes in 
-        with dpg.group(tag = f"session_parameteres_{window_id}"): pass
         with dpg.group(horizontal=True,tag = f"mode_list_group_{window_id}"): pass  
         with dpg.tab_bar(tag=f"tab_bar_window_{window_id}"): pass 
             

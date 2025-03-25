@@ -1,99 +1,73 @@
+import dearpygui.dearpygui as dpg
+import csv
 
-import matplotlib.pyplot as plt    
-import DataHandling as DH
-import Preprocessing as pre
-import numpy as np
-                                                                                          
-'''nSamples = 1000                                                                           
-win_size = nSamples // 4                                                                  
-# create a slepian sequence of 6 orthogonal tapers                                        
-slepians = windows.dpss(win_size, NW=2, Kmax=6)                                           
-signal = randn(nSamples)                                                                  
-                                                                                          
-nSamples = 1000
-t = np.linspace(0, 1000, nSamples, endpoint=False)
-sig = ss.square(2 * np.pi * 5 * t)
+dpg.create_context()
 
-'''
-
-file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-10-14\\Report_Json_Session_Report_20241125T162143.json"
-Data = DH.getData(file_path)
-stream = DH.getSignals(Data, 'Streaming')[0]
-
-def fill_params(func, replace, module):
+def save_table_to_file(sender, app_data, user_data):
+    """Saves DPG table data to a .csv or .txt file"""
+    table_id, file_type = user_data  # Unpack table ID and file type
 
 
-    params = pre.get_required_params(func, module)
 
-    parameters = {}
-    for name, param in params.items():            
-        if param == None:
-            value = ""
-        
-        else:
-            value = param
-
-        parameters[name] =value
-
-    if func == 'dpss':
-        parameters['NW'] = 3
-        parameters['Kmax'] = int(parameters['NW'])*2 -1
-        parameters['M'] = len(stream['X'])
-        
-
-    if replace != {}:
-        for name, value in replace.items():
-            parameters[name] = value
+    # Get table columns (headers)
+    column_children = dpg.get_item_children(table_id, slot=0)
     
-    return parameters
+    if column_children and isinstance(column_children, list):  # Ensure it's a list
+        headers = [dpg.get_item_label(col) for col in column_children]
+        for col in column_children: print(col)
 
-parameters = fill_params('dpss',{}, module='ssw')
-
-
-windows = pre.call_function('dpss',param_dict=parameters,module='ssw')
-
-power_combined = []
-for order, taper in enumerate(windows):
-    
-    replace = {
-        'x': stream['Y'],
-        'fs': 250, 
-        'window': taper,
-        'nperseg': len(stream['Y'])
-    }
-    welch_params = fill_params('welch',replace, module='ss')
-
-    freq, psd = pre.call_function('welch',param_dict=welch_params,module='ss')
-    power_combined.append(psd)
-    power_sum = np.abs(psd).mean()
+    else:
+        headers = []  # No columns found
 
 
-power_combined = np.mean(power_combined, axis=-2)
-params = {
-    'x': stream['Y'],
-    'fs': 250
-}
-
-rep = {
-    'x': np.array(stream['Y']),
-    'sfreq': 250
-}
-
-multi_params = fill_params('psd_array_multitaper',replace=rep, module='mtf')
-
-multitaper, freqs = pre.call_function('psd_array_multitaper', multi_params, module='mtf')
+    # Get table rows (data)
+    rows = []
+    row_children = dpg.get_item_children(table_id, slot=1)
+    if row_children and isinstance(row_children, list):
+        for row in row_children:  
+            cell_children = dpg.get_item_children(row, slot=1)
+            if cell_children and isinstance(cell_children, list):
+                row_data = [dpg.get_value(cell) for cell in cell_children]
+                print("Row Data:", row_data)  # Debugging
+                rows.append(row_data)
 
 
-plt.figure()
+    # Save to CSV or TXT
+    filename = f"table_data.{file_type}"
+    if file_type == "csv":
+        with open(filename, mode="w", newline="") as file:
+            writer = csv.writer(file)
+            if headers:
+                writer.writerow(headers)  # Write headers
+            writer.writerows(rows)  # Write data
+    else:
+        with open(filename, mode="w") as file:
+            if headers:
+                file.write("\t".join(headers) + "\n")  # Tab-separated headers
+            for row in rows:
+                file.write("\t".join(map(str, row)) + "\n")  # Tab-separated values
 
-mask1 = freqs <= 100
-mask2 = freq <= 100
+    print(f"Table saved as {filename}")
 
-multitaper = np.array([m*100/np.max(multitaper[mask1]) for m in multitaper])
-power_combined = np.array([m*100/np.max(power_combined[mask2]) for m in power_combined])
+# Example Table
+with dpg.window(label="Table Example"):
+    with dpg.table(header_row=True) as table_id:
+        dpg.add_table_column(label="Column 1")  # FIXED: No 'with' needed
+        dpg.add_table_column(label="Column 2")
 
-plt.plot(freqs[mask1], multitaper[mask1], label = 'multitaper mne')
-plt.plot(freq[mask2], power_combined[mask2], label="welch_dpss")
+        with dpg.table_row():
+            dpg.add_text("Data 1")
+            dpg.add_text("Data 2")
 
-plt.legend()
-plt.show()
+        with dpg.table_row():
+            dpg.add_text("Data 3")
+            dpg.add_text("Data 4")
+
+    dpg.add_button(label="Save as CSV", callback=save_table_to_file, user_data=(table_id, "csv"))
+    dpg.add_button(label="Save as TXT", callback=save_table_to_file, user_data=(table_id, "txt"))
+
+dpg.create_viewport(title='DPG Table Save Example', width=600, height=400)
+dpg.setup_dearpygui()
+dpg.show_viewport()
+dpg.start_dearpygui()
+dpg.destroy_context()
