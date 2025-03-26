@@ -1,72 +1,58 @@
+import numpy as np
+import mne
 import dearpygui.dearpygui as dpg
-import csv
+import DataHandling as DH
 
+file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
+Data = DH.getData(file_path)
+a = np.array(DH.getSignals(Data, 'Indefinite')[0]['Y'])
+
+
+
+sfreq = 250
+signal = a[np.newaxis, np.newaxis, :]
+
+# Define parameters for the Morlet wavelet transform
+freqs = np.arange(1, 100, 1)  # Frequencies from 1Hz to 50Hz
+n_cycles = freqs / 2  # Number of cycles per frequency
+tfr = mne.time_frequency.tfr_array_morlet(signal, sfreq=sfreq, freqs=freqs, n_cycles=n_cycles, output='power')   
+
+
+
+n_cycles = freqs / 2  # Number of cycles per frequency
+tfr = mne.time_frequency.tfr_array_morlet(signal, sfreq=sfreq, freqs=freqs, n_cycles=n_cycles, output='power')
+
+# Normalize power values (0 to 1)
+tfr = (tfr - np.min(tfr)) / (np.max(tfr) - np.min(tfr))
+
+# Flip upside down
+tfr = np.flipud(tfr[0, 0, :, :])
+
+downsampled_tfr = tfr[::5, ::5]
+heatmap_data = downsampled_tfr.flatten().tolist()
+
+# Set up Dear PyGui
 dpg.create_context()
 
-def save_table_to_file(sender, app_data, user_data):
-    """Saves DPG table data to a .csv or .txt file"""
-    table_id, file_type = user_data  # Unpack table ID and file type
+global_min = np.min(downsampled_tfr)
+global_max = np.max(downsampled_tfr)
 
+with dpg.window(label="Wavelet Transform Heatmap", width=800, height=600):
+    with dpg.group(horizontal=True):
+        dpg.add_colormap_scale(tag="colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
+                               min_scale=global_min, max_scale=global_max, height=400)
 
+        with dpg.plot(label=f"Spectrogram", width=700, height=500, tag="plot"):
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
 
-    # Get table columns (headers)
-    column_children = dpg.get_item_children(table_id, slot=0)
-    
-    if column_children and isinstance(column_children, list):  # Ensure it's a list
-        headers = [dpg.get_item_label(col) for col in column_children]
-        for col in column_children: print(col)
+            # Add downsampled heatmap series
+            dpg.add_heat_series(heatmap_data, rows=downsampled_tfr.shape[0], cols=downsampled_tfr.shape[1], 
+                                parent=y_axis, scale_min=0.0, scale_max=1.0, label="Wavelet Power", format="")
 
-    else:
-        headers = []  # No columns found
+            dpg.bind_colormap("plot", dpg.mvPlotColormap_Jet)
 
-
-    # Get table rows (data)
-    rows = []
-    row_children = dpg.get_item_children(table_id, slot=1)
-    if row_children and isinstance(row_children, list):
-        for row in row_children:  
-            cell_children = dpg.get_item_children(row, slot=1)
-            if cell_children and isinstance(cell_children, list):
-                row_data = [dpg.get_value(cell) for cell in cell_children]
-                print("Row Data:", row_data)  # Debugging
-                rows.append(row_data)
-
-
-    # Save to CSV or TXT
-    filename = f"table_data.{file_type}"
-    if file_type == "csv":
-        with open(filename, mode="w", newline="") as file:
-            writer = csv.writer(file)
-            if headers:
-                writer.writerow(headers)  # Write headers
-            writer.writerows(rows)  # Write data
-    else:
-        with open(filename, mode="w") as file:
-            if headers:
-                file.write("\t".join(headers) + "\n")  # Tab-separated headers
-            for row in rows:
-                file.write("\t".join(map(str, row)) + "\n")  # Tab-separated values
-
-    print(f"Table saved as {filename}")
-
-# Example Table
-with dpg.window(label="Table Example"):
-    with dpg.table(header_row=True) as table_id:
-        dpg.add_table_column(label="Column 1")  # FIXED: No 'with' needed
-        dpg.add_table_column(label="Column 2")
-
-        with dpg.table_row():
-            dpg.add_text("Data 1")
-            dpg.add_text("Data 2")
-
-        with dpg.table_row():
-            dpg.add_text("Data 3")
-            dpg.add_text("Data 4")
-
-    dpg.add_button(label="Save as CSV", callback=save_table_to_file, user_data=(table_id, "csv"))
-    dpg.add_button(label="Save as TXT", callback=save_table_to_file, user_data=(table_id, "txt"))
-
-dpg.create_viewport(title='DPG Table Save Example', width=600, height=400)
+dpg.create_viewport(title="FEATURES", width=800, height=600)
 dpg.setup_dearpygui()
 dpg.show_viewport()
 dpg.start_dearpygui()

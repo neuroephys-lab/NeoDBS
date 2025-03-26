@@ -52,14 +52,25 @@ def peak_per_band(stream):
     return peaks
 
 def std_dev_band(stream, band):
+
+    if 'X' in stream.keys():
+        f = 'X'
+        p = 'Y'
+    elif 'Frequency'in stream.keys():
+        f = 'Frequency'
+        p = 'Power'
+
     a,b = band
-    freq_array = np.array(stream['Frequency'])
+    freq_array = np.array(stream[f])
     mask = (freq_array >= a) & (freq_array <= b)
-    power = np.array(stream['Power'])[mask]
+    power = np.array(stream[p])[mask]
 
     return np.std(power)
    
 def std_dev_streams(streams):
+
+    if not isinstance(streams, (list, tuple, np.ndarray)):  
+        streams = [streams]
     
     if 'X' in streams[0].keys():
         f = 'X'
