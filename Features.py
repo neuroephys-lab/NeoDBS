@@ -162,6 +162,7 @@ def psd_fft(filtered_eeg, fs=250):
 
     return freqs, psd
 
+
 def wave(frequency = 10, sampling_rate = 1000, duration = 1, amplitude = 1):
     
     # Generate time vector

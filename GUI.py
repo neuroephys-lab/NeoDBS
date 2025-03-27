@@ -87,7 +87,7 @@ def add_combo_filters(sender, app_data, user_data):
 def add_combo_features(sender, app_data, user_data):
     tab_tag,signal_tags = user_data
 
-    features = ['periodogram','welch','multitaper','spectrogram', 'dpss']
+    features = ['periodogram','welch','multitaper','spectrogram', 'dpss', 'wavelet']
 
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_custom_features"):
@@ -552,6 +552,13 @@ def enforce_min_max(sender, app_data, user_data):
         dpg.set_value(min_tag, min_value)
         dpg.set_value(max_tag, max_value)
 
+def get_window_type(window_id):
+    temp = app_state['windows'][window_id]['Files']
+    if len(temp)>1:
+        return 'combined'
+    else:
+        return 'individual'
+
 #--- Process with signal
 
 def Volt2dB(sender,app_data,user_data):
@@ -594,6 +601,7 @@ def getMeanActiveSeries(window_id,tab_tag,signal_tags):
 
         active_signals.append(active)
     mean_power = pre.MeanSignal(active_signals)
+    #mean_power = [m*100/np.sum(mean_power) for m in mean_power]
     return mean_power
 
 def segment_signal(tab_tag, signal_tags):
@@ -846,28 +854,28 @@ def CustomFeatures(sender,app_data,user_data):
 
     def create_input_fields(sender, app_data):
         """Dynamically create input fields for selected function."""
-
-        if app_data == 'dpss':
-            windows = pre.get_required_params(app_data, module = 'ssw')
-            welch = pre.get_required_params('welch')
-            
-            params = windows | welch #join dictionaries  
-
-            replace = {
-                'x': '---',
-                'M': '---',
-                'fs': 250,
-                'window': 'skip',
-                'NW': 3, #min1
-                'Kmax': 5
-            }     
-
-            params.update(replace)  
-
-        elif app_data == 'multitaper':
-            app_data = 'psd_array_multitaper'
-            params = pre.get_required_params(app_data, module='mtf')
-        else: params = pre.get_required_params(app_data)        
+        match app_data:
+            case 'dpss':
+                windows = pre.get_required_params(app_data, module = 'ssw')
+                welch = pre.get_required_params('welch')
+                params = windows | welch #join dictionaries  
+                replace = {
+                    'x': '---',
+                    'M': '---',
+                    'fs': 250,
+                    'window': 'skip',
+                    'NW': 3, #min1
+                    'Kmax': 5
+                }     
+                params.update(replace)  
+            case 'wavelet':
+                app_data = 'tfr_array_morlet'
+                params = pre.get_required_params(app_data, module='mtf')
+            case 'multitaper':
+                app_data = 'psd_array_multitaper'
+                params = pre.get_required_params(app_data, module='mtf')
+            case _: 
+                params = pre.get_required_params(app_data)        
         if not params:
             dpg.add_text("No parameters found", parent=param_container)
             return
@@ -878,8 +886,10 @@ def CustomFeatures(sender,app_data,user_data):
         
 
         for param, default in params.items():            
-            if param == 'x':  default = '---'
+            if param == 'x' or param == 'data':  default = '---'
             if param == 'fs' or param =='sfreq': default = 250
+            if param == 'output': default = 'power' #wavelet
+            if param == 'freqs': default = 100 #wavelet
             if param != 'window':
                 input_id = dpg.add_input_text(
                     label=param, 
@@ -912,39 +922,47 @@ def CustomFeatures(sender,app_data,user_data):
         stream = getSignalbyIdx(window_id,tab_tag,tag)
         parameter_values['x'] = np.array(stream['Y'])
 
-        if func == 'psd_array_multitaper': 
-            
-            signal = pre.call_function(func, parameter_values, module='mtf')
-        elif func == 'dpss':
-            parameter_values['M'] = len(np.array(stream['Y']))
-            power_combined =[]
-            windows = pre.call_function(func, parameter_values, module = 'ssw')
-            for order, taper in enumerate(windows):
-                parameter_values['window'] = taper
-                freq, psd = pre.call_function('welch',param_dict=parameter_values,module='ss')
-                power_combined.append(psd)
-                #power_sum = np.abs(psd).mean()
+        match func:
 
-            signal = freq, np.mean(power_combined, axis=-2)
+            case 'psd_array_multitaper': signal = pre.call_function(func, parameter_values, module='mtf')
+            case 'dpss':
+                parameter_values['M'] = len(np.array(stream['Y']))
+                power_combined =[]
+                windows = pre.call_function(func, parameter_values, module = 'ssw')
+                for order, taper in enumerate(windows):
+                    parameter_values['window'] = taper
+                    try: freq, psd = pre.call_function('welch',param_dict=parameter_values,module='ss')
+                    except Exception as e: print(e)
+                    power_combined.append(psd)
+                    #power_sum = np.abs(psd).mean()
 
-        else: 
-            signal = pre.call_function(func, parameter_values)
+                signal = freq, np.mean(power_combined, axis=-2)
+            case 'tfr_array_morlet':
+                a = np.array(stream['Y'])
+                parameter_values['data'] = a[np.newaxis, np.newaxis, :]
+                parameter_values['sfreq'] = 250
+                parameter_values['freqs'] = np.arange(1, int(parameter_values['freqs'])+1, 1)
+                parameter_values['n_cycles'] = parameter_values['freqs'] / int(parameter_values['n_cycles'])
+                try:
+                    signal = pre.call_function(func, parameter_values, module = 'mtf')
+                except Exception as e: print(e)
 
-        
-        if signal:            
-            tab_label = f"{tab_tag}_{func}"
-            if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
-                dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar")
+            case _: 
+                try: signal = pre.call_function(func, parameter_values)
+                except Exception as e: print(e)
+                    
+        tab_label = f"{tab_tag}_{func}"
+        if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
+            dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar")
 
-            if dpg.does_item_exist(tab_label):
-                dpg.delete_item(f"{tab_label}_plot_group")
-            else:
-                dpg.add_tab(label=f"{func}", parent=f"{tab_tag}_features_bar", tag=tab_label)  
-
-            if func == 'spectrogram':
-                plot_spectrogram(signal, tags, func)
-            else:
-                plot_filtered_signal(tags, func)
+        if dpg.does_item_exist(tab_label):
+            dpg.delete_item(f"{tab_label}_plot_group")
+        else:
+            dpg.add_tab(label=f"{func}", parent=f"{tab_tag}_features_bar", tag=tab_label)  
+        match func:
+            case 'spectrogram': plot_spectrogram(signal, tags, func)
+            case 'tfr_array_morlet': plot_wavelet(signal, tags, func)
+            case _: plot_filtered_signal(tags, func)
                 #dpg.add_button(label='Normalize', parent = tab_label)
                                      
     def plot_filtered_signal(tags, func):
@@ -1004,10 +1022,11 @@ def CustomFeatures(sender,app_data,user_data):
                         app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx][func] = p
                         
 
-                        dpg.add_line_series(freqs,psd, label=series_label, parent=f"{tab_label}_y_axis", tag = f"{tab_tag}_{channel}_{func}")
+                        dpg.add_line_series(freqs,p['Y'], label=series_label, parent=f"{tab_label}_y_axis", tag = f"{tab_tag}_{channel}_{func}")
 
                 if len(power)>1:
                     mean = np.mean([p['Y'] for p in power], axis=0)
+                    print(power)
                     dpg.add_line_series(freqs, mean, label="Mean Power", parent=f"{tab_label}_y_axis", tag=f"{tab_label}_mean")
                 dpg.set_axis_limits(f"{tab_label}_x_axis",min(freqs),max(freqs))
                 dpg.set_axis_limits(f"{tab_label}_y_axis",min(psd),max(psd))
@@ -1070,7 +1089,7 @@ def CustomFeatures(sender,app_data,user_data):
 
         with dpg.group(horizontal=True, parent=f"{tab_label}", tag=f"{tab_label}_plot_group"):
 
-            dpg.add_colormap_scale(tag=f"{tab_tag}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
+            dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
                                                 min_scale = global_min, max_scale=global_max, height=400*num_rows)
             
             with dpg.subplots(rows=num_rows, columns=num_cols, label="Spectrograms", width=800, height=400*num_rows, tag=f"{tab_tag}_subplots"):
@@ -1118,10 +1137,83 @@ def CustomFeatures(sender,app_data,user_data):
                 dpg.configure_item(f"{tab_tag}_subplots", link_all_x=app_data, link_all_y=app_data)
 
             dpg.add_checkbox(label='Synchronize Axis', callback=link)      
-            
+
+    def plot_wavelet(signal, tags, func):
+
+        tab_label = f"{tab_tag}_{func}"
+        num_plots = len(tags)
+        num_cols = 2
+        num_rows = (num_plots + 1) // num_cols
+
+        with dpg.group(horizontal=True,tag = f"{tab_label}_plot_group", parent=tab_label):
+            with dpg.subplots(rows=num_rows, columns=num_cols, label=f"Wavelet", width=800, height=400*num_rows, tag=f"{tab_label}_subplots"):
+                
+                for tag in tags:
+                    stream = getSignalbyIdx(window_id, tab_tag, tag)
+                    idx = extract_idx_from_series_tag(tag)
+                    y = stream['Y']
+                    channel = stream['Channel']
+                    a = np.array(y)
+                    parameter_values['data'] = a[np.newaxis, np.newaxis, :]
+                    parameter_values['sfreq'] = 250
+                    if isinstance(parameter_values['freqs'], str):
+                        parameter_values['freqs'] = np.arange(1, int(parameter_values['freqs'])+1, 1)
+                        parameter_values['n_cycles'] = parameter_values['freqs'] / int(parameter_values['n_cycles'])
+                    try:
+                        signal = pre.call_function(func, parameter_values, module = 'mtf')
+                        app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx][func] = signal
+                    except Exception as e: print(e)
+                
+                    with dpg.plot(label = f'Morlet Wavelet - {channel}', width=-1, height=-1, tag = f"{tab_label}_{channel}"):
+                    
+                        x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
+                        y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
+
+                        freqs = parameter_values['freqs']
+                        tfr = signal
+
+                        # tfr = (tfr * 100) / np.max(tfr)
+                        tfr = 10 * np.log10(tfr)
+
+                        tfr = np.flipud(tfr[0, 0, :, :])
+
+                        times = np.arange(0, len(tfr[0,:])/parameter_values['sfreq'], 1)
+
+                        downsampled_tfr = tfr[:, ::2]
+                        heatmap_data = downsampled_tfr.flatten().tolist()
+
+                        global_min = np.min(downsampled_tfr)
+                        global_max = np.max(downsampled_tfr)
+
+                        label_pairs = ()
+                        for i in np.arange(0,1.1,0.1):
+                            label_pairs += ((f"{i*times[-1]:.2f}", i),)
+                        dpg.set_axis_ticks(x_axis, label_pairs)
+
+                        freq_pairs = ()
+                        for i in freqs[::5]:
+                            freq_pairs += ((f"{i:.0f}", i/np.max(freqs)),)
+                        dpg.set_axis_ticks(y_axis, freq_pairs)
+
+
+                        # Add downsampled heatmap series
+                        dpg.add_heat_series(heatmap_data, rows=downsampled_tfr.shape[0], cols=downsampled_tfr.shape[1], 
+                                            parent=y_axis, scale_min=global_min, scale_max=global_max, label="Wavelet Power", format="")
+
+                        dpg.bind_colormap(f"{tab_label}_{channel}", dpg.mvPlotColormap_Jet)
+
+            dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
+                                min_scale=global_min, max_scale=global_max, height=400*num_rows)
+
+            def link(sender, app_data):
+                dpg.configure_item(f"{tab_label}_subplots", link_all_x=app_data, link_all_y=app_data)
+
+            dpg.add_checkbox(label='Synchronize Axis', callback=link)
+
+
     create_input_fields(sender,app_data)
 
-#--------------------------------------MODE TABS-----------------------------------------
+#--------------------------------------INDIVIDUAL TABS-----------------------------------------
 '''For now ONLY individual analysis'''
 def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     app_state['windows'][window_id]['Data'][tab_tag]['Signals'] = {'left': [], 'right': []}
@@ -1364,6 +1456,11 @@ def indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     add_features_buttons(tab_tag, signal_tags)
     add_correlation_buttons(tab_tag)
 
+#--------------------------------------COMBINED TABS-----------------------------------------
+
+def comb_event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
+    print('COMBINED TAB EVENTS')
+
 #-----------------------------------COMBINED ANALISYS-------------------------------------
 
 def create_multiple_window():
@@ -1430,6 +1527,7 @@ def create_multiple_window():
             dpg.configure_item(f"modes_{window_id}", show = False)
             dpg.configure_item(f"mode_list_group_{window_id}", show = False)
         else:
+
             
             for idx, file in enumerate(files):
 
@@ -1457,7 +1555,35 @@ def create_multiple_window():
    
     def open_tab_mode(sender,app_data,user_data): 
         mode, window_id = user_data
-        dpg.add_tab(label=mode, tag=f"tab_{mode}_{window_id}",parent=f"tab_bar_window_{window_id}")
+
+        dpg.configure_item(item=f"open_file_btn_{window_id}",show=False)
+
+        tab_tag = f"tab_{mode}_{window_id}"
+        if dpg.does_item_exist(tab_tag): #check if its already created
+            if not dpg.is_item_shown(tab_tag):  # If closed, show it again
+                dpg.configure_item(tab_tag, show=True)
+                '''maybe delete tab, create a new one from scrath enabling reset (?)'''
+            return
+        plot_tag = f"plot_{tab_tag}"
+        signal_tags = {}
+
+        match mode:
+            case 'Setup': print('combined setup')
+
+            case 'Survey': print('combined Survey')
+                
+            case 'Streaming': print('combined Streaming')
+                
+            case 'Indefinite': print('combined Indefinite')
+        
+            case 'Events': print('combined Events')
+            
+            case 'Timeline': print('combined Timeline')
+
+        dpg.set_item_width(item=f"window_{window_id}",width=-1)
+        dpg.set_item_height(item=f"window_{window_id}",height=-1)
+
+        #dpg.add_tab(label=mode, tag=f"tab_{mode}_{window_id}",parent=f"tab_bar_window_{window_id}")
                     
     with dpg.window(label=f"Window {window_id + 1}", width=400, height=300, tag=f"window_{window_id}"):
         dpg.add_button(label="Add File", callback=lambda: dpg.show_item(f"file_dialog_{window_id}"))
