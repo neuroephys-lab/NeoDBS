@@ -26,10 +26,10 @@ def peak_power(stream):
         peak_f = stream[f][peak_idx]
         peak_power = stream[p][peak_idx]
 
-        return [peak_f, peak_power]
-    else: return [0, 0]
+        return (peak_power, peak_f)
+    else: return (0, 0)
 
-def peak_per_band(stream):
+def peak_per_band(stream, bands):
     temp = {}
     peaks = {}
     if 'X' in stream.keys():
@@ -67,7 +67,7 @@ def std_dev_band(stream, band):
 
     return np.std(power)
    
-def std_dev_streams(streams):
+def std_dev_streams(streams, bands):
 
     if not isinstance(streams, (list, tuple, np.ndarray)):  
         streams = [streams]
@@ -123,7 +123,7 @@ def mean_power_band(log,band):
 
     return np.mean(power) if power else np.nan 
 
-def mean_power_all_bands(stream):
+def mean_power_all_bands(stream, bands):
     """Computes mean power for frequency bands over a stream of events."""
     
     # Ensure stream is iterable
