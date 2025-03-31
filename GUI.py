@@ -19,13 +19,13 @@ def show_metadata(data):
 def print_me(sender, app_data):
     print(f"Menu item {sender} clicked!")
 
-def create_band(sender, app_data, user_data):
+def add_band(sender, app_data, user_data):
     global bands
     tab_tag = user_data
-    bands.clear()
     min = dpg.get_value(f"{tab_tag}_band_min")
     max = dpg.get_value(f"{tab_tag}_band_max")
-    bands = {f'Band {min}-{max}': [min,max]}
+    new = {f'Band {min}-{max}': [min,max]}
+    bands = bands | new
 
 def save_table_to_file(sender, app_data, user_data):
     """Saves DPG table data to a .csv or .txt file"""
@@ -98,7 +98,7 @@ def add_features_buttons(tab_tag, signal_tags):
                 with dpg.group(horizontal=True):
                     dpg.add_input_int(label='Hz', tag=f"{tab_tag}_band_min", width=90, default_value=0, callback=enforce_min_max, user_data=(f"{tab_tag}_band_min", f"{tab_tag}_band_max", 2))
                     dpg.add_input_int(label='Hz', tag=f"{tab_tag}_band_max", width=90, default_value=100, callback=enforce_min_max, user_data=(f"{tab_tag}_band_min", f"{tab_tag}_band_max", 2))
-                    dpg.add_button(label='Band of Interest', show=True, callback=create_band,user_data=(tab_tag))
+                    dpg.add_button(label='Insert Band of Interest', show=True, callback=add_band,user_data=(tab_tag))
     else:
         print(f"Tab {tab_tag} does not exist yet.")
 
@@ -341,7 +341,7 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons_side", user_data=(day, window_id, tab_tag))
 
-        dpg.add_button(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag, "", ""),parent=f"{tab_tag}_buttons")
+        dpg.add_button(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag, "", "", ""),parent=f"{tab_tag}_buttons")
         
 
 #--- Visualization functions
@@ -560,6 +560,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
     #tab_label = f"{tab_tag}_{func}"
     window_id = extract_window_id(tab_tag)
     tags = getActiveSeries(signal_tags)
+    tables = []
 
     with dpg.group(horizontal=True, parent = tab_label,tag=f"{tab_label}_plot_group"):
         with dpg.plot(label=f"Spectral Analysis - {func}", height=400, width=600, tag = f"{tab_label}_plot"):
@@ -568,13 +569,15 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µV^2/Hz)", tag= f"{tab_label}_y_axis")
             
-            power, channels = [], []
-            power_band = {}
+            power = []
             for tag in tags:
                 stream = getSignalbyIdx(window_id,tab_tag,tag)
                 idx = extract_idx_from_series_tag(tag)
                 y = stream['Y']
-                channel = series_label = stream['Channel']
+                date = stream['Date']
+                date = f"{date.day:02d}/{date.month:02d} - {date.hour:02d}:{date.minute:02d}"
+                channel = stream['Channel']
+                series_label = f"{channel} - {date}"
 
                 signal = apply_feat(func,parameter_values,y)
                 if func == 'multitaper': 
@@ -587,15 +590,51 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     psd = np.ascontiguousarray(signal[1][mask])
 
                 p = {'X': freqs,
-                    'Y': psd*100/np.sum(psd)}
-                
-                power.append(p)
-                channels.append(channel)
-                power_band[channel] = ft.mean_power_all_bands(p, bands)
-                app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx][func] = p
-                
+                    'Y': psd} #*100/np.sum(psd)                               
 
-                dpg.add_line_series(freqs,p['Y'], label=series_label, parent=y_axis, tag = f"{tab_label}_{channel}_{func}")
+                dpg.add_line_series(freqs,p['Y'], label=series_label, parent=y_axis, tag = f"{tab_label}_{series_label}_{func}")
+
+
+                if not dpg.does_item_exist(f"{tab_label}_{series_label}"):
+                    dpg.add_collapsing_header(label = f'{series_label}', tag =f"{tab_label}_{series_label}", parent = tab_label)
+                else:
+                    dpg.delete_item(f"{tab_label}_{series_label}_table")
+
+                #TABLE CONTENT
+                full_power = np.sum(psd)
+                for b, v in bands.items():
+                    band = {b: v}
+                    #mean power per band
+                    pc = ft.mean_power_all_bands(p, band)
+                    std = ft.std_dev_streams(p, band)
+                    mean = {'Mean Power (mean, std. dev)': [np.round(pc[b],2), np.round(std[b],2)]}
+
+                    #normalized mean power
+                    norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc[b]*100/full_power,2), np.round(std[b],2)]}
+
+                    #auc
+                    params = pre.get_required_params('simpson', module='si')
+                    param_auc = {}
+                    for name, param in params.items(): param_auc[name] = param
+                    mask = (freqs >= v[0]) & (freqs <= v[1])
+                    param_auc['y'] = psd[mask]
+                    simpson = pre.call_function('simpson', param_dict=param_auc, module='si')
+                    auc = {'Sum Power (AUC)': f"{np.round(simpson,2)}"}
+
+                    #normalized auc
+                    norm_auc = {'% Sum Power (AUC)': f"{np.round(simpson*100/full_power,2)}"}
+
+                    #peak power
+                    peak = ft.peak_per_band(p, band)
+                    picos = {'Peak Power (power, frequency)': p for p in peak.values()}
+
+
+                    info = mean | norm_mean| auc | norm_auc| picos
+                    create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table", info, trial_label=b)
+                tables.append(f"{tab_label}_{series_label}_table")
+
+
+                app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx][func] = p
 
             if len(power)>1:
                 mean = np.mean([p['Y'] for p in power], axis=0)
@@ -603,35 +642,8 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             dpg.set_axis_limits(x_axis,min(freqs),max(freqs))
             dpg.set_axis_limits(y_axis,min(psd),max(psd))
 
-        dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag,func, tab_label),parent=f"{tab_tag}_buttons", tag = f"{tab_label}_2db")
-
-    if not dpg.does_item_exist(f"{tab_label}_mean_power"): #once the first is created all are
-        dpg.add_collapsing_header(label = 'Channel Power', tag =f"{tab_label}_power", parent = tab_label)
-        dpg.add_collapsing_header(label = 'Mean Power', tag =f"{tab_label}_mean_power", parent = tab_label) #adicionar normalize dentro de cada collapsing header
-        dpg.add_collapsing_header(label = 'Peak Features', tag =f"{tab_label}_peak", parent = tab_label)
-        
-        #dpg.add_collapsing_header(label = 'Area Under Curve', tag =f"{tab_label}_auc", parent = tab_label)
+        dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag,func, tab_label, tables),parent=f"{tab_tag}_buttons", tag = f"{tab_label}_2db")
     
-    #Power per band per stream
-    for ch, pwr in power_band.items():
-        std_dev = ft.std_dev_streams(power, bands)
-        info = {band: f"{np.round(p,2)} , {np.round(s,2)}" for band,p,s in zip(bands.keys(),pwr.values(),std_dev.values())}
-        create_table(f"{tab_label}_power",f"{tab_label}_table_power", info, trial_label=ch)
-
-    #Mean power per band for all streams
-    features = ft.mean_power_all_bands(power, bands)
-    std_dev = ft.std_dev_streams(power, bands)
-    info = {band: f"{np.round(p,2)} , {np.round(s,2)}" for band,p,s in zip(bands,features.values(),std_dev.values())}
-    create_table(f"{tab_label}_mean_power",f"{tab_label}_table_mean_power",info)
-
-    #Peaks per band and stream
-    for p, ch in zip(power,channels):
-        picos = ft.peak_per_band(p, bands)
-        create_table(f"{tab_label}_peak",f"{tab_label}_table_peak",picos, trial_label=ch)
-
-    
-    #create_table(f"{tab_label}_auc",table_tag,features)
-
     time.sleep(0.2)
     dpg.set_axis_limits_auto(x_axis)
     dpg.set_axis_limits_auto(y_axis)
@@ -780,50 +792,60 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values):
 
 def convert_to_db(value):
     """Convert a value to dB scale using 10 * log10."""
-    # if isinstance(value, (list, np.ndarray)):
-    #     return [round(10 * np.log10(v +1e-6), 2) for v in value]
+     # if isinstance(value, (list, np.ndarray)):
+     #     return [round(10 * np.log10(v +1e-6), 2) for v in value]
     if isinstance(value, (list, np.ndarray,tuple)):  # Handle peak values (power, frequency)
         return (round(10 * np.log10(value[0]+1e-6), 2), value[1])
     elif isinstance(value, (int, float)):
         return round(10 * np.log10(value+1e-6), 2)
     return value  # Return unchanged if it's a string or invalid type
-
+ 
 def convert_from_db(value):
+ 
     """Convert a dB value back to linear scale using 10^(dB/10)."""
-    # if isinstance(value, (list, np.ndarray,tuple)):  
-    #     return [round(10**(v / 10), 2) if v != float('-inf') else 0 for v in value]
+     # if isinstance(value, (list, np.ndarray,tuple)):  
+     #     return [round(10**(v / 10), 2) if v != float('-inf') else 0 for v in value]
+ 
     if isinstance(value, (list, np.ndarray,tuple)):  # Handle peak values (power, frequency)
         return (round(10**(value[0] / 10), 2) if value[0] != float('-inf') else 0, value[1])
     elif isinstance(value, (int, float)):
         return round(10**(value / 10), 2) if value != float('-inf') else 0
     return value  # Return unchanged if it's a string or invalid type
-
+ 
 def update_table(table_tag, type):
     """Update the table by replacing values with their dB equivalents."""
+
     if not dpg.does_item_exist(table_tag):
         print(f"Table {table_tag} does not exist!")
         return
-    
+ 
     children = dpg.get_item_children(table_tag, slot=1)  # Get table rows
+ 
     if not children:
         print(f"No rows found in {table_tag}.")
+ 
         return
     
     for row_id in children:  # Iterate through rows
         row_children = dpg.get_item_children(row_id, slot=1)  # Get row items
-        
+ 
         for i in range(1, len(row_children)):  # Skip first column (Trial)
+
             value = eval(dpg.get_value(row_children[i]))
             if type == 'dB':
                 db_value = convert_to_db(value)
             else: db_value = convert_from_db(value)
-            
+          
             if isinstance(db_value, list):  # List case
                 dpg.set_value(row_children[i], str(db_value))
+
             elif isinstance(db_value, tuple):  # Peak case (power, frequency)
                 dpg.set_value(row_children[i], f"({db_value[0]}, {value[1]})")
+ 
             else:  # Single number case
                 dpg.set_value(row_children[i], f"{db_value:.2f}")
+
+
 
 #--- Extract signal/identifiers
 def extract_idx_from_series_tag(series_tag: str) -> int:
@@ -971,7 +993,7 @@ def Volt2dB(sender,app_data,user_data):
         type = 'Y'
         label = 'µV^2/Hz'
 
-    signal_tags,tab_tag, func, tab_label = user_data
+    signal_tags,tab_tag, func, tab_label, tables = user_data
     if tab_label == "":
         identifier = tab_tag
     else:
@@ -1003,10 +1025,9 @@ def Volt2dB(sender,app_data,user_data):
 
         dpg.configure_item(f"{identifier}_y_axis", label = f"LFP Power ({label})")
         update_plot_feature(tab_tag,signal_tags,func, identifier, type)
-        table_tags = ["power", 'mean_power', 'peak']
-        for table_tag in table_tags:
-            table_tag = f"{identifier}_table_{table_tag}"
-            update_table(table_tag,type)
+
+    for table in tables:
+        update_table(table,type)
 
 def getMeanActiveSeries(window_id,tab_tag,signal_tags):
     active_tags = getActiveSeries(signal_tags)
@@ -1187,9 +1208,8 @@ def DefaultFeatures2(sender, app_data, user_data):
             mask = f <= 100  
             f_filtered = f[mask]  
             p_filtered = p[mask]  
-            p = p_filtered*100/np.max(p_filtered)
             pwr = {'X':f_filtered,
-                'Y':p}
+                'Y':p_filtered} #*100/np.max(p_filtered)
             power.append(pwr)
             
     elif mode != 'Timeline':
@@ -1215,8 +1235,7 @@ def DefaultFeatures2(sender, app_data, user_data):
             p = medtronic['Power']
             mask = medtronic['Frequency'] <= 100  
             f_filtered = medtronic['Frequency'][mask]  
-            p_filtered = p[mask]  
-            p_filtered = p_filtered*100/np.sum(p_filtered)
+            p_filtered = p[mask]  # *100/np.sum(p_filtered)
 
             pwr = {'X':f_filtered,
                 'Y':p_filtered}
