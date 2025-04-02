@@ -1,13 +1,14 @@
 import DataHandling as DH
 import utils as utl
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import timedelta
 import inspect
 from scipy import optimize
 from scipy import signal as ss
 import scipy.integrate as si
 import scipy.signal.windows as ssw
 import mne.time_frequency as mtf
+import re
 #-----------------------------------------NeoDBS-------------------------------------------------
 
 #------------------ Easy Access to Scipy.signal---------------------
@@ -34,6 +35,20 @@ def get_functions(module = 'ss'):
         except Exception as e:
             print(f"Skipping function {name} due to error: {e}")
     return functions
+
+def extract_params_and_returns(docstring):
+    params_section = re.search(r'Parameters\s*-+\n(.*?)(?=\n\n\S)', docstring, re.DOTALL)
+    returns_section = re.search(r'Returns\s*-+\n(.*?)(?=\n\n\S)', docstring, re.DOTALL)
+
+    params = params_section.group(1).strip() if params_section else "No parameters found."
+    returns = returns_section.group(1).strip() if returns_section else "No return values found."
+
+    params = "Parameters: \n" + params + "\n"
+    returns = "Returns: \n" + returns + "\n"
+
+    documentation = params + returns
+
+    return documentation
 
 def dict_to_arg(param_dict, func_name, module = 'ss'):
     # Convert saved parameters (strings) into appropriate types
