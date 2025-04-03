@@ -192,9 +192,11 @@ def toggleVisibility(signal_tags, parent, group, user_data):
                         
                     else:
                         pass
-                    mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
-                    current = dpg.get_value(f"{tab_tag}_mean")
-                    dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
+                    mode = extract_mode(tab_tag)
+                    if mode == 'Events':
+                        mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+                        current = dpg.get_value(f"{tab_tag}_mean")
+                        dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
                     
 
                 checkbox = dpg.add_checkbox(label=label, default_value=visible,
@@ -233,10 +235,10 @@ def toggleType2(signal_tags, parent, user_data):
         # Add type-level checkbox
         dpg.add_checkbox(label=f"{type_filter}", default_value=True, callback=toggle_filtered_series, tag=f"{tab_tag}_{type_filter}_checkbox")
 
-def toggleType(signal_tags, parent, user_data):
+def toggleType(signal_tags, parent, user_data, orientation = False):
     type_filter, window_id, tab_tag = user_data  # This is the type (like "day", "hemisphere", or "event")
     
-    with dpg.group(parent=parent):
+    with dpg.group(parent=parent, horizontal=orientation):
         # Create a checkbox to toggle all matching series at once
         def toggle_filtered_series(sender, app_data):
             inactive_tags = getInactiveSeries(signal_tags)
@@ -255,13 +257,19 @@ def toggleType(signal_tags, parent, user_data):
 
 def toggleDisplay(signals, signal_tags, window_id, tab_tag):
 
-    days = [] #by date
+    
+    signals = getActiveSignals(tab_tag,signal_tags)
+
+    days, hours = [], [] #by date
     for signal in signals: 
         date = signal['Date']
-        date = f"{date.hour:02d}:{date.minute:02d}"
-        days.append(date)
+        hour = f"{date.hour:02d}:{date.minute:02d}"
+        hours.append(hour)
+        day = f"{date.year}-{date.month}-{date.day}"
+        days.append(day)
         
     days = np.unique(days).tolist()
+    hours = np.unique(hours).tolist()
 
     channels = []
     for signal in signals: # by channel
@@ -282,9 +290,15 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag):
         # Horizontal group for types
         with dpg.group(horizontal=True, parent=f"{tab_tag}_buttons", tag=f"{tab_tag}_types"):
             
+            with dpg.group(label=f"{tab_tag}_buttons_hours"):
+                if len(hours) > 1:
+                    dpg.add_text('By recording:')
+                    for day in hours:
+                        toggleType(signal_tags, parent=f"{tab_tag}_buttons_hours", user_data=(day, window_id, tab_tag))
+
             with dpg.group(label=f"{tab_tag}_buttons_day"):
                 if len(days) > 1:
-                    dpg.add_text('By recording:')
+                    dpg.add_text('By day:')
                     for day in days:
                         toggleType(signal_tags, parent=f"{tab_tag}_buttons_day", user_data=(day, window_id, tab_tag))
 
@@ -299,6 +313,8 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag):
                     dpg.add_text('By hemisphere:')
                     for day in sides:
                         toggleType(signal_tags, parent=f"{tab_tag}_buttons_side", user_data=(day, window_id, tab_tag))
+
+            with dpg.group(label=f"{tab_tag}_buttons_events"): pass
         segment_signal(tab_tag, signal_tags)
 
 def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
@@ -346,7 +362,7 @@ def plot_td(signals, parent, tab_tag, signal_tags, files = None):
     '''
     Plot Time Domain signals (Streaming, Indefinite, Setup, Survey)
     '''
-    extra =  len(signal_tags)
+    #extra =  len(signal_tags)
     window_id = extract_window_id(tab_tag)
     
     for idx, signal in enumerate(signals):
@@ -355,8 +371,8 @@ def plot_td(signals, parent, tab_tag, signal_tags, files = None):
         date = signal['Date']
         channel = signal['Channel']
         
-        series_tag = f"{tab_tag}_series_{idx + extra}"
-        combined_tag = f"{tab_tag}_file_{files}_series_{idx + extra}"
+        series_tag = f"{tab_tag}_series_{idx}" #+extra
+        combined_tag = f"{tab_tag}_file_{files}_series_{idx}"
         
         if 'Data' in app_state['windows'][window_id].keys():
             if not dpg.does_item_exist(series_tag):
@@ -962,13 +978,13 @@ def getSignalbyIdxSide(window_id,tab_tag,series_tag):
     side = extract_side_from_series_tag(series_tag)
     return app_state['windows'][window_id]['Data'][tab_tag]['Signals'][side][idx]
 
-def updateXSignalbyIdx(value,tab_tag,series_tag):
+def updateKeySignalbyIdx(value,tab_tag,series_tag, key):
     window_id = extract_window_id(tab_tag)
     idx = extract_idx_from_series_tag(series_tag)
     file = extract_file_from_series_tag(series_tag)
     if file == None:
-        app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['X'] = value
-    else: app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Signals'][idx]['X'] = value
+        app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx][key] = value
+    else: app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Signals'][idx][key] = value
 
 def updateSignalbyIdx(value,tab_tag,series_tag, func = None):
     window_id = extract_window_id(tab_tag)
@@ -1420,14 +1436,17 @@ def insert_events(sender, app_data, user_data):
         streaming_file = app_data['file_path_name']
         events = utl.read_event_file(streaming_file)
         events_times = {}
-        scatter = []
-        active = getActiveSignals(tab_tag,signal_tags)
+        scatter, dates = [], []
+        #active = getActiveSignals(tab_tag,signal_tags)
         series = getActiveSeries(signal_tags)
-        for i,signal in enumerate(active):
+        window_id = extract_window_id(tab_tag)
+        for i,tag in enumerate(series):
+            signal = getSignalbyIdx(window_id,tab_tag,tag)
             date = signal['Date']
+            dates.append(f"{date.year}-{date.month}-{date.day}")
             new_time = [date + timedelta(seconds=val) for val in signal['X']]
             new_x = [d.timestamp() for d in new_time]
-            updateXSignalbyIdx(new_x,tab_tag,series[i])
+            updateKeySignalbyIdx(new_x,tab_tag,series[i],'X')
             
             dpg.configure_item(f"x_axis_{tab_tag}",scale=dpg.mvPlotScale_Time)
             dpg.configure_item(series[i], x=new_x)
@@ -1436,14 +1455,39 @@ def insert_events(sender, app_data, user_data):
                 hour, minute, type = event
                 idx = utl.find_closest_index(new_time,hour,minute)
                 if idx != None: 
+                    
                     events_times[f"{hour}:{minute}"] = (type, idx)
-                    scatter.append((new_x[int(idx)], type))
+                    idx = int(idx)
+                    scatter.append([new_x[idx], type, new_time[idx]])
+                    time_diff = 15*250
+                    min = idx-time_diff
+                    max = idx+time_diff
+                    if min<0:
+                        min = 0
+                    if max>len(signal)-1:
+                        max = len(signal)-1
+
+                    updateKeySignalbyIdx(new_x[min:max],tab_tag,tag,f"{type}_X")
+                    updateKeySignalbyIdx(signal[min:max],tab_tag,tag,f"{type}_Y")
         if scatter:
-            for i, type in scatter:
-                dpg.add_vline_series(parent=f"y_axis_{tab_tag}", x=[i], label=type)
+            for i, point in enumerate(scatter):
+                idx, type, time = point
+                tag = f"{tab_tag}_{type}_{i}"
+                dpg.add_inf_line_series(parent=f"y_axis_{tab_tag}", x=[idx], label=f"{type} - {time}", tag=tag)
+                signal_tags[tag] = True
+                segment_signal()
+
+            scatter = np.array(scatter, dtype=object)
+            types= np.unique(scatter[:,1]).tolist()
+            if len(types)>1:
+                dpg.add_text('By Event:', parent=f"{tab_tag}_add_events")
+                for day in types:
+                    toggleType(signal_tags,parent=f"{tab_tag}_add_events", orientation=True, user_data=(day, window_id, tab_tag))               
+                
         else: 
             dpg.add_text("No Events in the present recordings!", parent=f"{tab_tag}_add_events")
 
+        
 
     def create_file_dialog(window_id):
         with dpg.file_dialog(
@@ -1731,11 +1775,13 @@ def comb_streaming_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     dpg.add_text(f"Channel: {channel.upper()}", parent=tab_tag)
                     plot_td(signals,parent,tab_tag,signal_tags,files=idx)
 
-        toggleDisplay(signals, signal_tags, window_id, tab_tag)
-        with dpg.group(parent=tab_tag, tag = f"{tab_tag}_add_events"):
+        
+        with dpg.group(parent=tab_tag, tag = f"{tab_tag}_add_events", horizontal=True):
             dpg.add_button(label='Insert Streaming Events', parent=f"{tab_tag}_add_events", callback = insert_events, user_data=(window_id, tab_tag, signal_tags))
-        add_filters_buttons(tab_tag,signal_tags)
-        add_features_buttons(tab_tag, signal_tags)
+        
+        toggleDisplay(signals, signal_tags, window_id, tab_tag)
+        # add_filters_buttons(tab_tag,signal_tags)
+        # add_features_buttons(tab_tag, signal_tags)
 
 #-----------------------------------COMBINED ANALISYS-------------------------------------
 
