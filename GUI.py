@@ -432,8 +432,7 @@ def update_plot_feature(tab_tag, signal_tags, func, identifier, type):
         dpg.delete_item(plot_tag, children_only=True)
 
     for serie in active_series:
-        idx = extract_idx_from_series_tag(serie)
-        memory = app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]
+        memory = getSignalbyIdx(window_id,tab_tag,serie)
         signal = memory[func]
         channel = memory['Channel']
         dpg.add_line_series(signal['X'], signal[type], label = channel, parent=plot_tag)
@@ -958,13 +957,18 @@ def getSignalbyIdx(window_id,tab_tag,series_tag):
     else:
         return app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Signals'][idx]
 
-def getSignalbyIdx2(data,tab_tag,idx):
-    return data['Data'][tab_tag]['Signals'][idx]
-
 def getSignalbyIdxSide(window_id,tab_tag,series_tag):
     idx = extract_idx_from_series_tag(series_tag)
     side = extract_side_from_series_tag(series_tag)
     return app_state['windows'][window_id]['Data'][tab_tag]['Signals'][side][idx]
+
+def updateXSignalbyIdx(value,tab_tag,series_tag):
+    window_id = extract_window_id(tab_tag)
+    idx = extract_idx_from_series_tag(series_tag)
+    file = extract_file_from_series_tag(series_tag)
+    if file == None:
+        app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['X'] = value
+    else: app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Signals'][idx]['X'] = value
 
 def updateSignalbyIdx(value,tab_tag,series_tag, func = None):
     window_id = extract_window_id(tab_tag)
@@ -1033,12 +1037,13 @@ def Volt2dB(sender,app_data,user_data):
     for serie in series:
         idx = extract_idx_from_series_tag(serie)
         if mode == 'Events':
-            side = extract_side_from_series_tag(serie)
-            norm = pre.log_normalization_db(app_state['windows'][window_id]['Data'][tab_tag]['Signals'][side][idx])
-            app_state['windows'][window_id]['Data'][tab_tag]['Signals'][side][idx]['dB'] = norm
+            signal = getSignalbyIdxSide(window_id,tab_tag,serie)
+            norm = pre.log_normalization_db(signal)
+            signal['dB'] = norm
         else:
-            norm = pre.log_normalization_db(app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx][func])
-            app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx][func]['dB'] = norm
+            signal = getSignalbyIdx(window_id,tab_tag,serie)
+            norm = pre.log_normalization_db(signal[func])
+            signal[func]['dB'] = norm
 
 
     time.sleep(0.1)
@@ -1409,31 +1414,35 @@ def CustomFeatures(sender,app_data,user_data):
     create_input_fields(sender,app_data)
 
 def insert_events(sender, app_data, user_data):
-    window_id, files, tab_tag= user_data
+    window_id, tab_tag, signal_tags= user_data
 
     def read_txt(sender, app_data, user_data):
         streaming_file = app_data['file_path_name']
         events = utl.read_event_file(streaming_file)
-
         events_times = {}
         scatter = []
-        y = []
-        for i, file in enumerate(files):
-            signals = app_state['windows'][window_id]['Files'][i]['Data'][tab_tag]['Signals']
-            for stream in signals:
-                date = stream['Date']
-                new_time = [date + timedelta(seconds=val) for val in stream['X']]
-                
-                for event in events:
-                    hour, minute, type = event
-                    
-                    idx = utl.find_closest_index(new_time,hour,minute)
-                    if idx != None: 
-                        events_times[f"{hour}:{minute}"] = (type, idx)
-                        scatter.append(idx)
-                        y.append(100)
-
-        dpg.add_vline_series(parent=f"y_axis_{tab_tag}", x=scatter, y=y, label="Events")
+        active = getActiveSignals(tab_tag,signal_tags)
+        series = getActiveSeries(signal_tags)
+        for i,signal in enumerate(active):
+            date = signal['Date']
+            new_time = [date + timedelta(seconds=val) for val in signal['X']]
+            new_x = [d.timestamp() for d in new_time]
+            updateXSignalbyIdx(new_x,tab_tag,series[i])
+            
+            dpg.configure_item(f"x_axis_{tab_tag}",scale=dpg.mvPlotScale_Time)
+            dpg.configure_item(series[i], x=new_x)
+                        
+            for event in events:
+                hour, minute, type = event
+                idx = utl.find_closest_index(new_time,hour,minute)
+                if idx != None: 
+                    events_times[f"{hour}:{minute}"] = (type, idx)
+                    scatter.append((new_x[int(idx)], type))
+        if scatter:
+            for i, type in scatter:
+                dpg.add_vline_series(parent=f"y_axis_{tab_tag}", x=[i], label=type)
+        else: 
+            dpg.add_text("No Events in the present recordings!", parent=f"{tab_tag}_add_events")
 
 
     def create_file_dialog(window_id):
@@ -1451,6 +1460,7 @@ def insert_events(sender, app_data, user_data):
 
 
     create_file_dialog(window_id)
+
 #--------------------------------------INDIVIDUAL TABS-----------------------------------------
 '''For now ONLY individual analysis'''
 def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
@@ -1722,7 +1732,8 @@ def comb_streaming_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     plot_td(signals,parent,tab_tag,signal_tags,files=idx)
 
         toggleDisplay(signals, signal_tags, window_id, tab_tag)
-        dpg.add_button(label='Insert Streaming Events', parent=tab_tag, callback = insert_events, user_data=(window_id, files, tab_tag))
+        with dpg.group(parent=tab_tag, tag = f"{tab_tag}_add_events"):
+            dpg.add_button(label='Insert Streaming Events', parent=f"{tab_tag}_add_events", callback = insert_events, user_data=(window_id, tab_tag, signal_tags))
         add_filters_buttons(tab_tag,signal_tags)
         add_features_buttons(tab_tag, signal_tags)
 
