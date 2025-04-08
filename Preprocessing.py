@@ -428,12 +428,12 @@ def removeCardiacComponent(raw, band, filterMethod="Fixed Peak Find"):
 
     band = np.array([a,b])
 
-    stream = raw['Y']
+    filtered = raw['Y']
     fs = 250
     #Filtrar bandpass butter
-    [b,a] = ss.butter(5, band*2/fs, 'bp', output='ba')
-    filtered = ss.filtfilt(b, a, stream)
-    buttered = filtered.copy()
+    # [b,a] = ss.butter(5, band*2/fs, 'bp', output='ba')
+    # filtered = ss.filtfilt(b, a, stream)
+    # buttered = filtered.copy()
 
     #filterMethod = "Kurtosis"
     PredictedSignal = ss.wiener(filtered, mysize=125)
@@ -480,7 +480,9 @@ def removeCardiacComponent(raw, band, filterMethod="Fixed Peak Find"):
                     filtered[sliceSelection] = filtered[sliceSelection] - EKGTemplateFunc(sliceSelection, *params)
                     ecg = EKGTemplateFunc(sliceSelection, *params)
 
-        
+        [b,a] = ss.butter(5, band*2/fs, 'bp', output='ba')
+        filtered = ss.filtfilt(b, a, filtered)
+        buttered = ss.filtfilt(b, a, raw['Y'])
 
         #wavelet = waveletTimeFrequency(filtered, freq=np.arange(0.5,100.5,0.5), ma=int(fs/2), fs=fs)
         #sfft = defaultSpectrogram(stream, window=1.0, overlap=0.5, frequency_resolution=0.5, fs=fs)

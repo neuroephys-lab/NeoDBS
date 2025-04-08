@@ -315,6 +315,7 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag):
                         toggleType(signal_tags, parent=f"{tab_tag}_buttons_side", user_data=(day, window_id, tab_tag))
 
             with dpg.group(label=f"{tab_tag}_buttons_events"): pass
+        
         segment_signal(tab_tag, signal_tags)
 
 def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
@@ -599,8 +600,10 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
     tags = getActiveSeries(signal_tags)
     tables = []
 
-    if 'Events' in app_state['windows'][window_id]['Files'][-1]['Data'][tab_tag].keys():
-        mode = 'segment'
+    if 'Files' in app_state['windows'][window_id]:
+        if 'Events' in app_state['windows'][window_id]['Files'][-1]['Data'][tab_tag].keys():
+            mode = 'segment'
+        else: mode = None
     else: mode = None
 
     with dpg.group(horizontal=True, parent = tab_label,tag=f"{tab_label}_plot_group"):
@@ -835,6 +838,10 @@ def plot_spectrogram(tags, tab_label, func, tab_tag, parameter_values, mode = No
                     x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                     y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Power (dB)")
 
+                    with dpg.theme() as alpha_theme:
+                            with dpg.theme_component(0):
+                                dpg.add_theme_style(dpg.mvPlotStyleVar_FillAlpha, 0.5, category=dpg.mvThemeCat_Plots)
+
                     for b,v in bands.items():
                         band_slices = []
                         for sxx in all_Sxx:
@@ -842,13 +849,22 @@ def plot_spectrogram(tags, tab_label, func, tab_tag, parameter_values, mode = No
                             mask = (frequencies*125 >= v[0]) & (frequencies*125 < v[1])
                             if np.any(mask):
                                 band_power = np.mean(sxx[mask, :],axis=0)  # mean across freqs -> shape: (time,)
+                                band_power = 10 * np.log10(band_power + 1e-10)
                                 band_slices.append(band_power)
 
                         if band_slices:
                             power = np.mean(np.stack(band_slices), axis=0)
-                            power = 10 * np.log10(power + 1e-10)
+                            variance = np.var(np.stack(band_slices),axis=0)
+                            std = np.std(np.stack(band_slices), axis=0)
+                            min_std = power-std
+                            max_std = power+std
+
                             time_array = np.linspace(-15,15,33)
+                            dpg.add_shade_series(time_array,min_std,y2=max_std,label = f"{b} Std. Deviation", tag=f"{tab_label}_{b}_std", parent=y_axis)
+                            dpg.bind_item_theme(f"{tab_label}_{b}_std", alpha_theme)
                             dpg.add_line_series(time_array,power,label = f"{b} Mean", tag=f"{tab_label}_{b}_mean", parent=y_axis)
+                            # dpg.add_error_series(time_array,power,std,std,label = f"{b} Std. Deviation", tag=f"{tab_label}_{b}_std", parent=y_axis)
+
 
         with dpg.group(horizontal=False):
             dpg.add_checkbox(label='Synchronize Axis', callback=link)      
@@ -859,8 +875,10 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
 
     #tab_label = f"{tab_tag}_{func}"
     window_id = extract_window_id(tab_tag)
-    if 'Events' in app_state['windows'][window_id]['Files'][-1]['Data'][tab_tag].keys():
-        mode = 'segment'
+    if 'Files' in app_state['windows'][window_id]:
+        if 'Events' in app_state['windows'][window_id]['Files'][-1]['Data'][tab_tag].keys():
+            mode = 'segment'
+        else: mode = None
     else: mode = None
     num_plots = len(tags)
     num_cols = 2
@@ -1195,7 +1213,7 @@ def Volt2dB(sender,app_data,user_data):
 
 
     time.sleep(0.1)
-    update_plot_td(tab_tag,series,'Log Normalized')
+    if mode == 'Events': update_plot_td(tab_tag,series,'Log Normalized')
 
     if dpg.does_item_exist(f"{tab_tag}_mean"):
         mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
@@ -1203,7 +1221,6 @@ def Volt2dB(sender,app_data,user_data):
         dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
 
     if dpg.does_item_exist(f"{identifier}_y_axis"):
-
         dpg.configure_item(f"{identifier}_y_axis", label = f"LFP Power ({label})")
         update_plot_feature(tab_tag,signal_tags,func, identifier, type)
 
@@ -1268,6 +1285,12 @@ def cut_signals(sender,app_data,user_data):
     time.sleep(0.1)
     update_plot_td(tab_tag,signal_tags,' Segment')
 
+def interval_events(tab_tag, signal_tags):
+    min_dif = 2
+    with dpg.group(horizontal=True):
+        dpg.add_input_int(label='T Before (s)', tag=f"{tab_tag}_emin", width=90, default_value=15, callback=enforce_min_max, user_data=(f"{tab_tag}_emin", f"{tab_tag}_emax", min_dif))
+        dpg.add_input_int(label='T After (s)', tag=f"{tab_tag}_emax", width=90, default_value=15, callback=enforce_min_max, user_data=(f"{tab_tag}_emin", f"{tab_tag}_emax", min_dif))
+
 def DefaultFilter(sender,app_data,user_data):
     '''
     Standard filtration = 5th order Butterworth bandpass filter 1-100 Hz + Removal of cardiac component 
@@ -1278,8 +1301,10 @@ def DefaultFilter(sender,app_data,user_data):
     active_series = getActiveSeries(signal_tags)
     window_id = extract_window_id(tab_tag)
 
-    if 'Events' in app_state['windows'][window_id]['Files'][-1]['Data'][tab_tag].keys():
-        mode = 'segment'
+    if 'Files' in app_state['windows'][window_id]:
+        if 'Events' in app_state['windows'][window_id]['Files'][-1]['Data'][tab_tag].keys():
+            mode = 'segment'
+        else: mode = None
     else: mode = None
     
     band = dpg.get_value(item=f"{tab_tag}_default_wn")[:2]
@@ -1300,8 +1325,10 @@ def CustomFilter(sender,app_data,user_data):
 
     window_id = extract_window_id(tab_tag)
 
-    if 'Events' in app_state['windows'][window_id]['Files'][-1]['Data'][tab_tag].keys():
-        mode = 'segment'
+    if 'Files' in app_state['windows'][window_id]:
+        if 'Events' in app_state['windows'][window_id]['Files'][-1]['Data'][tab_tag].keys():
+            mode = 'segment'
+        else: mode = None
     else: mode = None
 
     param_container = dpg.add_child_window(parent=f"{tab_tag}_filters", width=200, height=300)  # Space to add inputs dynamically
@@ -1481,6 +1508,9 @@ def CustomFeatures(sender,app_data,user_data):
 def insert_events(sender, app_data, user_data):
     window_id, tab_tag, signal_tags= user_data
 
+    min = int(dpg.get_value(f"{tab_tag}_emin"))*250
+    max = int(dpg.get_value(f"{tab_tag}_emax"))*250
+
     def read_txt(sender, app_data, user_data):
         window_id, tab_tag, signal_tags = user_data
         
@@ -1513,20 +1543,19 @@ def insert_events(sender, app_data, user_data):
                     events_times[f"{hour}:{minute}"] = (type, idx)
                     idx = int(idx)
                     scatter.append([new_x[idx], type, new_time[idx]])
-                    time_diff = 15*250
-                    min = idx-time_diff
-                    max = idx+time_diff
-                    if min<0:
-                        min = 0
-                        max = time_diff*2
-                    if max>len(new_x)-1:
-                        max = len(new_x)-1
-                        min = len(new_x) -1-2*time_diff
+                    imin = idx-min
+                    imax = idx+max
+                    if imin<0:
+                        imin = 0
+                        imax = idx+max+min
+                    if imax>len(new_x)-1:
+                        imax = len(new_x)-1
+                        imin = len(new_x) -1-(max+min)
 
-                    segment_x = new_x[min:max]
-                    new_y = signal['Y'][min:max]
-                    mid_index = len(segment_x) // 2
-                    x_shift = segment_x[mid_index]
+                    segment_x = new_x[imin:imax]
+                    new_y = signal['Y'][imin:imax]
+                    # mid_index = len(segment_x) // 2
+                    x_shift = segment_x[min] #mid_index
 
                     aligned_x = [xi - x_shift for xi in segment_x]
                     segment = {'X': aligned_x,'Y':new_y,'Channel':channel,'Type':type, 'Date': signal['Date']}
@@ -1577,8 +1606,10 @@ def align_events(sender,app_data, user_data):
     for idx,_ in enumerate(files):
         if 'Events' in files[idx]['Data'][tab_tag].keys():
             events = files[idx]['Data'][tab_tag]['Events']
-            dpg.configure_item(f"x_axis_{tab_tag}", scale=dpg.mvPlotScale_Linear)
-            plot_td(events,parent,tab_tag, signal_tags,files=idx,events=True)
+            if len(events)>1:
+                dpg.configure_item(f"x_axis_{tab_tag}", scale=dpg.mvPlotScale_Linear)
+                plot_td(events,parent,tab_tag, signal_tags,files=idx,events=True)
+            else: dpg.add_text('To compare events, needs at least 2 events', parent=parent)
 
 #--------------------------------------INDIVIDUAL TABS-----------------------------------------
 '''For now ONLY individual analysis'''
@@ -1851,13 +1882,15 @@ def comb_streaming_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     plot_td(signals,parent,tab_tag,signal_tags,files=idx)
 
         
-        with dpg.group(parent=tab_tag, tag = f"{tab_tag}_add_events", horizontal=True):
-            dpg.add_button(label='Insert Streaming Events', parent=f"{tab_tag}_add_events", callback = insert_events, user_data=(window_id, tab_tag, signal_tags))
-            dpg.add_button(label='Analyze Events', parent = f"{tab_tag}_add_events", callback=align_events,user_data=(tab_tag,signal_tags), tag=f"{tab_tag}_align",show=False)
         toggleDisplay(signals, signal_tags, window_id, tab_tag)
-        
-        add_filters_buttons(tab_tag,signal_tags)
-        add_features_buttons(tab_tag, signal_tags)
+    
+    with dpg.group(parent=tab_tag, tag = f"{tab_tag}_add_events", horizontal=True):
+        interval_events(tab_tag,signal_tags)
+        dpg.add_button(label='Insert Streaming Events', parent=f"{tab_tag}_add_events", callback = insert_events, user_data=(window_id, tab_tag, signal_tags))
+        dpg.add_button(label='Analyze Events', parent = f"{tab_tag}_add_events", callback=align_events,user_data=(tab_tag,signal_tags), tag=f"{tab_tag}_align",show=False)
+    
+    add_filters_buttons(tab_tag,signal_tags)
+    add_features_buttons(tab_tag, signal_tags)
 
 #-----------------------------------COMBINED ANALISYS-------------------------------------
 
