@@ -72,6 +72,7 @@ def save_table_to_file(sender, app_data, user_data):
 
 #--- Add common buttons
 def add_filters_buttons(tab_tag,signal_tags):
+  
     if dpg.does_item_exist(tab_tag):
         with dpg.group(parent=tab_tag, horizontal=True, width=600):
             with dpg.collapsing_header(label="Filters", default_open=False, parent=tab_tag, tag = f"{tab_tag}_filters"):
@@ -81,6 +82,7 @@ def add_filters_buttons(tab_tag,signal_tags):
 
                 with dpg.tooltip(f"{tab_tag}_default_filter"):
                     dpg.add_text("5th Order Butterworth Filter and Removal of Cardiac Component")
+
                 dpg.add_button(label="Custom Filtering",width=-1, callback=add_combo_filters, user_data=(tab_tag,signal_tags))
     else:
         print(f"Tab {tab_tag} does not exist yet.")
@@ -730,7 +732,6 @@ def plot_spectrogram_individual(tags, tab_label, func, tab_tag, parameter_values
         global_min = min(global_min, Sxx_log.min())
         global_max = max(global_max, Sxx_log.max())     
         all_Sxx.append(Sxx_log)
-
     
     num_plots = len(per_rec.keys())
     num_cols = 1
@@ -741,12 +742,17 @@ def plot_spectrogram_individual(tags, tab_label, func, tab_tag, parameter_values
         dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
                                             min_scale = global_min, max_scale=global_max, height=400*num_rows)
         
-        def mean_spectrogram(signals, file = None):           
-            all_Sxx = []
+        def mean_spectrogram(signals, file = None):  
 
-            events = signals['Events']
-            signals.pop('Events',None)
-            all_Sxx = [sxx for _, sxx in signals.items()]
+            if isinstance(signals,dict):  
+                all_Sxx = []
+
+                events = signals['Events']
+                signals.pop('Events',None)
+                all_Sxx = [sxx for _, sxx in signals.items()]
+            else: 
+                all_Sxx = signals
+                events = None
 
             if file == None: 
                 title = "Mean Spectrogram"
@@ -811,27 +817,25 @@ def plot_spectrogram_individual(tags, tab_label, func, tab_tag, parameter_values
                 mean_spectrogram(all_Sxx)
                 
 def plot_spectrogram(tags, tab_label, func, tab_tag, parameter_values, mode = 'segment'):
-    #tab_label = f"{tab_tag}_{func}"
     window_id = extract_window_id(tab_tag)
-    # if 'Files' in app_state['windows'][window_id]:
-    #     if 'Events' in app_state['windows'][window_id]['Files'][-1]['Data'][tab_tag].keys():
-    #         mode = 'segment'
     num_plots = len(tags)
     num_cols = 2
-    num_rows = (num_plots + 1) // num_cols  # Determine the required rows for the grid
+    num_rows = (num_plots + 1) // num_cols 
 
     global_min = float("inf")
     global_max = float("-inf")
 
+
+
     Merge = []
-    per_file = {}
-    for tag in tags:
+    for i, tag in enumerate(tags):
+        events = getEventsbyTag(tab_tag,tag)
+        if events == None: mode = None
         stream = getSignalbyIdx(window_id,tab_tag,tag,mode=mode)
         file = extract_file_from_series_tag(tag)
         y = stream['Y']
         parameter_values['x'] = np.array(y)
         signal = pre.call_function(func, parameter_values)
-        if file != None: per_file[file] = []
 
         frequencies, times, Sxx = signal
         Sxx_log = 10 * np.log10(Sxx + 1e-10)  # Convert to dB scale
@@ -958,11 +962,6 @@ def plot_spectrogram(tags, tab_label, func, tab_tag, parameter_values, mode = 's
 
             with dpg.group(horizontal=True, parent=tab_label, tag = f"{tab_label}_merged"):
                 mean_spectrogram(all_Sxx)
-
-                if len(per_file.keys())>1:
-                    for file, signals in per_file.items():
-                        all_Sxx = [s[2] for s in signals]
-                        mean_spectrogram(all_Sxx, file=file)
             
             if mode == 'segment':
                 with dpg.plot(tag=f"{tab_label}_bands_merged", parent=f"{tab_label}_merged", width=-1, height=400):
@@ -994,25 +993,148 @@ def plot_spectrogram(tags, tab_label, func, tab_tag, parameter_values, mode = 's
                             time_array = np.linspace(-emin,emax,sxx.shape[1])
                             dpg.add_shade_series(time_array,min_std,y2=max_std,label = f"{b} Std. Deviation", tag=f"{tab_label}_{b}_std", parent=y_axis)
                             dpg.bind_item_theme(f"{tab_label}_{b}_std", alpha_theme)
-                            # dpg.add_line_series(time_array,variance,label = f"{b} - variance", parent=y_axis)
                             dpg.add_line_series(time_array,power,label = f"{b} Mean", tag=f"{tab_label}_{b}_mean", parent=y_axis)
-                            # dpg.add_error_series(time_array,power,std,std,label = f"{b} Std. Deviation", tag=f"{tab_label}_{b}_std", parent=y_axis)
-
 
         with dpg.group(horizontal=False):
             dpg.add_checkbox(label='Synchronize Axis', callback=link)      
-            # if mode:
             dpg.add_button(label='Merge Spectrograms', callback=merge_spectrograms)
 
-def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
+def new_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
 
-    #tab_label = f"{tab_tag}_{func}"
     window_id = extract_window_id(tab_tag)
-    if not 'Data' in app_state['windows'][window_id]:
-        if 'Events' in app_state['windows'][window_id]['Files'][-1]['Data'][tab_tag].keys():
-            mode = 'segment'
-        else: mode = None
-    else: mode = None
+    wt = extract_type_window(window_id)
+    per_rec = {}
+    all_wt = []
+
+    def mean_wavelet(signals, file = None):
+        if isinstance(signals,dict):  
+            all_Sxx = []
+            events = signals['Events']
+            signals.pop('Events',None)
+            all_Sxx = [sxx for _, sxx in signals.items()]
+        else: 
+            all_Sxx = signals
+            events = None
+
+        if file == None: 
+            title = "Mean Spectrogram"
+            subplot_tag = f"{tab_label}_mean"
+        else:           
+            title =f"Mean Spectrogram - File {file}"
+            subplot_tag = f"{tab_label}_mean_{file}"
+
+        mean_Sxx_log = np.mean(np.stack(all_Sxx), axis=0)
+        freqs = parameter_values['freqs']
+        times = np.arange(0, len(mean_Sxx_log[0,:])/parameter_values['sfreq'], 1)
+
+        with dpg.plot(label = title, width=-1, height=-1, tag =subplot_tag):
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
+
+            heatmap_data = mean_Sxx_log.flatten().tolist()
+
+            label_pairs = ()
+            for i in np.arange(0,1.1,0.1):
+                label_pairs += ((f"{i*times[-1]:.2f}", i),)
+            dpg.set_axis_ticks(x_axis, label_pairs)
+
+            freq_pairs = ()
+            for i in freqs[::5]:
+                freq_pairs += ((f"{i:.0f}", i/np.max(freqs)),)
+            dpg.set_axis_ticks(y_axis, freq_pairs)
+
+            # Add downsampled heatmap series
+            dpg.add_heat_series(heatmap_data, rows=mean_Sxx_log.shape[0], cols=mean_Sxx_log.shape[1], 
+                                parent=y_axis, scale_min=global_min, scale_max=global_max, label="Wavelet Power", format="")
+
+            dpg.bind_colormap(subplot_tag, dpg.mvPlotColormap_Jet)
+
+
+    #segment when combined with events, else none!
+    if wt == 'Combined':
+        if not 'Data' in app_state['windows'][window_id]:
+            if 'Events' in app_state['windows'][window_id]['Files'][-1]['Data'][tab_tag].keys():
+                mode = 'segment'
+        num_plots = len(tags)
+        num_cols = 2
+        num_rows = (num_plots + 1) // num_cols
+    else:        
+        num_plots = len(per_rec.keys())
+        num_cols = 1
+        num_rows = num_plots
+
+    #count different days and save each recording to the correspondant date
+    for tag in tags: 
+        date = getSignalbyIdx(window_id,tab_tag,tag,mode=mode)['Date']
+        date = f"{date.day:02d}/{date.month:02d} - {date.hour:02d}:{date.minute:02d}"
+        per_rec[date] = {}
+
+    for tag in tags:
+        stream = getSignalbyIdx(window_id,tab_tag,tag,mode=mode)
+        stream_events = getEventsbyTag(tab_tag,tag)
+        y = stream['Y']
+        channel = stream['Channel']
+        date = stream['Date']
+        date = f"{date.day:02d}/{date.month:02d} - {date.hour:02d}:{date.minute:02d}"
+        
+        try:
+            signal = apply_feat(func,parameter_values,y)
+            updateSignalbyIdx(signal,tab_tag,tag,func) #save in dictionary
+            tfr = 10 * np.log10(signal)
+            tfr = np.flipud(tfr[0, 0, :, :])
+            tfr = tfr[:, ::2]
+
+            per_rec[date] = {channel: tfr, 'Events': stream_events} #save to be plotted per day with events in the case
+            
+            global_min = min(global_min, tfr.min())
+            global_max = max(global_max, tfr.max())
+            all_wt.append(tfr)
+
+        except Exception as e: print(e)
+
+    with dpg.group(horizontal=True, parent=f"{tab_label}", tag=f"{tab_label}_plot_group"):
+        dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
+                                    min_scale = global_min, max_scale=global_max, height=400*num_rows)
+
+        if dpg.does_item_exist(f"{tab_label}_merged"):dpg.delete_item(f"{tab_label}_merged")
+
+        with dpg.subplots(rows=num_rows, columns=num_cols, label="Spectrograms", width=800, height=400*num_rows, tag = f"{tab_label}_merged"):
+            if wt == 'Individual':
+                if len(per_rec.keys())>1:
+                    for file, signals in per_rec.items():
+                        mean_wavelet(signals, file=file)
+                else: 
+                    mean_wavelet(all_wt)
+            # else:
+                # with dpg.plot(label = title, width=-1, height=-1, tag =subplot_tag):
+                #     x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
+                #     y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
+
+                #     heatmap_data = mean_Sxx_log.flatten().tolist()
+
+                #     label_pairs = ()
+                #     for i in np.arange(0,1.1,0.1):
+                #         label_pairs += ((f"{i*times[-1]:.2f}", i),)
+                #     dpg.set_axis_ticks(x_axis, label_pairs)
+
+                #     freq_pairs = ()
+                #     for i in freqs[::5]:
+                #         freq_pairs += ((f"{i:.0f}", i/np.max(freqs)),)
+                #     dpg.set_axis_ticks(y_axis, freq_pairs)
+
+                #     # Add downsampled heatmap series
+                #     dpg.add_heat_series(heatmap_data, rows=mean_Sxx_log.shape[0], cols=mean_Sxx_log.shape[1], 
+                #                         parent=y_axis, scale_min=global_min, scale_max=global_max, label="Wavelet Power", format="")
+
+                #     dpg.bind_colormap(subplot_tag, dpg.mvPlotColormap_Jet)
+
+    def link(sender, app_data):
+        dpg.configure_item(f"{tab_label}_subplots", link_all_x=app_data, link_all_y=app_data)
+
+    dpg.add_checkbox(label='Synchronize Axis', callback=link)
+
+def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
+    window_id = extract_window_id(tab_tag)
     num_plots = len(tags)
     num_cols = 2
     num_rows = (num_plots + 1) // num_cols
@@ -1160,12 +1282,20 @@ def extract_file_from_series_tag(series_tag: str):
     match = re.search(r'_file_(\d+)_series_', series_tag)  # Ensure only digits
     return int(match.group(1)) if match else None  # Return integer or None
 
-def extract_event_from_series_tag(series_tag: str) -> str:
+def extract_edx_from_series_tag(series_tag: str) -> str:
     """
-    Extracts the event type from a tag string.
-    Example: 'tab_Streaming_0_file_0_series_0_obsessao' -> 'obsessao'
+    Extracts last group of string bla_bla_bla_group
     """
     return series_tag.split('_')[-1]
+
+def extract_event_from_series_tag(event_string):
+    parts = event_string.split('_')
+    
+    # Skip the first three (e.g., tab, Streaming, 0), then look for the next non-number
+    for i in range(3, len(parts), 2):  # step by 2 to skip the numbers
+        if not parts[i].isdigit():
+            return parts[i]
+    return None
 
 def extract_channel_from_series_tag(series_tag: str) -> str:
     match = re.search(r'^(.*?)(?=_(left|right))', series_tag.lower())  # Look for '_left' or '_right' without including them
@@ -1215,6 +1345,8 @@ def getActiveSeries(signal_tags):
         info = dpg.get_item_configuration(tag)
         if info['show'] == True: 
             active_tags.append(tag)
+    keywords = ['series', 'file', 'OFF', 'ON']
+    active_tags = [tag for tag in active_tags if extract_event_from_series_tag(tag) in keywords]
 
     return active_tags
 
@@ -1249,15 +1381,16 @@ def getActiveSignals(tab_tag,signal_tags):
 def getSignalbyIdx(window_id,tab_tag,series_tag,mode=None):
     idx = extract_idx_from_series_tag(series_tag)
     file = extract_file_from_series_tag(series_tag)
-    edx = extract_event_from_series_tag(series_tag)
-    if mode == None:
-        if 'Data' in app_state['windows'][window_id].keys():
-            return app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]
-        else:
+    edx = int(extract_edx_from_series_tag(series_tag))
+    wt = extract_type_window(window_id)
+    if wt == 'Combined': #Combined window
+        if mode == None: #signal and not events
             return app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Signals'][idx]
-    elif mode == 'segment':
-        return app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Events'][idx]
-
+        else: #events
+            return app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Events'][edx]
+    else: #Individual - always signal
+        return app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]
+    
 def getSignalbyIdxSide(window_id,tab_tag,series_tag):
     idx = extract_idx_from_series_tag(series_tag)
     side = extract_side_from_series_tag(series_tag)
@@ -1265,14 +1398,23 @@ def getSignalbyIdxSide(window_id,tab_tag,series_tag):
 
 def getEventsbyIdx(tab_tag,idx):
     window_id = extract_window_id(tab_tag)
-    # idx = extract_idx_from_series_tag(series_tag)
-    return app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Events']
+    if extract_type_window(window_id) == 'Combined':
+        dictionary = app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]
+    
+    if 'Events' in dictionary.keys():
+        return app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Events']
+    else: return None
 
 def getEventsbyTag(tab_tag,series_tag):
     window_id = extract_window_id(tab_tag)
     idx = extract_idx_from_series_tag(series_tag)
-    if 'Events' in app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx].keys():
-        return app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Events']
+    file = extract_file_from_series_tag(series_tag)
+    if extract_type_window(window_id) == 'Combined':
+        dictionary= app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]
+    else:
+        dictionary = app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]
+    if 'Events' in dictionary.keys():
+        return dictionary['Events']
     else: return None
 
 def updateKeySignalbyIdx(value,tab_tag,series_tag, key):
@@ -1287,8 +1429,11 @@ def updateSignalbyIdx(value,tab_tag,series_tag, func = None, mode = None):
     window_id = extract_window_id(tab_tag)
     idx = extract_idx_from_series_tag(series_tag)
     file = extract_file_from_series_tag(series_tag)
-    edx = int(extract_event_from_series_tag(series_tag))
+    edx = int(extract_edx_from_series_tag(series_tag))
     wt = extract_type_window(window_id)
+    # if wt == 'Combined':
+        
+
     if mode == None:
         if file == None:
             if func != None:
@@ -1299,7 +1444,7 @@ def updateSignalbyIdx(value,tab_tag,series_tag, func = None, mode = None):
             else: app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Signals'][idx]['Y'] = value
     else: 
         if wt == 'Combined':
-            app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Events'][idx]['Y'] = value
+            app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Events'][edx]['Y'] = value
         else:
             app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Events'][edx]['Y'] = value
 
@@ -1454,27 +1599,32 @@ def DefaultFilter(sender,app_data,user_data):
     tab_tag, signal_tags = user_data
 
     active_series = getActiveSeries(signal_tags)
+    
     window_id = extract_window_id(tab_tag)
     signal_mode, plot_mode = None, None
-
-    if not 'Data' in app_state['windows'][window_id]:
+    wt = extract_type_window(window_id)
+    if wt == 'Combined':
+        config = dpg.get_item_configuration(f"x_axis_{tab_tag}")
         if 'Events' in app_state['windows'][window_id]['Files'][-1]['Data'][tab_tag].keys():
             signal_mode = plot_mode = 'segment'
-    # else: 
-    #     signals = app_state['windows'][window_id]['Data'][tab_tag]['Signals']
-    #     for i,_ in enumerate(signals):
-    #         events = getEventsbyIdx(tab_tag,i)
-    #         if events != None: plot_mode = 'segment'
+            if config['scale'] == 1: #if were plotting in datetime (signal w marked events) and not seconds (cutted events)
+                signal_mode = plot_mode = None
+        
+                #scale == 1 --> datetime format
+                #scale == 0 --> linear format
+    else: 
+        signals = app_state['windows'][window_id]['Data'][tab_tag]['Signals']
+        for i,_ in enumerate(signals):
+            events = getEventsbyIdx(tab_tag,i)
+            if events != None: plot_mode = 'segment'
     
     band = dpg.get_value(item=f"{tab_tag}_default_wn")[:2]
 
     for series in active_series:
-        if signal_mode:
-            signal=getSignalbyIdx(window_id,tab_tag,series,mode=signal_mode)
-        else: signal = getSignalbyIdx(window_id,tab_tag,series)
+        signal=getSignalbyIdx(window_id,tab_tag,series,mode=signal_mode)
         clean, _ = pre.removeCardiacComponent(signal, band)
         clean = np.ascontiguousarray(clean)
-        updateSignalbyIdx(clean,tab_tag,series,mode=plot_mode)
+        updateSignalbyIdx(clean,tab_tag,series,mode=signal_mode)
 
     title = 'Standard Filter'
     update_plot_td(tab_tag,signal_tags, title,signal_mode = plot_mode)
@@ -1674,6 +1824,8 @@ def insert_events(sender, app_data, user_data):
     if dpg.does_item_exist(f"{tab_tag}_emin"):
         min = int(dpg.get_value(f"{tab_tag}_emin"))*250
         max = int(dpg.get_value(f"{tab_tag}_emax"))*250
+   
+        
 
     window_type = extract_type_window(window_id)
 
@@ -1728,13 +1880,15 @@ def insert_events(sender, app_data, user_data):
 
                         segment_x = new_x[imin:imax]
                         new_y = signal['Y'][imin:imax]
-                        # mid_index = len(segment_x) // 2
                         x_shift = segment_x[min] #mid_index
 
                         aligned_x = [xi - x_shift for xi in segment_x]
                         segment = {'X': aligned_x,'Y':new_y,'Channel':channel,'Type':type, 'Date': signal['Date'], 'Idx': tidx, 'Serie': i}
-                        if window_type == 'Combined': app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Events'].append(segment)
-                        else: app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Events'].append(segment)
+                    else:
+                        segment = {'Channel':channel,'Type':type, 'Date': signal['Date'], 'Idx': tidx, 'Serie': i}
+
+                    if window_type == 'Combined': app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Events'].append(segment)
+                    else: app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Events'].append(segment)
 
         if scatter:
             if dpg.does_item_exist(f"{tab_tag}_align"): dpg.configure_item(f"{tab_tag}_align",show=True)
@@ -1742,7 +1896,7 @@ def insert_events(sender, app_data, user_data):
                 idx, type, time = point
                 tag = f"{tab_tag}_{type}_{i}"
                 dpg.add_inf_line_series(parent=f"y_axis_{tab_tag}", x=[idx], label=f"{type} - {time}", tag=tag)
-                # signal_tags[tag] = True
+                signal_tags[tag] = True
 
             scatter = np.array(scatter, dtype=object)
             types= np.unique(scatter[:,1]).tolist()
