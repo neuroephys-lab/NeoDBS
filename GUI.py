@@ -259,7 +259,9 @@ def toggleType(signal_tags, parent, user_data, orientation = False):
 
 def toggleDisplay(signals, signal_tags, window_id, tab_tag):
 
-    
+    '''
+    Documentation
+    '''    
     signals = getActiveSignals(tab_tag,signal_tags)
 
     days, hours = [], [] #by date
@@ -455,7 +457,7 @@ def update_plot_fd(tab_tag, signal_tags, title = None):
     dpg.set_axis_limits_auto(f"x_axis_{tab_tag}")
     dpg.set_axis_limits_auto(f"y_axis_{tab_tag}")
 
-def update_plot_feature(tab_tag, signal_tags, func, identifier, type):
+def update_plot_feature(tab_tag, signal_tags, func, identifier, type, events = False):
 
     active_series = getActiveSeries(signal_tags)
     window_id = extract_window_id(tab_tag)
@@ -465,7 +467,10 @@ def update_plot_feature(tab_tag, signal_tags, func, identifier, type):
         dpg.delete_item(plot_tag, children_only=True)
 
     for serie in active_series:
-        memory = getSignalbyIdx(window_id,tab_tag,serie)
+        if events == True:
+            memory = getEventsbyTag(tab_tag,serie)
+            label = f"{channel} - {type}"
+        else: memory = getSignalbyIdx(window_id,tab_tag,serie)
         signal = memory[func]
         channel = memory['Channel']
         dpg.add_line_series(signal['X'], signal[type], label = channel, parent=plot_tag)
@@ -496,7 +501,6 @@ def create_table(tab_label,table_tag,features, trial_label = "New Trial"):
                 dpg.add_table_column(label="Trial", width=100)                          
                 for band in features.keys():
                     dpg.add_table_column(label=band, width=100)
-
         add_row()
         if not dpg.does_item_exist(f"{table_tag}_save"):
             dpg.add_button(label='Save table', tag = f"{table_tag}_save", callback=save_table_to_file, user_data=(table_tag, 'csv'), parent=tab_label)
@@ -604,6 +608,14 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
     window_id = extract_window_id(tab_tag)
     tags = getActiveSeries(signal_tags)
     tables = []
+    events_tags = []
+    events_names = []
+
+    comparing = False
+    if dpg.does_item_exist(f"{tab_label}_bva"): 
+        comparing = dpg.get_value(f"{tab_label}_bva")
+
+    dpg.delete_item(f"{tab_label}_plot_group")
 
     if not 'Data' in app_state['windows'][window_id]:
         if 'Events' in app_state['windows'][window_id]['Files'][-1]['Data'][tab_tag].keys():
@@ -617,22 +629,8 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µV^2/Hz)", tag= f"{tab_label}_y_axis")
-            
-            power = []
-            for i,tag in enumerate(tags):
-                if mode:
-                    stream=getSignalbyIdx(window_id,tab_tag,tag,mode='segment')
-                else: stream = getSignalbyIdx(window_id,tab_tag,tag)
-                y = stream['Y']
-                date = stream['Date']
-                date = f"{date.day:02d}/{date.month:02d} - {date.hour:02d}:{date.minute:02d}"
-                channel = stream['Channel']
-                if mode:
-                    series_label = f"{stream['Type']} {i}- {channel} - {date}"
-                else:
-                    series_label = f"{channel} - {date}"
 
-                signal = apply_feat(func,parameter_values,y)
+            def contiguous_array(signal, func):
                 if func == 'multitaper': 
                     mask = signal[1] <= 100
                     psd = np.ascontiguousarray(signal[0][mask])
@@ -642,58 +640,197 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     freqs = np.ascontiguousarray(signal[0][mask])
                     psd = np.ascontiguousarray(signal[1][mask])
 
-                p = {'X': freqs, 'Y': psd} #*100/np.sum(psd)                     
+                p = {'X': freqs, 'Y': psd}
+                return p
+            
+            power = []
+            for i,tag in enumerate(tags):
+                if mode:
+                    stream=getSignalbyIdx(window_id,tab_tag,tag,mode='segment')
+                else: stream = getSignalbyIdx(window_id,tab_tag,tag)
 
-                dpg.add_line_series(freqs,psd, label=series_label, parent=y_axis, tag = f"{tab_label}_{series_label}_{func}")
+                date = stream['Date']
+                date = f"{date.day:02d}/{date.month:02d} - {date.hour:02d}:{date.minute:02d}"
+                channel = stream['Channel']
 
-
-                if not dpg.does_item_exist(f"{tab_label}_{series_label}"):
-                    dpg.add_collapsing_header(label = f'{series_label}', tag =f"{tab_label}_{series_label}", parent = tab_label)
+                if mode:
+                    series_label = f"{stream['Type']} {i} - {date}"
                 else:
-                    dpg.delete_item(f"{tab_label}_{series_label}_table")
+                    series_label = f"{channel} - {date}"
 
-                #TABLE CONTENT
-                full_power = np.sum(psd)
-                for b, v in bands.items():
-                    band = {b: v}
-                    #mean power per band
-                    pc = ft.mean_power_all_bands(p, band)
-                    std = ft.std_dev_streams(p, band)
-                    mean = {'Mean Power (mean, std. dev)': [np.round(pc[b],2), np.round(std[b],2)]}
+    	        #BEFORE AND AFTER PSD
+                if comparing == True:
+                    temp = []
+                    zero = [i for i,x in enumerate(stream['X']) if x == 0.0][0]
+                    pre_event = stream['Y'][:zero]
+                    post_event = stream['Y'][zero:]
+                    pre_event = apply_feat(func,parameter_values,pre_event)
+                    post_event = apply_feat(func,parameter_values,post_event)
+                    
+                    #BEFORE-------------------------------------------------
+                    p = contiguous_array(pre_event, func)      
+                    b_label = 'Before ' + f"{stream['Type']} {i} - {date}"              
+                    dpg.add_line_series(p['X'],p['Y'], label=b_label, parent=y_axis, tag = f"{tab_label}_{series_label}_{func}_pre")
+                    events_tags.append(f"{tab_label}_{b_label}_{func}_pre")
+                    power.append(p)
+                    temp.append(p)
 
-                    #normalized mean power
-                    norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc[b]*100/full_power,2), np.round(std[b],2)]}
+                    #AFTER-------------------------------------------------
+                    p = contiguous_array(post_event, func)      
+                    a_label = 'After ' + f"{stream['Type']} {i} - {date}"              
+                    dpg.add_line_series(p['X'],p['Y'], label=a_label, parent=y_axis, tag = f"{tab_label}_{series_label}_{func}_post")
+                    events_tags.append(f"{tab_label}_{a_label}_{func}_post")
+                    power.append(p)
+                    temp.append(p)
 
-                    #auc
-                    params = pre.get_required_params('simpson', module='si')
-                    param_auc = {}
-                    for name, param in params.items(): param_auc[name] = param
-                    mask = (freqs >= v[0]) & (freqs <= v[1])
-                    param_auc['y'] = psd[mask]
-                    simpson = pre.call_function('simpson', param_dict=param_auc, module='si')
-                    auc = {'Sum Power (AUC)': f"{np.round(simpson,2)}"}
+                    events_names.append(f"{stream['Type']} {i}")
+                    states = ['Before', 'After']
+                    #TABLE CONTENT
+                    full_power = np.sum(p['Y'])
 
-                    #normalized auc
-                    norm_auc = {'% Sum Power (AUC)': f"{np.round(simpson*100/full_power,2)}"}
+                    if not dpg.does_item_exist(f"{tab_label}_{series_label}"):
+                        dpg.add_collapsing_header(label = f'{series_label}', tag =f"{tab_label}_{series_label}", parent = tab_label)
+                    else:
+                        dpg.delete_item(f"{tab_label}_{series_label}", children_only=True)
 
-                    #peak power
-                    peak = ft.peak_per_band(p, band)
-                    picos = {'Peak Power (power, frequency)': p for p in peak.values()}
+                    for i,p in enumerate(temp):
+                        freqs, psd = p['X'], p['Y']
+                        for b, v in bands.items():
+                            band = {b: v}
+                            #mean power per band
+                            pc = ft.mean_power_all_bands(p, band)
+                            std = ft.std_dev_streams(p, band)
+                            mean = {'Mean Power (mean, std. dev)': [np.round(pc[b],2), np.round(std[b],2)]}
+
+                            #normalized mean power
+                            norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc[b]*100/full_power,2), np.round(std[b],2)]}
+
+                            #auc
+                            params = pre.get_required_params('simpson', module='si')
+                            param_auc = {}
+                            for name, param in params.items(): param_auc[name] = param
+                            mask = (freqs >= v[0]) & (freqs <= v[1])
+                            param_auc['y'] = psd[mask]
+                            simpson = pre.call_function('simpson', param_dict=param_auc, module='si')
+                            auc = {'Sum Power (AUC)': f"{np.round(simpson,2)}"}
+
+                            #normalized auc
+                            norm_auc = {'% Sum Power (AUC)': f"{np.round(simpson*100/full_power,2)}"}
+
+                            #peak power
+                            peak = ft.peak_per_band(p, band)
+                            picos = {'Peak Power (power, frequency)': p for p in peak.values()}
 
 
-                    info = mean | norm_mean| auc | norm_auc| picos
-                    create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table", info, trial_label=b)
-                tables.append(f"{tab_label}_{series_label}_table")
+                            info = mean | norm_mean| auc | norm_auc| picos
+                        
+                            create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table_{states[i]}", info, trial_label=b)
 
-                updateSignalbyIdx(p,tab_tag,tag,func)
+                        tables.append(f"{tab_label}_{series_label}_table_{states[i]}")
 
+                #NORMAL PSD
+                if comparing == False:
+                    y = stream['Y']
+                    signal = apply_feat(func,parameter_values,y)
+                        
+                    p = contiguous_array(signal, func)   
+                    power.append(p) 
+                    freqs, psd = p['X'], p['Y']               
+                    dpg.add_line_series(p['X'],p['Y'], label=series_label, parent=y_axis, tag = f"{tab_label}_{series_label}_{func}")
+
+
+                    if not dpg.does_item_exist(f"{tab_label}_{series_label}"):
+                        dpg.add_collapsing_header(label = f'{series_label}', tag =f"{tab_label}_{series_label}", parent = tab_label)
+                    else:
+                        dpg.delete_item(f"{tab_label}_{series_label}_table")
+
+                    #TABLE CONTENT
+                    full_power = np.sum(p['Y'])
+                    for b, v in bands.items():
+                        band = {b: v}
+                        #mean power per band
+                        pc = ft.mean_power_all_bands(p, band)
+                        std = ft.std_dev_streams(p, band)
+                        mean = {'Mean Power (mean, std. dev)': [np.round(pc[b],2), np.round(std[b],2)]}
+
+                        #normalized mean power
+                        norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc[b]*100/full_power,2), np.round(std[b],2)]}
+
+                        #auc
+                        params = pre.get_required_params('simpson', module='si')
+                        param_auc = {}
+                        for name, param in params.items(): param_auc[name] = param
+                        mask = (freqs >= v[0]) & (freqs <= v[1])
+                        param_auc['y'] = psd[mask]
+                        simpson = pre.call_function('simpson', param_dict=param_auc, module='si')
+                        auc = {'Sum Power (AUC)': f"{np.round(simpson,2)}"}
+
+                        #normalized auc
+                        norm_auc = {'% Sum Power (AUC)': f"{np.round(simpson*100/full_power,2)}"}
+
+                        #peak power
+                        peak = ft.peak_per_band(p, band)
+                        picos = {'Peak Power (power, frequency)': p for p in peak.values()}
+
+
+                        info = mean | norm_mean| auc | norm_auc| picos
+                        create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table", info, trial_label=b)
+
+                    tables.append(f"{tab_label}_{series_label}_table")
+
+                    updateSignalbyIdx(p,tab_tag,tag,func)
+
+                freqs, psd = p['X'], p['Y']
+            
             if len(power)>1:
                 mean = np.mean([p['Y'] for p in power], axis=0)
                 dpg.add_line_series(freqs, mean, label="Mean Power", parent=y_axis, tag=f"{tab_label}_mean")
+
             dpg.set_axis_limits(x_axis,min(freqs),max(freqs))
             dpg.set_axis_limits(y_axis,min(psd),max(psd))
 
-        dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag,func, tab_label, tables),parent=f"{tab_tag}_buttons", tag = f"{tab_label}_2db")
+        def toggle(sender,app_data,user_data):
+            axis = user_data
+            power_temp = []
+            for i, tag in enumerate(events_tags):
+                key = str(dpg.get_item_label(sender))
+                if axis!=None:
+                    key = key.split(' ')[axis]
+                if key in tag:
+                    dpg.configure_item(tag,show=app_data)
+
+                visibility = dpg.get_item_configuration(tag)['show']
+                if visibility==True:
+                    power_temp.append(power[i])
+
+            mean_temp = np.mean([p['Y'] for p in power_temp], axis=0)
+            dpg.configure_item(f"{tab_label}_mean",y=mean_temp)
+
+        with dpg.group(parent=f"{tab_tag}_buttons"):
+            dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag,func, tab_label, tables), tag = f"{tab_label}_2db")
+            if mode == 'segment': 
+                dpg.add_checkbox(label='Before vs. After',callback=before_vs_after, user_data=(signal_tags,tab_label,func,tab_tag,parameter_values), tag = f"{tab_label}_bva", default_value=comparing)
+            
+            if comparing== True:
+                dpg.add_separator()
+                dpg.add_text('Toggle Streams')
+                with dpg.group(parent=f"{tab_tag}_buttons", horizontal=True):   
+                    with dpg.group(): #Before and After
+                        dpg.add_text('When:')
+                        dpg.add_checkbox(label='PSD Before', default_value=True, callback=toggle, user_data=-1)
+                        dpg.add_checkbox(label='PSD After', default_value=True, callback=toggle, user_data=-1)
+                    
+                    with dpg.group(): #Per Event
+                        dpg.add_text('Who:')
+                        for i, name in enumerate(events_names): 
+                            dpg.add_checkbox(label=name, callback=toggle, default_value=True)
+
+                    with dpg.group(): #Per Type of Event
+                        events_type = [name.split(' ')[0] for name in events_names]
+                        events_type = np.unique(events_type)
+                        dpg.add_text('What:')
+                        for i, etype in enumerate(events_type):
+                            dpg.add_checkbox(label=etype, callback=toggle, default_value=True)
     
     time.sleep(0.2)
     dpg.set_axis_limits_auto(x_axis)
@@ -818,6 +955,8 @@ def plot_spectrogram_individual(tags, tab_label, func, tab_tag, parameter_values
                 
 def plot_spectrogram(tags, tab_label, func, tab_tag, parameter_values, mode = 'segment'):
     window_id = extract_window_id(tab_tag)
+    wt = extract_type_window(window_id)
+    if wt == 'Individual': mode = None
     num_plots = len(tags)
     num_cols = 2
     num_rows = (num_plots + 1) // num_cols 
@@ -825,14 +964,14 @@ def plot_spectrogram(tags, tab_label, func, tab_tag, parameter_values, mode = 's
     global_min = float("inf")
     global_max = float("-inf")
 
-
-
     Merge = []
+    per_file = {}
     for i, tag in enumerate(tags):
         events = getEventsbyTag(tab_tag,tag)
         if events == None: mode = None
         stream = getSignalbyIdx(window_id,tab_tag,tag,mode=mode)
         file = extract_file_from_series_tag(tag)
+        per_file[file] = []
         y = stream['Y']
         parameter_values['x'] = np.array(y)
         signal = pre.call_function(func, parameter_values)
@@ -852,6 +991,7 @@ def plot_spectrogram(tags, tab_label, func, tab_tag, parameter_values, mode = 's
         with dpg.subplots(rows=num_rows, columns=num_cols, label="Spectrograms", width=800, height=400*num_rows, tag=f"{tab_label}_subplots"):
             for i,tag in enumerate(tags):
                 stream = getSignalbyIdx(window_id, tab_tag, tag, mode=mode)
+                stream_events = getEventsbyTag(tab_tag,tag)
                 file = extract_file_from_series_tag(tag)
                 y = stream['Y']
                 channel = stream['Channel']
@@ -905,6 +1045,13 @@ def plot_spectrogram(tags, tab_label, func, tab_tag, parameter_values, mode = 's
                                             
                     
                     dpg.bind_colormap(plot_tag, dpg.mvPlotColormap_Jet)
+
+                    if stream_events != None and wt == 'Individual':
+                        for event in stream_events:
+                            stamp = [event['Idx']/(len(times)*250)] #spectrogram axis is in reality from 0 to 1, and the columns are time based, not sample
+                            type = event['Type']
+                            dpg.add_plot_legend()
+                            dpg.add_inf_line_series(x=stamp,label=f'{type}',parent=y_axis)
 
         def link(sender, app_data):
             dpg.configure_item(f"{tab_label}_subplots", link_all_x=app_data, link_all_y=app_data)
@@ -1261,6 +1408,9 @@ def update_table(table_tag, type):
             else:  # Single number case
                 dpg.set_value(row_children[i], f"{db_value:.2f}")
 
+def before_vs_after(sender,app_data,user_data):
+    signal_tags,tab_label,func,tab_tag,parameter_values = user_data
+    plot_filtered_signal(signal_tags,tab_label,func,tab_tag,parameter_values)
 
 #--- Extract signal/identifiers
 def extract_idx_from_series_tag(series_tag: str) -> int:
@@ -1398,6 +1548,7 @@ def getSignalbyIdxSide(window_id,tab_tag,series_tag):
 
 def getEventsbyIdx(tab_tag,idx):
     window_id = extract_window_id(tab_tag)
+    dictionary = {}
     if extract_type_window(window_id) == 'Combined':
         dictionary = app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]
     
@@ -1431,8 +1582,6 @@ def updateSignalbyIdx(value,tab_tag,series_tag, func = None, mode = None):
     file = extract_file_from_series_tag(series_tag)
     edx = int(extract_edx_from_series_tag(series_tag))
     wt = extract_type_window(window_id)
-    # if wt == 'Combined':
-        
 
     if mode == None:
         if file == None:
@@ -1473,12 +1622,6 @@ def enforce_min_max(sender, app_data, user_data):
         dpg.set_value(min_tag, min_value)
         dpg.set_value(max_tag, max_value)
 
-def get_window_type(window_id):
-    temp = app_state['windows'][window_id]['Files']
-    if len(temp)>1:
-        return 'combined'
-    else:
-        return 'individual'
 
 #--- Process with signal
 
@@ -1501,7 +1644,6 @@ def Volt2dB(sender,app_data,user_data):
     window_id = extract_window_id(tab_tag)
     mode = extract_mode(tab_tag)
     for serie in series:
-        idx = extract_idx_from_series_tag(serie)
         if mode == 'Events':
             signal = getSignalbyIdxSide(window_id,tab_tag,serie)
             norm = pre.log_normalization_db(signal)
@@ -1729,9 +1871,7 @@ def DefaultFeatures(sender, app_data, user_data):
     else:
         dpg.add_tab(label=f"Default {func}", parent=f"{tab_tag}_features_bar", tag=tab_label)  
     match func:
-        case 'spectrogram': 
-            if extract_type_window(window_id) == 'Combined': plot_spectrogram(tags, tab_label, func, tab_tag, parameter_values)
-            else: plot_spectrogram_individual(tags, tab_label, func, tab_tag, parameter_values)
+        case 'spectrogram': plot_spectrogram(tags, tab_label, func, tab_tag, parameter_values)
         case 'wavelet': plot_wavelet(tags, tab_label, func, tab_tag, parameter_values)
         case _: plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values)
 
@@ -1809,9 +1949,7 @@ def CustomFeatures(sender,app_data,user_data):
         else:
             dpg.add_tab(label=f"{func}", parent=f"{tab_tag}_features_bar", tag=tab_label)  
         match func:
-            case 'spectrogram': 
-                if extract_type_window(window_id) == 'Combined': plot_spectrogram(tags, tab_label, func, tab_tag, parameter_values)
-                else: plot_spectrogram_individual(tags, tab_label, func, tab_tag, parameter_values)
+            case 'spectrogram': plot_spectrogram(tags, tab_label, func, tab_tag, parameter_values)
             case 'wavelet': plot_wavelet(tags, tab_label, func, tab_tag, parameter_values)
             case _: plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values)
                 #dpg.add_button(label='Normalize', parent = tab_label)
