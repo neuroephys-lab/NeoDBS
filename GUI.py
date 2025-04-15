@@ -670,7 +670,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     #BEFORE-------------------------------------------------
                     p = contiguous_array(pre_event, func)      
                     b_label = 'Before ' + f"{stream['Type']} {i} - {date}"              
-                    dpg.add_line_series(p['X'],p['Y'], label=b_label, parent=y_axis, tag = f"{tab_label}_{series_label}_{func}_pre")
+                    dpg.add_line_series(p['X'],p['Y'], label=b_label, parent=y_axis, tag = f"{tab_label}_{b_label}_{func}_pre")
                     events_tags.append(f"{tab_label}_{b_label}_{func}_pre")
                     power.append(p)
                     temp.append(p)
@@ -678,7 +678,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     #AFTER-------------------------------------------------
                     p = contiguous_array(post_event, func)      
                     a_label = 'After ' + f"{stream['Type']} {i} - {date}"              
-                    dpg.add_line_series(p['X'],p['Y'], label=a_label, parent=y_axis, tag = f"{tab_label}_{series_label}_{func}_post")
+                    dpg.add_line_series(p['X'],p['Y'], label=a_label, parent=y_axis, tag = f"{tab_label}_{a_label}_{func}_post")
                     events_tags.append(f"{tab_label}_{a_label}_{func}_post")
                     power.append(p)
                     temp.append(p)
@@ -723,7 +723,8 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
 
 
                             info = mean | norm_mean| auc | norm_auc| picos
-                        
+
+                            if not dpg.does_item_exist(f"{tab_label}_{series_label}_{states[i]}"): dpg.add_text(f"{states[i]}", parent=f"{tab_label}_{series_label}", tag = f"{tab_label}_{series_label}_{states[i]}")
                             create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table_{states[i]}", info, trial_label=b)
 
                         tables.append(f"{tab_label}_{series_label}_table_{states[i]}")
