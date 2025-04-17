@@ -1,8 +1,5 @@
 
-import matplotlib.pyplot as plt    
-import DataHandling as DH
-import Preprocessing as pre
-import numpy as np
+import dearpygui.dearpygui as dpg
                                                                                           
 '''nSamples = 1000                                                                           
 win_size = nSamples // 4                                                                  
@@ -16,12 +13,14 @@ sig = ss.square(2 * np.pi * 5 * t)
 
 '''
 
-file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-10-14\\Report_Json_Session_Report_20241125T162143.json"
-Data = DH.getData(file_path)
-stream = DH.getSignals(Data, 'Streaming')[0]
+dpg.create_context()
 
-M = len(stream['X'])
-NW = 3
+dpg.show_implot_demo()
+dpg.show_imgui_demo()
 
-print(M**2/(M**2+NW))
+dpg.create_viewport(title="NeoDBS", width=1000, height=600)
+dpg.setup_dearpygui()
+dpg.show_viewport()
+dpg.start_dearpygui()
+dpg.destroy_context()
 
