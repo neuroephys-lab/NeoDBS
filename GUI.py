@@ -360,7 +360,7 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons_side", user_data=(day, window_id, tab_tag))
 
-        dpg.add_button(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag, "", "", ""),parent=f"{tab_tag}_buttons")
+        dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag, "", "", ""),parent=f"{tab_tag}_buttons",default_value=False)
         
 
 #--- Visualization functions
@@ -648,6 +648,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 return p
             
             power = []
+            max_p = 0
             for i,tag in enumerate(tags):
                 if mode:
                     stream=getSignalbyIdx(window_id,tab_tag,tag,mode='segment')
@@ -680,6 +681,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     events_tags.append(f"{tab_label}_{a_label}_{func}_post")
                     power.append(p)
                     temp.append(p)
+                    max_p = max(max_p,np.max(p['Y']))
 
                     events_names.append(f"{stream['Type']} {i}")
                     states = ['Before', 'After']
@@ -734,7 +736,8 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                         
                     p = contiguous_array(signal, func)   
                     power.append(p) 
-                    freqs, psd = p['X'], p['Y']               
+                    freqs, psd = p['X'], p['Y']      
+                    max_p = max(max_p,np.max(p['Y']))         
                     dpg.add_line_series(p['X'],p['Y'], label=series_label, parent=y_axis, tag = f"{tab_label}_{series_label}_{func}")
 
                     if not dpg.does_item_exist(f"{tab_label}_{series_label}"):
@@ -777,7 +780,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     tables.append(f"{tab_label}_{series_label}_table")
 
                     updateSignalbyIdx(p,tab_tag,tag,func, mode=mode)
-
+                    
                 freqs, psd = p['X'], p['Y']
             
             if len(power)>1:
@@ -823,6 +826,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 
                 freqs = np.asarray(freqs, dtype=np.float32)
                 all_mean = np.asarray(all_mean, dtype=np.float32)
+                # all_mean = all_mean*max_p/np.max(all_mean) --> makes it like an envelope, not a mean
                 dpg.add_line_series(freqs.tolist(), all_mean.tolist(), label="Mean Power", parent=y_axis, tag=f"{tab_label}_mean")
 
             dpg.set_axis_limits(x_axis,min(freqs),max(freqs))
@@ -2046,15 +2050,23 @@ def Volt2dB(sender,app_data,user_data):
     series = getActiveSeries(signal_tags)
     window_id = extract_window_id(tab_tag)
     mode = extract_mode(tab_tag)
-    events = [getEventsbyTag(tab_tag,serie) for serie in series]
-    if all(e is None for e in events):events = None
+
+    if mode != 'Events': 
+        events = [getEventsbyTag(tab_tag,serie) for serie in series]
+        if all(e is None for e in events):events = None
+    else: events = None
     plot_mode = None
     events_flag = False
+
     for serie in series:
         if mode == 'Events':
             signal = getSignalbyIdxSide(window_id,tab_tag,serie)
-            norm = pre.log_normalization_db(signal)
-            signal[type] = norm
+            if app_data: 
+                norm = pre.log_normalization_db(signal)
+                signal[type] = norm
+                dpg.set_value(serie, [signal['X'], norm])
+            else:
+                dpg.set_value(serie, [signal['X'], signal['Y']])
         else:
             if events: 
                 plot_mode = 'segment'
@@ -2065,10 +2077,12 @@ def Volt2dB(sender,app_data,user_data):
                 signal[type] = norm
 
     time.sleep(0.1)
-    if mode == 'Events': update_plot_td(tab_tag,series,'Log Normalized')
+    # if mode == 'Events': update_plot_td(tab_tag,series,'Log Normalized')
 
     if dpg.does_item_exist(f"{tab_tag}_mean"):
-        mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+        if type == 'Y': key = None
+        else: key = type
+        mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags, key)
         current = dpg.get_value(f"{tab_tag}_mean")
         dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
 
@@ -2079,7 +2093,7 @@ def Volt2dB(sender,app_data,user_data):
     for table in tables:
         update_table(table,type)
 
-def getMeanActiveSeries(window_id,tab_tag,signal_tags):
+def getMeanActiveSeries(window_id,tab_tag,signal_tags, key = None):
     active_tags = getActiveSeries(signal_tags)
     active_signals = []
     mode = extract_mode(tab_tag)
@@ -2090,7 +2104,8 @@ def getMeanActiveSeries(window_id,tab_tag,signal_tags):
             active = getSignalbyIdx(window_id,tab_tag,tag)
 
         active_signals.append(active)
-    mean_power = pre.MeanSignal(active_signals)
+
+    mean_power = pre.MeanSignal(active_signals, key)
     #mean_power = [m*100/np.sum(mean_power) for m in mean_power]
     return mean_power
 
@@ -2531,7 +2546,6 @@ def insert_events(sender, app_data, user_data):
             if window_type == 'Combined': align_events(sender,app_data,(tab_tag,signal_tags))  
         else: 
             dpg.add_text("No Events in the present recordings!", parent=f"{tab_tag}_add_events")
-
 
     def create_file_dialog(window_id,tab_tag, signal_tags):
         with dpg.file_dialog(

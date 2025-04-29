@@ -259,8 +259,10 @@ def zscoreRemoval(signal,n):
 
     return cleaned, removed  # Convert back to lists if needed
 
-def MeanSignal(signals):
-    yy=[signal['Y'] for signal in signals]
+def MeanSignal(signals, key = None):
+    if key == None: key = 'Y'
+    
+    yy=[signal[key] for signal in signals]
     
     mean_signal = np.mean(yy, axis=0)
     return mean_signal
