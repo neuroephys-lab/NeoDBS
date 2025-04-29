@@ -1,0 +1,5 @@
+dearpygui==2.0.0
+matplotlib==3.8.1
+mne==1.6.1
+numpy==2.2.5
+scipy==1.15.2
