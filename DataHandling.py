@@ -937,6 +937,19 @@ def concatenateJSONs(JSONs):
 
     return CompiledJSON
 
+def getImpedance(Data):
+
+    Left, Right = {}, {}
+    if len(Data['Device']['Impedance']) == 0:
+        return 'No Impedance data in file!'
+    else:
+        info = Data['Device']['Impedance'][0]
+        status = utl.after_point(info['ImpedanceStatus'])
+        tests = info['Hemisphere'][0]['SessionImpedance'].keys()
+        for type in tests:
+            Left[type] = info['Hemisphere'][0]['SessionImpedance'][type]
+            Right[type] = info['Hemisphere'][1]['SessionImpedance'][type]
+    return status, Left, Right
 
 '''
 data2 = getData(file_path1)

@@ -1,5 +1,6 @@
 from datetime import timedelta, datetime
 import dearpygui.dearpygui as dpg
+import dearpygui_ext.themes as themes
 import numpy as np
 import re 
 import DataHandling as DH # type: ignore
@@ -3151,7 +3152,13 @@ def create_multiple_window():
 
                 file_path = file['path']
                 Data = DH.getData(file_path)
-            
+                date = DH.getSessionDate(Data)
+                impedance = DH.getImpedance(Data)
+                if not isinstance(impedance, str):
+                    impedance_status, l, r = impedance
+                else: impedance_status = impedance
+                dpg.add_text(f"Impedance Status {date}: {impedance_status}", parent=f"session_parameteres_{window_id}", show=True)
+
                 modes = DH.getModes(Data)
                 if modes == ['None. Recording is Damaged!']:
                     remove_file_callback('','',user_data=(window_id,idx))
@@ -3170,6 +3177,7 @@ def create_multiple_window():
                 dpg.add_button(label = mode, parent=f"mode_list_group_{window_id}",callback=open_tab_mode ,user_data=(mode,window_id),show=True)
 
         dpg.configure_item(f"mode_list_group_{window_id}", show = True)
+        dpg.configure_item(f"session_parameteres_{window_id}", show = True)
    
     def open_tab_mode(sender,app_data,user_data): 
         mode, window_id = user_data
@@ -3216,9 +3224,8 @@ def create_multiple_window():
         dpg.add_text('', tag=f"modes_{window_id}", show=False) #Modes in 
         dpg.add_button(label="Load Files", callback=open_file_callback,
                        tag=f"open_file_btn_{window_id}", show=False, user_data=window_id)
-        
-        with dpg.group(horizontal=True,tag = f"mode_list_group_{window_id}"): pass
-   
+        with dpg.child_window(tag = f"session_parameteres_{window_id}", height=100, show=False): pass
+        with dpg.group(horizontal=True,tag = f"mode_list_group_{window_id}"): pass  
         with dpg.tab_bar(tag=f"tab_bar_window_{window_id}"): pass
 
     create_file_dialog(window_id)
@@ -3284,25 +3291,68 @@ def create_individual_window():
             return
 
         Data = app_state['windows'][window_id]['Data']
-        app_state['windows'][window_id]['Data'][tab_tag]= {'Signals': []}
+        if mode == 'Impedance':
+            status, l, r = DH.getImpedance(Data)
 
-        signals = DH.getSignals(Data,mode)
+            def build_result_table(session_name, session_data):
+                # Collect unique electrodes
+                electrodes1 = sorted(set(entry["Electrode1"] for entry in session_data))
+                electrodes2 = sorted(set(entry["Electrode2"] for entry in session_data))
 
-        plot_tag = f"plot_{tab_tag}"
-        signal_tags = {}
+                # Build a lookup dictionary
+                result_dict = {
+                    (entry["Electrode2"], entry["Electrode1"]): entry["ResultValue"]
+                    for entry in session_data
+                }
 
-        match mode:
-            case 'Setup': setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+                with dpg.table(header_row=True, borders_innerH=True, borders_innerV=True,
+                                borders_outerH=True, borders_outerV=True, resizable=True, policy=dpg.mvTable_SizingStretchProp):
+                    # Header row
+                    dpg.add_table_column(label="SenSight")
+                    for e1 in electrodes1:
+                        new_label = utl.after_underscore(e1)
+                        if new_label==e1:
+                            new_label=utl.after_point(e1)
+                        dpg.add_table_column(label=new_label)
 
-            case 'Survey': survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
-                
-            case 'Streaming': streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
-                
-            case 'Indefinite': indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
-        
-            case 'Events': event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+                    # Rows
+                    for e2 in electrodes2:
+                        with dpg.table_row():
+                            dpg.add_text(utl.after_underscore(e2))
+                            for e1 in electrodes1:
+                                val = result_dict.get((e2, e1), "")
+                                if e2==e1: val = '-'
+                                if val == "": val = result_dict.get((e1, e2), "")
+                                dpg.add_text(str(val))
+            with dpg.tab(tag = tab_tag, label = mode, parent=f"tab_bar_window_{window_id}"):
+                with dpg.collapsing_header(label='Monopolar Left'): 
+                    build_result_table("Monopolar", l["Monopolar"])
+                with dpg.collapsing_header(label='Monopolar Right'):
+                    build_result_table("Monopolar", r["Monopolar"])
+                with dpg.collapsing_header(label='Bipolar Left'): 
+                    build_result_table("Bipolar", l["Bipolar"])
+                with dpg.collapsing_header(label='Bipolar Right'): 
+                    build_result_table("Bipolar", r["Bipolar"])
+        else:
+            app_state['windows'][window_id]['Data'][tab_tag]= {'Signals': []}
+
+            signals = DH.getSignals(Data,mode)
+
+            plot_tag = f"plot_{tab_tag}"
+            signal_tags = {}
+
+            match mode:
+                case 'Setup': setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+
+                case 'Survey': survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+                    
+                case 'Streaming': streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+                    
+                case 'Indefinite': indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
             
-            case 'Timeline': timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+                case 'Events': event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+                
+                case 'Timeline': timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
 
         dpg.set_item_width(item=f"window_{window_id}",width=-1)
         dpg.set_item_height(item=f"window_{window_id}",height=-1)
@@ -3334,6 +3384,10 @@ def create_individual_window():
                 date = DH.getSessionDate(Data)
                 session_duration = DH.getSessionDuration(Data)
                 initial_stim_status, final_stim_status = DH.getStimStatus(Data)
+                impedance = DH.getImpedance(Data)
+                if not isinstance(impedance, str):
+                    impedance_status, l, r = impedance
+                else: impedance_status = impedance
                 #left, right = DH.getStimulationParameters(Data,'A')
                 dpg.delete_item(item=f"session_parameteres_{window_id}",children_only=True)
                 dpg.delete_item(item=f"mode_list_group_{window_id}",children_only=True)
@@ -3343,11 +3397,13 @@ def create_individual_window():
                 dpg.add_text(f"Session duration: {session_duration}", parent=f"session_parameteres_{window_id}", show=True)
                 dpg.add_text(f"Initial Stimulation: {initial_stim_status}", parent=f"session_parameteres_{window_id}", show=True)
                 dpg.add_text(f"Final Stimulation: {final_stim_status}", parent=f"session_parameteres_{window_id}", show=True)
+                dpg.add_text(f"Impedance Status: {impedance_status}", parent=f"session_parameteres_{window_id}", show=True)
                 dpg.configure_item(f"session_parameteres_{window_id}", show=True)
                 #dpg.add_text(f"Stimulation parameters: {left['Electrodes']}", parent=f"session_parameteres_{window_id}", show=True)
 
                 
                 modes = app_state['windows'][window_id]['Modes']
+                if l: modes.append('Impedance')
                 if modes != ['None. Recording is Damaged!']:
                     dpg.set_value(f"modes_{window_id}", 'Recording modes present in the file:')
                     dpg.configure_item(f"modes_{window_id}", show=True)
@@ -3375,24 +3431,34 @@ def create_individual_window():
 #---------------------------------------MAIN WINDOW---------------------------------------
 
 dpg.create_context()
+dpg.create_viewport(title="NeoDBS", width=1000, height=600)
+dpg.setup_dearpygui()
 
 app_state = {"windows": {}}
 
-with dpg.theme(tag="mean_plot_theme"):
-    with dpg.theme_component(dpg.mvScatterSeries):
-        dpg.add_theme_color(dpg.mvPlotCol_Line, (60, 150, 200), category=dpg.mvThemeCat_Plots)
-        dpg.add_theme_style(dpg.mvPlotStyleVar_Marker, dpg.mvPlotMarker_Square, category=dpg.mvThemeCat_Plots)
-        dpg.add_theme_style(dpg.mvPlotStyleVar_MarkerSize, 2, category=dpg.mvThemeCat_Plots)
+light_theme = themes.create_theme_imgui_light()
+dark_theme = themes.create_theme_imgui_dark()
+default_classic_theme = dpg.add_theme() #created automatically, but no existent function in themes
 
-with dpg.window(label="NeoDBS", width=-1, height=-1, tag="Main"): #Main Window
-    with dpg.group(horizontal=True, pos = [250,250]):
+# Function to switch themes
+def switch_theme(sender, app_data, user_data):
+    dpg.bind_theme(user_data)
+
+# Main window with menu
+with dpg.window(label="NeoDBS", width=-1, height=-1, tag="Main"):
+    with dpg.menu_bar():
+        with dpg.menu(label="Themes"):
+            dpg.add_menu_item(label="Classic", callback=switch_theme, user_data=default_classic_theme)
+            dpg.add_menu_item(label="Light", callback=switch_theme, user_data=light_theme)
+            dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
+
+    with dpg.group(horizontal=True, pos=[250, 250]):
         dpg.add_button(label="Individual (Recording) Analysis", callback=create_individual_window)
         dpg.add_spacer(indent=2)
         dpg.add_button(label="Combined (Event) Analysis", callback=create_multiple_window)
 
+# Launch
 
-dpg.create_viewport(title="NeoDBS", width=1000, height=600)
-dpg.setup_dearpygui()
 dpg.show_viewport()
 dpg.set_primary_window("Main", True)
 dpg.start_dearpygui()

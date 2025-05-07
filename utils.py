@@ -64,6 +64,13 @@ def after_point(s):
         return s[start_index + 1:]
     else:
         return ''
+    
+def after_underscore(s):
+    start_index = s.find('_')
+    if start_index != -1:
+        return s[start_index + 1:]
+    else:
+        return s
 
 def parse_datetime(string):
     try:
