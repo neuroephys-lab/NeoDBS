@@ -325,7 +325,9 @@ def getAllRecordingDuration(dictionary):
     return Time
 
 def getElectrodes(list):
-
+    '''
+    list: stim['SensingChannel'][0]['ElectrodeState']
+    '''
     Electrodes = []
 
     for row in list:
@@ -338,6 +340,29 @@ def getElectrodes(list):
             ElectrodeFraction = row['ElectrodeFractionOf64']
             Electrodes.append([Electrode, ElectrodeState,ElectrodeAmplitude,ElectrodeFraction])
     return Electrodes
+
+def getEventsElectrodes(data):
+    if 'Events' not in getModes(data):
+        return None
+
+    if 'SensingChannel' not in data['Device']['Groups']['Initial'][0]['ProgramSettings'].keys():
+        initial = 'At-home sensing disabled!'
+    else:
+        initial = data['Device']['Groups']['Initial'][0]['ProgramSettings']['SensingChannel']
+        left = utl.after_point(initial[0]['Channel'])
+        right = utl.after_point(initial[1]['Channel'])
+        initial = left, right
+
+    if 'SensingChannel' not in data['Device']['Groups']['Final'][0]['ProgramSettings'].keys():
+        final = 'At-home sensing disabled!'
+    else:
+        final = data['Device']['Groups']['Final'][0]['ProgramSettings']['SensingChannel']
+        left = utl.after_point(final[0]['Channel'])
+        right = utl.after_point(final[1]['Channel'])
+        final = left, right
+
+    return initial, final
+
 
 def getStimulationParameters(dictionary, group_name, time = 'Initial'):
 

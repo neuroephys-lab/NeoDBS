@@ -10,10 +10,11 @@ import Features as ft
 import time
 import csv
 
-unchecked_channels = {}
+
 #----------------------------------------GLOBAL-----------------------------
 bands = ft.bands
-
+electrodes_names, unchecked_channels = {}, {}
+app_state = {"windows": {}}
 #-----------------------------------------UTILS----------------------------------------
 def show_metadata(data):
     info_electrodes = DH.info_electrodes(data)
@@ -279,8 +280,15 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag):
 
     channels = []
     for signal in signals: # by channel
-        channels.append(extract_channel_from_series_tag(signal['Channel']).upper())
+        # channels.append(extract_channel_from_series_tag(signal['Channel']).upper())
+        ch = signal['Channel']
+        if ch in electrodes_names.keys():
+            ch = electrodes_names[ch]
+        else:
+            electrodes_names[ch] = ch
+        channels.append(extract_channel_from_series_tag(ch))
     channels = np.unique(channels).tolist()
+    channels = [ch.upper() for ch in channels]
 
     sides = ['Left','Right']
     
@@ -382,6 +390,11 @@ def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False)
             y = np.ascontiguousarray(signal['Y'])
             date = signal['Date']
             channel = signal['Channel']
+
+            if channel in electrodes_names.keys():
+                channel = electrodes_names[channel]
+            else:
+                electrodes_names[channel] = channel
             
             if 'Data' in app_state['windows'][window_id].keys():
                 if not dpg.does_item_exist(series_tag):
@@ -398,7 +411,13 @@ def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False)
                 print(f"Skipping duplicate series: {combined_tag}")
 
         elif events == True:
-            x, y, type_event, channel, serie_idx = signal['X'],signal['Y'],signal['Type'], signal['Channel'], signal['Serie']
+            old_channel = signal['Channel']
+            if old_channel in electrodes_names.keys():
+                old_channel = electrodes_names[old_channel]
+            else:
+                electrodes_names[old_channel] = old_channel
+
+            x, y, type_event, channel, serie_idx = signal['X'],signal['Y'],signal['Type'], old_channel, signal['Serie']
             if extract_type_window(window_id) == 'Combined':
                 segment_tag = f"{tab_tag}_file_{files}_series_{serie_idx}_{type_event}_{idx}"
             else:
@@ -612,10 +631,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
     #tab_label = f"{tab_tag}_{func}"
     window_id = extract_window_id(tab_tag)
     tags = getActiveSeries(signal_tags)
-    tables = []
-    events_tags = []
-    events_names = []
-
+    tables, events_tags, events_names, channels, ploted_tags, days = [], [], [], [], [], []
     comparing = False
     if dpg.does_item_exist(f"{tab_label}_bva"): 
         comparing = dpg.get_value(f"{tab_label}_bva")
@@ -655,6 +671,8 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     stream=getSignalbyIdx(window_id,tab_tag,tag,mode='segment')
                 else: stream = getSignalbyIdx(window_id,tab_tag,tag)
 
+                channels.append(stream['Channel']) 
+                days.append(stream['Date'])
                 series_label = dpg.get_item_configuration(tag)['label']
 
 
@@ -740,43 +758,17 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     freqs, psd = p['X'], p['Y']      
                     max_p = max(max_p,np.max(p['Y']))         
                     dpg.add_line_series(p['X'],p['Y'], label=series_label, parent=y_axis, tag = f"{tab_label}_{series_label}_{func}")
+                    ploted_tags.append(f"{tab_label}_{series_label}_{func}")
 
                     if not dpg.does_item_exist(f"{tab_label}_{series_label}"):
                         dpg.add_collapsing_header(label = f'{series_label}', tag =f"{tab_label}_{series_label}", parent = tab_label)
                     else:
-                        dpg.delete_item(f"{tab_label}_{series_label}_table")
+                        dpg.delete_item(f"{tab_label}_{series_label}", children_only=True)
 
                     #TABLE CONTENT
-                    full_power = np.sum(p['Y'])
-                    for b, v in bands.items():
-                        band = {b: v}
-                        #mean power per band
-                        pc = ft.mean_power_all_bands(p, band)
-                        std = ft.std_dev_streams(p, band)
-                        mean = {'Mean Power (mean, std. dev)': [np.round(pc[b],2), np.round(std[b],2)]}
-
-                        #normalized mean power
-                        norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc[b]*100/full_power,2), np.round(std[b],2)]}
-
-                        #auc
-                        params = pre.get_required_params('simpson', module='si')
-                        param_auc = {}
-                        for name, param in params.items(): param_auc[name] = param
-                        mask = (freqs >= v[0]) & (freqs <= v[1])
-                        param_auc['y'] = psd[mask]
-                        simpson = pre.call_function('simpson', param_dict=param_auc, module='si')
-                        auc = {'Sum Power (AUC)': f"{np.round(simpson,2)}"}
-
-                        #normalized auc
-                        norm_auc = {'% Sum Power (AUC)': f"{np.round(simpson*100/full_power,2)}"}
-
-                        #peak power
-                        peak = ft.peak_per_band(p, band)
-                        picos = {'Peak Power (power, frequency)': p for p in peak.values()}
-
-
-                        info = mean | norm_mean| auc | norm_auc| picos
-                        create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table", info, trial_label=b)
+                    for band in bands.items():
+                        info = extract_psd_features(p, band)
+                        create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table", info, trial_label=band[0])
 
                     tables.append(f"{tab_label}_{series_label}_table")
 
@@ -792,7 +784,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                         flag = True
                 
                 
-                if flag == True: #checks if they have the same len
+                if flag == True: #checks if they DON'T have the same len
 
                     # Define 1-Hz bin edges from 0 to 125 Hz
                     bin_edges = np.arange(0, 100, 1)  # 0–1, 1–2, ..., 124–125
@@ -824,6 +816,24 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     freqs = np.arange(0,len(all_mean),1)
                 
                 else: all_mean = np.mean([p['Y'] for p in power], axis=0)
+
+                mean_power = {
+                    'Y': all_mean,
+                    'X': freqs
+                }
+
+                if not dpg.does_item_exist(f"{tab_label}_mean_metric"):
+                    dpg.add_collapsing_header(label = 'MEAN POWER', tag =f"{tab_label}_mean_metric", parent = tab_label)
+                else:
+                    dpg.delete_item(f"{tab_label}_mean_metric", children_only=True)
+
+
+                for band in bands.items():
+                    info = extract_psd_features(mean_power, band)
+                    create_table(f"{tab_label}_mean_metric",f"{tab_label}_mean_metric_table", info, trial_label=band[0])
+
+                tables.append(f"{tab_label}_mean_metric_table")
+
                 
                 freqs = np.asarray(freqs, dtype=np.float32)
                 all_mean = np.asarray(all_mean, dtype=np.float32)
@@ -850,6 +860,21 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             mean_temp = np.mean([p['Y'] for p in power_temp], axis=0)
             dpg.configure_item(f"{tab_label}_mean",y=mean_temp)
 
+        def toggle2(sender,app_data,user_data):
+            _ = []
+            ch = dpg.get_item_label(sender)
+            for tag in ploted_tags:
+                if ch in tag:
+                    dpg.configure_item(tag, show=app_data)
+                flag = dpg.get_item_configuration(tag)['show']
+                if flag:
+                    _.append(tag)
+
+            array = [dpg.get_value(t)[1] for t in _]
+            mean = np.mean(array, axis=0)
+            dpg.configure_item(f"{tab_label}_mean",y=mean)
+
+
         with dpg.group(parent=f"{tab_tag}_buttons"):
             dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag,func, tab_label, tables), tag = f"{tab_label}_2db")
             if mode == 'segment': 
@@ -875,7 +900,25 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                         dpg.add_text('What:')
                         for i, etype in enumerate(events_type):
                             dpg.add_checkbox(label=etype, callback=toggle, default_value=True)
-    
+            else:
+                dpg.add_text('Toggle Streams')
+                with dpg.group(parent=f"{tab_tag}_buttons", horizontal=True):   
+                    with dpg.group(): #channels
+                        dpg.add_text('Channels: ')
+                        channels = np.unique(channels)
+                        for ch in channels:
+                            dpg.add_checkbox(label=ch, callback=toggle2, default_value=True)
+                    with dpg.group(): #days
+                        dpg.add_text('Days: ')
+                        days = np.unique(days)
+                        for d in days:
+                            dpg.add_checkbox(label=d, callback=toggle2, default_value=True)
+                    with dpg.group(): #side
+                        dpg.add_text('Hemisphere: ')
+                        sides = ['LEFT', 'RIGHT']
+                        for d in sides:
+                            dpg.add_checkbox(label=d, callback=toggle2, default_value=True)
+
     time.sleep(0.2)
     dpg.set_axis_limits_auto(x_axis)
     dpg.set_axis_limits_auto(y_axis)
@@ -888,6 +931,11 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
     for tag in tags:
         signal = getSignalbyIdx(window_id,tab_tag,tag)
         ch = signal['Channel']
+        if ch in electrodes_names.keys():
+            ch = electrodes_names[ch]
+        else:
+            electrodes_names[ch] = ch
+
         if func in signal.keys(): signal.pop(func)
         temp = {key: np.array([]) for key in signal.keys()}
         temp['dX'] = []
@@ -930,6 +978,10 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
             # 'X' is in Unix timestamp
             signal['dX'] = [datetime.fromtimestamp(val) for val in X]
         ch = signal['Channel']
+        if ch in electrodes_names.keys():
+            ch = electrodes_names[ch]
+        else:
+            electrodes_names[ch] = ch
         prev = len(new_signal[ch]['dX'])
 
         current_start[ch] = signal['dX'][0]
@@ -1366,6 +1418,11 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
     for tag in tags:
         signal = getSignalbyIdx(window_id,tab_tag,tag)
         ch = signal['Channel']
+        if ch in electrodes_names.keys():
+            ch = electrodes_names[ch]
+        else:
+            electrodes_names[ch] = ch
+
         if func in signal.keys(): signal.pop(func)
         temp = {key: np.array([]) for key in signal.keys()}
         temp['dX'] = []
@@ -1391,6 +1448,10 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
             # 'X' is in Unix timestamp
             signal['dX'] = [datetime.fromtimestamp(val) for val in X]
         ch = signal['Channel']
+        if ch in electrodes_names.keys():
+            ch = electrodes_names[ch]
+        else:
+            electrodes_names[ch] = ch
 
         current_start[ch] = signal['dX'][0]
     
@@ -1805,6 +1866,48 @@ def before_vs_after(sender,app_data,user_data):
     signal_tags,tab_label,func,tab_tag,parameter_values = user_data
     plot_filtered_signal(signal_tags,tab_label,func,tab_tag,parameter_values)
 
+def switch_theme(sender, app_data, user_data):
+    dpg.bind_theme(user_data)
+
+def change_electrodes_names(sender, app_data, user_data):
+    input_counter = [0]  # Use a list to allow mutable reference
+
+    if dpg.does_item_exist("Change Electrode Names Window"):
+        dpg.delete_item("Change Electrode Names Window")
+
+    def add_input_row(sender, app_data, user_data):
+        row_id = user_data[0]
+        with dpg.group(tag=f"input_group_{row_id}", parent="input_container", horizontal=True):
+            dpg.add_input_text(tag=f"old_name_{row_id}", label="Old Name", width=150)
+            dpg.add_input_text(tag=f"new_name_{row_id}", label="New Name", width=150)
+        user_data[0] += 1  # Update the counter in-place
+
+    def handle_submit(sender, app_data, user_data):
+        for i in range(user_data[0]):
+            old_name = dpg.get_value(f"old_name_{i}")
+            new_name = dpg.get_value(f"new_name_{i}")
+            if new_name == '': new_name = old_name
+
+            for side in ['LEFT','RIGHT']:
+                electrodes_names[f'{old_name}_{side}'] = f'{new_name}_{side}'
+        
+    def reset(sender, app_data, user_data):
+        electrodes_names.clear()
+
+    with dpg.window(tag="Change Electrode Names Window", width=400, height=300):
+        dpg.add_text("Change Electrode Names")
+        dpg.add_spacing(count=2)
+        channels = ['ONE_THREE','ZERO_THREE','ZERO_TWO']
+        for row_id, ch in enumerate(channels):
+            input_counter[0]+=1
+            with dpg.group(tag=f"input_group_{row_id}", parent="input_container", horizontal=True):
+                dpg.add_input_text(tag=f"old_name_{row_id}",default_value=ch, width=120)
+                dpg.add_input_text(tag=f"new_name_{row_id}", label="New Name", width=120)
+
+        with dpg.group(horizontal=True):
+            dpg.add_button(label="Submit", callback=handle_submit, user_data=input_counter)
+            dpg.add_button(label="Reset", callback=reset)
+
 
 #--- Extract signal/identifiers
 def extract_idx_from_series_tag(series_tag: str) -> int:
@@ -1847,7 +1950,7 @@ def extract_channel_from_series_tag(series_tag: str) -> str:
     if match:
         return match.group(1)  # Return the part before '_left' or '_right'
     else:
-        raise ValueError("Invalid series_tag format or missing side")
+        return series_tag
 
 def extract_window_id(tab_tag: str) -> int:
     """
@@ -2021,6 +2124,40 @@ def enforce_min_max(sender, app_data, user_data):
         dpg.set_value(min_tag, min_value)
         dpg.set_value(max_tag, max_value)
 
+def extract_psd_features(p, band):
+    b,v = band
+    band = {b: v}
+    full_power = np.sum(p['Y'])
+    freqs, psd = p['X'], p['Y']
+
+    #mean power per band
+    pc = ft.mean_power_all_bands(p, band)
+    std = ft.std_dev_streams(p, band)
+    mean = {'Mean Power (mean, std. dev)': [np.round(pc[b],2), np.round(std[b],2)]}
+
+    #normalized mean power
+    norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc[b]*100/full_power,2), np.round(std[b],2)]}
+
+    #auc
+    params = pre.get_required_params('simpson', module='si')
+    param_auc = {}
+    for name, param in params.items(): param_auc[name] = param
+    mask = (freqs >= v[0]) & (freqs <= v[1])
+    param_auc['y'] = psd[mask]
+    simpson = pre.call_function('simpson', param_dict=param_auc, module='si')
+    auc = {'Sum Power (AUC)': f"{np.round(simpson,2)}"}
+
+    #normalized auc
+    norm_auc = {'% Sum Power (AUC)': f"{np.round(simpson*100/full_power,2)}"}
+
+    #peak power
+    peak = ft.peak_per_band(p, band)
+    picos = {'Peak Power (power, frequency)': p for p in peak.values()}
+
+
+    info = mean | norm_mean| auc | norm_auc| picos
+
+    return info
 
 #--- Process with signal
 
@@ -2482,7 +2619,13 @@ def insert_events(sender, app_data, user_data):
                     app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Events'] = []
 
             date = signal['Date']
+
             channel = signal['Channel']
+            if channel in electrodes_names.keys():
+                channel = electrodes_names[channel]
+            else:
+                electrodes_names[channel] = channel
+
             dates.append(f"{date.year}-{date.month}-{date.day}")
 
             if scale == 0: #in linear
@@ -2618,10 +2761,15 @@ def align_events(sender,app_data, user_data):
 '''For now ONLY individual analysis'''
 def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     app_state['windows'][window_id]['Data'][tab_tag]['Signals'] = {'left': [], 'right': []}
-
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)   
-    dpg.add_text(f"Total events: {len(signals)}", parent=tab_tag, label = f"{tab_tag}_text_recordings")
-    
+    dpg.add_text(f"Total events: {len(signals)}", parent=tab_tag, tag = f"{tab_tag}_text_recordings")
+
+    initial, final = DH.getEventsElectrodes(app_state['windows'][window_id]['Data'])
+    if not isinstance(initial, str): 
+        dpg.add_text(f'Electrodes | Left: {initial[0]} | Right: {initial[1]}', parent=tab_tag)
+    else: 
+        dpg.add_text(f'{initial}', parent=tab_tag)
+
     with dpg.group(label = f"{tab_tag}_group", parent=tab_tag, horizontal=True ):
         
         with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
@@ -2664,6 +2812,12 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     dpg.add_text(f"Total days: {len(signals)}", parent=tab_tag)
+    initial, final = DH.getEventsElectrodes(app_state['windows'][window_id]['Data'])
+    if not isinstance(initial, str): 
+        dpg.add_text(f'Electrodes | Left: {initial[0]} | Right: {initial[1]}', parent=tab_tag)
+    else: 
+        dpg.add_text(f'{initial}', parent=tab_tag)
+
     with dpg.group(label = f"{tab_tag}_group" , parent=tab_tag, horizontal=True):
         
         with dpg.plot(label=f"{mode} Signals", height=400, width=500, tag=plot_tag):
@@ -2812,9 +2966,18 @@ def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     dpg.add_text(f"Total recordings: {len(signals)}", parent=tab_tag)
     rdate = signals[0]['Date']
+
     dpg.add_text(f"Day: {rdate.day}/{rdate.month}/{rdate.year}", parent=tab_tag)
-    channel = extract_channel_from_series_tag(signals[0]['Channel'])
-    dpg.add_text(f"Channel: {channel.upper()}", parent=tab_tag)
+
+    Channel = signals[0]['Channel']
+    
+    if Channel in electrodes_names.keys():
+        Channel = electrodes_names[Channel]
+    else:
+        electrodes_names[Channel] = Channel
+
+
+    dpg.add_text(f"Channel: {extract_channel_from_series_tag(Channel).upper()}", parent=tab_tag)
 
     with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
 
@@ -2873,6 +3036,16 @@ def indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
     
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
+
+    files = app_state['windows'][window_id]['Files']
+    for file in files: 
+        data = file['Data']
+        initial, _ = DH.getEventsElectrodes(data)
+        if not isinstance(initial, str): 
+            dpg.add_text(f'Electrodes {DH.getSessionDate(data)} | Left: {initial[0]} | Right: {initial[1]}', parent=tab_tag)
+        else: 
+            dpg.add_text(f'{DH.getSessionDate(data)}: {initial}', parent=tab_tag)
+
     with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
 
         with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
@@ -3013,7 +3186,15 @@ def comb_indefinite_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
 
 def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
-    # dpg.add_text(f"Total days: {len()}", parent=tab_tag)
+    files = app_state['windows'][window_id]['Files']
+    for file in files: 
+        data = file['Data']
+        initial, _ = DH.getEventsElectrodes(data)
+        if not isinstance(initial, str): 
+            dpg.add_text(f'Electrodes {DH.getSessionDate(data)} | Left: {initial[0]} | Right: {initial[1]}', parent=tab_tag)
+        else: 
+            dpg.add_text(f'{DH.getSessionDate(data)}: {initial}', parent=tab_tag)
+
     days = []
     with dpg.group(parent=tab_tag, tag = f"{tab_tag}_group", horizontal=True):
 
@@ -3037,6 +3218,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
 
                     for sdx, signal in enumerate(signals):
                         
+                        signal_tag = f"{tab_tag}_file_{idx}_series_{sdx}"
                         app_state['windows'][window_id]['Files'][idx]['Data'][tab_tag]['Signals'].append({'left': [], 'right': []})
                         date = utl.parse_datetime(signal['Date'])
                         days.append(f"{date.day:02d}/{date.month:02d}/{date.year}")
@@ -3054,15 +3236,15 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                                 continue
                             
                             # Create a unique series tag for each side
-                            series_tag = f"{tab_tag}_file_{idx}_series_{sdx}_{side.lower()}_left"
+                            series_tag = f"{signal_tag}_{side.lower()}"
                             app_state['windows'][window_id]['Files'][idx]['Data'][tab_tag]['Signals'][sdx][side.lower()] = sign
 
                             # Add the line series for each side
                             dpg.add_line_series(x, y, label=label_left, parent=y_axis, tag=series_tag)#, fill=[1.0, 0, 0, 0.5]) --> define transparency?
                             signal_tags[series_tag] = True  # Track visibility
 
-                        dpg.add_line_series(x, y, label=f'Stimulation {date}', parent=yy_axis)
-
+                        # dpg.add_line_series(x, y, label=f'Stimulation {days[-1]}', parent=yy_axis, tag = signal_tag)
+                        # signal_tags[signal_tag] = True
 
         dpg.add_text(f"Total days: {len(days)}", parent=tab_tag)
         days = np.unique(days).tolist()
@@ -3387,7 +3569,9 @@ def create_individual_window():
                 impedance = DH.getImpedance(Data)
                 if not isinstance(impedance, str):
                     impedance_status, l, r = impedance
-                else: impedance_status = impedance
+                else: 
+                    impedance_status = impedance
+                    l=False
                 #left, right = DH.getStimulationParameters(Data,'A')
                 dpg.delete_item(item=f"session_parameteres_{window_id}",children_only=True)
                 dpg.delete_item(item=f"mode_list_group_{window_id}",children_only=True)
@@ -3434,15 +3618,9 @@ dpg.create_context()
 dpg.create_viewport(title="NeoDBS", width=1000, height=600)
 dpg.setup_dearpygui()
 
-app_state = {"windows": {}}
-
 light_theme = themes.create_theme_imgui_light()
 dark_theme = themes.create_theme_imgui_dark()
 default_classic_theme = dpg.add_theme() #created automatically, but no existent function in themes
-
-# Function to switch themes
-def switch_theme(sender, app_data, user_data):
-    dpg.bind_theme(user_data)
 
 # Main window with menu
 with dpg.window(label="NeoDBS", width=-1, height=-1, tag="Main"):
@@ -3451,7 +3629,8 @@ with dpg.window(label="NeoDBS", width=-1, height=-1, tag="Main"):
             dpg.add_menu_item(label="Classic", callback=switch_theme, user_data=default_classic_theme)
             dpg.add_menu_item(label="Light", callback=switch_theme, user_data=light_theme)
             dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
-
+        with dpg.menu(label="Settings"):
+            dpg.add_menu_item(label="Change electrodes' names", callback=change_electrodes_names)
     with dpg.group(horizontal=True, pos=[250, 250]):
         dpg.add_button(label="Individual (Recording) Analysis", callback=create_individual_window)
         dpg.add_spacer(indent=2)
