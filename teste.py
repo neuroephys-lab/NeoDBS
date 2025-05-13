@@ -3,15 +3,12 @@ import utils as utl
 import dearpygui.dearpygui as dpg
 import matplotlib.pyplot as plt
 
-base_directory = "C:\\Users\\OCD\\Desktop\\DATA\\RN"  # Change this to your folder path
 
-file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-10-14\\Report_Json_Session_Report_20241125T162143.json"
+file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
 
-new_names = {
-    'ZERO_TWO_LEFT': 'MAIN',
-    'ZERO_TWO_RIGHT': 'Right'
-}
+Data= DH.getData(file_path)
 
-string = 'ZERO_TWO_LEFT'
+sense, calibration, artifacts = DH.getSignals(Data,'Setup')
 
-print(new_names[string])
+for artifact in artifacts: 
+    print(artifact['Channel'], ': ', artifact['Artifact'])

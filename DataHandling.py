@@ -630,7 +630,9 @@ def getModeSignals(dictionary, mode):
             recs  = dictionary[mode]['IndefiniteStreaming']
             
         case 'Setup':
-            recs = dictionary[mode]['SenseChannelTests'], dictionary[mode]['CalibrationTests']
+            recs = [dictionary[mode]['SenseChannelTests'], 
+            dictionary[mode]['CalibrationTests'],
+            dictionary[mode]['MostRecentInSessionSignalCheck']]
 
         case 'Survey': #✅ #só falta o LFPMontage
             recs = dictionary[mode]['LfpMontageTimeDomain']
@@ -667,10 +669,22 @@ def getSignals(Data, mode):
         #Stimulation ON = Calibration
         sense = []
         calibration = []
+        artifacts = []
 
         for rec in recs[0]: sense.append(get(rec))
         for rec in recs[1]: calibration.append(get(rec))
-        signals = sense, calibration
+        for rec in recs[2]:
+            dict = {
+                'Channel': utl.after_point(rec['Channel']),
+                'Artifact': utl.after_point(rec['ArtifactStatus']),
+                'X': rec['SignalFrequencies'],
+                'Y': rec['SignalPsdValues']
+            }
+            artifacts.append(dict)
+        
+
+
+        signals = sense, calibration, artifacts
 
     if mode in ['Streaming','Indefinite','Survey']:
         for rec in recs: signals.append(get(rec))

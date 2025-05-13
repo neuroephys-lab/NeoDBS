@@ -901,18 +901,20 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                         for i, etype in enumerate(events_type):
                             dpg.add_checkbox(label=etype, callback=toggle, default_value=True)
             else:
+                channels = np.unique(channels)
+                days = np.unique(days)
                 dpg.add_text('Toggle Streams')
-                with dpg.group(parent=f"{tab_tag}_buttons", horizontal=True):   
-                    with dpg.group(): #channels
-                        dpg.add_text('Channels: ')
-                        channels = np.unique(channels)
-                        for ch in channels:
-                            dpg.add_checkbox(label=ch, callback=toggle2, default_value=True)
-                    with dpg.group(): #days
-                        dpg.add_text('Days: ')
-                        days = np.unique(days)
-                        for d in days:
-                            dpg.add_checkbox(label=d, callback=toggle2, default_value=True)
+                with dpg.group(parent=f"{tab_tag}_buttons", horizontal=True):  
+                    if len(channels)>1: 
+                        with dpg.group(): #channels
+                            dpg.add_text('Channels: ')
+                            for ch in channels:
+                                dpg.add_checkbox(label=ch, callback=toggle2, default_value=True)
+                    if len(days)>1:
+                        with dpg.group(): #days
+                            dpg.add_text('Recordings: ')
+                            for d in days:
+                                dpg.add_checkbox(label=d, callback=toggle2, default_value=True)
                     with dpg.group(): #side
                         dpg.add_text('Hemisphere: ')
                         sides = ['LEFT', 'RIGHT']
@@ -2758,7 +2760,6 @@ def align_events(sender,app_data, user_data):
             # else: dpg.add_text('To compare events, needs at least 2 events', parent=parent)
 
 #--------------------------------------INDIVIDUAL TABS-----------------------------------------
-'''For now ONLY individual analysis'''
 def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     app_state['windows'][window_id]['Data'][tab_tag]['Signals'] = {'left': [], 'right': []}
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)   
@@ -2783,7 +2784,7 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
                 for side in ['Left', 'Right']:
                     sign = signal[side]
-                    label = f"day {date.day:02d}/{date.month} | {date.minute} | {side} | {signal['EventName']}"
+                    label = f"day {date.day:02d}/{date.month:02d}/{date.year} | {date.minute} | {side} | {signal['EventName']}"
                     x = sign['X']
                     y = sign['Y']
                     
@@ -2885,7 +2886,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     add_correlation_buttons(tab_tag)
 
 def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
-    sense, calibration = signals   
+    sense, calibration, artifacts = signals   
     
     def setup_off_tab():
         #SENSE CHANNEL TEST - STIMULATION OFF
@@ -3031,6 +3032,8 @@ def indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     add_features_buttons(tab_tag, signal_tags)
     add_correlation_buttons(tab_tag)
 
+def device_window(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
+    print('DEVICE INFO')
 #--------------------------------------COMBINED TABS-----------------------------------------
 
 def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
@@ -3122,8 +3125,37 @@ def comb_streaming_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
     add_filters_buttons(tab_tag,signal_tags)
     add_features_buttons(tab_tag, signal_tags)
 
-def comb_setup_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags): print('setup combined')
+def comb_setup_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags): 
 
+    def setup_plot(mode, tab_tag, type):
+        signals = None
+        plot_tag = f"plot_{tab_tag}"
+        dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
+        with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
+            signal_tags = {}
+            with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
+                dpg.bind_colormap(plot_tag, 0)
+                dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
+                dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
+                dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
+                
+                parent = f"y_axis_{tab_tag}"
+                for idx, file in enumerate(files):
+                    file['Data'][tab_tag]= {'Signals': []}
+                    if 'Setup' in file['Modes']: 
+                        signals = DH.getSignals(file['Data'],'Setup')[type]
+                        plot_td(signals,parent,tab_tag,signal_tags, files=idx)
+
+            toggleDisplay(signals, signal_tags, window_id, tab_tag)
+        add_filters_buttons(tab_tag,signal_tags)
+        add_features_buttons(tab_tag, signal_tags)
+        add_correlation_buttons(tab_tag)
+
+    for idx, ext in enumerate(['OFF','ON']):
+        new_mode = mode + ' ' + ext
+        new_tag = tab_tag + '_' + ext
+        setup_plot(new_mode, new_tag, idx)
+        
 def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags): 
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
@@ -3631,6 +3663,7 @@ with dpg.window(label="NeoDBS", width=-1, height=-1, tag="Main"):
             dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
         with dpg.menu(label="Settings"):
             dpg.add_menu_item(label="Change electrodes' names", callback=change_electrodes_names)
+    
     with dpg.group(horizontal=True, pos=[250, 250]):
         dpg.add_button(label="Individual (Recording) Analysis", callback=create_individual_window)
         dpg.add_spacer(indent=2)
