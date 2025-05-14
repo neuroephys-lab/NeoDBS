@@ -740,6 +740,9 @@ def getSignals(Data, mode):
 
     return signals
 
+def getEventSummary(Data):
+    return Data['Events']['EventSummary'] 
+
 def cutSignal(signal, initial=0, end=-1):
     # Ensure 'X' and 'Y' exist and have the same length
     if 'X' not in signal or 'Y' not in signal:
@@ -1004,3 +1007,171 @@ print(getRealTime('Streaming',rec)[0], ' : ', getRealTime('Streaming',rec)[-1] )
 seconds = getRecordingDuration('Streaming',rec)
 print(timedelta(seconds=seconds))
 '''
+
+def getEventsInTimeline(Data):
+    events = getSignals(Data,'Events')
+    timeline = getSignals(Data,'Timeline')
+    events_in_timeline = []
+    evt_time = [e['DateInitial'] for e in events]
+
+    for t in timeline:
+        beg = utl.parse_datetime(t['Right']['X'][-1])
+        end = utl.parse_datetime(t['Right']['X'][0])
+
+        for idx, e in enumerate(evt_time):
+            e = utl.parse_datetime(e)
+            if beg<=e<=end:
+                events_in_timeline.append(events[idx])
+
+    return events_in_timeline
+
+def interpolateTimelineStream(signal):
+
+    missing = []
+    time = [utl.parse_datetime(s) for s in signal['X']]
+    for i in range(len(time)-1):
+        diff= (time[i+1]-time[i]).minutes()
+        if diff > 10:
+            n_extra = diff//10
+            dic = {
+                'idx': i,
+                'n_extra': n_extra
+            }
+            missing.append(dic)
+
+    return missing
+
+def right_hemisphere(data,days):
+    '''
+    This function is for the right hemisphere of the brain
+    This function recieves the information in dictionary data and also the days that will appear in the graphic
+    This function returns a dictionary, the dictionary have x - time, Y - LFP, 
+    X_missing - points in x-axis that will be added due to missing information, 
+    Y_missing - points in y-axis that will be added due to missing information
+    '''
+    #Inês Pereira (up202107421)
+    days_hemisphere_right=list(data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'].keys())
+    #days will contain all the days that were choosen to be in plot 
+    days_of_search=days
+    
+    time_format_somado=[]
+    LFP_somado=[]
+    red_LFP=[]
+    red_time=[]
+
+    if isinstance(days_of_search, list): #this for cycle needs to be changed so it is a search for key
+        for chosen_day in days_of_search:
+            for s in days_hemisphere_right:
+                if chosen_day in s:
+                    key_chosen_day = s
+                    break 
+
+            info_chosen_day= data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'][key_chosen_day]
+
+            size_chosen_day = len(info_chosen_day)
+            time_format=[0]*size_chosen_day
+            LFP=[0]*size_chosen_day
+            i=size_chosen_day
+
+            for t in info_chosen_day:
+                LFP[i-1]=int(t['LFP'])
+                time_format[i-1]=datetime.fromisoformat(t['DateTime'].rstrip('Z'))
+                i=i-1
+
+            #adding the missing points
+            index_n_pontos_extra=[]
+            for s in range(len(time_format)-1):
+                dif=time_format[s+1]-time_format[s]
+                dif=dif.seconds
+                if dif > 660:
+                    print('Adding missing points')
+                    n_pontos_extra=(dif//600) - 1
+                    index_n_pontos_extra.append(s)
+                    index_n_pontos_extra.append(n_pontos_extra)
+                    #change this to a dictionary so it is [{'pos':s, 'n_extra': n_pontos_extra}]
+
+            n_saltos=[]
+            n_saltos=len(index_n_pontos_extra)//2
+            LFP_acrescentar=[]
+
+            for i in range(n_saltos):
+                index_ponto_acrescentar=index_n_pontos_extra[i*2]
+                numero_pontos_acrescentar=index_n_pontos_extra[i*2+1]
+                #adding points in y-axis
+                min_ponto_acrescentar=LFP[index_ponto_acrescentar]
+                max_ponto_acrescentar=LFP[index_ponto_acrescentar+1]
+                media_ponto_acrescentar=(min_ponto_acrescentar+max_ponto_acrescentar)/2
+                LFP_acrescentar=[media_ponto_acrescentar]*numero_pontos_acrescentar
+                LFP[index_ponto_acrescentar+1:index_ponto_acrescentar+1]=LFP_acrescentar
+                red_LFP.extend(LFP_acrescentar)
+                #adding points in x-axis
+                tempo=time_format[index_ponto_acrescentar]
+                for j in range(1,numero_pontos_acrescentar+1):
+                    tempo=tempo + timedelta(minutes=10)
+                    time_format.insert(index_ponto_acrescentar+j,tempo)
+                    red_time.append(tempo)
+
+            time_format_somado.extend(time_format)
+            LFP_somado.extend(LFP)
+
+    elif isinstance(days_of_search, str):
+        for s in days_hemisphere_right: #in case of a single day
+            if days_of_search in s:
+                key_chosen_day = s
+                break 
+        
+        info_chosen_day= data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'][key_chosen_day]
+        
+            
+
+        size_chosen_day = len(info_chosen_day)
+        time_format=[0]*size_chosen_day
+        LFP=[0]*size_chosen_day
+        i=size_chosen_day
+
+        for t in info_chosen_day:
+            LFP[i-1]=int(t['LFP'])
+            # time_format[i-1]=datetime.fromisoformat(t['DateTime'].rstrip('Z'))
+            time_format[i-1] = t['DateTime']
+            i=i-1
+
+        #adding the missing points
+        index_n_pontos_extra=[]
+        for s in range(len(time_format)-1):
+            dif=time_format[s+1]-time_format[s]
+            dif=dif.seconds
+            if dif > 660: #why 660?
+                n_pontos_extra=(dif//600) - 1
+                index_n_pontos_extra.append(s)
+                index_n_pontos_extra.append(n_pontos_extra)
+
+        n_saltos=[]
+        n_saltos=len(index_n_pontos_extra)//2
+        LFP_acrescentar=[]
+
+        for i in range(n_saltos):
+            index_ponto_acrescentar=index_n_pontos_extra[i*2]
+            numero_pontos_acrescentar=index_n_pontos_extra[i*2+1]
+            #adding points in y-axis
+            min_ponto_acrescentar=LFP[index_ponto_acrescentar]
+            max_ponto_acrescentar=LFP[index_ponto_acrescentar+1]
+            media_ponto_acrescentar=(min_ponto_acrescentar+max_ponto_acrescentar)/2
+            LFP_acrescentar=[media_ponto_acrescentar]*numero_pontos_acrescentar
+            LFP[index_ponto_acrescentar+1:index_ponto_acrescentar+1]=LFP_acrescentar
+            red_LFP.extend(LFP_acrescentar)
+            #adding points in x-axis
+            tempo=time_format[index_ponto_acrescentar]
+            for j in range(1,numero_pontos_acrescentar+1):
+                tempo=tempo + timedelta(minutes=10)
+                time_format.insert(index_ponto_acrescentar+j,tempo)
+                red_time.append(tempo)
+
+        time_format_somado.extend(time_format)
+        LFP_somado.extend(LFP)
+        
+        time_format_somado = [utl.parse_datetime(t) for t in time_format_somado]
+
+    new_dic = {'X': time_format_somado, 'Y':LFP_somado,'X_missing':red_time,'Y_missing':red_LFP}
+
+            
+    return new_dic

@@ -1,15 +1,57 @@
+import subprocess
+import sys
+import importlib
+import os
+import re
+
+def is_package_installed(package_name):
+    try:
+        importlib.import_module(package_name)
+        return True
+    except ImportError:
+        return False
+
+def parse_package_name(requirement_line):
+    # Extract package name from line like "numpy>=1.20" or "dearpygui_ext==1.0.0"
+    return re.split(r'[<>=]', requirement_line.strip())[0]
+
+def install_requirements_if_needed(requirements_file="requirements.txt"):
+    if not os.path.exists(requirements_file):
+        print(f"{requirements_file} not found.")
+        return
+
+    with open(requirements_file, "r") as f:
+        lines = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+    missing = []
+    for line in lines:
+        package = parse_package_name(line)
+        if not is_package_installed(package):
+            missing.append(line)
+
+    if missing:
+        print("Installing missing packages:", missing)
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+            print("All missing requirements installed successfully.")
+        except subprocess.CalledProcessError as e:
+            print("Failed to install some requirements:", e)
+    else:
+        print("All required packages are already installed.")
+
+# --- Run before your imports ---
+install_requirements_if_needed()
+
 from datetime import timedelta, datetime
 import dearpygui.dearpygui as dpg
-import dearpygui_ext.themes as themes
-import numpy as np
-import re 
+from dearpygui_ext import themes as themes
+import numpy as np 
 import DataHandling as DH # type: ignore
 import utils as utl
 import Preprocessing as pre
 import Features as ft
 import time
 import csv
-
 
 #----------------------------------------GLOBAL-----------------------------
 bands = ft.bands
@@ -71,7 +113,6 @@ def save_table_to_file(sender, app_data, user_data):
                 file.write("\t".join(map(str, row)) + "\n")
 
     print(f"Table saved as {filename}")
-
 
 #--- Add common buttons
 def add_filters_buttons(tab_tag,signal_tags):
@@ -159,7 +200,6 @@ def add_combo_df_features(tab_tag,signal_tags):
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_df_features"):
         dpg.add_combo(label='Spectral Default Analysis',callback = DefaultFeatures, user_data=(tab_tag,signal_tags),items = features, parent=f"{tab_tag}_df_features", tag = f"{tab_tag}_combo_df_features",width=200)
-
 
 #--- Toggle buttons
 def toggleVisibility(signal_tags, parent, group, user_data):
@@ -371,7 +411,6 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
 
         dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag, "", "", ""),parent=f"{tab_tag}_buttons",default_value=False)
         
-
 #--- Visualization functions
 def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False):
     '''
@@ -2875,6 +2914,12 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     dpg.add_text(f"Total days: {len(signals)}", parent=tab_tag)
+    evt = DH.getEventSummary(app_state['windows'][window_id]['Data'])
+    if 'Eventos' in evt.keys():
+        for e in evt['Eventos']:
+            event = f"{e['EventName']}:  {e['EventCount']}"
+            dpg.add_text(event, parent=tab_tag)
+
     initial, final = DH.getEventsElectrodes(app_state['windows'][window_id]['Data'])
     if not isinstance(initial, str): 
         dpg.add_text(f'Electrodes | Left: {initial[0]} | Right: {initial[1]}', parent=tab_tag)
@@ -3448,6 +3493,12 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
             dpg.add_text(f'Electrodes {DH.getSessionDate(data)} | Left: {initial[0]} | Right: {initial[1]}', parent=tab_tag)
         else: 
             dpg.add_text(f'{DH.getSessionDate(data)}: {initial}', parent=tab_tag)
+
+        evt = DH.getEventSummary(data)
+        if 'Eventos' in evt.keys():
+            for e in evt['Eventos']:
+                event = f"{e['EventName']}:  {e['EventCount']}"
+                dpg.add_text(f'{event}', parent=tab_tag)
 
     days = []
     with dpg.group(parent=tab_tag, tag = f"{tab_tag}_group", horizontal=True):

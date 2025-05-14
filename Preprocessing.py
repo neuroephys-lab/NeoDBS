@@ -490,3 +490,21 @@ def removeCardiacComponent(raw, band, filterMethod="Fixed Peak Find"):
         #sfft = defaultSpectrogram(stream, window=1.0, overlap=0.5, frequency_resolution=0.5, fs=fs)
 
         return filtered, buttered
+    
+
+#----------INES--------------------------------
+
+
+    '''
+    Verifies continuos time: if the point belongs to the respective day (some points are lost in days)
+    '''
+    days = list(data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'].keys())
+    for d in days:
+        for j in reversed(data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'][d]):
+            if j['DateTime'][0:10] != d[0:10]:
+                for day_ in days:
+                    if day_[0:10] == j['DateTime'][0:10]:
+                        data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'][day_].insert(0,j)
+                        data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'][d].pop(-1)
+    
+    return data
