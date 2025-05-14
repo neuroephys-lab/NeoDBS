@@ -11,4 +11,4 @@ Data= DH.getData(file_path)
 sense, calibration, artifacts = DH.getSignals(Data,'Setup')
 
 for artifact in artifacts: 
-    print(artifact['Channel'], ': ', artifact['Artifact'])
+    print(artifact['Artifact'])

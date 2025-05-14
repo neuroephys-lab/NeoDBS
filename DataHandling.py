@@ -363,7 +363,6 @@ def getEventsElectrodes(data):
 
     return initial, final
 
-
 def getStimulationParameters(dictionary, group_name, time = 'Initial'):
 
     group_name = 'GroupIdDef.GROUP_' + group_name
