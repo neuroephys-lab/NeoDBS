@@ -1183,9 +1183,9 @@ def chart_obcession_compulsion(mark_obcession, mark_compulsion, right_dic, left_
         options_window[side][symptom].append({"time": window_time,"LFP": window_LFP})
 
 
-# file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
+file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
 
-file_path = "C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2024-10-14\\Report_Json_Session_Report_20241125T162143.json"
+# file_path = "C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2024-10-14\\Report_Json_Session_Report_20241125T162143.json"
 
 data = getData(file_path) 
 

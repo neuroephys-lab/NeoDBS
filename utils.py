@@ -117,3 +117,6 @@ def read_event_file(filename):
                 print(f"Skipping invalid line: {line}")  # Handle potential formatting errors
     
     return events
+
+def date2str(d: datetime) -> str:
+    return d.strftime("%Y-%m-%d")

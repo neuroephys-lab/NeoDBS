@@ -992,22 +992,6 @@ def getImpedance(Data):
             Right[type] = info['Hemisphere'][1]['SessionImpedance'][type]
     return status, Left, Right
 
-'''
-data2 = getData(file_path1)
-
-data1 = getData(file_path2)
-
-print(data1['Device']['SessionDate'])
-print(data2['Device']['SessionDate'])
-merged = mergeJSONs(*sortJSONs([data1, data2]))
-print(merged['Device']['SessionDate'])
-
-rec = Data['Streaming']['BrainSenseTimeDomain'][0]
-print(getRealTime('Streaming',rec)[0], ' : ', getRealTime('Streaming',rec)[-1] )
-seconds = getRecordingDuration('Streaming',rec)
-print(timedelta(seconds=seconds))
-'''
-
 def getEventsInTimeline(Data):
     events = getSignals(Data,'Events')
     timeline = getSignals(Data,'Timeline')
@@ -1041,18 +1025,21 @@ def interpolateTimelineStream(signal):
 
     return missing
 
-def right_hemisphere(data,days):
+def MissingTimeline(data,side):
     '''
+    Inês Pereira (up202107421)
+
     This function is for the right hemisphere of the brain
     This function recieves the information in dictionary data and also the days that will appear in the graphic
     This function returns a dictionary, the dictionary have x - time, Y - LFP, 
     X_missing - points in x-axis that will be added due to missing information, 
     Y_missing - points in y-axis that will be added due to missing information
     '''
-    #Inês Pereira (up202107421)
-    days_hemisphere_right=list(data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'].keys())
-    #days will contain all the days that were choosen to be in plot 
-    days_of_search=days
+    if side == 'Right': side = 'HemisphereLocationDef.Right'
+    else: side = 'HemisphereLocationDef.Left'
+    
+    days_hemisphere_right=list(data['Timeline']['LFPTrendLogs'][side].keys())
+    days_of_search=days_hemisphere_right
     
     time_format_somado=[]
     LFP_somado=[]
@@ -1066,7 +1053,7 @@ def right_hemisphere(data,days):
                     key_chosen_day = s
                     break 
 
-            info_chosen_day= data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'][key_chosen_day]
+            info_chosen_day= data['Timeline']['LFPTrendLogs'][side][key_chosen_day]
 
             size_chosen_day = len(info_chosen_day)
             time_format=[0]*size_chosen_day
@@ -1084,7 +1071,7 @@ def right_hemisphere(data,days):
                 dif=time_format[s+1]-time_format[s]
                 dif=dif.seconds
                 if dif > 660:
-                    print('Adding missing points')
+                    
                     n_pontos_extra=(dif//600) - 1
                     index_n_pontos_extra.append(s)
                     index_n_pontos_extra.append(n_pontos_extra)
@@ -1106,21 +1093,24 @@ def right_hemisphere(data,days):
                 red_LFP.extend(LFP_acrescentar)
                 #adding points in x-axis
                 tempo=time_format[index_ponto_acrescentar]
-                for j in range(1,numero_pontos_acrescentar+1):
+                for j in range(0,numero_pontos_acrescentar+1):
                     tempo=tempo + timedelta(minutes=10)
-                    time_format.insert(index_ponto_acrescentar+j,tempo)
-                    red_time.append(tempo)
+                    next_t = time_format[index_ponto_acrescentar+j+1]
+                    diff = next_t-tempo
+                    if diff>timedelta(minutes=10): 
+                        time_format.insert(index_ponto_acrescentar+j+1,tempo)
+                        red_time.append(tempo)
 
             time_format_somado.extend(time_format)
             LFP_somado.extend(LFP)
 
-    elif isinstance(days_of_search, str):
+    '''elif isinstance(days_of_search, str):
         for s in days_hemisphere_right: #in case of a single day
             if days_of_search in s:
                 key_chosen_day = s
                 break 
         
-        info_chosen_day= data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'][key_chosen_day]
+        info_chosen_day= data['Timeline']['LFPTrendLogs'][side][key_chosen_day]
         
             
 
@@ -1161,17 +1151,61 @@ def right_hemisphere(data,days):
             red_LFP.extend(LFP_acrescentar)
             #adding points in x-axis
             tempo=time_format[index_ponto_acrescentar]
-            for j in range(1,numero_pontos_acrescentar+1):
+            for j in range(0,numero_pontos_acrescentar+1):
                 tempo=tempo + timedelta(minutes=10)
-                time_format.insert(index_ponto_acrescentar+j,tempo)
-                red_time.append(tempo)
+                next_t = time_format[index_ponto_acrescentar+j+1]
+                diff = next_t-tempo
+                if diff>timedelta(minutes=10): 
+                    time_format.insert(index_ponto_acrescentar+j+1,tempo)
+                    red_time.append(tempo)
 
         time_format_somado.extend(time_format)
         LFP_somado.extend(LFP)
         
-        time_format_somado = [utl.parse_datetime(t) for t in time_format_somado]
+        time_format_somado = [utl.parse_datetime(t) for t in time_format_somado]'''
 
     new_dic = {'X': time_format_somado, 'Y':LFP_somado,'X_missing':red_time,'Y_missing':red_LFP}
-
             
     return new_dic
+
+def correctMissingTimeline(Data, Timeline, axis='X'):
+
+    other_axis = 'Y'
+    added_timeline = {'Right':[],'Left':[]}
+    added_lfp = {'Right':[],'Left':[]}
+
+    missing = utl.after_underscore(axis)
+    if missing == 'missing': 
+        other_axis = other_axis +'_' + missing
+    
+    for side in ['Left','Right']:
+
+        added = MissingTimeline(Data, side)
+        added_timeline[side] = added[axis]
+        added_lfp[side] = added[other_axis]
+
+
+        days_added = [utl.date2str(ad) for ad in added[axis]]
+        days_added = np.unique(days_added)
+
+        new_timeline = {d:[] for d in days_added}
+        new_lfp = {d:[] for d in days_added}
+
+        for idx, at in enumerate(added_timeline[side]):
+            key = utl.date2str(at)
+            new_timeline[key].append(at)
+            new_lfp[key].append(added_lfp[side][idx])
+
+        if isinstance(Timeline,dict): Timeline = [Timeline]
+        
+        for i,day in enumerate(Timeline):
+            date = utl.parse_datetime(day['Date'])
+            date = utl.date2str(date)
+            if axis not in Timeline[i][side].keys(): 
+                Timeline[i][side][axis] = []
+                Timeline[i][side][other_axis] = []
+            if date in new_timeline.keys():
+                Timeline[i][side][axis] = new_timeline[date]
+                Timeline[i][side][other_axis] = new_lfp[date]
+
+    return Timeline

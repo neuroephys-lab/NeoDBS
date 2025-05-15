@@ -2860,6 +2860,29 @@ def align_events(sender,app_data, user_data):
             plot_td(events,parent,tab_tag, signal_tags,events=True)
             # else: dpg.add_text('To compare events, needs at least 2 events', parent=parent)
 
+def changeTimelinePlot(sender,app_data,user_data):
+    signal_tags, signals, data, plot_tag = user_data
+
+    # signals = getActiveSignals(tab_tag,signal_tags)
+
+    for idx, signal in enumerate(signals):
+        for j, tag in enumerate(signal_tags.keys()):
+            i = extract_idx_from_series_tag(tag)
+            if i == idx and signal_tags[tag]==True:
+                if app_data:
+                    extra = DH.correctMissingTimeline(data, signal,'X_missing')[0]
+                    for side in ['Left','Right']:
+                        tagg = f"{tag}_{side}_added"
+                        extra_x, extra_y = extra[side]['X_missing'], extra[side]['Y_missing']
+                        extra_x = [x.timestamp() for x in extra_x]
+                        if extra_x != []:
+                            dpg.add_scatter_series(extra_x,extra_y,tag = tagg, parent=plot_tag)
+                else:
+                    if dpg.does_item_exist(f"{tag}_Left_added"): 
+                        dpg.delete_item(f"{tag}_Left_added")
+                        dpg.delete_item(f"{tag}_Right_added")
+
+
 #--------------------------------------INDIVIDUAL TABS-----------------------------------------
 def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     app_state['windows'][window_id]['Data'][tab_tag]['Signals'] = {'left': [], 'right': []}
@@ -2914,13 +2937,14 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     dpg.add_text(f"Total days: {len(signals)}", parent=tab_tag)
-    evt = DH.getEventSummary(app_state['windows'][window_id]['Data'])
+    data = app_state['windows'][window_id]['Data']
+    evt = DH.getEventSummary(data)
     if 'Eventos' in evt.keys():
         for e in evt['Eventos']:
             event = f"{e['EventName']}:  {e['EventCount']}"
             dpg.add_text(event, parent=tab_tag)
 
-    initial, final = DH.getEventsElectrodes(app_state['windows'][window_id]['Data'])
+    initial, final = DH.getEventsElectrodes(data)
     if not isinstance(initial, str): 
         dpg.add_text(f'Electrodes | Left: {initial[0]} | Right: {initial[1]}', parent=tab_tag)
     else: 
@@ -2944,7 +2968,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                 for side in ['Left','Right']:   
                     sign = signal[side]
                     date = utl.parse_datetime(signal['Date'])
-                    label_left = f"{side} - day {date.day:02d}/{date.month}"
+                    label_left = f"{side} - day {date.year}-{date.month:02d}-{date.day:02d}"
                     label_right = f"{side} - stim"
                 
                     try:
@@ -2957,7 +2981,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
 
                     # LFP power
-                    series_tag = f"{tab_tag}_series_{idx}_{side.lower()}_left"
+                    series_tag = f"{tab_tag}_series_{idx}_{side.lower()}"
                     dpg.add_line_series(x, y, label=label_left, parent=y_left, tag=series_tag)
                     signal_tags[series_tag] = True  # Track visibility
                     '''
@@ -2988,6 +3012,8 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag)) #check hemisphere
             #dpg.add_button(label='Normalize',callback=Volt2dB, user_data=(signal_tags,tab_tag),parent=f"{tab_tag}_buttons")
+            
+            dpg.add_checkbox(label='Interpolate missing points',parent=f"{tab_tag}_buttons", default_value=False, callback=changeTimelinePlot, user_data=(signal_tags, signals, data, y_left))
 
     add_features_buttons(tab_tag, signal_tags)
     add_correlation_buttons(tab_tag)
