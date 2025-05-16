@@ -3036,7 +3036,7 @@ def stimulation_timeline(sender,app_data,user_data):
     stimulation = {'Left':{'X':[],'Y':[]},'Right':{'X':[],'Y':[]}}
     for tag in tags:
         stream = getSignalbyIdx(window_id,tab_tag,tag)
-        date = stream['Date']
+        # date = stream['Date']
         for side in ['Left','Right']:
             y = stream[side]['Stim']
             x = stream[side]['X']
@@ -3058,10 +3058,6 @@ def stimulation_timeline(sender,app_data,user_data):
                 y = stimulation[side]['Y']
                 dpg.add_line_series(x,y, label = f'{side} Stimulation', parent = y_axis)
 
-
-
-
-    
  
 #--------------------------------------INDIVIDUAL TABS-----------------------------------------
 def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
@@ -3121,6 +3117,9 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     app_state['windows'][window_id]['Data'][tab_tag] = {'Signals': []}
     flag = False
     evt = DH.getEventSummary(data)
+
+    events = DH.getSignals(data,'Events')
+
     if 'Eventos' in evt.keys():
         for e in evt['Eventos']:
             event = f"{e['EventName']}:  {e['EventCount']}"
@@ -3183,6 +3182,10 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         days = np.unique(days).tolist()
         sides = ['Left','Right']
 
+        for event in events:
+            x_event = utl.convert_to_timestamp(event['DateInitial'])
+            label = event['EventName']
+            dpg.add_inf_line_series(x=[x_event],label=label, parent = y_left)
 
         with dpg.group(label = f"{tab_tag}_buttons", parent=f"{tab_tag}_group",):
             toggleVisibility(signal_tags,parent=tab_tag, group=f"{tab_tag}_buttons", user_data = window_id)
@@ -3728,6 +3731,9 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                 
                 if mode in file['Modes']: 
                     signals = DH.getSignals(file['Data'],mode)
+
+                    events = DH.getSignals(file['Data'],'Events')
+
                     file['Data'][tab_tag]= {'Signals': []}
                     rdate = signals[0]['Date']
                     rdate = utl.parse_datetime(rdate)
@@ -3771,6 +3777,10 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
 
                         # dpg.add_line_series(x, y, label=f'Stimulation {days[-1]}', parent=yy_axis, tag = signal_tag)
                         # signal_tags[signal_tag] = True
+                    for event in events:
+                        x_event = utl.convert_to_timestamp(event['DateInitial'])
+                        label = event['EventName']
+                        dpg.add_inf_line_series(x=[x_event],label=label, parent = y_axis)
 
         dpg.add_text(f"Total days: {len(days)}", parent=tab_tag)
         days = np.unique(days).tolist()

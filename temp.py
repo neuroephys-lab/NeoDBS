@@ -8,5 +8,11 @@ file_path = "C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2024-11-11\\R
 Data = DH.getData(file_path)
 
 timeline = DH.getSignals(Data, 'Timeline')
+events = DH.getSignals(Data,'Events')
+inicio, fim = timeline[0]['Date'], timeline[-1]['Date']
 
-for t in timeline: print(t['Left']['Stim'])
+print(inicio, ' --> ', fim)
+for event in events:
+    date = event['DateInitial']
+    if inicio <= date <= fim:
+        print(event['EventName'])
