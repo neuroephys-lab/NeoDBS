@@ -2,7 +2,7 @@
 
 from DataHandling import *
 import dearpygui.dearpygui as dpg
-import statistics
+import numpy as np
 
 def verify_countinous_time(data):
     '''This function receives the data dictionary and returns the corrected version of it.
@@ -686,8 +686,8 @@ def toggle_remove_outliers(sender,app_data,user_data):
     #breakpoint()
     if app_data == True:
         #dici=user_data
-        mean_for_outliers=statistics.mean(dici['Y'])
-        std_for_outliers=statistics.stdev(dici['Y'])
+        mean_for_outliers=np.mean(dici['Y'])
+        std_for_outliers=np.std(dici['Y'])
         num_std = 3
         limit_outliers = mean_for_outliers+num_std*std_for_outliers
         # print(limit_outliers)
@@ -743,8 +743,8 @@ def toggle_remove_outliers_2(_,app_data,user_data):
     #print(num_std)
     #if app_data == True:
         #dici=user_data
-    mean_for_outliers=statistics.mean(dici['Y'])
-    std_for_outliers=statistics.stdev(dici['Y'])
+    mean_for_outliers=np.mean(dici['Y'])
+    std_for_outliers=np.std(dici['Y'])
     limit_outliers = mean_for_outliers+num_std*std_for_outliers
     #print(limit_outliers)
     # print(limit_outliers)
@@ -826,8 +826,8 @@ def overlaid_days_average_right(data,days):
     mean_plus_std_days =  []
 
     for a in support:
-        mean = statistics.mean(support[str(a)])
-        std = statistics.stdev(support[str(a)])
+        mean = np.mean(support[str(a)])
+        std = np.std(support[str(a)])
         mean_less_std =mean - std
         mean_plus_std = mean + std 
         mean_days.append(mean)
@@ -881,8 +881,8 @@ def overlaid_days_average_left(data, days):
     mean_plus_std_days =  []
 
     for a in support:
-        mean = statistics.mean(support[str(a)])
-        std = statistics.stdev(support[str(a)])
+        mean = np.mean(support[str(a)])
+        std = np.std(support[str(a)])
         mean_less_std =mean - std
         mean_plus_std = mean + std 
         mean_days.append(mean)
@@ -961,9 +961,7 @@ def chart_overlaid_days(data,days):
 
             dpg.fit_axis_data('y_axis_id_right')
             dpg.fit_axis_data('x_axis_id_right')
-
-
-            
+ 
             #To create graphic with mean and standard deviation
             mean_days, mean_less_std_days, mean_plus_std_days, time_groups_10_min = overlaid_days_average_right(data,days)
             down_mean_days=[a-a*0.05 for a in mean_days]

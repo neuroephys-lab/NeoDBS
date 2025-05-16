@@ -1199,7 +1199,9 @@ def correctMissingTimeline(Data, Timeline, axis='X'):
         if isinstance(Timeline,dict): Timeline = [Timeline]
         
         for i,day in enumerate(Timeline):
-            date = utl.parse_datetime(day['Date'])
+            date = day['Date']
+            if isinstance(date,str):
+                date = utl.parse_datetime(date)
             date = utl.date2str(date)
             if axis not in Timeline[i][side].keys(): 
                 Timeline[i][side][axis] = []
@@ -1207,5 +1209,5 @@ def correctMissingTimeline(Data, Timeline, axis='X'):
             if date in new_timeline.keys():
                 Timeline[i][side][axis] = new_timeline[date]
                 Timeline[i][side][other_axis] = new_lfp[date]
-
+        u = Timeline
     return Timeline
