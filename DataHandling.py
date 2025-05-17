@@ -48,12 +48,54 @@ def info_electrodes(data):
                             Stimulation_electrodes.append(re.split('\.|_',d['Electrode'])[-1]+'-'+d["ElectrodeStateResult"].split('.')[-1])
                         Sensing_electrodes=SensingChannel[0]["Channel"]
                         Sensing_electrodes=Sensing_electrodes.split('.')[-1]
-    return Group_id, Rate_in_hertz, Pulse_width_in_microseconds, Suspend_amplitude_in_miliamps, Stimulation_electrodes, Sensing_electrodes
+    a = {
+        'Group_id': Group_id,
+        'Frequency': Rate_in_hertz,
+        'Pulse': Pulse_width_in_microseconds,
+        'Amplitude': Suspend_amplitude_in_miliamps,
+        'Stim_electrodes': Stimulation_electrodes, 
+        'Sense_electrodes': Sensing_electrodes,
+    }
+    return a
+
+def add_utc_conversion_to_dates(data, offset):
+    """
+    Recursively convert all 'Date'-related fields to UTC with offset (time-shifted).
+    Assumes naive datetimes are in the specified local timezone.
+    """
+   
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if 'Date' in key and isinstance(value, str):
+                try:
+                    data[key] = utl.full_date2str(utl.parse_datetime(data[key]) + offset)
+
+                except Exception:
+                    pass
+            elif isinstance(value, (dict, list)):
+                add_utc_conversion_to_dates(value, offset)
+
+    elif isinstance(data, list):
+        for item in data:
+            add_utc_conversion_to_dates(item, offset)
+
+    return data
+
+def extract_time_offset(Data):
+    offset = Data['ProgrammerUtcOffset']
+    sign = offset[0]
+    hours = int(offset[1:].split(':')[0])
+    if sign=='-':
+        offset =  int(-hours)
+    else: offset= hours
+    return timedelta(hours=offset)
 
 def getData(file_path):
 
     file = open(file_path,'r',encoding='utf-8')
-    raw_data = json.load(file)
+    raw = json.load(file)
+    offset = extract_time_offset(raw)
+    raw_data = add_utc_conversion_to_dates(raw,offset)
 
     device_keys = ['AbnormalEnd', 'FullyReadForSession', 
             'FeatureInformationCode', 'SessionDate', 
@@ -148,6 +190,15 @@ def getStimStatus(Data):
 def getTimeTicksMs(TickInS,GlobalPacketSizes,Fs):
     return np.round(np.arange(start=TickInS[0],stop=TickInS[-1]+ (GlobalPacketSizes[-1]-1)/Fs ,step=1/Fs),3)
 
+def getTimelineBand(Data):
+    # return Data['Device']['GroupHistory'][0]['Groups'][0]
+    central = Data['Device']['Groups']['Final'][0]['ProgramSettings']['SensingChannel'][0]['SensingSetup']['FrequencyInHertz']
+    band_values = [np.round(central-2.5,2), np.round(central+2.5,2)]
+    band = {
+        str(band_values): band_values
+    }
+    return band
+
 def getSessionDate(Data): 
     if Data['Device']['SessionDate']:
         return utl.parse_datetime(Data['Device']['SessionDate'])
@@ -162,6 +213,15 @@ def getSessionDuration(Data):
         print(beginning , '-->', end)
         return end - beginning
     else: return "No dates stored!"
+
+def getPatientInfo(Data):
+    return Data['Device']['PatientInformation']['Initial']
+
+def getDeviceInfo(Data):
+    return Data['Device']['DeviceInformation']['Final']
+
+def getBatteryInfo(Data):
+    return Data['Device']['BatteryInformation']
 
 '''
 def getRecordingDuration(dictionary):

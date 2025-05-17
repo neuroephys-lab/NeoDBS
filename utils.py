@@ -120,3 +120,6 @@ def read_event_file(filename):
 
 def date2str(d: datetime) -> str:
     return d.strftime("%Y-%m-%d")
+
+def full_date2str(d: datetime) -> str:
+    return d.strftime("%Y-%m-%dT%H:%M:%SZ")
