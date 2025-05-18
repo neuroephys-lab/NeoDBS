@@ -80,6 +80,9 @@ def parse_datetime(string):
         # Fallback for cases without milliseconds
         return datetime.strptime(string, "%Y-%m-%dT%H:%M:%SZ")
 
+def parse_time(string):
+     return datetime.strptime(string, "%H:%M:%S")
+
 def find_closest_index(new_time, target_hour, target_minute):
     """Finds the index of the sample in new_time closest to the given hour and minute.
        Returns None if the target time is out of bounds.
@@ -120,6 +123,19 @@ def read_event_file(filename):
 
 def date2str(d: datetime) -> str:
     return d.strftime("%Y-%m-%d")
+
+def extract_time_from_datetime_string(dt_string):
+    """Parses a datetime string and returns a timestamp of the time portion."""
+    dt = datetime.strptime(dt_string, "%H:%M:%S")
+    t = dt.time()
+    # Convert time to timestamp (seconds since midnight)
+    return t.hour * 3600 + t.minute * 60 + t.second
+
+def extract_time(dt):
+    """
+    Extracts and returns the time portion from a datetime object as a string (HH:MM:SS).
+    """
+    return dt.time().strftime("%H:%M:%S")
 
 def full_date2str(d: datetime) -> str:
     return d.strftime("%Y-%m-%dT%H:%M:%SZ")

@@ -2329,7 +2329,7 @@ def extract_timeline_features(p):
     #peak time
     time = psd.index(peak)
     time = freqs[time]
-    time = {'Peak Time': time}
+    time = {'Peak Time': str(utl.parse_datetime(time).time())}
 
 
     info = mean | norm_mean| picos | time
@@ -2588,7 +2588,7 @@ def CustomFilter(sender,app_data,user_data):
     def apply_filt(sender, app_data, user_data):
         func = user_data
         tags = getActiveSeries(signal_tags)
-        args = pre.call_function(func, parameter_values) #calculates the parameters of the filter
+        args = pre.call_function(func, parameter_values) #gets the parameters of the filter
         
         for tag in tags:
             if mode:
@@ -3438,7 +3438,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_text(f"Total days: {len(signals)}", parent=tab_tag)
     data = app_state['windows'][window_id]['Data']
     app_state['windows'][window_id]['Data'][tab_tag] = {'Signals': []}
-    flag, tables = False, []
+    flag, mean = False, []
     evt = DH.getEventSummary(data)
     events = DH.getSignals(data,'Events')
     ocd_events = np.unique([event['EventName'] for event in events])
@@ -3449,7 +3449,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             event = f"{e['EventName']}:  {e['EventCount']}"
             dpg.add_text(event, parent=tab_tag)
 
-    initial, final = DH.getEventsElectrodes(data)
+    initial, _ = DH.getEventsElectrodes(data)
     
     if not isinstance(initial, str): 
         for ch in initial:
@@ -3498,21 +3498,27 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     dpg.add_line_series(x, y, label=label_left, parent=y_left, tag=series_tag)
                     signal_tags[series_tag] = True  # Track visibility
 
-                    if not dpg.does_item_exist(f"{tab_tag}_{series_tag}"):
-                        header = dpg.get_item_label(series_tag)
-                        dpg.add_collapsing_header(label = header, tag =f"{tab_tag}_{series_tag}", parent = tab_tag)
-                    else:
-                        dpg.delete_item(f"{tab_tag}_{series_tag}", children_only=True)
+                    info = extract_timeline_features(sign)
+                    create_table(tab_tag,f"{tab_tag}_table", info, trial_label=label_left)
 
+                    mean.append(info)
+        mean_dict = {}
+        for key in mean[0].keys():
+            values = [m[key] for m in mean]
+            if isinstance(values[0], str):
+                #its datetime in string
+                values=[utl.extract_time_from_datetime_string(t) for t in values]
+                mean_value = utl.extract_time(datetime.fromtimestamp(np.mean(values)))
+                mean_value = {key: mean_value}
+            else:
+                mean_value = {key: np.mean(values,axis=0)}
 
-                    for band in bands.items():
-                        info = extract_timeline_features(sign)
-                        create_table(f"{tab_tag}_{series_tag}",f"{tab_tag}_{series_tag}_table", info, trial_label=band[0])
+            mean_dict = mean_dict | mean_value
+            
 
-                    tables.append(f"{tab_tag}_{series_tag}_table")
-                    
-                    
+        create_table(tab_tag,f"{tab_tag}_table", mean_dict, trial_label='Mean')
 
+        
         days = []
         for signal in signals: 
             date = utl.date2str(utl.parse_datetime(signal['Date']))
