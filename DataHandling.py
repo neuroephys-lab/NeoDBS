@@ -1069,6 +1069,66 @@ def getEventsInTimeline(Data):
 
     return events_in_timeline
 
+def getTimelineIndexofEvent(timeline, events):
+
+    index = {}
+    flag = False
+    
+
+    for idx,e in enumerate(events):
+        xe = utl.parse_datetime(e['DateInitial'])
+        key = str(idx) + f"_{e['EventName']}"
+        for j,t in enumerate(timeline):
+            xt = t['Left']['X']
+            xt = [utl.parse_datetime(x) for x in xt]
+
+            # Loop with enumerate to get index
+            for i, x in enumerate(xt):
+                if abs(x - xe) < timedelta(minutes=10):
+                    
+                    index[key] = [i,j]
+                    flag = True
+                    break
+        if flag==False:
+            index[key] = f'{xe}: Event not present in any Timeline Stream'
+
+    return index
+
+def segmentTimelineEvent(timeline, indexes):
+    segments = {}
+    flags = []
+    for edx, idxs in indexes.items():
+        if isinstance(idxs,str):
+            print(idxs)
+        else:
+            x, signal = idxs
+            segments[edx] = {}
+            for side in ['Left', 'Right']:
+
+                if x<6: 
+                    min,max = 0, 12
+                    flags.append(True)
+                elif x+6 > len(timeline[signal][side]['X']):
+                    max = len(timeline[signal][side]['X'])-1
+                    min = max-6
+                    flags.append(True)
+                else: 
+                    min,max =  x-6, x+6
+                    flags.append(False)
+
+                #if it axis accepts string we neede to order the signal,
+                # in case of dpg, that receives timestamps, it will automatically order the signal because theyre numbers
+                # xx = list(reversed(timeline[signal][side]['X'][x-6:x+6])) 
+                # yy = list(reversed(timeline[signal][side]['Y'][x-6:x+6]))
+
+                #for dpg
+                xx = timeline[signal][side]['X'][min:max]
+                yy = timeline[signal][side]['Y'][min:max]
+                segment = {'X': xx, 'Y': yy}
+                segments[edx][side] =  segment
+
+    return segments, flags
+
 def interpolateTimelineStream(signal):
 
     missing = []
@@ -1261,8 +1321,11 @@ def correctMissingTimeline(Data, Timeline, axis='X'):
         for i,day in enumerate(Timeline):
             date = day['Date']
             if isinstance(date,str):
-                date = utl.parse_datetime(date)
-            date = utl.date2str(date)
+                try:
+                    date = utl.parse_datetime(date)
+                    date = utl.date2str(date)
+                except Exception:
+                    pass
             if axis not in Timeline[i][side].keys(): 
                 Timeline[i][side][axis] = []
                 Timeline[i][side][other_axis] = []

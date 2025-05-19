@@ -402,6 +402,9 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
     events = np.unique(events).tolist()
     sides = ['Left', 'Right']
 
+    def show_mean(sender,app_data):
+        dpg.configure_item(f"{tab_tag}_mean",show=app_data)
+
     with dpg.group(label = f"{tab_tag}_buttons", width = -1):
         toggleVisibility(signal_tags, tab_tag, group = f"{tab_tag}_buttons",user_data=window_id)
         dpg.add_spacer(parent=f"{tab_tag}_buttons")
@@ -428,7 +431,9 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons_side", user_data=(day, window_id, tab_tag))
 
         dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag, "", "", ""),parent=f"{tab_tag}_buttons",default_value=False)
-        if extract_mode(tab_tag) == 'Events': dpg.add_button(label='Recalculate Mean Metrics', callback=recalculateMeanMetrics, user_data=tab_tag, parent=f"{tab_tag}_buttons")
+        if extract_mode(tab_tag) == 'Events': 
+            dpg.add_button(label='Recalculate Mean Metrics', callback=recalculateMeanMetrics, user_data=tab_tag, parent=f"{tab_tag}_buttons")
+            dpg.add_checkbox(label='Mean Visibility', default_value=True, callback=show_mean, parent=f"{tab_tag}_buttons")
 
 def recalculateMeanMetrics(sender, app_data, user_data):
     tab_tag = user_data
@@ -2311,6 +2316,7 @@ def extract_psd_features(p, band):
 
 def extract_timeline_features(p):
     
+    
     full_power = np.sum(p['Y'])
     freqs, psd = p['X'], p['Y']
 
@@ -2321,7 +2327,7 @@ def extract_timeline_features(p):
 
     #normalized mean power
     norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc*100/full_power,2), np.round(std,2)]}
-
+ 
     #peak power
     peak = max(psd)
     picos = {'Peak Power': peak}
@@ -2329,7 +2335,12 @@ def extract_timeline_features(p):
     #peak time
     time = psd.index(peak)
     time = freqs[time]
-    time = {'Peak Time': str(utl.parse_datetime(time).time())}
+    if isinstance(time,str):
+        peak = str(utl.parse_datetime(time).time())
+    else:
+        
+        peak = str(datetime.fromtimestamp(time).time())
+    time = {'Peak Time': peak}
 
 
     info = mean | norm_mean| picos | time
@@ -2949,7 +2960,7 @@ def changeTimelinePlot(sender,app_data,user_data):
                     if isinstance(data,list):
                         dictionary = data[idx]
                     else: dictionary = data
-                    if data != None: 
+                    if dictionary != None: 
                         extra = DH.correctMissingTimeline(dictionary, signal,'X_missing')[0]
                         for side in ['Left','Right']:
                             tagg = f"{tag}_{side}_added"
@@ -2988,6 +2999,7 @@ def circadian_rhythm(sender, app_data, user_data):
     mean, time_x = [], []
     days, toggle_tags = [], []
 
+
     with dpg.group(parent=tab_label, horizontal=True):
         with dpg.plot(label = "Circadian Rhythm", tag = f'{tab_label}_plot', width=500): 
             dpg.bind_colormap(f"{tab_label}_plot", 0)
@@ -3005,30 +3017,54 @@ def circadian_rhythm(sender, app_data, user_data):
                 stream = getSignalbyIdx(window_id,tab_tag,tag)
                 stream = DH.correctMissingTimeline(data,stream)[0]
                 x,y = stream[side]['X'],stream[side]['Y']
-                days.append(utl.date2str(utl.parse_datetime(stream['Date'])))
+                if isinstance(stream['Date'],str):
+                    try:
+                        days.append(utl.date2str(utl.parse_datetime(stream['Date'])))
+                    except Exception: days.append(stream['Date'])
+                else:
+                    days.append(utl.date2str(stream['Date']))
+                
                 
                 if isinstance(x[0], str):
-                    x = [utl.parse_datetime(xx) for xx in x]
-                    b = x[-1]
-                    mean.append(list(reversed(y)))
-                else: b = x[0]
+                    new_x = [utl.extract_time_from_datetime_string(xx) for xx in x]
+                else: 
+                    new_x = [utl.extract_time_from_datetime_string(str(xx.time())) for xx in x]
 
-                new_x = [(xx-b).total_seconds() for xx in x]
-                mean.append(y)
-                time_x.append(new_x)
+                sign = {'X':new_x,'Y':y}
+                info = extract_timeline_features(sign)
+                create_table(tab_label,f"{tab_label}_table", info, trial_label=series_label)
+
+                if new_x[0]>600:
+                    n_nan =  int((new_x[0] - 600)//600)+1
+                    nan_array = [np.nan] * n_nan
+                    new_x = list(np.arange(600,new_x[0],600)) + new_x
+                    
+                    y = nan_array+ y
 
                 dpg.add_line_series(new_x,y,label=series_label,tag=f"{tab_label}_{series_label}", parent=y_axis)
                 toggle_tags.append(f"{tab_label}_{series_label}")
+
+                
+                
+                mean.append(y)
+                time_x.append(new_x)
+
+                
+
+                
+
         with dpg.group(tag = f"{tab_label}_buttons", horizontal=True): pass
     max_len = max(len(arr) for arr in mean)
     
     # x = np.arange(0,len(mean)*600,600)
     big, x = 0, None
-    for line in time_x:
+    for line in time_x:  
         if len(line)>big:
             big = len(line)
             x = line
+    
     padded = np.array([arr + [np.nan] * (max_len - len(arr)) for arr in mean])
+    
 
     mean = np.nanmean(padded, axis=0)
     std = np.nanstd(padded,axis=0)
@@ -3043,6 +3079,11 @@ def circadian_rhythm(sender, app_data, user_data):
     dpg.bind_item_theme(f"{tab_label}_std",alpha_theme)
     dpg.add_line_series(x, mean, label = 'Mean', parent=y_axis, tag = f"{tab_label}_mean")
 
+    sign = {'X':x,'Y':list(mean)}
+    mean_x = x
+    info = extract_timeline_features(sign)
+    create_table(tab_label,f"{tab_label}_table", info, trial_label=series_label)
+
     def toggle(sender,app_data,user_data):
         label = dpg.get_item_label(sender)
         mean_array = []
@@ -3051,15 +3092,15 @@ def circadian_rhythm(sender, app_data, user_data):
                 dpg.configure_item(tag,show=app_data)
             if dpg.get_item_configuration(tag)['show']== True: 
                 mean_array.append(dpg.get_value(tag)[1])
-
-        padded = np.array([arr + [np.nan] * (max_len - len(arr)) for arr in mean_array])
+                
+        padded = np.array([arr + [np.nan] * (big - len(arr)) for arr in mean_array])
 
         mean = np.nanmean(padded, axis=0)
         std = np.nanstd(padded,axis=0)
         mais = mean + std
         menos = mean - std
-        dpg.configure_item(f"{tab_label}_std",y1=menos, y2=mais)
-        dpg.configure_item(f"{tab_label}_mean", y = mean)
+        dpg.configure_item(f"{tab_label}_std",y1=menos, y2=mais, x = mean_x)
+        dpg.configure_item(f"{tab_label}_mean", y = mean, x = mean_x)
 
 
     days = np.unique(days)
@@ -3093,12 +3134,14 @@ def stimulation_timeline(sender,app_data,user_data):
         for side in ['Left','Right']:
             y = stream[side]['Stim']
             x = stream[side]['X']
-            for xx in x: stimulation[side]['X'].append(utl.convert_to_timestamp(xx))
+            if isinstance(x[0],str):
+                for xx in x: stimulation[side]['X'].append(utl.parse_datetime(xx).timestamp())
+            else:
+                for xx in x: stimulation[side]['X'].append(xx.timestamp())
             for yy in y: stimulation[side]['Y'].append(yy)
 
     for side in ['Left','Right']:
         stimulation[side]['X'] = np.unique(list(reversed(stimulation[side]['X'])))
-    print(stimulation[side]['X'])
     with dpg.group(parent=tab_label, horizontal=True):
         with dpg.plot(label = "Stimulation", tag = f'{tab_label}_plot', width=500): 
             dpg.bind_colormap(f"{tab_label}_plot", 0)
@@ -3112,18 +3155,132 @@ def stimulation_timeline(sender,app_data,user_data):
                 dpg.add_line_series(x,y, label = f'{side} Stimulation', parent = y_axis)
 
 def AnalyzeTimelineEvents(sender,app_data,user_data):
-    tab_tag, signal_tags = user_data
+    tab_tag, events_tags = user_data
     window_id = extract_window_id(tab_tag)
-    data = getDatabyTag(tab_tag)
-    events = DH.getSignals(data,'Events')
-    series = getActiveSeries(signal_tags)
-    before, after = [], []
-    for series in series:
-        signal = getSignalbyIdx(window_id,tab_tag,series)
-        # for event in events:
-        #     if event['Date'] in signal['X']:
-        #         before_mask = 
-    
+    files = np.unique([e[1] for e in events_tags])
+    timelines = [DH.getSignals(app_state['windows'][window_id]['Files'][file]['Data'],'Timeline') for file in files]
+    events = [DH.getSignals(app_state['windows'][window_id]['Files'][file]['Data'],'Events') for file in files]
+
+    tab_label = tab_tag+'_bva'
+    plot_tag = f'{tab_label}_plot'
+
+    mean = []
+
+    def mean_info_table(mean):
+        mean_y = np.mean([sign['Y'] for sign in mean],axis=0)
+        x = mean[0]['X']
+        dpg.add_line_series(x,mean_y,label='Mean', parent=y_axis)
+        mean_info = {'X': x, 'Y':list(mean_y)}
+        mean_info = extract_timeline_features(mean_info)
+        create_table(tab_label,f"{tab_label}_table", mean_info, trial_label='Mean')
+
+    def beforeVafter(sender,app_data,user_data):
+        dpg.delete_item(y_axis, children_only=True)
+        dpg.delete_item(f"{tab_label}_table")
+        mean = []
+        if app_data:
+            for timeline, event in zip(timelines, events):
+                indexes = DH.getTimelineIndexofEvent(timeline,event)
+                segments, flags = DH.segmentTimelineEvent(timeline,indexes)
+                for idx,item in enumerate(segments.items()):
+                    i,segment = item
+                    for side in ['Left', 'Right']:
+                        x = segment[side]['X']
+                        x = [utl.extract_time_from_datetime_string(utl.extract_time(utl.parse_datetime(xx))) for xx in x]
+                        x = [xx-min(x) for xx in x]
+                        y = segment[side]['Y']
+                        date = utl.date2str(utl.parse_datetime(segment[side]['X'][0]))
+                        for moment in ['Before','After']:
+                            label = f"{idx} - {utl.after_underscore(i)} - {moment} | {date}"
+                            if moment=='Before':
+                                bx,by = x[:6], y[:6]
+                            else: 
+                                bx,by = x[6:], y[6:]
+
+                            bx = [xx-min(bx) for xx in bx]
+                            dpg.add_line_series(bx,by,label = label, parent = y_axis)
+                            
+
+                            sign = {'X':bx,'Y':by}
+                            info = extract_timeline_features(sign)
+                            create_table(tab_label,f"{tab_label}_table", info, trial_label=label)
+                            mean.append(sign)
+
+            mean_info_table(mean)
+
+        else:
+            for timeline, event in zip(timelines, events):
+                indexes = DH.getTimelineIndexofEvent(timeline,event)
+                segments, flags = DH.segmentTimelineEvent(timeline,indexes)
+                for idx,item in enumerate(segments.items()):
+                    i,segment = item
+                    for side in ['Left', 'Right']:
+                        x = segment[side]['X']
+                        x = [utl.extract_time_from_datetime_string(utl.extract_time(utl.parse_datetime(xx))) for xx in x]
+                        x = [xx-min(x) for xx in x]
+                        y = segment[side]['Y']
+                        date = utl.date2str(utl.parse_datetime(segment[side]['X'][0]))
+                        label = f"{idx} - {utl.after_underscore(i)} | {date}"
+                        dpg.add_line_series(x,y,label = label, parent = y_axis)
+                        
+                        sign = {'X':x,'Y':y}
+                        info = extract_timeline_features(sign)
+                        create_table(tab_label,f"{tab_label}_table", info, trial_label=label)
+                        mean.append(sign)
+
+                    if flags[idx] == True:
+                        meio = [x[7]]
+                        if not dpg.does_item_exist(f"{label}_center"): dpg.add_inf_line_series(meio, label = f"{idx} center", parent = y_axis, tag = f"{label}_center")
+
+            mean_info_table(mean)
+   
+    if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
+        dpg.add_tab_bar(parent=tab_tag, tag = f"{tab_tag}_features_bar")
+
+    if dpg.does_item_exist(tab_label):
+        dpg.delete_item(tab_label,children_only=True)
+    else:
+        dpg.add_tab(label=f"Timeline Events", parent=f"{tab_tag}_features_bar", tag=tab_label)
+
+        with dpg.group(parent=tab_label,horizontal=True):
+            dpg.add_checkbox(label='Before vs. After', callback=beforeVafter)
+
+        with dpg.group(parent=tab_label, tag=f"{plot_tag}_group"):
+            with dpg.plot(label = 'Event-locked Segments',tag = plot_tag,  width=-1):
+                dpg.bind_colormap(plot_tag, 0)
+                dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+                x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{plot_tag}", scale=dpg.mvPlotScale_Time)
+                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{plot_tag}")
+                    
+            
+                for timeline, event in zip(timelines, events):
+                    indexes = DH.getTimelineIndexofEvent(timeline,event)
+                    segments, flags = DH.segmentTimelineEvent(timeline,indexes)
+                    for idx,item in enumerate(segments.items()):
+                        i,segment = item
+                        for side in ['Left', 'Right']:
+                            x = segment[side]['X']
+                            x = [utl.extract_time_from_datetime_string(utl.extract_time(utl.parse_datetime(xx))) for xx in x]
+                            x = [xx-min(x) for xx in x]
+                            y = segment[side]['Y']
+                            date = utl.date2str(utl.parse_datetime(segment[side]['X'][0]))
+                            label = f"{idx} - {utl.after_underscore(i)} | {date}"
+                            dpg.add_line_series(x,y,label = label, parent = y_axis)
+                            
+                            sign = {'X':x,'Y':y}
+                            info = extract_timeline_features(sign)
+                            create_table(tab_label,f"{tab_label}_table", info, trial_label=label)
+                            mean.append(sign)
+
+                        if flags[idx] == True:
+                            meio = [x[7]]
+                            if not dpg.does_item_exist(f"{label}_center"): dpg.add_inf_line_series(meio, label = f"{idx} center", parent = y_axis, tag = f"{label}_center")
+
+                if not np.any(flags):
+                    dpg.add_inf_line_series([x[6]],label = "Center", parent = y_axis)
+                
+                mean_info_table(mean)
+                              
 #-------------------------------------GENERAL TABS-------------------------------------------
 def device_window(Data, window_id, file_id = None):
     wt = extract_type_window(window_id)
@@ -3535,6 +3692,8 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             theme = change_inf_line_color(color)
             dpg.bind_item_theme(e, theme)
 
+        
+
         with dpg.group(label = f"{tab_tag}_buttons", parent=f"{tab_tag}_group",):
             toggleVisibility(signal_tags,parent=tab_tag, group=f"{tab_tag}_buttons", user_data = window_id)
             with dpg.group(horizontal=True):
@@ -3552,6 +3711,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                         for ocd in ocd_events:
                             toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(ocd, window_id, tab_tag)) #check hemisphere
             #dpg.add_button(label='Normalize',callback=Volt2dB, user_data=(signal_tags,tab_tag),parent=f"{tab_tag}_buttons")
+            
             if flag == True:
                 dpg.add_text( 'Warning: There are missing points in Timeline', tag=f"{tab_tag}_wmp", parent=f"{tab_tag}_buttons")
                 dpg.add_checkbox(label='Show missing points',parent=f"{tab_tag}_buttons", default_value=False, callback=changeTimelinePlot, user_data=(signal_tags, signals, data, y_left))
@@ -3878,6 +4038,10 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
             tables.append(f"{tab_label}_mean_metric_table")
 
         toggleDisplay2(signals,signal_tags,window_id,tab_tag)
+        def show_mean(sender,app_data):
+            dpg.configure_item(f"{tab_tag}_mean",show=app_data)
+
+        dpg.add_checkbox(label='Mean Visibility', default_value=True, callback=show_mean, parent=f"{tab_tag}_buttons")
 
 def comb_streaming_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
@@ -4094,7 +4258,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     files = app_state['windows'][window_id]['Files']
     flag = False
-    datas, temp_signals = [], []
+    datas, temp_signals, events_tags = [], [], []
     for file in files: 
         data = file['Data']
         initial, _ = DH.getEventsElectrodes(data)
@@ -4136,8 +4300,8 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
 
                     file['Data'][tab_tag]= {'Signals': []}
                     rdate = signals[0]['Date']
-                    rdate = utl.parse_datetime(rdate)
-                    dpg.add_text(f"Day: {rdate.day}/{rdate.month}/{rdate.year}", parent=tab_tag)
+                    rdate = utl.date2str(utl.parse_datetime(rdate))
+                    dpg.add_text(f"Day: {rdate}", parent=tab_tag)
 
                     for sdx, signal in enumerate(signals):
                         extra = DH.correctMissingTimeline(file['Data'], signal,'X_missing')[0]
@@ -4149,14 +4313,14 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         else: datas.append(None)
 
                         signal_tag = f"{tab_tag}_file_{idx}_series_{sdx}"
-                        date = utl.parse_datetime(signal['Date'])
+                        date = utl.date2str(utl.parse_datetime(signal['Date']))
                         app_state['windows'][window_id]['Files'][idx]['Data'][tab_tag]['Signals'].append({'Date':date,'Left': [], 'Right': []})
                         
-                        days.append(f"{date.day:02d}/{date.month:02d}/{date.year}")
+                        days.append(date)
                             
                         for side in ['Left', 'Right']:
                             sign = signal[side]
-                            label_left = f"{side} - day {date.day:02d}/{date.month:02d}/{date.year}"
+                            label_left = f"{side} - day {date}"
                             
                             try:
                                 x = [utl.convert_to_timestamp(val) for val in sign['X']]
@@ -4170,24 +4334,23 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                             series_tag = f"{signal_tag}_{side.lower()}"
                             app_state['windows'][window_id]['Files'][idx]['Data'][tab_tag]['Signals'][sdx][side] = sign
 
-                            u = app_state['windows'][window_id]['Files'][idx]['Data'][tab_tag]['Signals']
                             # Add the line series for each side
                             dpg.add_line_series(x, y, label=label_left, parent=y_axis, tag=series_tag)#, fill=[1.0, 0, 0, 0.5]) --> define transparency?
                             signal_tags[series_tag] = True  # Track visibility
 
-                        # dpg.add_line_series(x, y, label=f'Stimulation {days[-1]}', parent=yy_axis, tag = signal_tag)
-                        # signal_tags[signal_tag] = True
-                    for event in events:
+                    for edx, event in enumerate(events):
                         x_event = utl.convert_to_timestamp(event['DateInitial'])
                         label = event['EventName']
-                        dpg.add_inf_line_series(x=[x_event],label=label, parent = y_axis)
+                        e_tag = f"{tab_tag}_{edx}_{idx}"
+                        dpg.add_inf_line_series(x=[x_event],label=label, parent = y_axis, tag =f"{tab_tag}_{edx}_{idx}")
+                        events_tags.append([e_tag,idx])
 
         dpg.add_text(f"Total days: {len(days)}", parent=tab_tag)
         days = np.unique(days).tolist()
         sides = ['Left','Right']
 
 
-        with dpg.group(label = f"{tab_tag}_buttons", parent=f"{tab_tag}_group",):
+        with dpg.group(label = f"{tab_tag}_buttons", parent=f"{tab_tag}_group"):
             toggleVisibility(signal_tags,parent=tab_tag, group=f"{tab_tag}_buttons", user_data = window_id)
             with dpg.group(horizontal=True):
                 with dpg.group():
@@ -4198,10 +4361,11 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     dpg.add_text('By hemisphere: ')
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag))
+            dpg.add_button(label = 'Analyze Events', callback=AnalyzeTimelineEvents, user_data=(tab_tag, events_tags),parent=f"{tab_tag}_buttons")
             if flag == True:
                 dpg.add_text( 'Warning: There are missing points in Timeline', tag=f"{tab_tag}_wmp", parent=f"{tab_tag}_buttons")
                 dpg.add_checkbox(label='Show missing points',parent=f"{tab_tag}_buttons", default_value=False, callback=changeTimelinePlot, user_data=(signal_tags, temp_signals, datas, y_axis))
-            dpg.add_button('Analyze Events')
+            
         
         add_timeline_features_buttons(tab_tag, signal_tags)
 
