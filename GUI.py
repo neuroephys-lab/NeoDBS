@@ -207,7 +207,7 @@ def add_combo_filters(sender, app_data, user_data):
 
 def add_combo_features(tab_tag,signal_tags):
 
-    features = ['periodogram','welch','multitaper','spectrogram', 'dpss', 'wavelet']
+    features = ['periodogram','welch','multitaper','spectrogram', 'dpss', 'wavelet', 'coherence']
 
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_custom_features"):
@@ -215,7 +215,7 @@ def add_combo_features(tab_tag,signal_tags):
 
 def add_combo_df_features(tab_tag,signal_tags):
 
-    features = ['periodogram','welch','multitaper','spectrogram', 'dpss', 'wavelet']
+    features = ['periodogram','welch','multitaper','spectrogram', 'dpss', 'wavelet', 'coherence']
 
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_df_features"):
@@ -804,7 +804,6 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 days.append(stream['Date'])
                 series_label = dpg.get_item_configuration(tag)['label']
 
-
     	        #BEFORE AND AFTER PSD
                 if comparing == True:
                     temp = []
@@ -1295,7 +1294,67 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
         with dpg.group(horizontal=False):
             dpg.add_checkbox(label='Synchronize Axis', callback=link) 
             dpg.add_button(label='Band Power over Time', callback=merge_spectrograms)     
-                         
+
+def plot_df_coherence(parameter_values,tab_tag,tags):
+    labels = [dpg.get_item_label(tag) for tag in tags]
+    tab_label = f"{tab_tag}_df_coherence"
+    window_id = extract_window_id(tab_tag)
+
+    def plot():
+        for no in ['0','1']:
+            tag = f"{tab_label}_s{no}"
+            lab = dpg.get_value(tag)
+            idx = labels.index(lab)
+            signal = getSignalbyIdx(window_id,tab_tag,tags[idx])
+            if no =='0': parameter_values['x'] = signal
+            else: parameter_values['y'] = signal
+
+        plot_coherence(parameter_values,tab_label)
+        
+    combos = {}
+    with dpg.group(horizontal=True,parent=tab_label):
+        for i,s in enumerate(['Signal 1','Signal 2']):
+            input_id = dpg.add_combo(
+                    label=s,
+                    items=labels,  # <-- customize your options
+                    default_value='---',
+                    callback=different_combo,
+                    user_data=(tab_label, combos),
+                    tag = f"{tab_label}_s{i}",
+                    width=200
+                )
+            combos[s] = input_id
+        dpg.add_button(label='Plot coherence', callback=plot,width=200)
+
+def plot_coherence(parameter_values, tab_label):
+
+    if dpg.does_item_exist(f"{tab_label}_plot_group"): dpg.delete_item(f"{tab_label}_plot_group")
+
+    signal1 = parameter_values['x']
+    signal2 = parameter_values['y']
+    parameter_values['x'] = signal1['Y']
+    parameter_values['y'] = signal2['Y']
+    parameter_values['fs'] = 250
+    freq, coh = pre.call_function('coherence', parameter_values)
+    mask = freq <= 100
+    freq, coh = freq[mask], coh[mask]
+    with dpg.group(parent=tab_label, tag=f"{tab_label}_plot_group"):
+        dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
+        dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
+        with dpg.plot(label = 'Coherence', width=-1, tag=f"{tab_label}_plot"):
+            dpg.bind_colormap(f"{tab_label}_plot", 0)
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µV^2/Hz)", tag= f"{tab_label}_y_axis")
+            dpg.add_line_series(freq.tolist(), coh.tolist(), label='Coherence', parent=y_axis)
+            dpg.set_axis_limits(y_axis,ymin=0,ymax=1)
+            p = {'X': list(freq), 'Y':list(coh)}
+            info = extract_timeline_features(p)
+            create_table(tab_label,f"{tab_label}_table", info, trial_label='Coherence')
+
+    time.sleep(0.2)
+    dpg.set_axis_limits_auto(y_axis)
+
 def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode = 'segment'):
     window_id = extract_window_id(tab_tag)
     wt = extract_type_window(window_id)
@@ -2045,6 +2104,16 @@ def change_text_color(color_id):
             dpg.add_theme_color(dpg.mvThemeCol_Text, colors[color_id], category=dpg.mvThemeCat_Core)
     return theme_id
 
+def different_combo(sender,app_data,user_data):
+    doc_container, combos = user_data
+    atual = dpg.get_value(sender)
+    for key in combos.keys():
+        if sender != combos[key]:
+            other = dpg.get_value(combos[key])
+    if atual == other:
+        dpg.add_separator(parent=doc_container)
+        dpg.add_text('Recordings cannot be the same!', parent=doc_container, show=True)
+         
 
 #--- Extract signal/identifiers
 def extract_idx_from_series_tag(series_tag: str) -> int:
@@ -2335,12 +2404,14 @@ def extract_timeline_features(p):
     #peak time
     time = psd.index(peak)
     time = freqs[time]
+    key = 'Peak Time'
     if isinstance(time,str):
         peak = str(utl.parse_datetime(time).time())
-    else:
-        
-        peak = str(datetime.fromtimestamp(time).time())
-    time = {'Peak Time': peak}
+    elif isinstance(time,float):
+        peak = time
+        key = 'Peak Frequency'
+    else: peak = str(datetime.fromtimestamp(time).time())
+    time = {key: peak}
 
 
     info = mean | norm_mean| picos | time
@@ -2645,7 +2716,7 @@ def DefaultFeatures(sender, app_data, user_data):
         signal = getSignalbyIdx(window_id,tab_tag,tag,mode)
         dates.append(signal['Date'])
     dates = np.unique(dates)
-
+    labels = [dpg.get_item_label(tag) for tag in tags]
     if len(dates)>1:
         plot_modes = ['Join Recordings', 'Separate Recordings']
     else: plot_modes = [None]  
@@ -2655,7 +2726,7 @@ def DefaultFeatures(sender, app_data, user_data):
     elif mode == None and (func == 'spectrogram' or func == 'wavelet'): 
         dpg.add_text(default_value=f"{func} only available in Combined Analysis for Event-lock based signals", show= True, parent=tab_label)
         continue_flag = False
-
+    dpg.add_group(parent=f"{tab_tag}_features_group", tag = f"{tab_tag}_df_group")
     if continue_flag == True:
         match func:
             case 'spectrogram': 
@@ -2668,7 +2739,7 @@ def DefaultFeatures(sender, app_data, user_data):
                     if not dpg.does_item_exist(f"{tab_label}_radio"): dpg.add_radio_button(items=plot_modes,label='Plot Mode', parent=tab_label, callback=choose, user_data=(tags, tab_label, func, tab_tag, parameter_values, mode), tag = f"{tab_label}_radio")
                 else: 
                     plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode=mode)
-            
+            case 'coherence': plot_df_coherence(parameter_values,tab_tag,tags)
             case _: plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values)
 
 def CustomFeatures(sender,app_data,user_data):
@@ -2676,7 +2747,6 @@ def CustomFeatures(sender,app_data,user_data):
     window_id = extract_window_id(tab_tag)
     parameter_values = {}
     input_fields = {}  # Store input field IDs
-  
     tags = getActiveSeries(signal_tags)
     events = [getEventsbyTag(tab_tag,serie) for serie in tags]
     if all(e is None for e in events):events = None
@@ -2687,6 +2757,9 @@ def CustomFeatures(sender,app_data,user_data):
     for tag in tags: 
         signal = getSignalbyIdx(window_id,tab_tag,tag,mode)
         dates.append(signal['Date'])
+    
+    labels = [[dpg.get_item_label(tag), tag] for tag in tags]
+
     dates = np.unique(dates)
 
     if len(dates)>1:
@@ -2717,19 +2790,44 @@ def CustomFeatures(sender,app_data,user_data):
         parameter_values.clear()  # Reset parameter storage
         input_fields.clear()  # Reset input field storage
         
+        combos = {}   
+        
+        for param, default in params.items():
+            # Set defaults
+            if param == 'x' or param == 'data':
+                default = '---'
+            if param == 'y' and app_data == 'coherence':
+                default = '---'
+            if param == 'fs' or param == 'sfreq':
+                default = 250
+            if param == 'output':
+                default = 'power'  # wavelet
+            if param == 'freqs':
+                default = 100  # wavelet
 
-        for param, default in params.items():            
-            if param == 'x' or param == 'data':  default = '---'
-            if param == 'fs' or param =='sfreq': default = 250
-            if param == 'output': default = 'power' #wavelet
-            if param == 'freqs': default = 100 #wavelet
             if param != 'window':
-                input_id = dpg.add_input_text(
-                    label=param, 
-                    default_value= default if default is not None else " ",
-                    parent=param_container
-                )
+                if (param == 'x' or param == 'y') and app_data == 'coherence':
+                    
+                    # Use a combo box (select box) for this special case
+                    input_id = dpg.add_combo(
+                        label=param,
+                        items=[l[0] for l in labels],  # <-- customize your options
+                        default_value=default,
+                        parent=param_container,
+                        callback=different_combo,
+                        user_data=(doc_container, combos)
+                    )
+                    combos[param] = input_id
+                else:
+                    # Default to input text
+                    input_id = dpg.add_input_text(
+                        label=param,
+                        default_value=default if default is not None else " ",
+                        parent=param_container
+                    )
+
                 input_fields[param] = input_id  # Store input field reference
+
 
         # Add save button
         dpg.add_button(label="Save Parameters", callback=save_parameters, parent=param_container, user_data = app_data)
@@ -2740,7 +2838,14 @@ def CustomFeatures(sender,app_data,user_data):
 
         for param, input_id in input_fields.items():
             value = dpg.get_value(input_id)
-            parameter_values[param] = value
+            if (param == 'x' or param == 'y') and user_data == 'coherence':
+                ls = [l[0] for l in labels]
+                index = ls.index(value)
+                tag = labels[index][1]
+                signal = getSignalbyIdx(window_id,tab_tag,tag)
+                parameter_values[param] = signal
+
+            else: parameter_values[param] = value
 
         
         if not dpg.does_item_exist(f"{tab_tag}_plot_features"):
@@ -2772,6 +2877,8 @@ def CustomFeatures(sender,app_data,user_data):
                 else: 
                     plot_wavelet(tags, tab_label, func, tab_tag, parameter_values)
             
+            case 'coherence': plot_coherence(parameter_values,tab_label)
+
             case _: plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values)
                                      
     create_input_fields(sender,app_data)
@@ -3031,8 +3138,12 @@ def circadian_rhythm(sender, app_data, user_data):
                     new_x = [utl.extract_time_from_datetime_string(str(xx.time())) for xx in x]
 
                 sign = {'X':new_x,'Y':y}
+
+                if not dpg.does_item_exist(f"{tab_label}_header"):
+                    dpg.add_collapsing_header(tag=f"{tab_label}_header", parent=tab_label, label = 'Circadian Metrics')
+
                 info = extract_timeline_features(sign)
-                create_table(tab_label,f"{tab_label}_table", info, trial_label=series_label)
+                create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=series_label)
 
                 if new_x[0]>600:
                     n_nan =  int((new_x[0] - 600)//600)+1
@@ -3082,7 +3193,7 @@ def circadian_rhythm(sender, app_data, user_data):
     sign = {'X':x,'Y':list(mean)}
     mean_x = x
     info = extract_timeline_features(sign)
-    create_table(tab_label,f"{tab_label}_table", info, trial_label=series_label)
+    create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=series_label)
 
     def toggle(sender,app_data,user_data):
         label = dpg.get_item_label(sender)
@@ -3166,17 +3277,21 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
 
     mean = []
 
-    def mean_info_table(mean):
+    def mean_info_table(mean, header_tag, table_tag):
         mean_y = np.mean([sign['Y'] for sign in mean],axis=0)
         x = mean[0]['X']
         dpg.add_line_series(x,mean_y,label='Mean', parent=y_axis)
         mean_info = {'X': x, 'Y':list(mean_y)}
         mean_info = extract_timeline_features(mean_info)
-        create_table(tab_label,f"{tab_label}_table", mean_info, trial_label='Mean')
+        create_table(header_tag,table_tag, mean_info, trial_label='Mean')
 
     def beforeVafter(sender,app_data,user_data):
         dpg.delete_item(y_axis, children_only=True)
-        dpg.delete_item(f"{tab_label}_table")
+        if not app_data:
+            dpg.delete_item(f"{tab_label}_Before_header",children_only=True)
+            dpg.delete_item(f"{tab_label}_After_header",children_only=True)
+        else:
+            dpg.delete_item(f"{tab_label}_header", children_only=True)
         mean = []
         if app_data:
             for timeline, event in zip(timelines, events):
@@ -3191,22 +3306,28 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
                         y = segment[side]['Y']
                         date = utl.date2str(utl.parse_datetime(segment[side]['X'][0]))
                         for moment in ['Before','After']:
-                            label = f"{idx} - {utl.after_underscore(i)} - {moment} | {date}"
+                            label = f"{idx} - {utl.after_underscore(i)} | {date} | {side}"
                             if moment=='Before':
                                 bx,by = x[:6], y[:6]
+        
                             else: 
                                 bx,by = x[6:], y[6:]
 
+                            header_tag = f"{tab_label}_{moment}_header"
+                            table_tag = f"{tab_label}_{moment}_table"
+
                             bx = [xx-min(bx) for xx in bx]
-                            dpg.add_line_series(bx,by,label = label, parent = y_axis)
+                            dpg.add_line_series(bx,by,label = f"{moment} - {label}", parent = y_axis)
                             
+                            if not dpg.does_item_exist(header_tag):
+                                dpg.add_collapsing_header(tag=header_tag,parent=tab_label,label = moment)
 
                             sign = {'X':bx,'Y':by}
                             info = extract_timeline_features(sign)
-                            create_table(tab_label,f"{tab_label}_table", info, trial_label=label)
+                            create_table(header_tag,table_tag, info, trial_label=label)
                             mean.append(sign)
 
-            mean_info_table(mean)
+            mean_info_table(mean, header_tag,table_tag)
 
         else:
             for timeline, event in zip(timelines, events):
@@ -3220,19 +3341,21 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
                         x = [xx-min(x) for xx in x]
                         y = segment[side]['Y']
                         date = utl.date2str(utl.parse_datetime(segment[side]['X'][0]))
-                        label = f"{idx} - {utl.after_underscore(i)} | {date}"
+                        label = f"{idx}-{utl.after_underscore(i)} | {date} | {side}"
                         dpg.add_line_series(x,y,label = label, parent = y_axis)
-                        
+
+                        if not dpg.does_item_exist(f"{tab_label}_header"):
+                            dpg.add_collapsing_header(tag=f"{tab_label}_header", parent=tab_label,label='Stream Metrics')
                         sign = {'X':x,'Y':y}
                         info = extract_timeline_features(sign)
-                        create_table(tab_label,f"{tab_label}_table", info, trial_label=label)
+                        create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=label)
                         mean.append(sign)
 
                     if flags[idx] == True:
                         meio = [x[7]]
                         if not dpg.does_item_exist(f"{label}_center"): dpg.add_inf_line_series(meio, label = f"{idx} center", parent = y_axis, tag = f"{label}_center")
 
-            mean_info_table(mean)
+            mean_info_table(mean,f"{tab_label}_header",f"{tab_label}_table")
    
     if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
         dpg.add_tab_bar(parent=tab_tag, tag = f"{tab_tag}_features_bar")
@@ -3268,8 +3391,12 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
                             dpg.add_line_series(x,y,label = label, parent = y_axis)
                             
                             sign = {'X':x,'Y':y}
+
+                            if not dpg.does_item_exist(f"{tab_label}_header"):
+                                dpg.add_collapsing_header(tag=f"{tab_label}_header", parent=tab_label,label='Stream Metrics')
                             info = extract_timeline_features(sign)
-                            create_table(tab_label,f"{tab_label}_table", info, trial_label=label)
+                            create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=label)
+
                             mean.append(sign)
 
                         if flags[idx] == True:
@@ -3279,7 +3406,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
                 if not np.any(flags):
                     dpg.add_inf_line_series([x[6]],label = "Center", parent = y_axis)
                 
-                mean_info_table(mean)
+                mean_info_table(mean,f"{tab_label}_header",f"{tab_label}_table")
                               
 #-------------------------------------GENERAL TABS-------------------------------------------
 def device_window(Data, window_id, file_id = None):
@@ -3655,8 +3782,11 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     dpg.add_line_series(x, y, label=label_left, parent=y_left, tag=series_tag)
                     signal_tags[series_tag] = True  # Track visibility
 
+                    if not dpg.does_item_exist(f"{tab_tag}_header"):
+                        dpg.add_collapsing_header(tag=f"{tab_tag}_header", parent=tab_tag, label = 'Stream Metrics')
+
                     info = extract_timeline_features(sign)
-                    create_table(tab_tag,f"{tab_tag}_table", info, trial_label=label_left)
+                    create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=label_left)
 
                     mean.append(info)
         mean_dict = {}
@@ -3673,7 +3803,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             mean_dict = mean_dict | mean_value
             
 
-        create_table(tab_tag,f"{tab_tag}_table", mean_dict, trial_label='Mean')
+        create_table(f"{tab_tag}_header",f"{tab_tag}_table", mean_dict, trial_label=label_left)
 
         
         days = []
@@ -4337,6 +4467,12 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                             # Add the line series for each side
                             dpg.add_line_series(x, y, label=label_left, parent=y_axis, tag=series_tag)#, fill=[1.0, 0, 0, 0.5]) --> define transparency?
                             signal_tags[series_tag] = True  # Track visibility
+
+                            if not dpg.does_item_exist(f"{tab_tag}_header"):
+                                dpg.add_collapsing_header(tag=f"{tab_tag}_header", parent=tab_tag, label = 'Stream Metrics')
+
+                            info = extract_timeline_features(sign)
+                            create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=label_left)
 
                     for edx, event in enumerate(events):
                         x_event = utl.convert_to_timestamp(event['DateInitial'])
