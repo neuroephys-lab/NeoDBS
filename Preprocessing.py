@@ -26,14 +26,22 @@ def get_functions(module = 'ss'):
         case 'mtf': module = mtf
         case 'si': module = si
         case 'ssw': module = ssw
+        case 'np': module = np
 
-    """Retrieve all callable functions from a module, handling errors gracefully."""
+    functions = {}
+    for name, obj in inspect.getmembers(module, inspect.isroutine):
+        try:
+            functions[name] = obj
+        except Exception as e:
+            print(f"Skipping function {name} due to error: {e}")
+
+    '''"""Retrieve all callable functions from a module, handling errors gracefully."""
     functions = {}
     for name, obj in inspect.getmembers(module, inspect.isfunction):
         try:
             functions[name] = obj  # Attempt to retrieve function
         except Exception as e:
-            print(f"Skipping function {name} due to error: {e}")
+            print(f"Skipping function {name} due to error: {e}")'''
     return functions
 
 def extract_params_and_returns(docstring):
@@ -123,6 +131,7 @@ def call_function(func_name, param_dict, module = 'ss'):
         case 'mtf': module = mtf
         case 'si': module = si
         case 'ssw': module = ssw
+        case 'np': module = np
 
     functions = get_functions(module)
     
@@ -180,6 +189,7 @@ def get_required_params(func_name, module = 'ss'):
         case 'mtf': module = mtf
         case 'si': module = si
         case 'ssw': module = ssw
+        case 'np': module = np
     functions = get_functions(module)
     
     if func_name not in functions:

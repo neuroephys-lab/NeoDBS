@@ -88,7 +88,7 @@ def plot_coherence_spectrogram(signal1, signal2, fs,window_len=1024,step=None,nw
         matrix[:, idx] = coh[mask]
 
     plt.figure(figsize=(8, 4))
-    plt.pcolormesh(times, freqs, matrix, shading='gouraud', cmap=cmap)
+    plt.pcolormesh(times, freqs, matrix, cmap=cmap)
     plt.colorbar(label='Coherence')
     plt.xlabel('Time (s)')
     plt.ylabel('Frequency (Hz)')
@@ -188,7 +188,7 @@ def plot_features(channel1, channel2, signal1, signal2, sample_rate):
             dpg.add_line_series(freq_mt.tolist(), coh_mt.tolist(), label="Multitaper", parent=coh_y)
         dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
 
-    # plot_coherence_spectrogram(signal1, signal2, sample_rate)
+    plot_coherence_spectrogram(signal1, signal2, sample_rate)
 
     # --- Cross-correlation ---
     dislocation, corr = compute_band_cross_correlation(signal1, signal2, normalize=True)

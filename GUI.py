@@ -207,7 +207,7 @@ def add_combo_filters(sender, app_data, user_data):
 
 def add_combo_features(tab_tag,signal_tags):
 
-    features = ['periodogram','welch','multitaper','spectrogram', 'dpss', 'wavelet', 'coherence']
+    features = ['periodogram','welch','multitaper','spectrogram', 'dpss', 'wavelet', 'coherence', 'multitaper coherence','cross-correlation']
 
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_custom_features"):
@@ -215,7 +215,7 @@ def add_combo_features(tab_tag,signal_tags):
 
 def add_combo_df_features(tab_tag,signal_tags):
 
-    features = ['periodogram','welch','multitaper','spectrogram', 'dpss', 'wavelet', 'coherence']
+    features = ['periodogram','welch','multitaper','spectrogram', 'dpss', 'wavelet', 'coherence', 'multitaper coherence', 'cross-correlation']
 
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_df_features"):
@@ -653,8 +653,12 @@ def create_table(tab_label,table_tag,features, trial_label = "New Trial"):
             dpg.add_button(label='Save table', tag = f"{table_tag}_save", callback=save_table_to_file, user_data=(table_tag, 'csv'), parent=tab_label)
            
 def fill_params_features(app_data):
-
     match app_data:
+        case 'correlate':
+            params = pre.get_required_params(app_data,module='np')
+            functions = pre.get_functions(module='np')
+            doc = functions[app_data].__doc__ if functions[app_data].__doc__ else "No documentation available"
+    
         case 'dpss':
             windows = pre.get_required_params(app_data, module = 'ssw')
             welch = pre.get_required_params('welch')
@@ -692,6 +696,7 @@ def fill_params_features(app_data):
             params = pre.get_required_params(app_data)
             functions = pre.get_functions()
             doc = functions[app_data].__doc__ if functions[app_data].__doc__ else "No documentation available"
+    
     return params, doc
 
 def replace_params(original,replace):
@@ -714,7 +719,8 @@ def apply_feat(func, parameter_values, raw):
             signal = pre.call_function(func, parameter_values, module='mtf')
             return signal
         case 'dpss':
-            parameter_values['M'] = len(np.array(raw))
+            if not isinstance(raw,float):
+                parameter_values['M'] = len(np.array(raw))
             power_combined =[]
             windows = pre.call_function(func, parameter_values, module = 'ssw')
             for order, taper in enumerate(windows):
@@ -1354,6 +1360,208 @@ def plot_coherence(parameter_values, tab_label):
 
     time.sleep(0.2)
     dpg.set_axis_limits_auto(y_axis)
+
+def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
+    labels = [dpg.get_item_label(tag) for tag in tags]
+    if flag == None:
+        tab_label = f"{tab_tag}_df_multitaper coherence"
+    else: tab_label = f"{tab_tag}_multitaper coherence"
+    window_id = extract_window_id(tab_tag)
+
+    def calculate():
+        if dpg.does_item_exist(f"{tab_label}_plot_group"): dpg.delete_item(f"{tab_label}_plot_group")
+        window_len = 1024
+        if flag==None:
+            for no in ['0','1']:
+                tag = f"{tab_label}_s{no}"
+                lab = dpg.get_value(tag)
+                idx = labels.index(lab)
+                signal = getSignalbyIdx(window_id,tab_tag,tags[idx])
+                if no =='0': signal1 = signal
+                else: signal2 = signal
+        else:
+            for s in ['x','y']:
+                idx = labels.index(parameter_values[s])
+                signal = getSignalbyIdx(window_id,tab_tag,tags[idx])
+                if s == 'x':
+                    signal1 = signal
+                else: signal2= signal
+
+        if len(signal1['Y'])>len(signal2['Y']):
+            raw=signal2['Y']
+        else: raw = signal1['Y']
+
+        if flag==None:
+            step = window_len // 2
+            nfft = max(window_len, 512)
+            kmax = 2*parameter_values['NW'] - 1
+            parameter_values['Kmax'] = kmax
+            parameter_values['M'] = window_len
+        else:
+            step = parameter_values['step']
+            nfft = parameter_values['nfft']
+            if step == ' ': step =2
+            if nfft == ' ': nfft = 512
+            parameter_values['step'] = window_len//int(step)
+            parameter_values['nfft'] = max(window_len,int(nfft))
+            parameter_values['M'] = window_len
+
+        tapers = pre.call_function('dpss', parameter_values, module = 'ssw')
+
+        Sxx_sum = np.zeros(nfft//2+1)
+        Syy_sum = np.zeros(nfft//2+1)
+        Sxy_sum = np.zeros(nfft//2+1, dtype=np.complex128)
+        n_windows = 0
+
+        for start in range(0, len(raw) - window_len + 1, step):
+            xw = signal1['Y'][start:start+window_len]
+            yw = signal2['Y'][start:start+window_len]
+            Sxx_tapers, Syy_tapers, Sxy_tapers = [], [], []
+            for taper in tapers:
+                S1 = np.fft.rfft(xw * taper, n=nfft)
+                S2 = np.fft.rfft(yw * taper, n=nfft)
+                Sxx_tapers.append(np.abs(S1)**2)
+                Syy_tapers.append(np.abs(S2)**2)
+                Sxy_tapers.append(S1 * np.conj(S2))
+            Sxx_sum += np.mean(Sxx_tapers, axis=0)
+            Syy_sum += np.mean(Syy_tapers, axis=0)
+            Sxy_sum += np.mean(Sxy_tapers, axis=0)
+            n_windows += 1
+
+        Sxx = Sxx_sum / n_windows
+        Syy = Syy_sum / n_windows
+        Sxy = Sxy_sum / n_windows
+
+        coh = np.abs(Sxy)**2 / (Sxx * Syy)
+        freq = np.fft.rfftfreq(nfft, d=1/250)
+
+        mask = freq <= 100
+        freq, coh = freq[mask], coh[mask]
+
+        plot(signal1,signal2,freq,coh)
+
+        if not dpg.does_item_exist(f"{tab_label}_coh_spec"):
+            dpg.add_button(label = 'Plot Coherence Spectrogram',width=-1,tag=f"{tab_label}_coh_spec", callback=spectrogram, user_data = (signal1,signal2, tapers, freq, mask), parent=tab_label)
+
+    def plot(signal1,signal2,freq,coh):
+        with dpg.group(parent=tab_label, tag=f"{tab_label}_plot_group"):
+            dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
+            dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
+            with dpg.plot(label = 'Multitaper Coherence', width=-1, tag=f"{tab_label}_plot"):
+                dpg.bind_colormap(f"{tab_label}_plot", 0)
+                dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+                x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
+                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µV^2/Hz)", tag= f"{tab_label}_y_axis")
+                dpg.add_line_series(freq.tolist(), coh.tolist(), label='Multitaper Coherence', parent=y_axis)
+                dpg.set_axis_limits(y_axis,ymin=0,ymax=1)
+                p = {'X': list(freq), 'Y':list(coh)}
+                info = extract_timeline_features(p)
+                create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{signal1['Channel']}-{signal2['Channel']}")
+
+        time.sleep(0.2)
+        dpg.set_axis_limits_auto(y_axis)
+
+    def spectrogram(sender,app_data,user_data):
+        signal1,signal2, tapers, freqs, mask = user_data
+
+        print(parameter_values)
+        if len(signal1['Y'])>len(signal2['Y']):
+            raw=signal2['Y']
+        else: raw = signal1['Y']
+        window_len = parameter_values['M']
+        if 'step' not in parameter_values.keys():
+            step = 2
+            nfft = 512
+            freqs = np.fft.rfftfreq(nfft, d=1/250)
+            mask = freqs <= 100
+        else: 
+            step = parameter_values['step']
+            nfft = parameter_values['nfft']
+
+        K = parameter_values['Kmax']
+        starts = np.arange(0, len(raw)-window_len+1, step)
+        matrix = np.zeros((len(freqs), len(starts)))
+
+        for idx, s in enumerate(starts):
+            signal1w, signal2w = signal1['Y'][s:s+window_len], signal2['Y'][s:s+window_len]
+            Sxx = Syy = Sxy = 0
+            for tap in tapers:
+                X = np.fft.rfft(signal1w * tap, n=nfft)
+                Y = np.fft.rfft(signal2w * tap, n=nfft)
+                Sxx += np.abs(X)**2
+                Syy += np.abs(Y)**2
+                Sxy += X * np.conj(Y)
+            Sxx /= K
+            Syy /= K
+            Sxy /= K
+            coh = np.abs(Sxy)**2 / (Sxx * Syy)
+            coh_masked = np.zeros(257)
+            coh_masked[mask] = coh[mask]
+            matrix[:, idx] = coh_masked
+
+        with dpg.group(parent=tab_label, tag=f"{tab_label}_spec_group", horizontal=True):
+            dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Viridis,
+                                            min_scale = 0, max_scale=1, height=400)
+
+            with dpg.plot(label='Coherence Spectrogram', width=-1, height=400, tag=f"{tab_label}_spec"):
+                x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
+                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
+
+                dpg.add_heat_series(matrix.flatten(), rows=len(freqs), cols=int(len(coh)/2),
+                                            scale_min=0, scale_max=1, 
+                                            parent=y_axis, format="",bounds_min=[0,0], bounds_max=[int(len(signal1['Y'])/250),100])
+                                            
+                    
+                dpg.bind_colormap(f"{tab_label}_spec", dpg.mvPlotColormap_Viridis)
+
+    combos = {}
+    if flag == None:
+        with dpg.group(horizontal=True,parent=tab_label):
+            for i,s in enumerate(['Signal 1','Signal 2']):
+                input_id = dpg.add_combo(
+                        label=s,
+                        items=labels,  # <-- customize your options
+                        default_value='---',
+                        callback=different_combo,
+                        user_data=(tab_label, combos),
+                        tag = f"{tab_label}_s{i}",
+                        width=200
+                    )
+                combos[s] = input_id
+            dpg.add_button(label='Plot Coherence', callback=calculate,width=200,tag=f"{tab_label}_coh")
+    else:
+        calculate()
+    
+def plot_cross_correlation(parameter_values,tab_tag,tags):
+    tab_label = f"{tab_tag}_cross-correlation"
+    labels = [dpg.get_item_label(tag) for tag in tags]
+    window_id = extract_window_id(tab_tag)
+    signal1, signal2 = None, None
+    for key in ['a','v']:
+        lab = parameter_values[key]
+        index = labels.index(lab)
+        signal = getSignalbyIdx(window_id,tab_tag,tags[index])
+        parameter_values[key] = signal['Y']
+        if key == 'a': signal1 = signal
+        else: signal2 = signal
+
+    correlation =pre.call_function('correlate', parameter_values, module='np')
+    d = parameter_values['dislocation']
+    if d == ' ' or d == '': d = 1
+    else: d = int(d)
+    dislocation = np.arange(-len(signal1['Y'])+d,len(signal1['Y']))
+    normalize = parameter_values['normalization']
+    if normalize == ' ' or normalize == '': normalize = 'False'
+    
+    if normalize == 'True':
+        correlation = correlation / np.max(np.abs(correlation))
+
+    with dpg.plot(label="Cross-correlation", height=300, width=-1, parent=tab_label):
+        cross_x = dpg.add_plot_axis(dpg.mvXAxis, label="Samples")
+        cross_y = dpg.add_plot_axis(dpg.mvYAxis, label="Correlation")
+        dpg.add_line_series(dislocation.tolist(), correlation.tolist(),label="Cross-correlation", parent=cross_y)
+            
+
 
 def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode = 'segment'):
     window_id = extract_window_id(tab_tag)
@@ -2627,8 +2835,8 @@ def CustomFilter(sender,app_data,user_data):
         #global parameter_values, input_fields
         
         dpg.delete_item(param_container, children_only=True)  # Clear previous inputs
-        params = pre.get_required_params(app_data)
         
+        params = pre.get_required_params(app_data)
         if not params:
             dpg.add_text("No parameters found", parent=param_container)
             return
@@ -2691,7 +2899,9 @@ def DefaultFeatures(sender, app_data, user_data):
     wt = extract_type_window(window_id)
     parameter_values = {}
 
-    parameter_values, documentation = fill_params_features(app_data)
+    if app_data== 'multitaper coherence':
+        parameter_values, documentation = fill_params_features('dpss')
+    else: parameter_values, documentation = fill_params_features(app_data)
 
     func = app_data
 
@@ -2716,7 +2926,6 @@ def DefaultFeatures(sender, app_data, user_data):
         signal = getSignalbyIdx(window_id,tab_tag,tag,mode)
         dates.append(signal['Date'])
     dates = np.unique(dates)
-    labels = [dpg.get_item_label(tag) for tag in tags]
     if len(dates)>1:
         plot_modes = ['Join Recordings', 'Separate Recordings']
     else: plot_modes = [None]  
@@ -2739,6 +2948,7 @@ def DefaultFeatures(sender, app_data, user_data):
                     if not dpg.does_item_exist(f"{tab_label}_radio"): dpg.add_radio_button(items=plot_modes,label='Plot Mode', parent=tab_label, callback=choose, user_data=(tags, tab_label, func, tab_tag, parameter_values, mode), tag = f"{tab_label}_radio")
                 else: 
                     plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode=mode)
+            case 'multitaper coherence': plot_multitaper_coherence(parameter_values,tab_tag,tags)
             case 'coherence': plot_df_coherence(parameter_values,tab_tag,tags)
             case _: plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values)
 
@@ -2778,8 +2988,19 @@ def CustomFeatures(sender,app_data,user_data):
 
     def create_input_fields(sender, app_data):
         """Dynamically create input fields for selected function."""
-        params, documentation = fill_params_features(app_data) 
+        if app_data == 'multitaper coherence':
+            params, documentation = fill_params_features('dpss') 
+        elif app_data == 'cross-correlation':
+            params, documentation = fill_params_features('correlate')
+        else: params, documentation = fill_params_features(app_data) 
         documentation = pre.extract_params_and_returns(documentation)
+        
+        if app_data == 'multitaper coherence':
+            for k in ['step', 'nfft','y']:
+                params[k] = None
+        if app_data == 'cross-correlation': 
+            params['dislocation'] = None
+            params['normalization'] = None
 
         dpg.add_text(documentation, parent=doc_container)       
         if not params:
@@ -2806,12 +3027,14 @@ def CustomFeatures(sender,app_data,user_data):
                 default = 100  # wavelet
 
             if param != 'window':
-                if (param == 'x' or param == 'y') and app_data == 'coherence':
+                if ((param == 'x' or param == 'y') and 
+                (app_data == 'coherence' or app_data=='multitaper coherence')) or (
+                    (param=='a' or param=='v') and app_data=='cross-correlation'):
                     
                     # Use a combo box (select box) for this special case
                     input_id = dpg.add_combo(
                         label=param,
-                        items=[l[0] for l in labels],  # <-- customize your options
+                        items=[l[0] for l in labels], 
                         default_value=default,
                         parent=param_container,
                         callback=different_combo,
@@ -2855,7 +3078,6 @@ def CustomFeatures(sender,app_data,user_data):
         func = user_data
 
         tags = getActiveSeries(signal_tags)
-        window_id = extract_window_id(tab_tag)
         tab_label = f"{tab_tag}_{func}"
         if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
             dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar")
@@ -2877,8 +3099,10 @@ def CustomFeatures(sender,app_data,user_data):
                 else: 
                     plot_wavelet(tags, tab_label, func, tab_tag, parameter_values)
             
-            case 'coherence': plot_coherence(parameter_values,tab_label)
+            case 'multitaper coherence': plot_multitaper_coherence(parameter_values,tab_tag,tags,flag='flag')
 
+            case 'coherence': plot_coherence(parameter_values,tab_label)
+            case 'cross-correlation': plot_cross_correlation(parameter_values,tab_tag,tags)
             case _: plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values)
                                      
     create_input_fields(sender,app_data)
