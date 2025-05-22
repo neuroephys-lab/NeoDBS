@@ -1532,36 +1532,83 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
     else:
         calculate()
     
-def plot_cross_correlation(parameter_values,tab_tag,tags):
-    tab_label = f"{tab_tag}_cross-correlation"
+def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
+    if mode:
+        tab_label = f"{tab_tag}_df_cross-correlation"
+    else: tab_label = f"{tab_tag}_cross-correlation"
     labels = [dpg.get_item_label(tag) for tag in tags]
     window_id = extract_window_id(tab_tag)
-    signal1, signal2 = None, None
-    for key in ['a','v']:
-        lab = parameter_values[key]
-        index = labels.index(lab)
-        signal = getSignalbyIdx(window_id,tab_tag,tags[index])
-        parameter_values[key] = signal['Y']
-        if key == 'a': signal1 = signal
-        else: signal2 = signal
 
-    correlation =pre.call_function('correlate', parameter_values, module='np')
-    d = parameter_values['dislocation']
-    if d == ' ' or d == '': d = 1
-    else: d = int(d)
-    dislocation = np.arange(-len(signal1['Y'])+d,len(signal1['Y']))
-    normalize = parameter_values['normalization']
-    if normalize == ' ' or normalize == '': normalize = 'False'
-    
-    if normalize == 'True':
-        correlation = correlation / np.max(np.abs(correlation))
+    def plot():
+        signal1, signal2 = None, None
+        if mode:
+            for i,key in enumerate(['a','v']):
+                lab = dpg.get_value(f"{tab_label}_s{i}")
+                index = labels.index(lab)
+                signal = getSignalbyIdx(window_id,tab_tag,tags[index])
+                parameter_values[key] = signal['Y']
+                if key == 'a': signal1 = signal
+                else: signal2 = signal
+        else: 
+            for key in ['a','v']:
+                lab = parameter_values[key]
+                index = labels.index(lab)
+                signal = getSignalbyIdx(window_id,tab_tag,tags[index])
+                parameter_values[key] = signal['Y']
+                if key == 'a': signal1 = signal
+                else: signal2 = signal
+        correlation =pre.call_function('correlate', parameter_values, module='np')
+        d = parameter_values['dislocation']
+        if d == ' ' or d == '': d = 1
+        else: d = int(d)
+        dislocation = np.arange((-len(signal1['Y'])+d)/250,(len(signal1['Y'])/250),1/250)
+        normalize = parameter_values['normalization']
+        if normalize == ' ' or normalize == '': normalize = 'False'
+        
+        if normalize == 'True':
+            correlation = correlation / np.max(np.abs(correlation))
 
-    with dpg.plot(label="Cross-correlation", height=300, width=-1, parent=tab_label):
-        cross_x = dpg.add_plot_axis(dpg.mvXAxis, label="Samples")
-        cross_y = dpg.add_plot_axis(dpg.mvYAxis, label="Correlation")
-        dpg.add_line_series(dislocation.tolist(), correlation.tolist(),label="Cross-correlation", parent=cross_y)
-            
+        if dpg.does_item_exist(f"{tab_label}_cc"): dpg.delete_item(f"{tab_label}_cc")
 
+        with dpg.group(tag=f"{tab_label}_cc", parent=tab_label):
+            dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
+            dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
+            dpg.add_plot_legend()
+            with dpg.plot(label="Cross-correlation", height=300, width=-1):
+                cross_x = dpg.add_plot_axis(dpg.mvXAxis, label="Samples")
+                cross_y = dpg.add_plot_axis(dpg.mvYAxis, label="Correlation")
+                dpg.add_line_series(dislocation.tolist(), correlation.tolist(),label="Cross-correlation", parent=cross_y)
+
+        p = {'Y': correlation.tolist(),'X':dislocation.tolist()}
+        info = extract_cc_features(p,cross_y)
+        label = f"{signal1['Channel']} - {signal2['Channel']}"
+
+        if not dpg.does_item_exist(f"{tab_label}_header"): 
+            dpg.add_collapsing_header(tag = f"{tab_label}_header", parent=tab_label, label='Metrics')
+
+        create_table(f"{tab_label}_header",f"{tab_label}_table",info,label)
+
+    if mode==None:
+        plot()
+    else:
+        combos = {}
+        with dpg.group(horizontal=True,parent=tab_label):
+            parameter_values['mode'] = 'full'
+            parameter_values['dislocation'] = '1'
+            parameter_values['normalization'] = 'True'
+
+            for i,s in enumerate(['Signal 1','Signal 2']):
+                input_id = dpg.add_combo(
+                        label=s,
+                        items=labels,  # <-- customize your options
+                        default_value='---',
+                        callback=different_combo,
+                        user_data=(tab_label, combos),
+                        tag = f"{tab_label}_s{i}",
+                        width=200
+                    )
+                combos[s] = input_id
+            dpg.add_button(label='Plot coherence', callback=plot,width=200)      
 
 def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode = 'segment'):
     window_id = extract_window_id(tab_tag)
@@ -2626,6 +2673,58 @@ def extract_timeline_features(p):
 
     return info
 
+def extract_cc_features(p, y_axis):
+
+    max_value = max(p['Y'])
+    idx = p['Y'].index(max_value)
+    lag = p['X'][idx]
+    half = np.round(max_value/2,2)
+    temp = [np.round(y,2) for y in p['Y']]
+    start = list(reversed(temp[:idx])).index(half) 
+    start = p['X'][idx-start]
+    end = temp[idx:].index(half) + idx
+    end = p['X'][end]
+
+    Y, X = p['Y'], p['X']
+
+    for i in range(idx, 0, -1):
+        if Y[i] >= half and Y[i-1] < half:
+            # Linear interpolation to find exact crossing point
+            x1, x2 = X[i-1], X[i]
+            y1, y2 = Y[i-1], Y[i]
+            start = x1 + (half - y1) * (x2 - x1) / (y2 - y1)
+            break
+
+    # 3. Search to the right of the peak for first crossing below half max
+    for i in range(idx, len(Y)-1):
+        if Y[i] >= half and Y[i+1] < half:
+            x1, x2 = X[i], X[i+1]
+            y1, y2 = Y[i], Y[i+1]
+            end = x1 + (half - y1) * (x2 - x1) / (y2 - y1)
+            break
+
+    inf = dpg.add_inf_line_series([start,end],parent=y_axis, label = 'Half Max Width')
+    dpg.add_inf_line_series([half],parent=y_axis,horizontal=True,label='Half Max')
+    color = change_inf_line_color(0)
+    dpg.bind_item_theme(inf,color)
+    
+
+    width = np.round((end-start)/250,2)
+    parameters, _ = fill_params_features('find_peaks')
+    parameters['x'] = p['Y']
+    parameters['distance'] = 500
+    no_peaks = pre.call_function('find_peaks',parameters)
+    no_peaks = len(no_peaks)
+
+    info = {
+        'Max Correlation': max_value,
+        'Lag til Max (s)': lag,
+        'Half Max Width (s)': width,
+        'Number of peaks': no_peaks
+    }
+
+    return info
+
 def extract_artifact_type(s: str):
     if s == "ARTIFACT_NOT_PRESENT":
         return 'Not'
@@ -2901,6 +3000,8 @@ def DefaultFeatures(sender, app_data, user_data):
 
     if app_data== 'multitaper coherence':
         parameter_values, documentation = fill_params_features('dpss')
+    elif app_data == 'cross-correlation':
+        parameter_values, documentation = fill_params_features('correlate')
     else: parameter_values, documentation = fill_params_features(app_data)
 
     func = app_data
@@ -2935,7 +3036,7 @@ def DefaultFeatures(sender, app_data, user_data):
     elif mode == None and (func == 'spectrogram' or func == 'wavelet'): 
         dpg.add_text(default_value=f"{func} only available in Combined Analysis for Event-lock based signals", show= True, parent=tab_label)
         continue_flag = False
-    dpg.add_group(parent=f"{tab_tag}_features_group", tag = f"{tab_tag}_df_group")
+    # dpg.add_group(parent=f"{tab_tag}_features_group", tag = f"{tab_tag}_df_group")
     if continue_flag == True:
         match func:
             case 'spectrogram': 
@@ -2949,6 +3050,7 @@ def DefaultFeatures(sender, app_data, user_data):
                 else: 
                     plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode=mode)
             case 'multitaper coherence': plot_multitaper_coherence(parameter_values,tab_tag,tags)
+            case 'cross-correlation': plot_cross_correlation(parameter_values,tab_tag,tags,mode='df')
             case 'coherence': plot_df_coherence(parameter_values,tab_tag,tags)
             case _: plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values)
 
