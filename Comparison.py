@@ -1,7 +1,7 @@
 import dearpygui.dearpygui as dpg
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import butter, filtfilt,coherence, hilbert
+from scipy.signal import butter, filtfilt,coherence, hilbert, find_peaks
 from scipy.signal.windows import dpss 
 import DataHandling as DH
 

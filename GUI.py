@@ -52,6 +52,7 @@ import Preprocessing as pre
 import Features as ft
 import time
 import csv
+import scipy.signal as ss
 
 #----------------------------------------GLOBAL-----------------------------
 global_bands = ft.bands
@@ -215,7 +216,7 @@ def add_combo_features(tab_tag,signal_tags):
 
 def add_combo_df_features(tab_tag,signal_tags):
 
-    features = ['periodogram','welch','multitaper','spectrogram', 'dpss', 'wavelet', 'coherence', 'multitaper coherence', 'cross-correlation']
+    features = ['periodogram','welch','multitaper','spectrogram', 'dpss', 'wavelet', 'coherence', 'multitaper coherence', 'cross-correlation', 'PAC']
 
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_df_features"):
@@ -737,7 +738,8 @@ def apply_feat(func, parameter_values, raw):
             func = 'tfr_array_morlet'
             a = np.array(raw)
             try:
-                parameter_values['data'] = a[np.newaxis, np.newaxis, :]
+                #older version was 'data' and not 'epoch_data'
+                parameter_values['epoch_data'] = a[np.newaxis, np.newaxis, :]
                 parameter_values['sfreq'] = 250
                 if isinstance(parameter_values['freqs'], str):
                     parameter_values['freqs'] = int(parameter_values['freqs'])
@@ -1573,8 +1575,8 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
         with dpg.group(tag=f"{tab_label}_cc", parent=tab_label):
             dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
             dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
-            dpg.add_plot_legend()
             with dpg.plot(label="Cross-correlation", height=300, width=-1):
+                dpg.add_plot_legend()
                 cross_x = dpg.add_plot_axis(dpg.mvXAxis, label="Samples")
                 cross_y = dpg.add_plot_axis(dpg.mvYAxis, label="Correlation")
                 dpg.add_line_series(dislocation.tolist(), correlation.tolist(),label="Cross-correlation", parent=cross_y)
@@ -1609,6 +1611,8 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                     )
                 combos[s] = input_id
             dpg.add_button(label='Plot coherence', callback=plot,width=200)      
+
+
 
 def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode = 'segment'):
     window_id = extract_window_id(tab_tag)
@@ -2253,6 +2257,113 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
             dpg.add_checkbox(label='Synchronize Axis', callback=link) 
             dpg.add_button(label='Band Power over Time', callback=merge_wavelet)
 
+
+def plot_pac(tags,tab_tag,parameter_values,mode=None):
+    window_id = extract_window_id(tab_tag)
+    labels = [dpg.get_item_label(tag) for tag in tags]
+    bands = getBandsByTab(tab_tag)
+    signal1, signal2 = None, None
+
+    if mode: #if default
+        tab_label = f"{tab_tag}_df_PAC"
+    else: 
+        tab_label = f"{tab_tag}_PAC"
+
+    def plot():
+        if mode: #if default
+            for b in ['s','b']:
+                for s in  ['0','1']:
+                    label = dpg.get_value(f"{tab_label}_{b}{s}")
+                    if b == 's':
+                        idx = labels.index(label)
+                        signal = getSignalbyIdx(window_id,tab_tag,tags[idx])
+                        parameter_values[f'{b}{s}'] = signal['Y']
+                        if s == '0':
+                            signal1 = signal
+                        else: 
+                            signal2 = signal
+                    else:
+                        parameter_values[f'{b}{s}'] = bands[label]
+                        
+
+            #1st: Filter signals
+            for s in ['0','1']:
+                band = parameter_values[f'b{s}']
+                param_filter = {'N': '4', 'Wn': str(band),'btype':'band','fs': '250'}
+                args = pre.call_function('butter', param_filter) 
+                filtered = pre.call_function2('filtfilt', *args, parameter_values[f's{s}'])
+                param_hilbert = {'x': filtered}
+                hilbert = pre.call_function('hilbert',param_hilbert)
+                if s == '0': 
+                    phase_data = np.angle(hilbert)
+                else: amp_data = np.abs(hilbert)
+
+            #4th: create bins
+            if mode: n_bins = 18
+            else: n_bins = int(parameter_values['n_bins'])
+            edges = np.linspace(-np.pi, np.pi, n_bins+1)
+            centers = (edges[:-1] + edges[1:]) / 2
+            digitized = np.digitize(phase_data, edges) - 1 #assign each time point to each bin (phase)
+
+            amp_means = np.zeros(n_bins)
+            for i in range(n_bins):
+                sel = amp_data[digitized==i]
+                amp_means[i] = np.mean(sel) if sel.size>0 else 0 #get the mean amp from the binned values
+
+            # Normaliza
+            amp_dist = amp_means / np.sum(amp_means + 1e-16)
+            entropy = -np.sum(amp_dist * np.log(amp_dist + 1e-16)) #shannon entropy
+            mi = (np.log(n_bins) - entropy) / np.log(n_bins) #modulation index
+
+
+            with dpg.group(tag=f"{tab_label}_pac", parent=tab_label):
+                dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
+                dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
+                with dpg.plot(label=f"Phase-Amplitude Coupling - Moduling Index: {mi}", height=300, width=-1,tag=f"{tab_label}_plot"):
+                    dpg.add_plot_legend()
+                    x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Samples")
+                    y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Correlation")
+                    phase = centers.tolist()
+                    amp = amp_means.tolist()
+                    for p,a in zip(phase,amp):
+                        dpg.add_bar_series([p], [a], parent=y_axis)
+                    dpg.bind_colormap(f"{tab_label}_plot", dpg.mvPlotColormap_Jet)
+
+
+
+    if mode:
+        combos = {}
+        with dpg.group(horizontal=True,parent=tab_label):
+            for i,s in enumerate(['Signal 1','Signal 2']):
+                input_id = dpg.add_combo(
+                        label=s,
+                        items=labels,  # <-- customize your options
+                        default_value='---',
+                        callback=different_combo,
+                        user_data=(tab_label, combos),
+                        tag = f"{tab_label}_s{i}",
+                        width=200
+                    )
+                combos[s] = input_id
+        
+        with dpg.group(horizontal=True,parent=tab_label):
+
+            bands_labels = list(getBandsByTab(tab_tag).keys())
+            for i,s in enumerate(['Band 1','Band 2']):
+                input_id = dpg.add_combo(
+                        label=s,
+                        items=bands_labels,  # <-- customize your options
+                        default_value='---',
+                        callback=different_combo,
+                        user_data=(tab_label, combos),
+                        tag = f"{tab_label}_b{i}",
+                        width=200
+                    )
+                combos[s] = input_id
+
+        dpg.add_button(label='Plot Phase-Amplitude Coupling', callback=plot,width=-1, parent=tab_label)
+
+
 def convert_to_db(value):
     """Convert a value to dB scale using 10 * log10."""
      # if isinstance(value, (list, np.ndarray)):
@@ -2712,16 +2823,20 @@ def extract_cc_features(p, y_axis):
     width = np.round((end-start)/250,2)
     parameters, _ = fill_params_features('find_peaks')
     parameters['x'] = p['Y']
-    parameters['distance'] = 500
-    no_peaks = pre.call_function('find_peaks',parameters)
-    no_peaks = len(no_peaks)
-
+    parameters['distance'] = 120
+    peaks = pre.call_function('find_peaks',parameters)
+    true_peaks = [(x-len(p['Y'])/2)/250 for x in peaks[0]]
+    dpg.add_scatter_series(true_peaks ,np.ones(len(peaks[0])).tolist(),parent=y_axis,label = 'peaks')
+    diff = np.diff(true_peaks)
+    freq_mean = np.round(1/np.mean(diff),2)
+    freq_std = np.std(diff)
     info = {
         'Max Correlation': max_value,
         'Lag til Max (s)': lag,
         'Half Max Width (s)': width,
-        'Number of peaks': no_peaks
+        'Peak Frequency (mean, std)': [freq_mean,freq_std]
     }
+    
 
     return info
 
@@ -3002,6 +3117,8 @@ def DefaultFeatures(sender, app_data, user_data):
         parameter_values, documentation = fill_params_features('dpss')
     elif app_data == 'cross-correlation':
         parameter_values, documentation = fill_params_features('correlate')
+    elif app_data == 'PAC': 
+        parameter_values, documentation = fill_params_features('hilbert')
     else: parameter_values, documentation = fill_params_features(app_data)
 
     func = app_data
@@ -3014,6 +3131,7 @@ def DefaultFeatures(sender, app_data, user_data):
     else: mode = None
     
     tab_label = f"{tab_tag}_df_{func}"
+    print(tab_label)
     if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
         dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar")
 
@@ -3043,7 +3161,6 @@ def DefaultFeatures(sender, app_data, user_data):
                 if plot_modes[0] != None:
                     if not dpg.does_item_exist(f"{tab_label}_radio"): dpg.add_radio_button(items=plot_modes,label='Plot Mode', parent=tab_label, callback=choose, user_data=(tags, tab_label, func, tab_tag, parameter_values, mode), tag = f"{tab_label}_radio")
                 else: plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode)
-            
             case 'wavelet': 
                 if plot_modes[0] != None:
                     if not dpg.does_item_exist(f"{tab_label}_radio"): dpg.add_radio_button(items=plot_modes,label='Plot Mode', parent=tab_label, callback=choose, user_data=(tags, tab_label, func, tab_tag, parameter_values, mode), tag = f"{tab_label}_radio")
@@ -3051,6 +3168,7 @@ def DefaultFeatures(sender, app_data, user_data):
                     plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode=mode)
             case 'multitaper coherence': plot_multitaper_coherence(parameter_values,tab_tag,tags)
             case 'cross-correlation': plot_cross_correlation(parameter_values,tab_tag,tags,mode='df')
+            case 'PAC': plot_pac(tags,tab_tag,parameter_values,mode='df')
             case 'coherence': plot_df_coherence(parameter_values,tab_tag,tags)
             case _: plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values)
 
