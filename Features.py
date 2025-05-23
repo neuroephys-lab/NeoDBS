@@ -2,7 +2,7 @@ import numpy as np
 #from spectrum import pyule
 
 bands = {
-            'Delta': [0,4],
+            'Delta': [0.1,4],
             'Theta': [4,8],
             'Alpha': [8,12],
             'Beta': [12,30],
