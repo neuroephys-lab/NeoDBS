@@ -1353,7 +1353,7 @@ def plot_coherence(parameter_values, tab_label):
             dpg.bind_colormap(f"{tab_label}_plot", 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
-            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µV^2/Hz)", tag= f"{tab_label}_y_axis")
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Coherence", tag= f"{tab_label}_y_axis")
             dpg.add_line_series(freq.tolist(), coh.tolist(), label='Coherence', parent=y_axis)
             dpg.set_axis_limits(y_axis,ymin=0,ymax=1)
             p = {'X': list(freq), 'Y':list(coh)}
@@ -1453,7 +1453,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
                 dpg.bind_colormap(f"{tab_label}_plot", 0)
                 dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
-                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µV^2/Hz)", tag= f"{tab_label}_y_axis")
+                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Coherence", tag= f"{tab_label}_y_axis")
                 dpg.add_line_series(freq.tolist(), coh.tolist(), label='Multitaper Coherence', parent=y_axis)
                 dpg.set_axis_limits(y_axis,ymin=0,ymax=1)
                 p = {'X': list(freq), 'Y':list(coh)}
@@ -1575,15 +1575,15 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
             dpg.delete_item(f"{tab_label}_text")
             dpg.delete_item(f"{tab_label}_cc",children_only=True)
         else: 
-            dpg.add_group(tag=f"{tab_label}_text", parent=tab_label)
             dpg.add_group(tag=f"{tab_label}_cc", parent=tab_label, horizontal=True)
 
-        dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}",parent=f"{tab_label}_text")
-        dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}",parent=f"{tab_label}_text")
+        with dpg.group(tag=f"{tab_label}_text", parent=tab_label):
+            dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}",parent=f"{tab_label}_text")
+            dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}",parent=f"{tab_label}_text")
         with dpg.plot(label="Cross-correlation", height=300, width=800, parent=f"{tab_label}_cc"):
             dpg.add_plot_legend()
             cross_x = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
-            cross_y = dpg.add_plot_axis(dpg.mvYAxis, label="Correlation")
+            cross_y = dpg.add_plot_axis(dpg.mvYAxis, label="Lfp µV^2")
 
         if plot_mode:
             bands = getBandsByTab(tab_tag)
@@ -1657,7 +1657,7 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                         width=200
                     )
                 combos[s] = input_id
-            dpg.add_button(label='Plot coherence', callback=plot,width=200)      
+            dpg.add_button(label='Plot Cross-Correlation', callback=plot,width=200)      
 
 def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode = 'segment'):
     window_id = extract_window_id(tab_tag)
@@ -4391,6 +4391,7 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         types_artifacts, channels = [], []
         tab_tag_art = tab_tag + "_ARTIFACTS"
         app_state['windows'][window_id]['Data'][tab_tag_art]= {'Signals': []}
+        bands = getBandsByTab(tab_tag_art)
 
         def toggle2(sender,app_data,user_data):
             _ = []
@@ -4439,9 +4440,23 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     # Add the line series for each side
                     dpg.add_line_series(x, y, label=label, parent=f"y_axis_{tab_tag_art}", tag=series_tag)#, fill=[1.0, 0, 0, 0.5]) --> define transparency?
                     signal_tags[series_tag] = True  # Track visibility
+
+                    if not dpg.does_item_exist(f"{series_tag}_header"): dpg.add_collapsing_header(tag=f"{series_tag}_header", parent=tab_tag_art,label=label)
+
+                    for band in bands.items():
+                        info = extract_psd_features(signal, band)
+                        create_table(f"{series_tag}_header",f"{series_tag}_table", info, trial_label=band[0])
+
                 
                 mean_power = np.mean([signal['Y'] for signal in artifacts], axis = 0)
                 dpg.add_scatter_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag_art}", tag=f"{tab_tag_art}_mean")
+                mean_power = {'Y': mean_power, 'X':x}
+
+                if not dpg.does_item_exist(f"{tab_tag_art}_mean_metric"): dpg.add_collapsing_header(tag=f"{tab_tag_art}_mean_metric",parent=tab_tag_art,label = 'Mean')
+
+                for band in bands.items():
+                    info = extract_psd_features(mean_power, band)
+                    create_table(f"{tab_tag_art}_mean_metric",f"{tab_tag_art}_mean_metric_table", info, trial_label=band[0])
 
             with dpg.group(tag=f"{tab_tag_art}_buttons", horizontal=True):
                 types_artifacts = np.unique(types_artifacts)
@@ -4724,6 +4739,7 @@ def comb_setup_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
     def setup_artifacts():
         types_artifacts, channels, days = [], [], []
         tab_tag_art = tab_tag + "_ARTIFACTS"
+        bands = getBandsByTab(tab_tag_art)
 
         def toggle2(sender,app_data,user_data):
             _ = []
@@ -4777,10 +4793,24 @@ def comb_setup_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         # Add the line series for each side
                         dpg.add_line_series(x, y, label=label, parent=f"y_axis_{tab_tag_art}", tag=series_tag)#, fill=[1.0, 0, 0, 0.5]) --> define transparency?
                         signal_tags[series_tag] = True  # Track visibility
-                
+
+                        if not dpg.does_item_exist(f"{series_tag}_header"): dpg.add_collapsing_header(tag=f"{series_tag}_header", parent=tab_tag_art,label=label)
+
+                        for band in bands.items():
+                            info = extract_psd_features(signal, band)
+                            create_table(f"{series_tag}_header",f"{series_tag}_table", info, trial_label=band[0])
+
                 mean_power = np.mean([signal['Y'] for signal in artifacts], axis = 0)
                 dpg.add_scatter_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag_art}", tag=f"{tab_tag_art}_mean")
+                mean_power = {'Y': mean_power, 'X':x}
 
+                if not dpg.does_item_exist(f"{tab_tag_art}_mean_metric"): dpg.add_collapsing_header(tag=f"{tab_tag_art}_mean_metric",parent=tab_tag_art,label = 'Mean')
+
+                for band in bands.items():
+                    info = extract_psd_features(mean_power, band)
+                    create_table(f"{tab_tag_art}_mean_metric",f"{tab_tag_art}_mean_metric_table", info, trial_label=band[0])
+
+                
             with dpg.group(tag=f"{tab_tag_art}_buttons"):
                 with dpg.group(horizontal=True):
                     types_artifacts = np.unique(types_artifacts)
@@ -4807,6 +4837,7 @@ def comb_setup_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         dpg.add_text('Hemisphere: ')
                         for s in ['LEFT', 'RIGHT']:
                             dpg.add_checkbox(label=s, callback=toggle2, default_value=True)
+    
     setup_artifacts()
        
 def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags): 
