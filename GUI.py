@@ -1538,10 +1538,21 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
     if mode:
         tab_label = f"{tab_tag}_df_cross-correlation"
     else: tab_label = f"{tab_tag}_cross-correlation"
+
     labels = [dpg.get_item_label(tag) for tag in tags]
     window_id = extract_window_id(tab_tag)
+    toggle_tags = []
+
+    def toggle(sender,app_data,user_data):
+        labs = [dpg.get_item_label(tag) for tag in toggle_tags]
+        name_band = dpg.get_item_label(sender)
+        for idx,l in enumerate(labs):
+            if name_band in l:
+                dpg.configure_item(toggle_tags[idx], show=app_data)
 
     def plot():
+        nonlocal toggle_tags
+        plot_mode = dpg.get_value(f"{tab_label}_band")
         signal1, signal2 = None, None
         if mode:
             for i,key in enumerate(['a','v']):
@@ -1559,36 +1570,72 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                 parameter_values[key] = signal['Y']
                 if key == 'a': signal1 = signal
                 else: signal2 = signal
-        correlation =pre.call_function('correlate', parameter_values, module='np')
-        d = parameter_values['dislocation']
-        if d == ' ' or d == '': d = 1
-        else: d = int(d)
-        dislocation = np.arange((-len(signal1['Y'])+d)/250,(len(signal1['Y'])/250),1/250)
-        normalize = parameter_values['normalization']
-        if normalize == ' ' or normalize == '': normalize = 'False'
-        
-        if normalize == 'True':
-            correlation = correlation / np.max(np.abs(correlation))
 
-        if dpg.does_item_exist(f"{tab_label}_cc"): dpg.delete_item(f"{tab_label}_cc")
+        if dpg.does_item_exist(f"{tab_label}_cc"): 
+            dpg.delete_item(f"{tab_label}_text")
+            dpg.delete_item(f"{tab_label}_cc",children_only=True)
+        else: 
+            dpg.add_group(tag=f"{tab_label}_text", parent=tab_label)
+            dpg.add_group(tag=f"{tab_label}_cc", parent=tab_label, horizontal=True)
 
-        with dpg.group(tag=f"{tab_label}_cc", parent=tab_label):
-            dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
-            dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
-            with dpg.plot(label="Cross-correlation", height=300, width=-1):
-                dpg.add_plot_legend()
-                cross_x = dpg.add_plot_axis(dpg.mvXAxis, label="Samples")
-                cross_y = dpg.add_plot_axis(dpg.mvYAxis, label="Correlation")
-                dpg.add_line_series(dislocation.tolist(), correlation.tolist(),label="Cross-correlation", parent=cross_y)
+        dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}",parent=f"{tab_label}_text")
+        dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}",parent=f"{tab_label}_text")
+        with dpg.plot(label="Cross-correlation", height=300, width=800, parent=f"{tab_label}_cc"):
+            dpg.add_plot_legend()
+            cross_x = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
+            cross_y = dpg.add_plot_axis(dpg.mvYAxis, label="Correlation")
 
-        p = {'Y': correlation.tolist(),'X':dislocation.tolist()}
-        info = extract_cc_features(p,cross_y)
-        label = f"{signal1['Channel']} - {signal2['Channel']}"
+        if plot_mode:
+            bands = getBandsByTab(tab_tag)
+        else:
+            bands = {'Bands': 'b'}
 
-        if not dpg.does_item_exist(f"{tab_label}_header"): 
-            dpg.add_collapsing_header(tag = f"{tab_label}_header", parent=tab_label, label='Metrics')
+        for b, band in bands.items():
+            for key in ['a','v']:
+                if not isinstance(band,str):
+                    param_filter = {'N': '4', 'Wn': band,'btype':'band','fs': '250'}
+                    args = pre.call_function('butter', param_filter) 
+                    parameter_values[key] = pre.call_function2('filtfilt', *args, parameter_values[key])
 
-        create_table(f"{tab_label}_header",f"{tab_label}_table",info,label)
+            correlation =pre.call_function('correlate', parameter_values, module='np')
+            d = parameter_values['dislocation']
+            if d == ' ' or d == '': d = 1
+            else: d = int(d)
+            dislocation = np.arange((-len(signal1['Y'])+d)/250,(len(signal1['Y'])/250),1/250)
+            normalize = parameter_values['normalization']
+            if normalize == ' ' or normalize == '': normalize = 'False'
+            
+            if normalize == 'True':
+                correlation = correlation / np.max(np.abs(correlation))
+
+            if plot_mode: 
+                label = f"{b} Cross-Correlatation"
+                info_mode = b
+                if not dpg.does_item_exist(f"{tab_label}_cc_buttons"):
+                    dpg.add_group(tag=f"{tab_label}_cc_buttons", parent = f"{tab_label}_cc", horizontal=False)
+                dpg.add_checkbox(label=b,parent=f"{tab_label}_cc_buttons",default_value=True,callback=toggle)
+            else: 
+                label = "Cross-correlation"
+                info_mode = None
+
+            dpg.add_line_series(dislocation.tolist(), correlation.tolist(),label=label, parent=cross_y,tag=f"{tab_label}_{label}")
+            toggle_tags.append(f"{tab_label}_{label}")
+
+            p = {'Y': correlation.tolist(),'X':dislocation.tolist()}
+            info, line_tags = extract_cc_features(p,cross_y,tab_label,info_mode)
+            label = f"{signal1['Channel']} - {signal2['Channel']}"
+
+            toggle_tags = toggle_tags + line_tags
+            
+
+            if not dpg.does_item_exist(f"{tab_label}_header"): 
+                dpg.add_collapsing_header(tag = f"{tab_label}_header", parent=tab_label, label=label)
+
+            create_table(f"{tab_label}_header",f"{tab_label}_table",info,label)
+
+
+    if not dpg.does_item_exist(f"{tab_label}_band"): 
+        dpg.add_checkbox(label='Band Cross-Correlation', parent=tab_label, tag = f"{tab_label}_band")
 
     if mode==None:
         plot()
@@ -1712,59 +1759,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
 
         def link(sender, app_data):
             dpg.configure_item(f"{tab_label}_subplots", link_all_x=app_data, link_all_y=app_data)
-
-        def mean_spectrogram(all_Sxx, file = None):
-
-            max_shape = np.max([s.shape for s in all_Sxx], axis=0)
-
-            # Pad all spectrograms to the same shape with NaNs
-            padded_Sxx = []
-            for s in all_Sxx:
-                pad_shape = [(0, max_shape[0] - s.shape[0]), (0, max_shape[1] - s.shape[1])]
-                s_padded = np.pad(s, pad_shape, mode='constant', constant_values=np.nan)
-                padded_Sxx.append(s_padded)
-
-            # Compute the mean spectrogram while ignoring NaNs
-            mean_Sxx = np.nanmean(np.stack(padded_Sxx), axis=0)
-
-            # Convert to dB
-            mean_Sxx_log = 10 * np.log10(mean_Sxx + 1e-10)
-            mean_Sxx_log = np.flipud(mean_Sxx_log)
-            
-            if file == None: 
-                title = "Mean Spectrogram"
-                subplot_tag = f"{tab_label}_mean"
-            else: 
-                title =f"Mean Spectrogram - File {file}"
-                subplot_tag = f"{tab_label}_mean_{file}"
-
-            with dpg.plot(label=title, width=-1, height=400, tag=subplot_tag, parent=f"{tab_label}_merged"):
-                x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
-                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
-
-                if wt == 'Combined' and all_events != None:
-                    emin = -int(dpg.get_value(f"{tab_tag}_emin"))
-                    emax = int(dpg.get_value(f"{tab_tag}_emax"))
-                    
-                else:
-                    emin, emax = 0, len(times)
-
-                dpg.add_heat_series(mean_Sxx_log.flatten(), rows=mean_Sxx_log.shape[0], cols=mean_Sxx_log.shape[1],
-                                    scale_min=global_min, scale_max=global_max,
-                                    parent=y_axis, format="", bounds_min=[emin,0], bounds_max=[emax,125])
-                dpg.bind_colormap(subplot_tag, dpg.mvPlotColormap_Jet)
-
-                
-                if all_events != None and wt == 'Individual':
-                    
-                    for event in all_events:
-                        # stamp = [event['Idx']/(len(times)*250)] #spectrogram axis is in reality from 0 to 1, and the columns are time based, not sample
-                        stamp = [event['Idx']/250]
-                        type = event['Type']
-                        if stamp[0] <= Sxx_log.shape[1]:
-                            dpg.add_plot_legend()
-                            dpg.add_inf_line_series(x=stamp,label=f'{type}',parent=y_axis)
-                
+       
         def merge_spectrograms(sender,app_data,user_data):
             
             if dpg.does_item_exist(f"{tab_label}_merged"): dpg.delete_item(f"{tab_label}_merged")
@@ -2255,7 +2250,6 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
             dpg.add_checkbox(label='Synchronize Axis', callback=link) 
             dpg.add_button(label='Band Power over Time', callback=merge_wavelet)
 
-
 def plot_pac(tags,tab_tag,parameter_values,mode=None):
     window_id = extract_window_id(tab_tag)
     labels = [dpg.get_item_label(tag) for tag in tags]
@@ -2483,7 +2477,7 @@ def change_text_color(color_id):
     return theme_id
 
 def different_combo(sender,app_data,user_data):
-    
+
     if dpg.does_item_exist(f"{sender}_pac_w"):dpg.delete_item(f"{sender}_pac_w")
     doc_container, combos = user_data
     atual = dpg.get_value(sender)
@@ -2798,17 +2792,18 @@ def extract_timeline_features(p):
 
     return info
 
-def extract_cc_features(p, y_axis):
+def extract_cc_features(p, y_axis, tab_label ,mode = None):
 
+    tags = []
     max_value = max(p['Y'])
     idx = p['Y'].index(max_value)
     lag = p['X'][idx]
     half = np.round(max_value/2,2)
     temp = [np.round(y,2) for y in p['Y']]
-    start = list(reversed(temp[:idx])).index(half) 
-    start = p['X'][idx-start]
-    end = temp[idx:].index(half) + idx
-    end = p['X'][end]
+    # start = list(reversed(temp[:idx])).index(half) 
+    # start = p['X'][idx-start]
+    # end = temp[idx:].index(half) + idx
+    # end = p['X'][end]
 
     Y, X = p['Y'], p['X']
 
@@ -2827,11 +2822,22 @@ def extract_cc_features(p, y_axis):
             y1, y2 = Y[i], Y[i+1]
             end = x1 + (half - y1) * (x2 - x1) / (y2 - y1)
             break
+    
+    if mode:
+        ext = mode
+    else: ext = ''
 
-    inf = dpg.add_inf_line_series([start,end],parent=y_axis, label = 'Half Max Width')
-    dpg.add_inf_line_series([half],parent=y_axis,horizontal=True,label='Half Max')
-    color = change_inf_line_color(0)
-    dpg.bind_item_theme(inf,color)
+    inf = dpg.add_inf_line_series([start,end],parent=y_axis, label = ext + ' Half Max Width', tag = f"{tab_label}_{ext}_HMW")
+    hlf = dpg.add_inf_line_series([half],parent=y_axis,horizontal=True,label= ext +' Half Max', tag = f"{tab_label}_{ext}_HW")
+
+    tags.append(f"{tab_label}_{ext}_HMW")
+    tags.append(f"{tab_label}_{ext}_HW")
+    tags.append(f"{tab_label}_{ext}_peaks")
+
+    red = change_inf_line_color(0)
+    green = change_inf_line_color(1)
+    dpg.bind_item_theme(inf,red)
+    dpg.bind_item_theme(hlf,green)
     
 
     width = np.round((end-start)/250,2)
@@ -2840,7 +2846,7 @@ def extract_cc_features(p, y_axis):
     parameters['distance'] = 120
     peaks = pre.call_function('find_peaks',parameters)
     true_peaks = [(x-len(p['Y'])/2)/250 for x in peaks[0]]
-    dpg.add_scatter_series(true_peaks ,np.ones(len(peaks[0])).tolist(),parent=y_axis,label = 'peaks')
+    dpg.add_scatter_series(true_peaks ,np.ones(len(peaks[0])).tolist(),parent=y_axis,label = ext +' Peaks', tag = f"{tab_label}_{ext}_peaks")
     diff = np.diff(true_peaks)
     freq_mean = np.round(1/np.mean(diff),2)
     freq_std = np.std(diff)
@@ -2852,7 +2858,7 @@ def extract_cc_features(p, y_axis):
     }
     
 
-    return info
+    return info, tags
 
 def extract_artifact_type(s: str):
     if s == "ARTIFACT_NOT_PRESENT":
@@ -4515,7 +4521,7 @@ def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         # interval_events(tab_tag,signal_tags)
         dpg.add_button(label='Insert Streaming Events', parent=f"{tab_tag}_add_events", callback = insert_events, user_data=(window_id, tab_tag, signal_tags))
         # dpg.add_button(label='Analyze Events', parent = f"{tab_tag}_add_events", callback=align_events,user_data=(tab_tag,signal_tags), tag=f"{tab_tag}_align",show=False)
-                
+    dpg.set_item_width
     add_filters_buttons(tab_tag,signal_tags)
     add_features_buttons(tab_tag, signal_tags)
     add_correlation_buttons(tab_tag)
@@ -5341,10 +5347,59 @@ def create_individual_window():
 #---------------------------------------MAIN WINDOW---------------------------------------
 
 dpg.create_context()
-dpg.create_viewport(title="NeoDBS", width=1000, height=600)
+dpg.create_viewport(title="NeoDBS", width=500, height=500)
+dpg.set_viewport_large_icon('NeoDBS.ico')
+dpg.set_viewport_small_icon('NeoDBS.ico')
 dpg.setup_dearpygui()
 
-light_theme = themes.create_theme_imgui_light()
+with dpg.texture_registry(show=False):
+    width, height, channels, data = dpg.load_image("NeoDBS.png")
+    dpg.add_static_texture(width, height, data, tag="logo_tex")
+
+# Create window that matches image size exactly
+with dpg.window(label="", tag="Splash", no_title_bar=True, no_resize=True, no_close=True,
+                no_collapse=True, no_move=True, width=width, height=height):
+    dpg.add_image("logo_tex", width=width, height=height, pos=[0, 0])
+
+
+def load_main_ui():
+    dpg.delete_item("Splash")
+
+    light_theme = themes.create_theme_imgui_light()
+    dark_theme = themes.create_theme_imgui_dark()
+    default_classic_theme = dpg.add_theme()  # DPG default
+
+    # Main window
+    with dpg.window(label="NeoDBS", width=1000, height=600, tag="Main"):
+        with dpg.menu_bar():
+            with dpg.menu(label="Themes"):
+                dpg.add_menu_item(label="Classic", callback=switch_theme, user_data=default_classic_theme)
+                dpg.add_menu_item(label="Light", callback=switch_theme, user_data=light_theme)
+                dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
+            with dpg.menu(label="Settings"):
+                dpg.add_menu_item(label="Change electrodes' names", callback=change_electrodes_names)
+                dpg.add_menu_item(label="Save All Plots")
+                dpg.add_menu_item(label="Save All Tables")
+                dpg.add_menu_item(label="Save Workspace")
+
+        with dpg.group(horizontal=True, pos=[250, 250]):
+            dpg.add_button(label="Individual (Recording) Analysis", callback=create_individual_window)
+            dpg.add_spacer(indent=2)
+            dpg.add_button(label="Combined (Event) Analysis", callback=create_multiple_window)
+
+        dpg.set_viewport_width(1000)
+        dpg.set_viewport_height(600)
+
+    dpg.set_primary_window("Main", True)
+
+# Show the viewport and start delayed loading of main UI
+dpg.show_viewport()
+dpg.set_frame_callback(60, load_main_ui)  # Load after ~1 second (60 frames @ 60 FPS)
+
+dpg.start_dearpygui()
+dpg.destroy_context()
+
+'''light_theme = themes.create_theme_imgui_light()
 dark_theme = themes.create_theme_imgui_dark()
 default_classic_theme = dpg.add_theme() #created automatically, but no existent function in themes
 
@@ -5369,4 +5424,4 @@ with dpg.window(label="NeoDBS", width=-1, height=-1, tag="Main"):
 dpg.show_viewport()
 dpg.set_primary_window("Main", True)
 dpg.start_dearpygui()
-dpg.destroy_context()
+dpg.destroy_context()'''
