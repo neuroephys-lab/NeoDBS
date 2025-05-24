@@ -103,23 +103,34 @@ def find_closest_index(new_time, target_hour, target_minute):
     return closest_idx
 
 def read_event_file(filename):
-    """Reads a text file and returns a list of (hour, minute, event) tuples."""
+    """Reads a text file and returns a list of (hour, minute, second, event) tuples.
+    If seconds are not provided, they default to 0."""
     events = []
     
     with open(filename, 'r', encoding='utf-8') as file:
         for line in file:
-            line = line.strip()  # Remove extra spaces/newlines
+            line = line.strip()
             if not line:
-                continue  # Skip empty lines
+                continue
             
             try:
-                time_part, event = line.split(", ")  # Split time and event
-                hour, minute = map(int, time_part.split(":"))  # Extract hour & minute
-                events.append((hour, minute, event))  # Store as tuple
+                time_part, event = line.split(", ")
+                time_components = list(map(int, time_part.split(":")))
+                
+                if len(time_components) == 2:
+                    hour, minute = time_components
+                    second = 0
+                elif len(time_components) == 3:
+                    hour, minute, second = time_components
+                else:
+                    raise ValueError("Invalid time format")
+
+                events.append((hour, minute, second, event))
             except ValueError:
-                print(f"Skipping invalid line: {line}")  # Handle potential formatting errors
+                print(f"Skipping invalid line: {line}")
     
     return events
+
 
 def date2str(d: datetime) -> str:
     return d.strftime("%Y-%m-%d")

@@ -1358,7 +1358,7 @@ def plot_coherence(parameter_values, tab_label):
             dpg.set_axis_limits(y_axis,ymin=0,ymax=1)
             p = {'X': list(freq), 'Y':list(coh)}
             info = extract_timeline_features(p)
-            create_table(tab_label,f"{tab_label}_table", info, trial_label='Coherence')
+            create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{signal1['Channel']}-{signal2['Channel']}")
 
     time.sleep(0.2)
     dpg.set_axis_limits_auto(y_axis)
@@ -3939,7 +3939,9 @@ def device_window(Data, window_id, file_id = None):
 
 def stimulation_window(Data, window_id, file_id = None):
     wt = extract_type_window(window_id)
-    stimulation = DH.info_electrodes(Data)
+    try:
+        stimulation = DH.info_electrodes(Data)
+    except Exception: return
     date = DH.getSessionDate(Data)
     info_parent = f"stimulation_parameteres_{window_id}"
     
