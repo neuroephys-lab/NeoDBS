@@ -801,7 +801,9 @@ def getSignals(Data, mode):
     return signals
 
 def getEventSummary(Data):
-    return Data['Events']['EventSummary'] 
+    if 'EventSummary' in Data['Events'].keys():
+        return Data['Events']['EventSummary'] 
+    else: return {}
 
 def cutSignal(signal, initial=0, end=-1):
     # Ensure 'X' and 'Y' exist and have the same length
