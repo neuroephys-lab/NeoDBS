@@ -2734,19 +2734,21 @@ def extract_psd_features(p, band):
     norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc[b]*100/full_power,2), np.round(std[b],2)]}
 
     #auc
-    params = pre.get_required_params('simpson', module='si')
-    param_auc = {}
-    for name, param in params.items(): param_auc[name] = param
+    # params = pre.get_required_params('simpson', module='si')
+    # param_auc = {}
+    # for name, param in params.items(): param_auc[name] = param
     if isinstance(freqs, list): 
         freqs = np.array(freqs)
         psd = np.array(psd)
     mask = (freqs >= v[0]) & (freqs <= v[1])
-    param_auc['y'] = psd[mask]
-    simpson = pre.call_function('simpson', param_dict=param_auc, module='si')
-    auc = {'Sum Power (AUC)': f"{np.round(simpson,2)}"}
+    # param_auc['y'] = psd[mask]
+    # simpson = pre.call_function('simpson', param_dict=param_auc, module='si')
+    auc = {'Sum Power (AUC)': f"{np.round(np.sum(psd[mask]),2)}"}
+    # auc = {'Sum Power (AUC)': f"{np.round(simpson,2)}"}
+    # print('AUC: ', np.round(np.sum(p['Y'][mask])/full_power,2))
 
     #normalized auc
-    norm_auc = {'% Sum Power (AUC)': f"{np.round(simpson*100/full_power,2)}"}
+    norm_auc = {'% Sum Power (AUC)': f"{np.round(np.sum(psd[mask])/full_power*100,2)}"}
 
     #peak power
     peak = ft.peak_per_band(p, band)
