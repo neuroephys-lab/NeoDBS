@@ -1761,7 +1761,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
             dpg.configure_item(f"{tab_label}_subplots", link_all_x=app_data, link_all_y=app_data)
        
         def merge_spectrograms(sender,app_data,user_data):
-            
+            bands = getBandsByTab(tab_tag)
             if dpg.does_item_exist(f"{tab_label}_merged"): dpg.delete_item(f"{tab_label}_merged")
 
             with dpg.group(parent=tab_label, tag = f"{tab_label}_merged"): 
@@ -4000,7 +4000,8 @@ def session_window(Data, window_id, file_id = None):
         if dpg.does_item_exist(header_tag): dpg.delete_item(header_tag)
         dpg.add_collapsing_header(tag=header_tag, parent=info_parent, label = date)
         info_parent = header_tag
-            
+    
+    dpg.add_text(f"Session date: {date}", parent=info_parent, show=True)
     dpg.add_text(f"Session duration: {session_duration}", parent=info_parent, show=True)
     dpg.add_text(f"Initial Stimulation: {initial_stim_status}", parent=info_parent, show=True)
     dpg.add_text(f"Final Stimulation: {final_stim_status}", parent=info_parent, show=True)
@@ -5342,9 +5343,7 @@ def create_individual_window():
                 l = session_window(Data,window_id)
                 device_window(Data,window_id)
                 stimulation_window(Data,window_id)
-                date = DH.getSessionDate(Data)
-                dpg.add_text(f"Session date: {date}", parent=f"window_{window_id}", show=True)
-
+                
                 modes = app_state['windows'][window_id]['Modes']
                 if l: modes.append('Impedance')
                 if modes != ['None. Recording is Damaged!']:
