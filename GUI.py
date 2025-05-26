@@ -3638,9 +3638,9 @@ def circadian_rhythm(sender, app_data, user_data):
                     new_x = list(np.arange(600,new_x[0],600)) + new_x
                     
                     y = nan_array+ y
-
-                dpg.add_line_series(new_x,y,label=series_label,tag=f"{tab_label}_{series_label}", parent=y_axis)
-                toggle_tags.append(f"{tab_label}_{series_label}")
+                print(f"{tab_label}_{i}_{series_label}")
+                dpg.add_line_series(new_x,y,label=series_label,tag=f"{tab_label}_{i}_{series_label}", parent=y_axis)
+                toggle_tags.append(f"{tab_label}_{i}_{series_label}")
 
                 
                 
@@ -4233,7 +4233,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                 electrodes_names[ch] = ch
         dpg.add_text(f"Electrodes | Left: {electrodes_names[initial[0]]} | Right: {electrodes_names[initial[1]]}", parent=tab_tag)
     else: 
-        electrodes_names[ch] = ch
+        electrodes_names[initial] = initial
         dpg.add_text(f'{electrodes_names[initial]}', parent=tab_tag)
 
     with dpg.group(label = f"{tab_tag}_group" , parent=tab_tag, horizontal=True):
@@ -4921,7 +4921,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     electrodes_names[ch] = ch
             dpg.add_text(f"Electrodes {DH.getSessionDate(data)} | Left: {electrodes_names[initial[0]]} | Right: {electrodes_names[initial[1]]}", parent=tab_tag)
         else: 
-            electrodes_names[ch] = ch
+            electrodes_names[initial] = initial
             dpg.add_text(f'{DH.getSessionDate(data)}: {electrodes_names[initial]}', parent=tab_tag)
 
 
