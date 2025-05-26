@@ -1254,7 +1254,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                         dpg.add_inf_line_series(x=[stamp],label=f'{type}',parent=y_axis)
     
         def merge_spectrograms(sender,app_data,user_data):
-            
+            bands = getBandsByTab(tab_tag)
             if dpg.does_item_exist(f"{tab_label}_merged"): dpg.delete_item(f"{tab_label}_merged")
 
             with dpg.group(parent=tab_label, tag = f"{tab_label}_merged"): 
@@ -1336,32 +1336,49 @@ def plot_df_coherence(parameter_values,tab_tag,tags):
 
 def plot_coherence(parameter_values, tab_label):
 
-    if dpg.does_item_exist(f"{tab_label}_plot_group"): dpg.delete_item(f"{tab_label}_plot_group")
+    if not dpg.does_item_exist(f"{tab_label}_clean"): 
+        print('adicionou')
+        dpg.add_checkbox(label = 'Clean Previous Plot', parent=tab_label,default_value=True,tag=f"{tab_label}_clean")
 
     signal1 = parameter_values['x']
     signal2 = parameter_values['y']
     parameter_values['x'] = signal1['Y']
     parameter_values['y'] = signal2['Y']
     parameter_values['fs'] = 250
+
+    clean = dpg.get_value(f"{tab_label}_clean")
+    print(clean)
+    if clean==True: 
+        dpg.delete_item(f"{tab_label}_plot_group")
+
     freq, coh = pre.call_function('coherence', parameter_values)
     mask = freq <= 100
     freq, coh = freq[mask], coh[mask]
-    with dpg.group(parent=tab_label, tag=f"{tab_label}_plot_group"):
-        dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
-        dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
-        with dpg.plot(label = 'Coherence', width=-1, tag=f"{tab_label}_plot"):
-            dpg.bind_colormap(f"{tab_label}_plot", 0)
-            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
-            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
-            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Coherence", tag= f"{tab_label}_y_axis")
-            dpg.add_line_series(freq.tolist(), coh.tolist(), label='Coherence', parent=y_axis)
-            dpg.set_axis_limits(y_axis,ymin=0,ymax=1)
-            p = {'X': list(freq), 'Y':list(coh)}
-            info = extract_timeline_features(p)
-            create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{signal1['Channel']}-{signal2['Channel']}")
+
+    if clean:
+        with dpg.group(parent=tab_label, tag=f"{tab_label}_plot_group"):
+            with dpg.group(parent=f"{tab_label}_plot_group", tag = f"{tab_label}_plot_group_text"):
+                dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
+                dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
+            with dpg.plot(label = 'Coherence', width=-1, tag=f"{tab_label}_plot"):
+                dpg.bind_colormap(f"{tab_label}_plot", 0)
+                dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+                x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
+                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Coherence", tag= f"{tab_label}_y_axis")
+    else:
+        dpg.delete_item(f"{tab_label}_plot_group_text")
+        with dpg.group(parent=f"{tab_label}_plot_group", tag = f"{tab_label}_plot_group_text"):
+            dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
+            dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
+        
+    dpg.add_line_series(freq.tolist(), coh.tolist(), label=f"Coherence | {signal1['Channel']}-{signal2['Channel']}", parent=f"{tab_label}_y_axis")
+    dpg.set_axis_limits(f"{tab_label}_y_axis",ymin=0,ymax=1)
+    p = {'X': list(freq), 'Y':list(coh)}
+    info = extract_timeline_features(p)
+    create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{signal1['Channel']}-{signal2['Channel']}")
 
     time.sleep(0.2)
-    dpg.set_axis_limits_auto(y_axis)
+    dpg.set_axis_limits_auto(f"{tab_label}_y_axis")
 
 def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
     labels = [dpg.get_item_label(tag) for tag in tags]
@@ -1369,9 +1386,16 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
         tab_label = f"{tab_tag}_df_multitaper coherence"
     else: tab_label = f"{tab_tag}_multitaper coherence"
     window_id = extract_window_id(tab_tag)
+    bands = getBandsByTab(tab_tag)
 
     def calculate():
-        if dpg.does_item_exist(f"{tab_label}_plot_group"): dpg.delete_item(f"{tab_label}_plot_group")
+        if dpg.does_item_exist(f"{tab_label}_plot_group"): 
+            dpg.delete_item(f"{tab_label}_plot_group")
+
+        if dpg.does_item_exist(f"{tab_label}_spec_group"): 
+            dpg.delete_item(f"{tab_label}_spec_group")
+            dpg.delete_item(f"{tab_label}_progress_bar")
+
         window_len = 1024
         if flag==None:
             for no in ['0','1']:
@@ -1444,6 +1468,8 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
 
         if not dpg.does_item_exist(f"{tab_label}_coh_spec"):
             dpg.add_button(label = 'Plot Coherence Spectrogram',width=-1,tag=f"{tab_label}_coh_spec", callback=spectrogram, user_data = (signal1,signal2, tapers, freq, mask), parent=tab_label)
+        else:
+            dpg.set_item_user_data(f"{tab_label}_coh_spec", user_data=(signal1,signal2, tapers, freq, mask))
 
     def plot(signal1,signal2,freq,coh):
         with dpg.group(parent=tab_label, tag=f"{tab_label}_plot_group"):
@@ -1454,36 +1480,46 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
                 dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
                 y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Coherence", tag= f"{tab_label}_y_axis")
+
+                # freq, coh = freq.tolist(), coh.tolist()
                 dpg.add_line_series(freq.tolist(), coh.tolist(), label='Multitaper Coherence', parent=y_axis)
                 dpg.set_axis_limits(y_axis,ymin=0,ymax=1)
-                p = {'X': list(freq), 'Y':list(coh)}
-                info = extract_timeline_features(p)
-                create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{signal1['Channel']}-{signal2['Channel']}")
+
+                for b,band in bands.items():
+                    mask2 = (freq >= band[0]) & (freq <= band[1])
+                    p = {'X': freq[mask2], 'Y':list(coh[mask2])}
+                    info = extract_timeline_features(p)
+                    create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
 
         time.sleep(0.2)
         dpg.set_axis_limits_auto(y_axis)
 
     def spectrogram(sender,app_data,user_data):
         signal1,signal2, tapers, freqs, mask = user_data
+        
+        if dpg.does_item_exist(f"{tab_label}_progress_bar"): 
+            dpg.set_value(f"{tab_label}_progress_bar",0.0)
+        else: dpg.add_progress_bar(parent=tab_label, default_value=0.0, overlay='Coherogram Loading', tag = f"{tab_label}_progress_bar",width=-1)
 
-        print(parameter_values)
         if len(signal1['Y'])>len(signal2['Y']):
             raw=signal2['Y']
         else: raw = signal1['Y']
         window_len = parameter_values['M']
         if 'step' not in parameter_values.keys():
             step = 2
-            nfft = 512
+            nfft = max(window_len, 512)
             freqs = np.fft.rfftfreq(nfft, d=1/250)
             mask = freqs <= 100
         else: 
             step = parameter_values['step']
             nfft = parameter_values['nfft']
 
+        freqs = freqs[mask]
+        step = window_len // 2
         K = parameter_values['Kmax']
         starts = np.arange(0, len(raw)-window_len+1, step)
+        
         matrix = np.zeros((len(freqs), len(starts)))
-
         for idx, s in enumerate(starts):
             signal1w, signal2w = signal1['Y'][s:s+window_len], signal2['Y'][s:s+window_len]
             Sxx = Syy = Sxy = 0
@@ -1493,23 +1529,28 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
                 Sxx += np.abs(X)**2
                 Syy += np.abs(Y)**2
                 Sxy += X * np.conj(Y)
+
+            total = len(starts)
+            progress = (idx+1)/total
+            dpg.set_value(f"{tab_label}_progress_bar",np.round(progress,2))
             Sxx /= K
             Syy /= K
             Sxy /= K
             coh = np.abs(Sxy)**2 / (Sxx * Syy)
-            coh_masked = np.zeros(257)
-            coh_masked[mask] = coh[mask]
-            matrix[:, idx] = coh_masked
+            matrix[:, idx] = coh[mask]
+        
+        matrix = np.flipud(np.array(matrix))
+        times = (starts + window_len/2) / 250
 
         with dpg.group(parent=tab_label, tag=f"{tab_label}_spec_group", horizontal=True):
             dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Viridis,
                                             min_scale = 0, max_scale=1, height=400)
 
-            with dpg.plot(label='Coherence Spectrogram', width=-1, height=400, tag=f"{tab_label}_spec"):
+            with dpg.plot(label='Coherogram', width=-1, height=400, tag=f"{tab_label}_spec"):
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                 y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
 
-                dpg.add_heat_series(matrix.flatten(), rows=len(freqs), cols=int(len(coh)/2),
+                dpg.add_heat_series(matrix.flatten(), rows=len(freqs), cols=len(times),
                                             scale_min=0, scale_max=1, 
                                             parent=y_axis, format="",bounds_min=[0,0], bounds_max=[int(len(signal1['Y'])/250),100])
                                             
@@ -3423,8 +3464,8 @@ def insert_events(sender, app_data, user_data):
                 new_time = [datetime.fromtimestamp(val) for val in new_x]
                     
             for _, event in enumerate(events):
-                hour, minute, type = event
-                tidx = utl.find_closest_index(new_time,hour,minute)
+                hour, minute, second, type = event
+                tidx = utl.find_closest_index(new_time,hour,minute, second)
                 flag = True
                 if tidx != None: 
                     flag = False
@@ -3595,7 +3636,7 @@ def circadian_rhythm(sender, app_data, user_data):
 
 
     with dpg.group(parent=tab_label, horizontal=True):
-        with dpg.plot(label = "Circadian Rhythm", tag = f'{tab_label}_plot', width=500): 
+        with dpg.plot(label = "Circadian Rhythm", tag = f'{tab_label}_plot', width=800): 
             dpg.bind_colormap(f"{tab_label}_plot", 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time", scale = dpg.mvPlotScale_Time) #tag=f"{tab_label}_x_axis"
@@ -4238,7 +4279,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
     with dpg.group(label = f"{tab_tag}_group" , parent=tab_tag, horizontal=True):
         
-        with dpg.plot(label=f"{mode} Signals", height=400, width=500, tag=plot_tag):
+        with dpg.plot(label=f"{mode} Signals", height=400, width=800, tag=plot_tag):
             # dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time", tag=f"x_axis_{tab_tag}", scale = dpg.mvPlotScale_Time)
@@ -4317,11 +4358,11 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         with dpg.group(label = f"{tab_tag}_buttons", parent=f"{tab_tag}_group",):
             toggleVisibility(signal_tags,parent=tab_tag, group=f"{tab_tag}_buttons", user_data = window_id)
             with dpg.group(horizontal=True):
-                with dpg.group():
+                with dpg.child_window(height=250, width=100):
                     dpg.add_text('By Day: ')
                     for day in days:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag)) #check day
-                with dpg.group():
+                with dpg.child_window(height=250, width=100):
                     dpg.add_text('By Hemisphere: ')
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag)) #check hemisphere

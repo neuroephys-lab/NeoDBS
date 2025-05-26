@@ -71,7 +71,6 @@ def plot_coherence_spectrogram(signal1, signal2, fs,window_len=1024,step=None,nw
     freqs = freqs[mask]
 
     matrix = np.zeros((len(freqs), len(starts)))
-
     for idx, s in enumerate(starts):
         signal1w, signal2w = signal1[s:s+window_len], signal2[s:s+window_len]
         Sxx = Syy = Sxy = 0
@@ -86,6 +85,7 @@ def plot_coherence_spectrogram(signal1, signal2, fs,window_len=1024,step=None,nw
         Sxy /= K
         coh = np.abs(Sxy)**2 / (Sxx * Syy)
         matrix[:, idx] = coh[mask]
+        print(max(coh[mask]))
 
     plt.figure(figsize=(8, 4))
     plt.pcolormesh(times, freqs, matrix, cmap=cmap)
@@ -239,9 +239,12 @@ def select_channels():
     else:
         dpg.add_text("Please select exactly two channels for comparison", parent="main_window")
 
-file_path = "C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
+# file_path = "C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
+file_path = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-10-14\\Report_Json_Session_Report_20241125T162143.json"
+
 Data = DH.getData(file_path)
-signals = DH.getSignals(Data, 'Streaming')
+Streaming = DH.getSignals(Data, 'Streaming')
+signals = Streaming[-2], Streaming[-1]
 
 dpg.create_context()
 dpg.create_viewport(title="NeoDBS", width=1000, height=600)

@@ -83,12 +83,12 @@ def parse_datetime(string):
 def parse_time(string):
      return datetime.strptime(string, "%H:%M:%S")
 
-def find_closest_index(new_time, target_hour, target_minute):
+def find_closest_index(new_time, target_hour, target_minute, target_second = 0):
     """Finds the index of the sample in new_time closest to the given hour and minute.
        Returns None if the target time is out of bounds.
     """
     # Convert target hour and minute to a datetime object (same date as new_time[0])
-    target_time = datetime(new_time[0].year, new_time[0].month, new_time[0].day, target_hour, target_minute)
+    target_time = datetime(new_time[0].year, new_time[0].month, new_time[0].day, target_hour, target_minute, target_second)
 
     # Check if the target time is within bounds
     if target_time < new_time[0] or target_time > new_time[-1]:

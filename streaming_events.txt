@@ -1,1 +1,3 @@
-12:43:34, compulsao
+13:03:00, baseline
+13:06:00, obsession
+13:09:30, compulsion
