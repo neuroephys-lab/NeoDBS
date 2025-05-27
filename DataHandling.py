@@ -187,7 +187,7 @@ def getStimStatus(Data):
     final = utl.after_point(Data['Device']['Stimulation']['FinalStimStatus'])
     return (initial,final)
 
-def getTimeTicksMs(TickInS,GlobalPacketSizes,Fs):
+def getTimeTicksMs(TickInS,GlobalPacketSizes,Fs): #unused
     return np.round(np.arange(start=TickInS[0],stop=TickInS[-1]+ (GlobalPacketSizes[-1]-1)/Fs ,step=1/Fs),3)
 
 def getTimelineBand(Data):
@@ -291,7 +291,7 @@ def getRecordingDuration(dictionary):
     return Time
 '''
 
-def getLogDuration(log):
+def getLogDuration(log): #unused
     TickI = utl.parse_datetime(log[-1]['DateTime']).timestamp()   
     TickF = utl.parse_datetime(log[0]['DateTime']).timestamp()  
     temp_time = (TickF - TickI)/1000
@@ -337,7 +337,7 @@ def getRecordingDuration(mode, recording):
 
     return np.abs(np.round(temp_time,1))
 
-def getAllRecordingDuration(dictionary):
+def getAllRecordingDuration(dictionary): #unused
     '''
     Calculate duration of recording, not the whole session (1 session, can have several Recordings)    
     #Survey -> SenseChannelTests -> [:6] -> TicksInMses --- supostamente tem 90s de duração
@@ -423,7 +423,7 @@ def getEventsElectrodes(data):
 
     return initial, final
 
-def getStimulationParameters(dictionary, group_name, time = 'Initial'):
+def getStimulationParameters(dictionary, group_name, time = 'Initial'): #unused
 
     group_name = 'GroupIdDef.GROUP_' + group_name
     #left = 0
@@ -477,7 +477,7 @@ def getStimulationParameters(dictionary, group_name, time = 'Initial'):
 
     return Stimulation
 
-def getSetupInfo(dictionary,group_name):
+def getSetupInfo(dictionary,group_name): #unused
 
     '''
     Receives dictionary and group of interest and outputs the setup information by hemisphere
@@ -493,7 +493,7 @@ def getSetupInfo(dictionary,group_name):
 
     return [LeftSetup, RightSetup]
 
-def correctMissingData(dictionary,path):
+def correctMissingData(dictionary,path): #unused
 
     '''
     NaN where there is missing data, path: path of previously identified missing data, by checkingMissingData
@@ -584,7 +584,7 @@ def correctMissingData(dictionary,path):
             plt.ylim([-1, 2])
             plt.show()'''
 
-def sortJSONs(json_list):
+def sortJSONs(json_list): #unused
     """Sort a list of JSON objects by 'SessionEndDate' in ascending order."""
     try:
         json_list.sort(key=lambda x: datetime.strptime(x['SessionEndDate'], "%Y-%m-%dT%H:%M:%SZ"))
@@ -595,7 +595,7 @@ def sortJSONs(json_list):
     
     return json_list
 
-def getRealTime(mode, recording):
+def getRealTime(mode, recording): #unused
     
     Times = []
     if mode == 'Timeline' or mode == 'Events':
@@ -609,59 +609,6 @@ def getRealTime(mode, recording):
                 Times.append(real)
         else: Warning('Unable to convert for lack of data!')
         return Times
-
-def chooseRecordingDates(dictionary, mode):
-    dates = []
-    types = None
-    keys = {}
-
-    match mode:
-        case 'Streaming': #ver se quero plottar estimulação - é à parte
-            recs  = dictionary[mode]['BrainSenseTimeDomain']
-            for rec in recs: dates.append(rec['FirstPacketDateTime'])
-            dates = np.unique(dates)
-            keys = {'Dates': dates}
-
-        case 'Timeline': #dont need to check date, only hemisphere
-            recs = dictionary[mode]['LFPTrendLogs']['HemisphereLocationDef.Left']
-            for rec in recs: dates.append(rec)
-            dates = np.unique(dates)
-            keys = {'Dates': dates}
-            
-        case 'Events': #ver isto
-            recs = dictionary[mode]['LfpFrequencySnapshotEvents']
-            events_paths = utl.find_key_path(recs, 'LfpFrequencySnapshotEvents')
-            for path in events_paths:
-                event = utl.access_by_path(recs, utl.parse_path(path))
-                first = event['DateTime']
-                '''event = event['LfpFrequencySnapshotEvents']
-                date = event['HemisphereLocationDef.Left']['DateTime']
-                print(first,' | ', date)'''
-                dates.append(first)
-            dates = np.unique(dates)    
-            keys = {'Dates': dates}
-                           
-
-        case 'Indefinite': 
-            recs  = dictionary[mode]['IndefiniteStreaming']
-            for rec in recs: dates.append(rec['FirstPacketDateTime'])
-            dates = np.unique(dates)
-            keys = {'Dates': dates}
-
-        case _: #SenseChannelTests or CalibrationTests
-            recs = dictionary['Survey']
-            types = list(recs.keys())
-            paths = utl.find_key_path(recs,'FirstPacketDateTime')
-            for path in paths:
-                path = utl.parse_path(path)
-                rec = utl.access_by_path(recs,path)
-                date = rec['FirstPacketDateTime']
-                dates.append(date)
-            #vai ser necessário se as datas pertencem ao modo-type
-            keys = {'Dates': dates,
-                    'Types': types}
-            
-    return keys
 
 def getModeSignals(dictionary, mode):
     match mode:
@@ -805,7 +752,7 @@ def getEventSummary(Data):
         return Data['Events']['EventSummary'] 
     else: return {}
 
-def cutSignal(signal, initial=0, end=-1):
+def cutSignal(signal, initial=0, end=-1): #unused
     # Ensure 'X' and 'Y' exist and have the same length
     if 'X' not in signal or 'Y' not in signal:
         raise ValueError("Signal must contain both 'X' and 'Y' keys.")
@@ -837,7 +784,7 @@ def cutSignal(signal, initial=0, end=-1):
 
     return new
 
-def getSignal(dictionary,mode):
+def getSignal(dictionary,mode): #unused
     '''
     Checkar primeiro data e depois ir buscar canal, porque canais repetem-se e datas não
     '''
@@ -927,7 +874,7 @@ def getSignal(dictionary,mode):
 
     return signal
 
-def mergeJSONs(data1, data2):
+def mergeJSONs(data1, data2): #unused
     """Merge two JSON structures.""" 
     merged = {} 
     for key in data1.keys() | data2.keys(): # Union of all keys 
@@ -942,12 +889,12 @@ def mergeJSONs(data1, data2):
             merged[key] = data1.get(key, data2.get(key)) 
     return merged
 
-def removeDuplicates(lst):
+def removeDuplicates(lst): #unused
     """Remove duplicate entries from a list while maintaining order."""
     seen = set()
     return [x for x in lst if not (tuple(x.items()) if isinstance(x, dict) else x) in seen and not seen.add(tuple(x.items()) if isinstance(x, dict) else x)]
 
-def concatenateLists(JSONs, keys):
+def concatenateLists(JSONs, keys): #unused
     """Concatenate lists from multiple JSONs based on the keys path."""
     concatenated = []
     for JSON in JSONs:
@@ -964,11 +911,11 @@ def concatenateLists(JSONs, keys):
             concatenated.append(data)
     return concatenated
 
-def listSort(lst, indices):
+def listSort(lst, indices):#unused
     """Sort a list based on given indices."""
     return [lst[i] for i in indices]
 
-def concatenateJSONs(JSONs):
+def concatenateJSONs(JSONs):#unused
     """Merge multiple JSONs according to the adapted data structure."""
     CompiledJSON = {
         'Device': {},
@@ -1040,7 +987,7 @@ def concatenateJSONs(JSONs):
 
     return CompiledJSON
 
-def getImpedance(Data):
+def getImpedance(Data): #unused
 
     Left, Right = {}, {}
     if len(Data['Device']['Impedance']) == 0:
@@ -1096,7 +1043,7 @@ def getTimelineIndexofEvent(timeline, events):
 
     return index
 
-def segmentTimelineEvent(timeline, indexes):
+def segmentTimelineEvent(timeline, indexes):#unused
     segments = {}
     flags = []
     for edx, idxs in indexes.items():
@@ -1131,7 +1078,7 @@ def segmentTimelineEvent(timeline, indexes):
 
     return segments, flags
 
-def interpolateTimelineStream(signal):
+def interpolateTimelineStream(signal):#unused
 
     missing = []
     time = [utl.parse_datetime(s) for s in signal['X']]

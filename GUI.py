@@ -200,7 +200,7 @@ def add_combo_filters(sender, app_data, user_data):
     tab_tag,signal_tags = user_data
 
     filters = ['butter','cheby1','cheby2','ellip',
-                'bessel','iirnotch','iirpeak', 'iircomb']
+                'bessel','iirnotch','iirpeak']
 
     dpg.add_spacer(parent=f"{tab_tag}_filters")
     with dpg.group(horizontal=True,parent=f"{tab_tag}_filters"):

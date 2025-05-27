@@ -131,7 +131,6 @@ def read_event_file(filename):
     
     return events
 
-
 def date2str(d: datetime) -> str:
     return d.strftime("%Y-%m-%d")
 
