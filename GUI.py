@@ -60,10 +60,10 @@ electrodes_names, unchecked_channels = {}, {}
 app_state = {"windows": {}}
 colors = [
         (255, 0, 0, 255),      # red
-        (0, 255, 0, 255),      # green
+        (255, 165, 0, 255),    # orange
         (0, 0, 255, 255),      # blue
         (255, 255, 0, 255),    # yellow
-        (255, 165, 0, 255),    # orange
+        (0, 255, 0, 255),      # green
     ]
 #-----------------------------------------UTILS----------------------------------------
 def show_metadata(data):
@@ -1713,7 +1713,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
     global_min = float("inf")
     global_max = float("-inf")
 
-    Merge, all_events = [], None
+    Merge = []
     per_file = {}
     per_tag = {}
 
@@ -1790,13 +1790,15 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
 
                     if stream_events != None and wt == 'Individual':
                         mode = 'segment' #why??
-                        for event in stream_events:
+                        for colorIdx, event in enumerate(stream_events):
                             # stamp = [event['Idx']/(len(times)*250)] #spectrogram axis is in reality from 0 to 1, and the columns are time based, not sample
                             stamp = [event['Idx']/250]
                             type = event['Type']
                             if stamp[0] <= Sxx_log.shape[1]:
                                 dpg.add_plot_legend()
-                                dpg.add_inf_line_series(x=stamp,label=f'{type}',parent=y_axis)
+                                inf = dpg.add_inf_line_series(x=stamp,label=f'{type}',parent=y_axis)
+                                color = change_inf_line_color(colorIdx)
+                                dpg.bind_item_theme(inf, color)
 
         def link(sender, app_data):
             dpg.configure_item(f"{tab_label}_subplots", link_all_x=app_data, link_all_y=app_data)
@@ -2365,9 +2367,10 @@ def plot_pac(tags,tab_tag,parameter_values,mode=None):
                 y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Amplitude (microV)")
                 phase = centers.tolist()
                 amp = amp_means.tolist()
-                for p,a in zip(phase,amp):
-                    dpg.add_bar_series([p], [a], parent=y_axis)
-                dpg.bind_colormap(f"{tab_label}_plot", dpg.mvPlotColormap_Jet)
+                # for p,a in zip(phase,amp):
+                #     dpg.add_bar_series([p], [a], parent=y_axis)
+                dpg.add_bar_series(phase,amp,parent=y_axis)
+                # dpg.bind_colormap(f"{tab_label}_plot", dpg.mvPlotColormap_Jet)
 
         peak_a = max(amp)
         peak_p = phase[amp.index(peak_a)]
