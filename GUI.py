@@ -52,7 +52,6 @@ import Preprocessing as pre
 import Features as ft
 import time
 import csv
-import scipy.signal as ss
 
 #----------------------------------------GLOBAL-----------------------------
 global_bands = ft.bands
@@ -74,12 +73,12 @@ def print_me(sender, app_data):
     print(f"Menu item {sender} clicked!")
 
 def add_band(sender, app_data, user_data):
-    global global_bands
     tab_tag = user_data
+    old = getBandsByTab(tab_tag)
     min = dpg.get_value(f"{tab_tag}_band_min")
     max = dpg.get_value(f"{tab_tag}_band_max")
     new = {f'Band {min}-{max}': [min,max]}
-    t_bands = global_bands | new
+    t_bands = old | new
     window_id = extract_window_id(tab_tag)
     app_state['windows'][window_id]['Bands'] = t_bands
 
@@ -682,7 +681,7 @@ def fill_params_features(app_data):
         case 'wavelet':
             app_data = 'tfr_array_morlet'
             params = pre.get_required_params(app_data, module='mtf')
-            rep = {'freqs':100,'n_cycles': 2,'sfreq':250, 'output':'power'}
+            rep = {'freqs':100,'n_cycles': 3,'sfreq':250, 'output':'power'}
             params.update(rep)
             functions = pre.get_functions('mtf')
             doc = functions['tfr_array_morlet'].__doc__ if functions['tfr_array_morlet'].__doc__ else "No documentation available"
@@ -710,7 +709,6 @@ def apply_feat(func, parameter_values, raw):
             parameter_values[param] = 250
         if param == 'x' or param =='data':
             parameter_values[param] = np.array(raw)
-
     
     match func:
 
@@ -737,10 +735,10 @@ def apply_feat(func, parameter_values, raw):
         case 'wavelet':
             func = 'tfr_array_morlet'
             a = np.array(raw)
+            print(parameter_values['n_cycles'])
             try:
                 #older version was 'data' and not 'epoch_data'
                 parameter_values['epoch_data'] = a[np.newaxis, np.newaxis, :]
-                parameter_values['sfreq'] = 250
                 if isinstance(parameter_values['freqs'], str):
                     parameter_values['freqs'] = int(parameter_values['freqs'])
                 
@@ -750,8 +748,8 @@ def apply_feat(func, parameter_values, raw):
                 if isinstance(parameter_values['n_cycles'],(int, float)):
                     parameter_values['freqs'] = np.arange(1,parameter_values['freqs']+1, 1)
                     parameter_values['n_cycles'] = parameter_values['freqs'] / parameter_values['n_cycles']
-                
                 signal = pre.call_function(func, parameter_values, module = 'mtf')
+                print(parameter_values)
                 return signal
             except Exception as e: print(e)
 
@@ -775,6 +773,10 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
     bands = getBandsByTab(tab_tag)
     dpg.delete_item(f"{tab_label}_plot_group")
 
+    units = 'µV^2/Hz'
+    if func == 'periodogram' and parameter_values['scaling'] == 'spectrum':
+        units = 'µV^2'
+
     if not 'Data' in app_state['windows'][window_id]:
         if 'Events' in app_state['windows'][window_id]['Files'][-1]['Data'][tab_tag].keys():
             mode = 'segment'
@@ -786,7 +788,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             dpg.bind_colormap(f"{tab_label}_plot", 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
-            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µV^2/Hz)", tag= f"{tab_label}_y_axis")
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label=f"LFP Power ({units})", tag= f"{tab_label}_y_axis")
 
             def contiguous_array(signal, func):
                 if func == 'multitaper': 
@@ -887,6 +889,11 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 if comparing == False:
                     y = stream['Y']
                     signal = apply_feat(func,parameter_values,y)
+                    
+                    # for key in parameter_values.keys():
+                    #     if key == 'x' or key == 'y':
+                    #         print(key)
+                    #     else: print(parameter_values[key])
                         
                     p = contiguous_array(signal, func)   
                     power.append(p) 
@@ -1347,7 +1354,6 @@ def plot_coherence(parameter_values, tab_label):
     parameter_values['fs'] = 250
 
     clean = dpg.get_value(f"{tab_label}_clean")
-    print(clean)
     if clean==True: 
         dpg.delete_item(f"{tab_label}_plot_group")
 
@@ -1396,7 +1402,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
             dpg.delete_item(f"{tab_label}_spec_group")
             dpg.delete_item(f"{tab_label}_progress_bar")
 
-        window_len = 1024
+        window_len = 512
         if flag==None:
             for no in ['0','1']:
                 tag = f"{tab_label}_s{no}"
@@ -1419,7 +1425,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
 
         if flag==None:
             step = window_len // 2
-            nfft = max(window_len, 512)
+            nfft = window_len
             kmax = 2*parameter_values['NW'] - 1
             parameter_values['Kmax'] = kmax
             parameter_values['M'] = window_len
@@ -1427,7 +1433,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
             step = parameter_values['step']
             nfft = parameter_values['nfft']
             if step == ' ': step =2
-            if nfft == ' ': nfft = 512
+            if nfft == ' ': nfft = 256
             parameter_values['step'] = window_len//int(step)
             parameter_values['nfft'] = max(window_len,int(nfft))
             parameter_values['M'] = window_len
@@ -1518,7 +1524,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
         step = window_len // 2
         K = parameter_values['Kmax']
         starts = np.arange(0, len(raw)-window_len+1, step)
-        
+        print(parameter_values)
         matrix = np.zeros((len(freqs), len(starts)))
         for idx, s in enumerate(starts):
             signal1w, signal2w = signal1['Y'][s:s+window_len], signal2['Y'][s:s+window_len]
@@ -1612,6 +1618,13 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                 if key == 'a': signal1 = signal
                 else: signal2 = signal
 
+        if dpg.does_item_exist(f"{tab_label}_size_warning"): dpg.delete_item(f"{tab_label}_size_warning")
+        
+        s1, s2 = parameter_values['a'], parameter_values['v']
+        if len(s1) == len(s2) and parameter_values['mode'] == 'valid':
+            parameter_values['mode'] = 'full'
+            dpg.add_text("Mode changed to 'full' because signals have the same length!", parent=tab_label, tag = f"{tab_label}_size_warning")
+
         if dpg.does_item_exist(f"{tab_label}_cc"): 
             dpg.delete_item(f"{tab_label}_text")
             dpg.delete_item(f"{tab_label}_cc",children_only=True)
@@ -1631,6 +1644,13 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
         else:
             bands = {'Bands': 'b'}
 
+        d = parameter_values['dislocation']
+        if d == ' ' or d == '': d = 1
+        else: d = int(d)
+        shape = parameter_values['mode']
+        normalize = parameter_values['normalization']
+        if normalize == ' ' or normalize == '': normalize = 'False'
+            
         for b, band in bands.items():
             for key in ['a','v']:
                 if not isinstance(band,str):
@@ -1639,13 +1659,13 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                     parameter_values[key] = pre.call_function2('filtfilt', *args, parameter_values[key])
 
             correlation =pre.call_function('correlate', parameter_values, module='np')
-            d = parameter_values['dislocation']
-            if d == ' ' or d == '': d = 1
-            else: d = int(d)
-            dislocation = np.arange((-len(signal1['Y'])+d)/250,(len(signal1['Y'])/250),1/250)
-            normalize = parameter_values['normalization']
-            if normalize == ' ' or normalize == '': normalize = 'False'
-            
+            N, D = len(signal1['Y']), len(signal2['Y'])
+            match shape:
+                case 'full': 
+                    dislocation = np.arange(-(D-1), N) / 250
+                    # dislocation = np.arange((-len(signal1['Y'])+d)/250,(len(signal1['Y'])/250),1/250)
+                case 'same': dislocation = (np.arange(N) - D//2) / 250
+                case 'valid': dislocation = np.arange(N-D+1) / 250
             if normalize == 'True':
                 correlation = correlation / np.max(np.abs(correlation))
 
@@ -1710,29 +1730,16 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
     num_cols = 2
     num_rows = (num_plots + 1) // num_cols 
 
-    global_min = float("inf")
-    global_max = float("-inf")
+    global_min = 0
+    global_max = 1
 
     Merge = []
     per_file = {}
     per_tag = {}
 
     for i, tag in enumerate(tags):
-        events = getEventsbyTag(tab_tag,tag)
-        if events == None: mode = None
-        stream = getSignalbyIdx(window_id,tab_tag,tag,mode=mode)
         file = extract_file_from_series_tag(tag)
         per_file[file] = []
-        y = stream['Y']
-        parameter_values['x'] = np.array(y)
-        signal = pre.call_function(func, parameter_values)
-
-        frequencies, times, Sxx = signal
-        Sxx_log = 10 * np.log10(Sxx + 1e-10)  # Convert to dB scale
-        Sxx_log = np.flipud(Sxx_log)
-
-        global_min = min(global_min, Sxx_log.min())
-        global_max = max(global_max, Sxx_log.max())     
 
     with dpg.group(horizontal=True, parent=f"{tab_label}", tag=f"{tab_label}_plot_group"):
 
@@ -1759,6 +1766,9 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                 frequencies, times, Sxx = signal
                 Sxx_log = 10 * np.log10(Sxx + 1e-10)  # Convert to dB scale
                 Sxx_log = np.flipud(Sxx_log)
+
+                global_min = min(global_min, Sxx_log.min())
+                global_max = max(global_max, Sxx_log.max())
 
                 # Create a new subplot for each heat series
                 if mode and wt == 'Combined':
@@ -1799,6 +1809,8 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                                 inf = dpg.add_inf_line_series(x=stamp,label=f'{type}',parent=y_axis)
                                 color = change_inf_line_color(colorIdx)
                                 dpg.bind_item_theme(inf, color)
+
+        dpg.configure_item(item=f"{tab_label}_colormap_scale", min_scale=global_min, max_scale=global_max)
 
         def link(sender, app_data):
             dpg.configure_item(f"{tab_label}_subplots", link_all_x=app_data, link_all_y=app_data)
@@ -2340,7 +2352,6 @@ def plot_pac(tags,tab_tag,parameter_values,mode=None):
             else: n_bins = int(n_bins)
         else: n_bins = 18 
 
-
         edges = np.linspace(-np.pi, np.pi, n_bins+1)
         centers = (edges[:-1] + edges[1:]) / 2
         digitized = np.digitize(phase_data, edges) - 1 #assign each time point to each bin (phase)
@@ -2815,7 +2826,7 @@ def extract_timeline_features(p):
     mean = {'Mean Power (mean, std. dev)': [np.round(pc,2), np.round(std,2)]}
 
     #normalized mean power
-    norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc*100/full_power,2), np.round(std,2)]}
+    norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc*100/full_power,2), np.round(std * 100 / full_power,2)]}
  
     #peak power
     peak = max(psd)
@@ -2846,6 +2857,7 @@ def extract_cc_features(p, y_axis, tab_label ,mode = None):
     lag = p['X'][idx]
     half = np.round(max_value/2,2)
     temp = [np.round(y,2) for y in p['Y']]
+    start, inf, hlf = None, None, None
     # start = list(reversed(temp[:idx])).index(half) 
     # start = p['X'][idx-start]
     # end = temp[idx:].index(half) + idx
@@ -2873,8 +2885,8 @@ def extract_cc_features(p, y_axis, tab_label ,mode = None):
         ext = mode
     else: ext = ''
 
-    inf = dpg.add_inf_line_series([start,end],parent=y_axis, label = ext + ' Half Max Width', tag = f"{tab_label}_{ext}_HMW")
-    hlf = dpg.add_inf_line_series([half],parent=y_axis,horizontal=True,label= ext +' Half Max', tag = f"{tab_label}_{ext}_HW")
+    if start: inf = dpg.add_inf_line_series([start,end],parent=y_axis, label = ext + ' Half Max Width', tag = f"{tab_label}_{ext}_HMW")
+    if half: hlf = dpg.add_inf_line_series([half],parent=y_axis,horizontal=True,label= ext +' Half Max', tag = f"{tab_label}_{ext}_HW")
 
     tags.append(f"{tab_label}_{ext}_HMW")
     tags.append(f"{tab_label}_{ext}_HW")
@@ -2882,17 +2894,22 @@ def extract_cc_features(p, y_axis, tab_label ,mode = None):
 
     red = change_inf_line_color(0)
     green = change_inf_line_color(1)
-    dpg.bind_item_theme(inf,red)
-    dpg.bind_item_theme(hlf,green)
+    if inf: dpg.bind_item_theme(inf,red)
+    if hlf: dpg.bind_item_theme(hlf,green)
     
 
-    width = np.round((end-start)/250,2)
+    if start: width = np.round((end-start)/250,2)
+    else: width = 0
     parameters, _ = fill_params_features('find_peaks')
     parameters['x'] = p['Y']
     parameters['distance'] = 120
     peaks = pre.call_function('find_peaks',parameters)
-    true_peaks = [(x-len(p['Y'])/2)/250 for x in peaks[0]]
-    dpg.add_scatter_series(true_peaks ,np.ones(len(peaks[0])).tolist(),parent=y_axis,label = ext +' Peaks', tag = f"{tab_label}_{ext}_peaks")
+    true_peaks = [(x+0.5-len(p['Y'])/2)/250 for x in peaks[0]]
+    above_peaks = [p['Y'][x] for x in peaks[0]]
+    mask = np.array(above_peaks) >= half
+    true_peaks = np.array(true_peaks)[mask]
+    
+    dpg.add_scatter_series(true_peaks.tolist() ,np.ones(len(peaks[0])).tolist(),parent=y_axis,label = ext +' Peaks', tag = f"{tab_label}_{ext}_peaks")
     diff = np.diff(true_peaks)
     freq_mean = np.round(1/np.mean(diff),2)
     freq_std = np.std(diff)
@@ -3104,7 +3121,8 @@ def CustomFilter(sender,app_data,user_data):
         else: mode = None
     else: mode = None
 
-    param_container = dpg.add_child_window(parent=f"{tab_tag}_filters", width=200, height=300)  # Space to add inputs dynamically
+    if dpg.does_item_exist(f"{tab_tag}_filters_container"): dpg.delete_item(f"{tab_tag}_filters_container")
+    param_container = dpg.add_child_window(parent=f"{tab_tag}_filters", width=200, height=300, tag = f"{tab_tag}_filters_container")  # Space to add inputs dynamically
     parameter_values = {}
     input_fields = {}
     
@@ -3183,6 +3201,7 @@ def DefaultFeatures(sender, app_data, user_data):
         parameter_values, documentation = fill_params_features('dpss')
     elif app_data == 'cross-correlation':
         parameter_values, documentation = fill_params_features('correlate')
+        parameter_values['method'] = 'auto'
     elif app_data == 'PAC': 
         parameter_values, documentation = fill_params_features('hilbert')
     else: parameter_values, documentation = fill_params_features(app_data)
@@ -3197,7 +3216,6 @@ def DefaultFeatures(sender, app_data, user_data):
     else: mode = None
     
     tab_label = f"{tab_tag}_df_{func}"
-    print(tab_label)
     if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
         dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar")
 
@@ -3284,14 +3302,18 @@ def CustomFeatures(sender,app_data,user_data):
             params, documentation = fill_params_features('hilbert')
         else: params, documentation = fill_params_features(app_data) 
 
+        print(documentation)
         documentation = pre.extract_params_and_returns(documentation)
         
         if app_data == 'multitaper coherence':
             for k in ['step', 'nfft','y']:
                 params[k] = None
         elif app_data == 'cross-correlation': 
+            params['method'] = 'Choose: auto/direct/fft'
+            params['mode'] = 'Choose: full/same/valid'
             params['dislocation'] = None
             params['normalization'] = None
+            
         elif app_data == 'PAC': 
             for k in ['s1', 's2','b1', 'b2','n_bins']:
                 params[k] = 'choose'
@@ -3662,7 +3684,6 @@ def circadian_rhythm(sender, app_data, user_data):
                 else:
                     days.append(utl.date2str(stream['Date']))
                 
-                
                 if isinstance(x[0], str):
                     new_x = [utl.extract_time_from_datetime_string(xx) for xx in x]
                 else: 
@@ -3682,18 +3703,13 @@ def circadian_rhythm(sender, app_data, user_data):
                     new_x = list(np.arange(600,new_x[0],600)) + new_x
                     
                     y = nan_array+ y
-                print(f"{tab_label}_{i}_{series_label}")
                 dpg.add_line_series(new_x,y,label=series_label,tag=f"{tab_label}_{i}_{series_label}", parent=y_axis)
                 toggle_tags.append(f"{tab_label}_{i}_{series_label}")
 
                 
-                
                 mean.append(y)
                 time_x.append(new_x)
-
-                
-
-                
+      
 
         with dpg.group(tag = f"{tab_label}_buttons", horizontal=True): pass
     max_len = max(len(arr) for arr in mean)
@@ -3707,7 +3723,6 @@ def circadian_rhythm(sender, app_data, user_data):
     
     padded = np.array([arr + [np.nan] * (max_len - len(arr)) for arr in mean])
     
-
     mean = np.nanmean(padded, axis=0)
     std = np.nanstd(padded,axis=0)
     plus = mean + std
@@ -4324,6 +4339,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
                     mean.append(info)
         mean_dict = {}
+
         for key in mean[0].keys():
             values = [m[key] for m in mean]
             if isinstance(values[0], str):

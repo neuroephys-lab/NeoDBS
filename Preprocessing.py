@@ -44,19 +44,137 @@ def get_functions(module = 'ss'):
             print(f"Skipping function {name} due to error: {e}")'''
     return functions
 
-def extract_params_and_returns(docstring):
-    params_section = re.search(r'Parameters\s*-+\n(.*?)(?=\n\n\S)', docstring, re.DOTALL)
-    returns_section = re.search(r'Returns\s*-+\n(.*?)(?=\n\n\S)', docstring, re.DOTALL)
+def extract_params_and_returns(docstring: str) -> str:
+    """
+    Extracts the 'Parameters' and 'Returns' sections from a Numpydoc-formatted
+    documentation string.
 
-    params = params_section.group(1).strip() if params_section else "No parameters found."
-    returns = returns_section.group(1).strip() if returns_section else "No return values found."
+    Args:
+        docstring (str): The documentation string of a function.
 
-    params = "Parameters: \n" + params + "\n"
-    returns = "Returns: \n" + returns + "\n"
+    Returns:
+        str: A string containing only the 'Parameters' and 'Returns' sections.
+    """
+    lines = docstring.splitlines()
 
-    documentation = params + returns
+    sections_to_extract = {"Parameters", "Returns"}
+    section_content = {section: [] for section in sections_to_extract}
+    
+    current_section = None
+    capture = False
 
-    return documentation
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+
+        # Start of a new section
+        if stripped in sections_to_extract:
+            current_section = stripped
+            capture = True
+            section_content[current_section].append(line)  # add header
+            continue
+        elif stripped in {"See Also", "Notes", "Examples"}:
+            capture = False
+            current_section = None
+            continue
+
+        # Capture content under current section
+        if capture and current_section:
+            # Append blank lines and indented lines (part of parameter/return description)
+            if line.strip() or (section_content[current_section] and section_content[current_section][-1].strip()):
+                section_content[current_section].append(line)
+
+    # Combine captured sections into final output
+    output_lines = []
+    for section in ("Parameters", "Returns"):
+        if section_content[section]:
+            output_lines.extend(section_content[section])
+            output_lines.append("")  # spacing between sections
+
+    return "\n".join(output_lines).strip()
+
+def extract_params_and_returns2(docstring: str) -> str:
+    """
+    Extracts the 'Parameters' and 'Returns' sections from a Numpydoc-formatted
+    documentation string.
+
+    Args:
+        docstring (str): The documentation string of a function.
+
+    Returns:
+        str: A string containing only the 'Parameters' and 'Returns' sections.
+    """
+    lines = docstring.splitlines()
+    
+    in_parameters_section = False
+    in_returns_section = False
+    
+    extracted_content = []
+
+    for line in lines:
+        stripped_line = line.strip()
+
+        if stripped_line == "Parameters":
+            in_parameters_section = True
+            in_returns_section = False
+            extracted_content.append(line)  # Include the "Parameters" header
+            continue
+        elif stripped_line == "Returns":
+            in_returns_section = True
+            in_parameters_section = False
+            extracted_content.append(line)  # Include the "Returns" header
+            continue
+        elif stripped_line == "See Also":
+            in_parameters_section = False
+            in_returns_section = False
+            break  # Stop processing once "See Also" or similar sections are encountered
+        elif stripped_line == "Notes":
+            in_parameters_section = False
+            in_returns_section = False
+            break
+        elif stripped_line == "Examples":
+            in_parameters_section = False
+            in_returns_section = False
+            break
+        
+        if in_parameters_section or in_returns_section:
+            # Check if the line is part of the current section
+            # A common way to check if a line is part of a section in numpydoc
+            # is to look for indentation.
+            if line.strip() != "": # Exclude empty lines if they break the flow
+                 extracted_content.append(line)
+
+    # Clean up by removing leading/trailing whitespace from each line
+    # and then joining them back. Also remove any empty lines that might have
+    # been appended in between sections.
+    cleaned_content = [line.strip() for line in extracted_content if line.strip()]
+    
+    # Reconstruct with indentation for better readability, if desired.
+    # This part can be more complex if you want to preserve exact original indentation.
+    # For now, we'll just join them with newlines.
+    
+    # A simple way to manage indentation is to add a space for subsequent lines
+    # that are not headers.
+    final_output_lines = []
+    current_section_header = None
+    
+    for line in extracted_content:
+        if line.strip() == "Parameters" or line.strip() == "Returns":
+            final_output_lines.append(line.strip())
+            current_section_header = line.strip()
+        elif line.strip(): # if line is not empty
+            if current_section_header:
+                if current_section_header == "Parameters" and not line.startswith("    "):
+                    # This implies it's a parameter name, not its description
+                    final_output_lines.append(line.strip())
+                elif current_section_header == "Returns" and not line.startswith("    "):
+                    # This implies it's a return value name, not its description
+                    final_output_lines.append(line.strip())
+                else:
+                    final_output_lines.append(line)
+            else: # If we are not in a recognized section, just add the line
+                final_output_lines.append(line)
+
+    return "\n".join(final_output_lines).strip()
 
 def dict_to_arg(param_dict, func_name, module = 'ss'):
     # Convert saved parameters (strings) into appropriate types
@@ -141,7 +259,6 @@ def call_function(func_name, param_dict, module = 'ss'):
 
     func = functions[func_name]
     sig = inspect.signature(func)
-    
     # Extract required positional arguments
     required_params = [
         param.name for param in sig.parameters.values()
