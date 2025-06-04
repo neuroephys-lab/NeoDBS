@@ -632,14 +632,14 @@ def create_table(tab_label,table_tag,features, trial_label = "New Trial"):
             for band, value in features.items():
                 if isinstance(value, (list, np.ndarray, tuple)):  # Check if value is a list or NumPy array
                     if len(value) == 1:  # Single-element array
-                        dpg.add_text(f"{float(value[0]):.2f}")  # Convert to float for clean display
+                        dpg.add_input_text(default_value=f"{float(value[0]):.2f}",readonly=True)  # Convert to float for clean display
                     else:  # Multiple values
                         rounded_values = [float(v) for v in np.round(value, 2)]  # Convert each np.float64 to float
-                        dpg.add_text(f"{rounded_values}")  # Display clean list
+                        dpg.add_input_text(default_value=f"{rounded_values}",readonly=True)  # Display clean list
                 elif isinstance(value, str):
-                    dpg.add_text(value)
+                    dpg.add_input_text(default_value=value,readonly=True)
                 else:  # Single number case
-                    dpg.add_text(f"{float(value):.2f}")  # Ensure it's a clean float
+                    dpg.add_input_text(default_value=f"{float(value):.2f}",readonly=True)  # Ensure it's a clean float
 
     with dpg.group(parent=tab_label):
                         
@@ -1591,6 +1591,7 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
     toggle_tags = []
 
     def toggle(sender,app_data,user_data):
+        # print(toggle_tags)
         labs = [dpg.get_item_label(tag) for tag in toggle_tags]
         name_band = dpg.get_item_label(sender)
         for idx,l in enumerate(labs):
@@ -1692,7 +1693,7 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
             if not dpg.does_item_exist(f"{tab_label}_header"): 
                 dpg.add_collapsing_header(tag = f"{tab_label}_header", parent=tab_label, label=label)
 
-            create_table(f"{tab_label}_header",f"{tab_label}_table",info,label)
+            create_table(f"{tab_label}_header",f"{tab_label}_table",info,b)
 
 
     if not dpg.does_item_exist(f"{tab_label}_band"): 
@@ -2906,14 +2907,18 @@ def extract_cc_features(p, y_axis, tab_label ,mode = None):
     peaks = pre.call_function('find_peaks',parameters)
     true_peaks = [(x+0.5-len(p['Y'])/2)/250 for x in peaks[0]]
     above_peaks = [p['Y'][x] for x in peaks[0]]
-    mask = np.array(above_peaks) >= half
+
+    rms = np.sqrt(np.mean(np.array(p['Y'])**2))
+    mask = np.array(above_peaks) >= 3*rms
     true_peaks = np.array(true_peaks)[mask]
     
     dpg.add_scatter_series(true_peaks.tolist() ,np.ones(len(peaks[0])).tolist(),parent=y_axis,label = ext +' Peaks', tag = f"{tab_label}_{ext}_peaks")
     diff = np.diff(true_peaks)
+    if diff.size == 0: diff = [0]
     freq_mean = np.round(1/np.mean(diff),2)
     freq_std = np.std(diff)
     info = {
+        'RMS Correlation': rms,
         'Max Correlation': max_value,
         'Lag til Max (s)': lag,
         'Half Max Width (s)': width,
