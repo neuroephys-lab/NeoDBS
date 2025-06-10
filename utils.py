@@ -141,6 +141,7 @@ def extract_time_from_datetime_string(dt_string):
     # Convert time to timestamp (seconds since midnight)
     return t.hour * 3600 + t.minute * 60 + t.second
 
+
 def extract_time(dt):
     """
     Extracts and returns the time portion from a datetime object as a string (HH:MM:SS).

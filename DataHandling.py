@@ -1075,7 +1075,7 @@ def getTimelineIndexofEvent(timeline, events):
 
     return index
 
-def segmentTimelineEvent(timeline, indexes):#unused
+def segmentTimelineEvent2(timeline, indexes):#unused
     segments = {}
     flags = []
     for edx, idxs in indexes.items():
@@ -1107,6 +1107,67 @@ def segmentTimelineEvent(timeline, indexes):#unused
                 yy = timeline[signal][side]['Y'][min:max]
                 segment = {'X': xx, 'Y': yy}
                 segments[edx][side] =  segment
+
+    return segments, flags
+
+def segmentTimelineEvent(timeline, indexes, step_minutes=10):
+    segments = {}
+    flags = []
+
+    for edx, idxs in indexes.items():
+        if isinstance(idxs, str):
+            print(idxs)
+            continue
+
+        x, signal = idxs  # x is an index into the X/Y arrays (int)
+        segments[edx] = {}
+
+        for side in ['Left', 'Right']:
+            X_raw = timeline[signal][side]['X']
+            Y_raw = timeline[signal][side]['Y']
+
+            # Convert string timestamps to datetime objects
+            X_dt = [utl.parse_datetime(t) for t in X_raw]
+
+            half_window = 6
+            window_size = 13
+            padded = False
+
+            # Determine padding
+            pad_left = max(0, half_window - x)
+            pad_right = max(0, x + half_window + 1 - len(X_dt))
+
+            min_idx = max(0, x - half_window)
+            max_idx = min(len(X_dt), x + half_window + 1)
+
+            # Slice available data
+            segment_x_dt = X_dt[min_idx:max_idx]
+            segment_y = Y_raw[min_idx:max_idx]
+
+            # Pad left if needed
+            if pad_left > 0:
+                first_time = X_dt[min_idx]
+                left_fill = [first_time - timedelta(minutes=step_minutes * i) for i in range(pad_left, 0, -1)]
+                segment_x_dt = left_fill + segment_x_dt
+                segment_y = [np.nan] * pad_left + segment_y
+                padded = True
+
+            # Pad right if needed
+            if pad_right > 0:
+                last_time = X_dt[max_idx - 1]
+                right_fill = [last_time + timedelta(minutes=step_minutes * i) for i in range(1, pad_right + 1)]
+                segment_x_dt = segment_x_dt + right_fill
+                segment_y = segment_y + [np.nan] * pad_right
+                padded = True
+
+            # Final sanity check
+            segment_x_dt = segment_x_dt[:window_size]
+            segment_y = segment_y[:window_size]
+
+            segment_x = [utl.full_date2str(dt) for dt in segment_x_dt]
+
+            segments[edx][side] = {'X': segment_x, 'Y': segment_y}
+            flags.append(padded)
 
     return segments, flags
 
