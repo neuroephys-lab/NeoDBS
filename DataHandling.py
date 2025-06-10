@@ -29,34 +29,52 @@ def info_electrodes(data):
     '''
     GroupHistory=data['Device']['GroupHistory']
     days_hemisphere_right = list(data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'].keys())
-    for dic in GroupHistory:
-        if dic['SessionDate'][0:10]==days_hemisphere_right[0][0:10]:
-                Groups=dic["Groups"]
-                #print(Groups[1])
-                for di in Groups:
-                    if di.get("ActiveGroup")==True:
-                        Group_id=di["GroupId"][-1]
-                        ProgramSettings=di["ProgramSettings"]
-                        Rate_in_hertz=ProgramSettings["RateInHertz"]
-                        SensingChannel=ProgramSettings['SensingChannel']
-                        Pulse_width_in_microseconds=SensingChannel[0]["PulseWidthInMicroSecond"]
-                        Suspend_amplitude_in_miliamps=SensingChannel[0]["SuspendAmplitudeInMilliAmps"]
-                        Stimulation_electrodes_1=SensingChannel[0]["ElectrodeState"]
-                        Stimulation_electrodes=[]
-
-                        for d in Stimulation_electrodes_1:
-                            Stimulation_electrodes.append(re.split('\.|_',d['Electrode'])[-1]+'-'+d["ElectrodeStateResult"].split('.')[-1])
-                        Sensing_electrodes=SensingChannel[0]["Channel"]
-                        Sensing_electrodes=Sensing_electrodes.split('.')[-1]
+    # for dic in GroupHistory:
+    #     if dic['SessionDate'][0:10]==days_hemisphere_right[0][0:10]:
+    #             Groups=dic["Groups"]
+    #             #print(Groups[1])
+    #             for di in Groups:
+    #                 if di.get("ActiveGroup")==True:
+    di = GroupHistory[0]['Groups'][0]
+    Group_id=di["GroupId"][-1]
+    ProgramSettings=di["ProgramSettings"]
+    Rate_in_hertz=ProgramSettings["RateInHertz"]
+    try:
+        SensingChannel=ProgramSettings['SensingChannel']
+        Sensing_electrodes=SensingChannel[0]["Channel"]
+        Sensing_electrodes=Sensing_electrodes.split('.')[-1]
+        Suspend_amplitude_in_miliamps = SensingChannel[0]['SuspendAmplitudeInMilliAmps']
+        Sensing_freq = SensingChannel[0]['SensingSetup']['FrequencyInHertz']
+    except Exception: #when electrodes dont allow sensing
+        SensingChannel = ProgramSettings['LeftHemisphere']['Programs']
+        Suspend_amplitude_in_miliamps=SensingChannel[0]["AmplitudeInMilliAmps"]
+        Sensing_electrodes = 'Sensing Disabled'
+        Sensing_freq = ''
+    Pulse_width_in_microseconds=SensingChannel[0]["PulseWidthInMicroSecond"]
+    
+    left_e=SensingChannel[0]["ElectrodeState"]
+    right_e=SensingChannel[0]["ElectrodeState"]
+    Left,Right=[], []
+    for d in left_e:
+        Left.append(re.split('\.|_',d['Electrode'])[-1]+'-'+d["ElectrodeStateResult"].split('.')[-1])
+    # for d in right_e:
+    #     Right.append(re.split('\.|_',d['Electrode'])[-1]+'-'+d["ElectrodeStateResult"].split('.')[-1])
+    
+    
     a = {
         'Group_id': Group_id,
         'Frequency': Rate_in_hertz,
         'Pulse': Pulse_width_in_microseconds,
         'Amplitude': Suspend_amplitude_in_miliamps,
-        'Stim_electrodes': Stimulation_electrodes, 
+        'Stim_electrodes': Left, 
         'Sense_electrodes': Sensing_electrodes,
+        'Sense_frequency': Sensing_freq
     }
     return a
+
+# def electrodes(Data):
+#     session_date = getSessionDate(Data)
+#     GH = Data['Device']['GroupHistory']
 
 def add_utc_conversion_to_dates(data, offset):
     """
@@ -434,6 +452,8 @@ def getStimulationParameters(dictionary, group_name, time = 'Initial'): #unused
         time_ = 'InitialStimStatus'
     
     stim = next((group for group in dictionary['Device']['Groups'][time] if group['GroupId'] == group_name), None)
+    # print(stim)
+    # stim = dictionary['Device']['GroupHistory'][0]['Groups'][0]
     stim = stim['ProgramSettings']
     StimStatus = dictionary['Device']['Stimulation'][time_]
     StimFreq = stim['RateInHertz']
@@ -746,6 +766,18 @@ def getSignals(Data, mode):
 
 
     return signals
+
+def getStreamingStimulation(Data,date):
+    dictionary = Data['Streaming']['BrainSenseLfp']
+    group = None
+    for rec in dictionary:
+        if utl.parse_datetime(rec['FirstPacketDateTime']) == date: 
+            group = rec['TherapySnapshot']['ActiveGroup']
+            group = utl.after_underscore(utl.after_point(group))
+            return f'Stimulation ON: Group {group}'
+            # stimulation = getStimulationParameters(Data,group)
+            # return stimulation
+    if group == None: return 'Stimulation OFF'
 
 def getEventSummary(Data):
     if 'EventSummary' in Data['Events'].keys():
