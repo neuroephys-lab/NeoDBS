@@ -44,11 +44,17 @@ def parse_path(path):
     
     return path_parts
 
-def convert_to_timestamp(date_str):
-    try:
-        return datetime.fromisoformat(date_str.replace("Z", "")).timestamp()
-    except ValueError:
-        print(f"Invalid date format: {date_str}")
+def convert_to_timestamp(date_input):
+    if isinstance(date_input, datetime):
+        return date_input.timestamp()
+    elif isinstance(date_input, str):
+        try:
+            return datetime.fromisoformat(date_input.replace("Z", "")).timestamp()
+        except ValueError:
+            print(f"Invalid date format: {date_input}")
+            return None
+    else:
+        print(f"Unsupported type for date input: {type(date_input)}")
         return None
 
 def access_by_path(dictionary, path_parts):
@@ -73,12 +79,12 @@ def after_underscore(s):
         return s
 
 def parse_datetime(string):
-    try:
-        # Handle cases with milliseconds
-        return datetime.strptime(string, "%Y-%m-%dT%H:%M:%S.%fZ")
-    except ValueError:
-        # Fallback for cases without milliseconds
-        return datetime.strptime(string, "%Y-%m-%dT%H:%M:%SZ")
+    for fmt in ("%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%d %H:%M:%S"):
+        try:
+            return datetime.strptime(string, fmt)
+        except ValueError:
+            continue
+    raise ValueError(f"Unrecognized date format: {string}")
 
 def parse_time(string):
      return datetime.strptime(string, "%H:%M:%S")
