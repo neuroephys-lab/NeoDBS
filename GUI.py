@@ -402,16 +402,17 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
     def show_mean(sender,app_data):
         dpg.configure_item(f"{tab_tag}_mean",show=app_data)
 
-    with dpg.group(label = f"{tab_tag}_buttons", width = -1):
+    with dpg.group(label = f"{tab_tag}_buttons"):
         toggleVisibility(signal_tags, tab_tag, group = f"{tab_tag}_buttons",user_data=window_id)
         dpg.add_spacer(parent=f"{tab_tag}_buttons")
         with dpg.group(horizontal=True, parent=f"{tab_tag}_buttons"):
             #check days
             with dpg.group(label = f"{tab_tag}_buttons_day"):
                 if len(dates)>1:
-                    dpg.add_text('By days:')
-                    for day in dates:
-                        toggleType(signal_tags,parent=f"{tab_tag}_buttons_day", user_data=(day, window_id, tab_tag)) 
+                    with dpg.child_window(width=100, height=250):
+                        dpg.add_text('By days:')
+                        for day in dates:
+                            toggleType(signal_tags,parent=f"{tab_tag}_buttons_day", user_data=(day, window_id, tab_tag)) 
 
             #check channels
             with dpg.group(label = f"{tab_tag}_buttons_events"):
@@ -2845,7 +2846,11 @@ def extract_timeline_features(p):
     #peak time
     time = psd.index(peak)
     # print(time, ' ', len(freqs))
-    time = freqs[time]
+    time = freqs[0]
+    try:
+        time = freqs[time]
+    except Exception: pass
+
     key = 'Peak Time'
     if isinstance(time,str):
         peak = str(utl.parse_datetime(time).time())
@@ -3952,9 +3957,16 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
 
             if dpg.get_item_configuration(temp_tags[idx])['show'] == True:
                 v = dpg.get_value(temp_tags[idx])
+                
                 p.append(v[1])
-        new_p = np.nanmean(p,axis=0)
-        dpg.set_value(f"{tab_label}_mean",[v[0],new_p])
+
+
+        max_len = max(len(y) for y in p)
+        ys_padded = [np.pad(y, (0, max_len - len(y)), constant_values=np.nan) for y in p]
+        mean_y = np.nanmean(ys_padded, axis=0)
+        
+        # new_p = np.nanmean(p,axis=0)
+        dpg.set_value(f"{tab_label}_mean",[v[0],mean_y.tolist()])
 
             
 
@@ -3966,8 +3978,8 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
     else:
         dpg.add_tab(label=f"Timeline Events", parent=f"{tab_tag}_features_bar", tag=tab_label)
 
-    with dpg.group(parent=tab_label,horizontal=True):
-        dpg.add_checkbox(label='Before vs. After', callback=beforeVafter)
+    # with dpg.group(parent=tab_label,horizontal=True):
+    #     dpg.add_checkbox(label='Before vs. After', callback=beforeVafter)
 
     with dpg.group(parent=tab_label, tag=f"{plot_tag}_group", horizontal=True):
         with dpg.plot(label = 'Event-locked Segments',tag = plot_tag,  width=600, height=400):
@@ -4002,14 +4014,12 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
                             x = segment[side]['X']
                             x = [utl.extract_time_from_datetime_string(utl.extract_time(utl.parse_datetime(xx))) for xx in x]
                             first, last = x[0], x[-1]
-                            f1 = x.copy()
                             x = [xx-min(x) for xx in x]
 
                             flag = False
                             # for tag in tags:
                             values = dpg.get_value(tag)
                             old_x, y= values[0], np.array(values[1])
-                            f2 = old_x.copy()
                             old_x = [utl.extract_time_from_datetime_string(utl.extract_time(datetime.fromtimestamp(r))) for r in old_x]
                             # diff_x = [xx-min(old_x) for xx in old_x]
                             try:
@@ -4024,15 +4034,13 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
                                 print(e)
 
                             if flag==True: 
-                                print('não encontrou')
                                 y = segment[side]['Y']
                             else: y = y.tolist()
 
                             flag = False
 
                             if len(y)>13: 
-                                print('cortou')
-                                y = y[:len(x)]
+                                y = y[:len(x)-1]
 
                             event_name = utl.after_underscore(i)
                             event_names.append(event_name)
@@ -4057,7 +4065,9 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
                         meio = [x[6]]
                         if not dpg.does_item_exist(f"{label}_center"): dpg.add_inf_line_series(meio, label = f"{idx} center", parent = y_axis, tag = f"{label}_center")
             if not np.any(flags) and count:
-                dpg.add_inf_line_series([x[len(x)//2]],label = "Center", parent = y_axis)
+                center_timestamp = 1*60*60
+                c = dpg.add_inf_line_series([center_timestamp],label = "Center", parent = y_axis)
+                dpg.bind_item_theme(c,change_line_thickness(10))
             
             mean_info_table(mean,f"{tab_label}_header",f"{tab_label}_table")
             
@@ -4101,8 +4111,6 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         series_label = info['label']
         side = series_label.split(' ')[0]
 
-        print(len(x))
-
         stream = getSignalbyIdx(window_id,tab_tag,tag)
         stream = DH.correctMissingTimeline(data,stream)[0]
         new_x,y = stream[side]['X'],stream[side]['Y']
@@ -4111,6 +4119,8 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         # y = np.flip(np.array(y))
         y = np.array(y)
         copy = np.copy(y)
+
+        
 
         '''USING RMS'''
         # threshold = np.sqrt(np.mean(np.array(y)**2))
@@ -4129,7 +4139,10 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
        
         
         mask = copy > factor*threshold
-        copy[mask] = threshold
+        try:
+            update = np.max(y[y<factor*threshold]) #update with mean value
+        except Exception: update = np.mean(y)
+        copy[mask] = update
         dpg.set_value(tag,[new_x,copy.tolist()])
         progress = np.round((i+1)/len(tags),2)
         dpg.set_value(f"{tab_tag}_plot_progress", progress)
@@ -4837,7 +4850,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
     max_p = 0
     bands = getBandsByTab(tab_tag)
     files = app_state['windows'][window_id]['Files']
-    all_signals = []
+    all_signals, all_mean = [], {}
     for file in files: 
         data = file['Data']
         initial, _ = DH.getEventsElectrodes(data)
@@ -4851,6 +4864,8 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         else: 
             electrodes_names[ch] = ch
             dpg.add_text(f'{DH.getSessionDate(data)}: {electrodes_names[initial]}', parent=tab_tag)
+
+    
 
     with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
 
@@ -4884,8 +4899,6 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                             label = f"day {date.day:02d}/{date.month} | {date.minute} | {side} | {signal['EventName']}"
                             x = sign['X']
                             y = sign['Y']
-
-                            
                             
                             # Create a unique series tag for each side
                             series_tag = f"{tab_tag}_file_{idx}_series_{sdx}_{side.lower()}"
@@ -4900,16 +4913,44 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                             power.append(y) 
                             max_p = max(max_p,np.max(p['Y']))      
                             series_label = series_tag
+
+                            if not dpg.does_item_exist(f"{tab_label}_grouped"):
+                                dpg.add_tree_node(tag=f"{tab_label}_grouped",
+                                    label="Grouped Streams",
+                                    parent=tab_label,
+                                    default_open=True
+                                ) 
+
+                            if not dpg.does_item_exist(f"{tab_label}_{side}_all_mean"):
+                                dpg.add_collapsing_header(label = f'All Mean Power - {side}', tag =f"{tab_label}_{side}_all_mean", parent = f"{tab_label}_grouped")
+                                tables.append(f"{tab_label}_{side}_all_mean_table")
+
+                            if not dpg.does_item_exist(f"{tab_label}_{side}_{signal['EventName']}"):
+                                dpg.add_collapsing_header(label = f"All {signal['EventName']}s - {side}", tag =f"{tab_label}_{side}_{signal['EventName']}", parent = f"{tab_label}_grouped")
+                                tables.append(f"{tab_label}_{side}_{signal['EventName']}_table")
+
+                            if not dpg.does_item_exist(f"{tab_label}_individuals"):
+                                dpg.add_tree_node(tag=f"{tab_label}_individuals",
+                                    label="Individual Streams",
+                                    parent=tab_label,
+                                    default_open=True
+                                )   
+
                             if not dpg.does_item_exist(f"{tab_label}_{series_label}"):
                                 header = dpg.get_item_label(series_label)
-                                dpg.add_collapsing_header(label = header, tag =f"{tab_label}_{series_label}", parent = tab_label)
+                                dpg.add_collapsing_header(label = header, tag =f"{tab_label}_{series_label}", parent = f"{tab_label}_individuals")
                             else:
                                 dpg.delete_item(f"{tab_label}_{series_label}", children_only=True)
 
                             #TABLE CONTENT
                             for band in bands.items():
                                 info = extract_psd_features(p, band)
+                                temp = info['Mean Power (mean, std. dev)']
+                                all_mean[band[0]] = temp[0]
                                 create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table", info, trial_label=band[0])
+
+                            create_table(f"{tab_label}_{side}_all_mean",f"{tab_label}_{side}_all_mean_table", all_mean, trial_label=header)
+                            create_table(f"{tab_label}_{side}_{signal['EventName']}",f"{tab_label}_{side}_{signal['EventName']}_table", all_mean, trial_label= header)
 
                             tables.append(f"{tab_label}_{series_label}_table")
 
@@ -4922,7 +4963,8 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
 
 
             mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
-            dpg.add_scatter_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag}", tag=f"{tab_tag}_mean")
+            mp = dpg.add_line_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag}", tag=f"{tab_tag}_mean")
+            dpg.bind_item_theme(mp,change_line_thickness(5))
             mean_power = {'Y': mean_power, 'X': p['X']}
             for band in bands.items():
                 info = extract_psd_features(mean_power, band)
@@ -5168,7 +5210,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     files = app_state['windows'][window_id]['Files']
     flag = False
-    datas, temp_signals, events_tags = [], [], []
+    datas, temp_signals, events_tags, ocd_events = [], [], [], []
     for file in files: 
         data = file['Data']
         initial, _ = DH.getEventsElectrodes(data)
@@ -5188,9 +5230,11 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         if 'Eventos' in evt.keys():
             for e in evt['Eventos']:
                 event = f"{e['EventName']}:  {e['EventCount']}"
+                ocd_events.append(e['EventName'])
                 dpg.add_text(f'{event}', parent=tab_tag)
 
     days = []
+    ocd_events = np.unique(ocd_events).tolist()
     with dpg.group(parent=tab_tag, tag = f"{tab_tag}_group", horizontal=True):
 
         dpg.add_group(width=600, tag=f"{tab_tag}_plot_group", horizontal=False)
@@ -5261,8 +5305,15 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         x_event = utl.convert_to_timestamp(event['DateInitial'])
                         label = event['EventName']
                         e_tag = f"{tab_tag}_{edx}_{idx}"
-                        dpg.add_inf_line_series(x=[x_event],label=label, parent = y_axis, tag =f"{tab_tag}_{edx}_{idx}")
+                        try:
+                            color = list(ocd_events).index(label)
+                        except Exception: 
+                            ocd_events.append(label)
+                            color = list(ocd_events).index(label)
+                        t = dpg.add_inf_line_series(x=[x_event],label=label, parent = y_axis, tag =f"{tab_tag}_{edx}_{idx}")
                         events_tags.append([e_tag,idx])
+                        theme = change_inf_line_color(color)
+                        dpg.bind_item_theme(t, theme)
 
         dpg.add_text(f"Total days: {len(days)}", parent=tab_tag)
         days = np.unique(days).tolist()

@@ -1075,7 +1075,7 @@ def getTimelineIndexofEvent(timeline, events):
 
     return index
 
-def segmentTimelineEvent2(timeline, indexes):#unused
+def segmentTimelineEvent2(timeline, indexes):
     segments = {}
     flags = []
     for edx, idxs in indexes.items():
@@ -1087,21 +1087,31 @@ def segmentTimelineEvent2(timeline, indexes):#unused
             for side in ['Left', 'Right']:
 
                 if x<6: 
-                    min,max = 0, 12
+                    mini,maxi = 0, 12
                     flags.append(True)
                 elif x+6 > len(timeline[signal][side]['X']):
-                    max = len(timeline[signal][side]['X'])-1
-                    min = max-6
+                    maxi = len(timeline[signal][side]['X'])-1
+                    mini = max-6
                     flags.append(True)
                 else: 
-                    min,max =  x-6, x+6
+                    mini,maxi =  x-6, x+6
                     flags.append(False)
 
                 #for dpg
-                xx = timeline[signal][side]['X'][min:max]
-                yy = timeline[signal][side]['Y'][min:max]
-                segment = {'X': xx, 'Y': yy}
-                segments[edx][side] =  segment
+                xx = timeline[signal][side]['X'][mini:maxi]
+                temp = [utl.parse_datetime(x) for x in xx]
+                # print(abs(temp[0]-temp[-1]))
+                # if abs(temp[0]-temp[1])<timedelta(hours=2, minutes=20):
+                #     yy = timeline[signal][side]['Y'][mini:maxi]
+                #     segment = {'X': xx, 'Y': yy}
+                #     segments[edx][side] =  segment
+                if isinstance(temp[0], datetime) and isinstance(temp[-1], datetime):
+                    duration = abs(temp[-1] - temp[0])
+                    if duration < timedelta(hours=2, minutes=20):
+                        yy = timeline[signal][side]['Y'][mini:maxi]
+                        segment = {'X': xx, 'Y': yy}
+                        segments[edx][side] = segment
+                    elif edx in segments.keys(): segments.pop(edx)
 
     return segments, flags
 
