@@ -628,7 +628,8 @@ def create_table(tab_label,table_tag,features, trial_label = "New Trial"):
     def add_row():
         with dpg.table_row(parent=table_tag):
             dpg.add_input_text(default_value=trial_label, width=-1)                          
-            for band, value in features.items():
+            for _, value in features.items():
+                
                 if isinstance(value, (list, np.ndarray, tuple)):  # Check if value is a list or NumPy array
                     if len(value) == 1:  # Single-element array
                         dpg.add_input_text(default_value=f"{float(value[0]):.2f}",readonly=True)  # Convert to float for clean display
@@ -2808,7 +2809,7 @@ def extract_psd_features(p, band):
     mask = (freqs >= v[0]) & (freqs <= v[1])
     # param_auc['y'] = psd[mask]
     # simpson = pre.call_function('simpson', param_dict=param_auc, module='si')
-    auc = {'Sum Power (AUC)': f"{np.round(np.sum(psd[mask]),2)}"}
+    auc = {'Sum Power (AUC)': np.round(np.sum(psd[mask]),2)}
     # auc = {'Sum Power (AUC)': f"{np.round(simpson,2)}"}
     # print('AUC: ', np.round(np.sum(p['Y'][mask])/full_power,2))
 
@@ -4945,8 +4946,10 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                             #TABLE CONTENT
                             for band in bands.items():
                                 info = extract_psd_features(p, band)
-                                temp = info['Mean Power (mean, std. dev)']
-                                all_mean[band[0]] = temp[0]
+                                # temp = info['Mean Power (mean, std. dev)']
+                                temp = info['Peak Power (power, frequency)']
+                                if not isinstance(temp,(int,float)): all_mean[band[0]] = temp[-1]
+                                else: all_mean[band[0]]=temp
                                 create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table", info, trial_label=band[0])
 
                             create_table(f"{tab_label}_{side}_all_mean",f"{tab_label}_{side}_all_mean_table", all_mean, trial_label=header)
