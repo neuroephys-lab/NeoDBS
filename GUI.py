@@ -5323,11 +5323,11 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         with dpg.group(label = f"{tab_tag}_buttons", parent=f"{tab_tag}_group"):
             toggleVisibility(signal_tags,parent=tab_tag, group=f"{tab_tag}_buttons", user_data = window_id)
             with dpg.group(horizontal=True):
-                with dpg.child_window(height=250, width=100):
+                with dpg.child_window(height=250, width=150):
                     dpg.add_text('By day: ')
                     for day in days:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag)) #check day
-                with dpg.child_window(height=250, width=100):
+                with dpg.child_window(height=250, width=150):
                     dpg.add_text('By hemisphere: ')
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag))
