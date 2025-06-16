@@ -38,6 +38,7 @@ def info_electrodes(data):
     di = GroupHistory[0]['Groups'][0]
     Group_id=di["GroupId"][-1]
     ProgramSettings=di["ProgramSettings"]
+    GroupSettings = di["GroupSettings"]
     Rate_in_hertz=ProgramSettings["RateInHertz"]
     try:
         SensingChannel=ProgramSettings['SensingChannel']
@@ -59,7 +60,10 @@ def info_electrodes(data):
         Left.append(re.split('\.|_',d['Electrode'])[-1]+'-'+d["ElectrodeStateResult"].split('.')[-1])
     # for d in right_e:
     #     Right.append(re.split('\.|_',d['Electrode'])[-1]+'-'+d["ElectrodeStateResult"].split('.')[-1])
-    
+    type_stimulation = GroupSettings['Cycling']['Enabled']
+    if type_stimulation == False:
+        type_stimulation = 'Continuous'
+    else: type_stimulation = 'Cycling'
     
     a = {
         'Group_id': Group_id,
@@ -68,7 +72,8 @@ def info_electrodes(data):
         'Amplitude': Suspend_amplitude_in_miliamps,
         'Stim_electrodes': Left, 
         'Sense_electrodes': Sensing_electrodes,
-        'Sense_frequency': Sensing_freq
+        'Sense_frequency': Sensing_freq,
+        'Type': type_stimulation
     }
     return a
 
@@ -761,6 +766,10 @@ def getSignals(Data, mode):
                 signal[day][hemisphere]['X'].extend(time)
                 signal[day][hemisphere]['Y'].extend(LFP)
                 signal[day][hemisphere]['Stim'].extend(stim)
+
+            signal[day][hemisphere]['X'] = np.flip(np.array(signal[day][hemisphere]['X'])).tolist()
+            signal[day][hemisphere]['Y'] = np.flip(np.array(signal[day][hemisphere]['Y'])).tolist()
+            signal[day][hemisphere]['Stim'] = np.flip(np.array(signal[day][hemisphere]['Stim'])).tolist()
 
         signals = [{'Date': day, 'Left': data['Left'], 'Right': data['Right']} for day, data in signal.items()]
 

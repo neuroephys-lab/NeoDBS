@@ -204,7 +204,7 @@ def add_combo_filters(sender, app_data, user_data):
 
 def add_combo_features(tab_tag,signal_tags):
 
-    features = ['periodogram','welch','multitaper','spectrogram', 'dpss', 'wavelet', 'coherence', 'multitaper coherence','cross-correlation','PAC']
+    features = ['periodogram','welch','spectrogram', 'dpss', 'wavelet', 'coherence', 'multitaper coherence','cross-correlation','PAC']
 
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_custom_features"):
@@ -212,7 +212,7 @@ def add_combo_features(tab_tag,signal_tags):
 
 def add_combo_df_features(tab_tag,signal_tags):
 
-    features = ['periodogram','welch','multitaper','spectrogram', 'dpss', 'wavelet', 'coherence', 'multitaper coherence', 'cross-correlation', 'PAC']
+    features = ['periodogram','welch','spectrogram', 'multitaper', 'dpss', 'wavelet', 'coherence', 'multitaper coherence', 'cross-correlation', 'PAC']
 
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_df_features"):
@@ -702,6 +702,7 @@ def replace_params(original,replace):
 
 def apply_feat(func, parameter_values, raw):
     signal = None
+    
     for param in parameter_values.keys():
         if param == 'fs' or param =='sfreq':
             parameter_values[param] = 250
@@ -712,29 +713,57 @@ def apply_feat(func, parameter_values, raw):
 
         case 'multitaper': 
             func = 'psd_array_multitaper'
-            parameter_values
             signal = pre.call_function(func, parameter_values, module='mtf')
             return signal
         case 'dpss':
             if not isinstance(raw,float):
                 parameter_values['M'] = len(np.array(raw))
-            power_combined =[]
-            windows = pre.call_function(func, parameter_values, module = 'ssw')
-            for order, taper in enumerate(windows):
-                parameter_values['window'] = taper
-                try: 
-                    freq, psd = pre.call_function('welch', parameter_values,module='ss')
-                except Exception as e: print(e)
-                power_combined.append(psd)
-                #power_sum = np.abs(psd).mean()
+            try:
+                nfft = int(parameter_values['nfft'])
+            except Exception: 
+                window_len = 512
+                step = window_len // 4
+                nfft = window_len
+                kmax = 2*parameter_values['NW'] - 1
+                parameter_values['Kmax'] = kmax
+                parameter_values['M'] = window_len
 
-            signal = freq, np.mean(power_combined, axis=-2)
+            windows = pre.call_function(func, parameter_values, module = 'ssw')
+            Sxx_sum = np.zeros(nfft//2+1)
+            n_windows = 0
+
+            for start in range(0, len(raw) - window_len + 1, step):
+                xw = raw[start:start+window_len]
+                Sxx_tapers = []
+                for taper in windows:
+                    S1 = np.fft.rfft(xw * taper, n=nfft)
+                    Sxx_tapers.append((np.abs(S1)**2))
+                Sxx_sum += np.mean(Sxx_tapers, axis=0)
+                n_windows += 1
+
+            Sxx = Sxx_sum / n_windows
+
+            freq = np.fft.rfftfreq(nfft, d=1/250)
+            signal = freq, Sxx
             return signal
+            # for order, taper in enumerate(windows):
+                #     X = np.fft.rfft(raw * taper, n=nfft)
+                #     psd = (np.abs(X)**2)/( 250 * np.array(X))
+                #     power_combined.append(psd)
+                #     # parameter_values['window'] = taper
+                #     # try: 
+                #     #     freq, psd = pre.call_function('welch', parameter_values,module='ss')
+                #     # except Exception as e: print(e)
+                #     # power_combined.append(psd)
+                #     #power_sum = np.abs(psd).mean()
+                # freq = np.fft.rfftfreq(nfft,d=1/250)
+                # signal = freq, np.mean(power_combined, axis=0)
         case 'wavelet':
             func = 'tfr_array_morlet'
             a = np.array(raw)
             
             try:
+                print(parameter_values)
                 #older version was 'data' and not 'epoch_data' --> 10.06.2025 - changed again to prior name: this way it has acess to both values
                 parameter_values['data'] = a[np.newaxis, np.newaxis, :]
                 parameter_values['epoch_data'] = a[np.newaxis, np.newaxis, :]
@@ -1431,7 +1460,6 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
             dpg.delete_item(f"{tab_label}_spec_group")
             dpg.delete_item(f"{tab_label}_progress_bar")
 
-        window_len = 512
         if flag==None:
             for no in ['0','1']:
                 tag = f"{tab_label}_s{no}"
@@ -1452,6 +1480,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
             raw=signal2['Y']
         else: raw = signal1['Y']
 
+        window_len = 512
         if flag==None:
             step = window_len // 8
             nfft = window_len
@@ -1552,6 +1581,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
         freqs = freqs[mask]
         
         K = int(parameter_values['Kmax'])
+        print(parameter_values)
         starts = np.arange(0, len(raw)-window_len+1, step)
         matrix = np.zeros((len(freqs), len(starts)))
         for idx, s in enumerate(starts):
@@ -1648,7 +1678,7 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                 else: signal2 = signal
 
         if dpg.does_item_exist(f"{tab_label}_size_warning"): dpg.delete_item(f"{tab_label}_size_warning")
-        
+        # parameter_values['method'] = 'direct'
         s1, s2 = parameter_values['a'], parameter_values['v']
         if len(s1) == len(s2) and parameter_values['mode'] == 'valid':
             parameter_values['mode'] = 'full'
@@ -1741,10 +1771,10 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                         label=s,
                         items=labels,  # <-- customize your options
                         default_value='---',
-                        callback=different_combo,
-                        user_data=(tab_label, combos),
                         tag = f"{tab_label}_s{i}",
                         width=200
+                        # callback=different_combo,
+                        # user_data=(tab_label, combos),
                     )
                 combos[s] = input_id
             dpg.add_button(label='Plot Cross-Correlation', callback=plot,width=200)      
@@ -1765,6 +1795,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
     Merge = []
     per_file = {}
     per_tag = {}
+    parameter_values['fs'] = 250
 
     for i, tag in enumerate(tags):
         file = extract_file_from_series_tag(tag)
@@ -2516,9 +2547,9 @@ def change_inf_line_color(color_id):
             dpg.add_theme_color(dpg.mvPlotCol_Line, colors[color_id], category=dpg.mvThemeCat_Plots)
     return theme_id
 
-def change_line_thickness(thickness):
+def change_line_thickness(thickness, component = dpg.mvLineSeries):
     with dpg.theme() as theme_id:
-        with dpg.theme_component(dpg.mvLineSeries):
+        with dpg.theme_component(component):
             dpg.add_theme_style(dpg.mvPlotStyleVar_LineWeight, thickness, category=dpg.mvThemeCat_Plots)
     return theme_id
 
@@ -3122,11 +3153,14 @@ def DefaultFilter(sender,app_data,user_data):
     
     band = dpg.get_value(item=f"{tab_tag}_default_wn")[:2]
 
+    print("----------------")
     for series in active_series:
         signal=getSignalbyIdx(window_id,tab_tag,series,mode=signal_mode)
         clean, _ = pre.removeCardiacComponent(signal, band)
         clean = np.ascontiguousarray(clean)
         updateSignalbyIdx(clean,tab_tag,series,mode=signal_mode)
+        snr = (10*np.log10(np.sum(np.array(signal['Y'])**2)/np.sum((signal['Y']-clean)**2)))
+        print(f"SNR: {snr/100:.3f}")
 
     title = 'Standard Filter'
     update_plot_td(tab_tag,signal_tags, title,signal_mode = plot_mode)
@@ -3206,6 +3240,8 @@ def CustomFilter(sender,app_data,user_data):
             y = stream['Y']
             filtered = pre.call_function2('filtfilt', *args, y)
             updateSignalbyIdx(np.ascontiguousarray(filtered),tab_tag,tag, mode=mode)
+            snr = (10*np.log10(np.sum(np.array(y)**2)/np.sum(y-filtered)**2))
+            print(f"{func} SNR: {snr/100:.3f}")
 
         title = f'Custom Filter: {func}'
         update_plot_td(tab_tag,signal_tags, title,signal_mode=mode)
@@ -3504,6 +3540,7 @@ def insert_events(sender, app_data, user_data):
                 new_x = [d.timestamp() for d in new_time]
                 updateKeySignalbyIdx(new_x,tab_tag,series[i],'X')
                 dpg.configure_item(f"x_axis_{tab_tag}",scale=dpg.mvPlotScale_Time)
+                dpg.configure_item(f"x_axis_{tab_tag}",label='Time (UTC)')
                 dpg.configure_item(series[i], x=new_x)
             else: 
                 new_x = signal['X']
@@ -3546,13 +3583,14 @@ def insert_events(sender, app_data, user_data):
             #     if window_type == 'Combined': app_state['windows'][window_id]['Files'][file]['Data'][tab_tag].pop('Events')
             #     else: app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx].pop('Events')
 
-        
 
-        if scatter:
+        if scatter: 
             for i, point in enumerate(scatter):
                 idx, type, time = point
-                tag = f"{tab_tag}_{type}_{idx}_{i}"
-                dpg.add_inf_line_series(parent=f"y_axis_{tab_tag}", x=[idx], label=f"{type} - {time}", tag=tag)
+                tag = f"{tab_tag}_{type}_{time}"
+                if not dpg.does_item_exist(tag): 
+                    m = dpg.add_inf_line_series(parent=f"y_axis_{tab_tag}", x=[idx], label=f"{type} - {time}", tag=tag)
+                    dpg.bind_item_theme(m, change_line_thickness(5, component=dpg.mvInfLineSeries))
                 signal_tags[tag] = True
 
             scatter = np.array(scatter, dtype=object)
@@ -3573,7 +3611,6 @@ def insert_events(sender, app_data, user_data):
                     dpg.add_text('By Event:')
                     for day in types:
                         toggleType(signal_tags,parent=f"{new_parent}_events", orientation=True, user_data=(day, window_id, tab_tag))  
-
             if window_type == 'Combined': align_events(sender,app_data,(tab_tag,signal_tags))  
         else: 
             dpg.add_text("No Events in the present recordings!", parent=f"{tab_tag}_add_events")
@@ -3818,6 +3855,8 @@ def stimulation_timeline(sender,app_data,user_data):
             x = stream[side]['X']
             if isinstance(x[0],str):
                 for xx in x: stimulation[side]['X'].append(utl.parse_datetime(xx).timestamp())
+            elif isinstance(x[0],float):
+                for xx in x: stimulation[side]['X'].append(xx)
             else:
                 for xx in x: stimulation[side]['X'].append(xx.timestamp())
             for yy in y: stimulation[side]['Y'].append(yy)
@@ -3974,7 +4013,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{plot_tag}", scale=dpg.mvPlotScale_Time)
-            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{plot_tag}")
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µVP)", tag=f"y_axis_{plot_tag}")
 
             # max_timestamp = datetime(1970, 1, 1, 2, 0, 0).timestamp()
             max_timestamp = 2*60*60
@@ -4101,8 +4140,6 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         series_label = info['label']
         side = series_label.split(' ')[0]
 
-        print(len(x))
-
         stream = getSignalbyIdx(window_id,tab_tag,tag)
         stream = DH.correctMissingTimeline(data,stream)[0]
         new_x,y = stream[side]['X'],stream[side]['Y']
@@ -4116,7 +4153,7 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         # threshold = np.sqrt(np.mean(np.array(y)**2))
 
         # '''USING ITERATIVE RMS'''
-        # rms = np.sqrt(np.mean(y**2))
+        rms = np.sqrt(np.mean(y**2))
 
         # for _ in range(3):  # Iterate a few times
         #     y = y[np.abs(y) <= 3 * rms]
@@ -4129,7 +4166,7 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
        
         
         mask = copy > factor*threshold
-        copy[mask] = threshold
+        copy[mask] = rms
         dpg.set_value(tag,[new_x,copy.tolist()])
         progress = np.round((i+1)/len(tags),2)
         dpg.set_value(f"{tab_tag}_plot_progress", progress)
@@ -4213,6 +4250,7 @@ def stimulation_window(Data, window_id, file_id = None):
     dpg.add_text(f"Frequency: {stimulation['Frequency']} Hz", parent=info_parent)
     dpg.add_text(f"Amplitude: {stimulation['Amplitude']} mA", parent=info_parent)
     dpg.add_text(f"Pulse Width: {stimulation['Pulse']} µs", parent=info_parent)
+    dpg.add_text(f"Type: {stimulation['Type']}", parent=info_parent)
     dpg.add_text(f"Electrodes: {stimulation['Stim_electrodes']}", parent=info_parent)
     dpg.add_separator(parent=info_parent)
     dpg.add_text(f"Sensing Channel: {ch}", parent=info_parent)
@@ -4394,7 +4432,7 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
             dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag=f"x_axis_{tab_tag}")
-            dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µV^2/Hz)", tag=f"y_axis_{tab_tag}")
+            dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µVp)", tag=f"y_axis_{tab_tag}")
 
             for idx, signal in enumerate(signals):
                 date = utl.parse_datetime(signal['DateInitial'])
@@ -4446,8 +4484,8 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
 
             mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
-            m = dpg.add_scatter_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag}", tag=f"{tab_tag}_mean")
-            # dpg.bind_item_theme(m, 'highlight_line_thickness_theme')
+            m = dpg.add_line_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag}", tag=f"{tab_tag}_mean")
+            dpg.bind_item_theme(m, change_line_thickness(5))
             mean_power = {'Y': mean_power, 'X': p['X']}
             for band in bands.items():
                 info = extract_psd_features(mean_power, band)
@@ -4488,11 +4526,12 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
     with dpg.group(label = f"{tab_tag}_group" , parent=tab_tag, horizontal=True):
         
-        with dpg.plot(label=f"{mode} Signals", height=400, width=800, tag=plot_tag):
+        dpg.add_group(width=600, tag=f"{tab_tag}_plot_group", horizontal=False)
+        with dpg.plot(label=f"{mode} Signals", height=400, width=800, tag=plot_tag, parent=f"{tab_tag}_plot_group"):
             # dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time", tag=f"x_axis_{tab_tag}", scale = dpg.mvPlotScale_Time)
-            y_left = dpg.add_plot_axis(dpg.mvYAxis, label="Mean LFP Power (µV^2/Hz)", tag=f"y_axis_{tab_tag}_left")
+            y_left = dpg.add_plot_axis(dpg.mvYAxis, label="Mean LFP Power (µVp)", tag=f"y_axis_{tab_tag}_left")
             #y_right = dpg.add_plot_axis(dpg.mvYAxis, label="Stimulation Amplitude (mA)", tag=f"y_axis_{tab_tag}_right")
 
             dpg.set_axis_limits_auto(y_left)
@@ -4568,21 +4607,21 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         with dpg.group(label = f"{tab_tag}_buttons", parent=f"{tab_tag}_group",):
             toggleVisibility(signal_tags,parent=tab_tag, group=f"{tab_tag}_buttons", user_data = window_id)
             with dpg.group(horizontal=True):
-                with dpg.child_window(height=250, width=100):
+                with dpg.child_window(height=150, width=120):
                     dpg.add_text('By Day: ')
                     for day in days:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag)) #check day
-                with dpg.child_window(height=250, width=100):
+                with dpg.child_window(height=150, width=120):
                     dpg.add_text('By Hemisphere: ')
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag)) #check hemisphere
                 if len(ocd_events)>1:
-                    with dpg.group():
+                    with dpg.child_window(height=150, width=120):
                         dpg.add_text('By Event: ')
                         for ocd in ocd_events:
                             toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(ocd, window_id, tab_tag)) #check hemisphere
             #dpg.add_button(label='Normalize',callback=Volt2dB, user_data=(signal_tags,tab_tag),parent=f"{tab_tag}_buttons")
-            dpg.add_slider_float(label = 'Remove Outlier RMS', callback=RemoveTimelineOutliers,default_value=3.0,user_data=(tab_tag,signal_tags), width=100, min_value=0,max_value=24)
+            dpg.add_slider_float(label = 'Remove Outlier', callback=RemoveTimelineOutliers,default_value=3.0,user_data=(tab_tag,signal_tags), width=100, min_value=0,max_value=100)
             if flag == True:
                 dpg.add_text( 'Warning: There are missing points in Timeline', tag=f"{tab_tag}_wmp", parent=f"{tab_tag}_buttons")
                 dpg.add_checkbox(label='Show missing points',parent=f"{tab_tag}_buttons", default_value=False, callback=changeTimelinePlot, user_data=(signal_tags, signals, data, y_left))
@@ -4671,7 +4710,7 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                 dpg.bind_colormap(plot_tag, 0)
                 dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
-                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µV^2/Hz)", tag=f"y_axis_{tab_tag_art}")
+                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µVp)", tag=f"y_axis_{tab_tag_art}")
 
                 for idx, signal in enumerate(artifacts):
                    
@@ -4705,7 +4744,8 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
                 
                 mean_power = np.mean([signal['Y'] for signal in artifacts], axis = 0)
-                dpg.add_scatter_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag_art}", tag=f"{tab_tag_art}_mean")
+                m = dpg.add_line_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag_art}", tag=f"{tab_tag_art}_mean")
+                dpg.bind_item_theme(m, change_line_thickness(5))
                 mean_power = {'Y': mean_power, 'X':x}
 
                 if not dpg.does_item_exist(f"{tab_tag_art}_mean_metric"): dpg.add_collapsing_header(tag=f"{tab_tag_art}_mean_metric",parent=tab_tag_art,label = 'Mean')
@@ -4748,7 +4788,7 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
             dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
-            dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
+            dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µV)", tag=f"y_axis_{tab_tag}")
             
             parent = f"y_axis_{tab_tag}"
             plot_td(signals,parent,tab_tag,signal_tags)
@@ -4783,7 +4823,7 @@ def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
             dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
-            dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
+            dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µV)", tag=f"y_axis_{tab_tag}")
             
             parent = f"y_axis_{tab_tag}"
             plot_td(signals,parent,tab_tag,signal_tags)
@@ -4809,7 +4849,7 @@ def indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
             dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
-            dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
+            dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µV)", tag=f"y_axis_{tab_tag}")
             
             parent = f"y_axis_{tab_tag}"
             plot_td(signals,parent,tab_tag,signal_tags)
@@ -4858,7 +4898,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
             dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
-            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µVp)", tag=f"y_axis_{tab_tag}")
             
             for idx, file in enumerate(files):
                 app_state['windows'][window_id]['Files'][idx]['Data'][tab_tag] = {}
@@ -4922,7 +4962,8 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
 
 
             mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
-            dpg.add_scatter_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag}", tag=f"{tab_tag}_mean")
+            m = dpg.add_line_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag}", tag=f"{tab_tag}_mean")
+            dpg.bind_item_theme(m, change_line_thickness(5))
             mean_power = {'Y': mean_power, 'X': p['X']}
             for band in bands.items():
                 info = extract_psd_features(mean_power, band)
@@ -4944,7 +4985,7 @@ def comb_streaming_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
             dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
-            dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
+            dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µV)", tag=f"y_axis_{tab_tag}")
             
             parent = f"y_axis_{tab_tag}"
 
@@ -4980,7 +5021,7 @@ def comb_setup_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                 dpg.bind_colormap(plot_tag, 0)
                 dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
                 dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
-                dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
+                dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µV)", tag=f"y_axis_{tab_tag}")
                 
                 parent = f"y_axis_{tab_tag}"
                 for idx, file in enumerate(files):
@@ -5026,7 +5067,7 @@ def comb_setup_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                 dpg.bind_colormap(plot_tag, 0)
                 dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
-                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µV^2/Hz)", tag=f"y_axis_{tab_tag_art}")
+                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µVp)", tag=f"y_axis_{tab_tag_art}")
 
                 for fdx, file in enumerate(files):
                     file['Data'][tab_tag_art]= {'Signals': []}
@@ -5111,7 +5152,7 @@ def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
             dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
-            dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
+            dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µV)", tag=f"y_axis_{tab_tag}")
             
             parent = f"y_axis_{tab_tag}"
 
@@ -5141,7 +5182,7 @@ def comb_indefinite_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
             dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
-            dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
+            dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µV)", tag=f"y_axis_{tab_tag}")
             
             parent = f"y_axis_{tab_tag}"
 
@@ -5198,7 +5239,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}", scale=dpg.mvPlotScale_Time)
-            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP (mV)", tag=f"y_axis_{tab_tag}")
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Mean LFP Power (µVp)", tag=f"y_axis_{tab_tag}")
             # yy_axis = dpg.add_plot_axis(dpg.mvYAxis2, label="Stimulation (mA)", tag=f"yy_axis_{tab_tag}", opposite=True)
             
             for idx, file in enumerate(files):
