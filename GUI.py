@@ -58,11 +58,12 @@ global_bands = ft.bands
 electrodes_names, unchecked_channels = {}, {}
 app_state = {"windows": {}}
 colors = [
-        (255, 0, 0, 255),      # red
-        (255, 165, 0, 255),    # orange
         (0, 0, 255, 255),      # blue
-        (255, 255, 0, 255),    # yellow
+        (255, 0, 0, 255),      # red
+        (0,0,0,0),              # black
         (0, 255, 0, 255),      # green
+        (255, 165, 0, 255),    # orange
+        (255, 255, 0, 255),    # yellow
     ]
 #-----------------------------------------UTILS----------------------------------------
 
@@ -451,6 +452,9 @@ def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False)
     '''
     #extra =  len(signal_tags)
     window_id = extract_window_id(tab_tag)
+    if events:
+        event_types = [signal['Type'] for signal in signals]
+        event_types = np.unique(event_types).tolist()
     
     for idx, signal in enumerate(signals):
         series_tag = f"{tab_tag}_series_{idx}" #+extra
@@ -495,8 +499,10 @@ def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False)
                 segment_tag = f"{tab_tag}_file_{files}_series_{serie_idx}_{type_event}_{idx}"
             else:
                 segment_tag = f"{tab_tag}_series_{serie_idx}_{type_event}_{idx}"
+            
             if not dpg.does_item_exist(segment_tag):
                 dpg.add_line_series(x, y, label=f"{type_event} {signal['Date']} ({channel})", parent=parent, tag=segment_tag)
+                dpg.bind_item_theme(segment_tag,change_inf_line_color(event_types.index(type_event)))
                 signal_tags[segment_tag] = True 
             else:
                 print(f"Skipping duplicate series: {combined_tag}")
@@ -722,6 +728,7 @@ def apply_feat(func, parameter_values, raw):
                 parameter_values['M'] = len(np.array(raw))
             try:
                 nfft = int(parameter_values['nfft'])
+                window_len = nfft
             except Exception: 
                 window_len = 512
                 step = window_len // 4
@@ -739,7 +746,9 @@ def apply_feat(func, parameter_values, raw):
                 Sxx_tapers = []
                 for taper in windows:
                     S1 = np.fft.rfft(xw * taper, n=nfft)
-                    Sxx_tapers.append((np.abs(S1)**2))
+                    scale = 1 / (250 * np.sum(taper**2))
+                    psd = (np.abs(S1)**2) * scale
+                    Sxx_tapers.append(psd)
                 Sxx_sum += np.mean(Sxx_tapers, axis=0)
                 n_windows += 1
 
@@ -765,7 +774,6 @@ def apply_feat(func, parameter_values, raw):
             a = np.array(raw)
             
             try:
-                print(parameter_values)
                 #older version was 'data' and not 'epoch_data' --> 10.06.2025 - changed again to prior name: this way it has acess to both values
                 parameter_values['data'] = a[np.newaxis, np.newaxis, :]
                 parameter_values['epoch_data'] = a[np.newaxis, np.newaxis, :]
@@ -786,13 +794,22 @@ def apply_feat(func, parameter_values, raw):
             except Exception as e: print(e)
 
         case _: 
-            
             try: 
                 signal = pre.call_function(func, parameter_values)
-                return signal
-            except Exception as e: print(e) 
+            except Exception as e: 
+                return str(e) 
 
     return signal
+
+def display_error(tab_tag,e):
+    doc_container = f"{tab_tag}_ft_doc"
+    if dpg.does_item_exist(doc_container):
+        v = dpg.get_value(f"{doc_container}_doc")
+        dpg.delete_item(doc_container,children_only=True)
+        ee = dpg.add_text(e, parent=doc_container)
+        dpg.add_separator(parent=doc_container)
+        dpg.add_text(v, parent=doc_container, tag = f"{doc_container}_doc")
+        dpg.bind_item_theme(ee, change_text_color(1))
 
 def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values, mode = None):
     #tab_label = f"{tab_tag}_{func}"
@@ -806,7 +823,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
     dpg.delete_item(f"{tab_label}_plot_group")
 
     units = 'µV^2/Hz'
-    if func == 'periodogram' and parameter_values['scaling'] == 'spectrum':
+    if 'scaling' in parameter_values and parameter_values['scaling'] == 'spectrum':
         units = 'µV^2'
 
     if not 'Data' in app_state['windows'][window_id]:
@@ -823,6 +840,8 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
         else: mode = None
     else: mode = None
 
+
+    print(parameter_values)
     with dpg.group(horizontal=True, parent = tab_label,tag=f"{tab_label}_plot_group"):
         with dpg.plot(label=f"Spectral Analysis - {func}", height=400, width=600, tag = f"{tab_label}_plot"):
             dpg.bind_colormap(f"{tab_label}_plot", 0)
@@ -928,18 +947,21 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 #NORMAL PSD
                 if comparing == False:
                     y = stream['Y']
-                    signal = apply_feat(func,parameter_values,y)
+                    try:
+                        signal = apply_feat(func,parameter_values,y)
+                        if isinstance(signal, str): 
+                            display_error(tab_tag, signal)
+                            return
+                        p = contiguous_array(signal, func)
+                        max_p = max(max_p,np.max(p['Y']))         
+                        dpg.add_line_series(p['X'],p['Y'], label=series_label, parent=y_axis, tag = f"{tab_label}_{series_label}_{func}")
+                    except Exception as e: 
+                        display_error(tab_tag,e)
+                        return
                     
-                    # for key in parameter_values.keys():
-                    #     if key == 'x' or key == 'y':
-                    #         print(key)
-                    #     else: print(parameter_values[key])
-                        
-                    p = contiguous_array(signal, func)   
+                    
                     power.append(p) 
                     freqs, psd = p['X'], p['Y']      
-                    max_p = max(max_p,np.max(p['Y']))         
-                    dpg.add_line_series(p['X'],p['Y'], label=series_label, parent=y_axis, tag = f"{tab_label}_{series_label}_{func}")
                     ploted_tags.append(f"{tab_label}_{series_label}_{func}")
 
                     if not dpg.does_item_exist(f"{tab_label}_{series_label}"):
@@ -964,7 +986,6 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 for i in range(len(power)-1):
                     if len(power[i]['Y']) != len(power[i+1]['Y']): 
                         flag = True
-                
                 
                 if flag == True: #checks if they DON'T have the same len
 
@@ -1020,7 +1041,8 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 freqs = np.asarray(freqs, dtype=np.float32)
                 all_mean = np.asarray(all_mean, dtype=np.float32)
                 # all_mean = all_mean*max_p/np.max(all_mean) --> makes it like an envelope, not a mean
-                dpg.add_line_series(freqs.tolist(), all_mean.tolist(), label="Mean Power", parent=y_axis, tag=f"{tab_label}_mean")
+                m = dpg.add_line_series(freqs.tolist(), all_mean.tolist(), label="Mean Power", parent=y_axis, tag=f"{tab_label}_mean")
+                dpg.bind_item_theme(m,change_line_thickness(3))
 
             dpg.set_axis_limits(x_axis,min(freqs),max(freqs))
             dpg.set_axis_limits(y_axis,min(psd),max(psd))
@@ -1407,7 +1429,7 @@ def plot_coherence(parameter_values, tab_label):
     p2['x'] = parameter_values['y']
     _, pyy = pre.call_function('welch', p2)
 
-    im = pxy/np.sqrt(pxx*pxy)
+    im = pxy/np.sqrt(pxx*pyy)
     ab = np.abs(im)[mask]
     IMcoh = np.abs(np.imag(im)[mask])
 
@@ -1416,7 +1438,7 @@ def plot_coherence(parameter_values, tab_label):
             with dpg.group(parent=f"{tab_label}_plot_group", tag = f"{tab_label}_plot_group_text"):
                 dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
                 dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
-            with dpg.plot(label = 'Coherence', width=-1, tag=f"{tab_label}_plot"):
+            with dpg.plot(label = 'Coherence', width=-1, height=400, tag=f"{tab_label}_plot"):
                 dpg.bind_colormap(f"{tab_label}_plot", 0)
                 dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
@@ -1430,7 +1452,7 @@ def plot_coherence(parameter_values, tab_label):
   
     dpg.add_line_series(freq.tolist(), coh.tolist(), label=f"Coherence | {signal1['Channel']}-{signal2['Channel']}", parent=f"{tab_label}_y_axis")
     dpg.add_line_series(freq.tolist(), IMcoh.tolist(), label=f"Imaginary Coherence | {signal1['Channel']}-{signal2['Channel']}", parent=f"{tab_label}_y_axis")
-    dpg.add_line_series(freq.tolist(), ab.tolist(), label=f"Absolute Coherence | {signal1['Channel']}-{signal2['Channel']}", parent=f"{tab_label}_y_axis")
+    # dpg.add_line_series(freq.tolist(), ab.tolist(), label=f"Absolute Coherence | {signal1['Channel']}-{signal2['Channel']}", parent=f"{tab_label}_y_axis")
     dpg.set_axis_limits(f"{tab_label}_y_axis",ymin=0,ymax=1)
     # p = {'X': list(freq), 'Y':list(coh)}
     # info = extract_timeline_features(p)
@@ -1452,6 +1474,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
         tab_label = f"{tab_tag}_df_multitaper coherence"
     else: tab_label = f"{tab_tag}_multitaper coherence"
     window_id = extract_window_id(tab_tag)
+    wt = extract_type_window(window_id)
     bands = getBandsByTab(tab_tag)
 
     def calculate():
@@ -1500,11 +1523,11 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
 
         tapers = pre.call_function('dpss', parameter_values, module = 'ssw')
 
-        Sxx_sum = np.zeros(nfft//2+1)
-        Syy_sum = np.zeros(nfft//2+1)
+        Sxx_sum = np.zeros(nfft//2+1, dtype=np.complex128)
+        Syy_sum = np.zeros(nfft//2+1, dtype=np.complex128)
         Sxy_sum = np.zeros(nfft//2+1, dtype=np.complex128)
         n_windows = 0
-
+        coh_segments,imcoh_segments = [], []
         for start in range(0, len(raw) - window_len + 1, step):
             xw = signal1['Y'][start:start+window_len]
             yw = signal2['Y'][start:start+window_len]
@@ -1512,43 +1535,70 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
             for taper in tapers:
                 S1 = np.fft.rfft(xw * taper, n=nfft)
                 S2 = np.fft.rfft(yw * taper, n=nfft)
-                Sxx_tapers.append(np.abs(S1)**2)
-                Syy_tapers.append(np.abs(S2)**2)
+                # Sxx_tapers.append(np.abs(S1)**2)
+                # Syy_tapers.append(np.abs(S2)**2)
+                Sxx_tapers.append(S1*np.conj(S1))
+                Syy_tapers.append(S2*np.conj(S2))
                 Sxy_tapers.append(S1 * np.conj(S2))
             Sxx_sum += np.mean(Sxx_tapers, axis=0)
             Syy_sum += np.mean(Syy_tapers, axis=0)
             Sxy_sum += np.mean(Sxy_tapers, axis=0)
             n_windows += 1
 
-        Sxx = Sxx_sum / n_windows
-        Syy = Syy_sum / n_windows
+            coh_seg = np.abs(Sxy_sum)**2 / (Sxx_sum.real * Syy_sum.real)
+            imcoh_seg = np.abs(np.imag(Sxy_sum) / np.sqrt(Sxx_sum.real * Syy_sum.real))
+
+            coh_segments.append(coh_seg)
+            imcoh_segments.append(imcoh_seg)
+
+        Sxx = Sxx_sum.real / n_windows
+        Syy = Syy_sum.real / n_windows
         Sxy = Sxy_sum / n_windows
 
-        coh = np.abs(Sxy)**2 / (Sxx * Syy)
-        freq = np.fft.rfftfreq(nfft, d=1/250)
+        # coh = np.abs(Sxy)**2 / (Sxx * Syy)
 
+        #3rd
+        coh = np.mean(coh_segments, axis=0)
+
+
+        freq = np.fft.rfftfreq(nfft, d=1/250)
         mask = freq <= 100
         freq, coh = freq[mask], coh[mask]
 
-        plot(signal1,signal2,freq,coh)
+        #1st
+        # im = Sxy/np.sqrt(Sxx*Syy)
+        # imcoh = np.abs(np.imag(im)[mask])
+        # ab = np.abs(im)[mask]
+
+        #2nd
+        # imcoh = np.abs(np.imag(Sxy) / np.sqrt(Sxx * Syy))
+        
+        #3rd
+        imcoh = np.mean(imcoh_segments, axis=0)
+        
+        imcoh = imcoh[mask]
+        label=f"{signal1['Channel']}-{signal2['Channel']}"
+        plot(signal1,signal2,freq,coh,imcoh, label)
 
         if not dpg.does_item_exist(f"{tab_label}_coh_spec"):
             dpg.add_button(label = 'Plot Coherence Spectrogram',width=-1,tag=f"{tab_label}_coh_spec", callback=spectrogram, user_data = (signal1,signal2, tapers, freq, mask), parent=tab_label)
         else:
             dpg.set_item_user_data(f"{tab_label}_coh_spec", user_data=(signal1,signal2, tapers, freq, mask))
 
-    def plot(signal1,signal2,freq,coh):
+    def plot(signal1,signal2,freq,coh,imcoh,label):
         with dpg.group(parent=tab_label, tag=f"{tab_label}_plot_group"):
             dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
             dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
-            with dpg.plot(label = 'Multitaper Coherence', width=-1, tag=f"{tab_label}_plot"):
+            with dpg.plot(label = 'Multitaper Coherence', width=-1, height=400, tag=f"{tab_label}_plot"):
                 dpg.bind_colormap(f"{tab_label}_plot", 0)
                 dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
                 y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Coherence", tag= f"{tab_label}_y_axis")
 
+
                 # freq, coh = freq.tolist(), coh.tolist()
-                dpg.add_line_series(freq.tolist(), coh.tolist(), label='Multitaper Coherence', parent=y_axis)
+                dpg.add_line_series(freq.tolist(), coh.tolist(), label=f'Multitaper Coherence | {label}', parent=y_axis)
+                dpg.add_line_series(freq.tolist(), imcoh.tolist(), label=f'Imaginary Multitaper Coherence | {label}', parent=y_axis)
                 dpg.set_axis_limits(y_axis,ymin=0,ymax=1)
 
                 for b,band in bands.items():
@@ -1583,7 +1633,6 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
         freqs = freqs[mask]
         
         K = int(parameter_values['Kmax'])
-        print(parameter_values)
         starts = np.arange(0, len(raw)-window_len+1, step)
         matrix = np.zeros((len(freqs), len(starts)))
         for idx, s in enumerate(starts):
@@ -1607,7 +1656,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
         
         matrix = np.flipud(np.array(matrix))
         times = (starts + window_len/2) / 250
-
+        header_tag = f"{tab_label}_cot"
         with dpg.group(parent=tab_label, tag=f"{tab_label}_spec_group", horizontal=True):
             dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Viridis,
                                             min_scale = 0, max_scale=1, height=400)
@@ -1623,6 +1672,32 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
                     
                 dpg.bind_colormap(f"{tab_label}_spec", dpg.mvPlotColormap_Viridis)
 
+            if dpg.does_item_exist(header_tag): dpg.delete_item(header_tag, children_only=True)
+
+            with dpg.collapsing_header(tag=header_tag, parent=tab_label, label='Coherence over time'):
+
+                with dpg.theme() as alpha_theme:
+                    with dpg.theme_component(0):
+                        dpg.add_theme_style(dpg.mvPlotStyleVar_FillAlpha, 0.5, category=dpg.mvThemeCat_Plots)
+
+                with dpg.plot(label='Coherence over time', width=-1):
+                    dpg.add_plot_legend()
+                    x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
+                    y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Power (dB)")
+                    
+                    for b,v in bands.items():
+                        mask = (freqs >= v[0]) & (freqs < v[1])
+                        if np.any(mask):
+                            power = np.flipud(matrix)[mask, :]
+                            std = np.std(matrix[mask, :], axis=0)
+                            min_std = power-std
+                            max_std = power+std
+
+                            c = dpg.add_shade_series(times,min_std,y2=max_std,label = f"{b} Std. Deviation", parent=y_axis)
+                            dpg.bind_item_theme(c, alpha_theme)
+                            l = dpg.add_line_series(times,power,label = f"{b} Power", parent=y_axis)
+                            dpg.bind_item_theme(l, change_line_thickness(3))
+                  
     combos = {}
     if flag == None:
         with dpg.group(horizontal=True,parent=tab_label):
@@ -1889,6 +1964,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                 
                 dpg.add_text('Band Power over Time', parent=f"{tab_label}_merged")
                 dpg.add_separator(parent=f"{tab_label}_merged")
+
                 for _, value in per_tag.items():
                     sxx, plot_tag, plot_label, stream_events, time = value
                     header_tag = f"{plot_tag}_header"
@@ -1902,8 +1978,9 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Power (dB)")
                             
                             for b,v in bands.items():
-                                mask = (frequencies*250 >= v[0]) & (frequencies*250 < v[1])
+                                mask = (frequencies >= v[0]) & (frequencies < v[1])
                                 if np.any(mask):
+                    
                                     power = np.flipud(sxx)[mask, :]
                                     std = np.std(sxx[mask, :], axis=0)
                                     min_std = power-std
@@ -1913,7 +1990,8 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                                     time_array = np.linspace(emin,emax,int(-emin+emax+1))
                                     dpg.add_shade_series(time_array,min_std,y2=max_std,label = f"{b} Std. Deviation", tag=f"{plot_tag}_{b}_std", parent=y_axis)
                                     dpg.bind_item_theme(f"{plot_tag}_{b}_std", alpha_theme)
-                                    dpg.add_line_series(time_array,power,label = f"{b} Power", tag=f"{plot_tag}_{b}_mean", parent=y_axis)
+                                    l = dpg.add_line_series(time_array,power,label = f"{b} Power", tag=f"{plot_tag}_{b}_mean", parent=y_axis)
+                                    dpg.bind_item_theme(l, change_line_thickness(3))
 
                             if stream_events != None and wt == 'Individual':
                                 for event in stream_events:
@@ -2507,6 +2585,8 @@ def update_table(table_tag, type):
 def before_vs_after(sender,app_data,user_data):
     signal_tags,tab_label,func,tab_tag,parameter_values = user_data
     plot_filtered_signal(signal_tags,tab_label,func,tab_tag,parameter_values)
+
+#------------GUI PRETTY-----------------
 
 def switch_theme(sender, app_data, user_data):
     dpg.bind_theme(user_data)
@@ -3285,7 +3365,7 @@ def DefaultFeatures(sender, app_data, user_data):
     if dpg.does_item_exist(tab_label):
         dpg.delete_item(tab_label, children_only=True)
     else:
-        dpg.add_tab(label=f"Default {func}", parent=f"{tab_tag}_features_bar", tag=tab_label)  
+        dpg.add_tab(label=f"Default {func}", parent=f"{tab_tag}_features_bar", tag=tab_label, closable=True)  
     
     dates = []
     for tag in tags: 
@@ -3365,7 +3445,6 @@ def CustomFeatures(sender,app_data,user_data):
             params, documentation = fill_params_features('hilbert')
         else: params, documentation = fill_params_features(app_data) 
 
-        print(documentation)
         documentation = pre.extract_params_and_returns(documentation)
         
         if app_data == 'multitaper coherence':
@@ -3381,7 +3460,7 @@ def CustomFeatures(sender,app_data,user_data):
             for k in ['s1', 's2','b1', 'b2','n_bins']:
                 params[k] = 'choose'
 
-        dpg.add_text(documentation, parent=doc_container)       
+        dpg.add_text(documentation, parent=doc_container, tag = f"{doc_container}_doc")       
         if not params:
             dpg.add_text("No parameters found", parent=param_container)
             return
@@ -3479,7 +3558,7 @@ def CustomFeatures(sender,app_data,user_data):
         if dpg.does_item_exist(tab_label):
             dpg.delete_item(tab_label, children_only=True)
         else:
-            dpg.add_tab(label=f"{func}", parent=f"{tab_tag}_features_bar", tag=tab_label)  
+            dpg.add_tab(label=f"{func}", parent=f"{tab_tag}_features_bar", tag=tab_label, closable=True)  
         
         match func:
             case 'spectrogram': 
@@ -3514,7 +3593,6 @@ def insert_events(sender, app_data, user_data):
         
         streaming_file = app_data['file_path_name']
         events = utl.read_event_file(streaming_file)
-        events_times = {}
         scatter, dates = [], []
         series = getActiveSeries(signal_tags)
         window_id = extract_window_id(tab_tag)
@@ -3591,12 +3669,16 @@ def insert_events(sender, app_data, user_data):
 
 
         if scatter: 
+            event_types = [s[1] for s in scatter]
+            event_types = np.unique(event_types).tolist()
             for i, point in enumerate(scatter):
-                idx, type, time = point
-                tag = f"{tab_tag}_{type}_{time}"
+                idx, etype, time = point
+                tag = f"{tab_tag}_{etype}_{time}"
                 if not dpg.does_item_exist(tag): 
-                    m = dpg.add_inf_line_series(parent=f"y_axis_{tab_tag}", x=[idx], label=f"{type} - {time}", tag=tag)
-                    dpg.bind_item_theme(m, change_line_thickness(5, component=dpg.mvInfLineSeries))
+                    m = dpg.add_inf_line_series(parent=f"y_axis_{tab_tag}", x=[idx], label=f"{etype} - {time}", tag=tag)
+                    # dpg.bind_item_theme(m, change_line_thickness(5, component=dpg.mvInfLineSeries))
+                    dpg.bind_item_theme(m, change_inf_line_color(event_types.index(etype)))
+
                 signal_tags[tag] = True
 
             scatter = np.array(scatter, dtype=object)
@@ -5771,9 +5853,9 @@ def load_main_ui():
                 dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
             with dpg.menu(label="Settings"):
                 dpg.add_menu_item(label="Change electrodes' names", callback=change_electrodes_names)
-                dpg.add_menu_item(label="Save All Plots")
-                dpg.add_menu_item(label="Save All Tables")
-                dpg.add_menu_item(label="Save Workspace")
+                # dpg.add_menu_item(label="Save All Plots")
+                # dpg.add_menu_item(label="Save All Tables")
+                # dpg.add_menu_item(label="Save Workspace")
 
         with dpg.group(horizontal=True, pos=[250, 250]):
             dpg.add_button(label="Individual/Recording Analysis", callback=create_individual_window)

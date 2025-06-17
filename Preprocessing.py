@@ -296,8 +296,8 @@ def call_function(func_name, param_dict, module = 'ss'):
     try:
         return func(*args, **kwargs)
     except Exception as e:
-        print(f"Error calling {func_name}: {e}")
-        return None
+        error = f"Error calling {func_name}: {e}"
+        return error
 
 def get_required_params(func_name, module = 'ss'):
 
