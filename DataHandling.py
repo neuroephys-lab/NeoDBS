@@ -1100,7 +1100,7 @@ def segmentTimelineEvent2(timeline, indexes):
                     flags.append(True)
                 elif x+6 > len(timeline[signal][side]['X']):
                     maxi = len(timeline[signal][side]['X'])-1
-                    mini = max-6
+                    mini = maxi-6
                     flags.append(True)
                 else: 
                     mini,maxi =  x-6, x+6

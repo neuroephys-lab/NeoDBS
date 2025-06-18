@@ -328,7 +328,7 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag):
         date = signal['Date']
         hour = f"{date.hour:02d}:{date.minute:02d}"
         hours.append(hour)
-        day = f"{date.year}-{date.month}-{date.day}"
+        day = f"{date.year}-{date.month:02d}-{date.day:02d}"
         days.append(day)
         
     days = np.unique(days).tolist()
@@ -393,10 +393,11 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
     dates = []
     for signal in signals: 
         date = utl.parse_datetime(signal['DateInitial'])
-        date = f"day {date.day:02d}/{date.month}"
+        date = f"day {date.day:02d}/{date.month:02d}"
         dates.append(date)
 
     dates = np.unique(dates).tolist()
+    print(dates)
     events = np.unique(events).tolist()
     sides = ['Left', 'Right']
 
@@ -4183,18 +4184,19 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
 
                                 mean.append(sign)
 
+            
                     if flags[idx] == True and count:
-                        meio = [x[6]]
+                        meio = [x[len(x)//2]]
                         if not dpg.does_item_exist(f"{label}_center"): dpg.add_inf_line_series(meio, label = f"{idx} center", parent = y_axis, tag = f"{label}_center")
+            # mean_array = np.nanmean(mean_array, axis = 0)[:12]
+            # ml = dpg.add_line_series(x[:12],mean_array.tolist(), label = 'MEAN', parent=y_axis)
+            # dpg.bind_item_theme(ml, change_line_thickness(5))
             if not np.any(flags) and count:
                 center_timestamp = 1*60*60
                 c = dpg.add_inf_line_series([center_timestamp],label = "Center", parent = y_axis)
                 dpg.bind_item_theme(c,change_line_thickness(10))
             
             mean_info_table(mean,f"{tab_label}_header",f"{tab_label}_table")
-            
-
-
             
 
     event_names = np.unique(event_names)
@@ -4993,7 +4995,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
 
         with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
             dpg.bind_colormap(plot_tag, 0)
-            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
             dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µVp)", tag=f"y_axis_{tab_tag}")
             
@@ -5018,7 +5020,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         for side in ['Left', 'Right']:
                             
                             sign = signal[side]
-                            label = f"day {date.day:02d}/{date.month} | {date.minute} | {side} | {signal['EventName']}"
+                            label = f"day {date.day:02d}/{date.month:02d} | {date.minute:02d} | {side} | {signal['EventName']}"
                             x = sign['X']
                             y = sign['Y']
                             
