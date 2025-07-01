@@ -5057,11 +5057,11 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     electrodes_names[ch] = ch
             dpg.add_text(f"Electrodes {DH.getSessionDate(data)} | Left: {electrodes_names[initial[0]]} | Right: {electrodes_names[initial[1]]}", parent=tab_tag)
         else: 
-            electrodes_names[ch] = ch
+            electrodes_names[initial] = initial
             dpg.add_text(f'{DH.getSessionDate(data)}: {electrodes_names[initial]}', parent=tab_tag)
 
     
-
+    plotted = []
     with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
 
         with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
@@ -5086,6 +5086,10 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         all_signals.append(signal)
                         
                         date = utl.parse_datetime(signal['DateInitial'])
+                        if plotted != []:
+                            if date in plotted:
+                                continue
+                        else: plotted.append(date)
                         app_state['windows'][window_id]['Files'][idx]['Data'][tab_tag]['Signals'].append({'left': [], 'right': []})
 
                         for side in ['Left', 'Right']:
@@ -5140,18 +5144,17 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                             #TABLE CONTENT
                             for band in bands.items():
                                 info = extract_psd_features(p, band)
-                                # temp = info['Mean Power (mean, std. dev)']
-                                temp = info['Peak Power (power, frequency)']
+                                temp = info['Mean Power (mean, std. dev)']
+                                # temp = info['Peak Power (power, frequency)']
                                 if not isinstance(temp,(int,float)): all_mean[band[0]] = temp[-1]
                                 else: all_mean[band[0]]=temp
                                 create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table", info, trial_label=band[0])
 
                             create_table(f"{tab_label}_{side}_all_mean",f"{tab_label}_{side}_all_mean_table", all_mean, trial_label=header)
-                            create_table(f"{tab_label}_{side}_{signal['EventName']}",f"{tab_label}_{side}_{signal['EventName']}_table", all_mean, trial_label= header)
+                            create_table(f"{tab_label}_{side}_{signal['EventName']}",f"{tab_label}_{side}_{signal['EventName']}_table", all_mean, trial_label=header)
 
                             tables.append(f"{tab_label}_{series_label}_table")
-
-                    
+       
 
             if not dpg.does_item_exist(f"{tab_label}_mean_metric"):
                 dpg.add_collapsing_header(label = 'MEAN POWER', tag =f"{tab_label}_mean_metric", parent = tab_label)
@@ -5613,7 +5616,9 @@ def create_multiple_window():
 
                 file_path = file['path']
                 Data = DH.getData(file_path)
-                date = DH.getSessionDate(Data)
+                if isinstance(Data,str): 
+                    dpg.add_text(f"{file['name']} corrupted.", parent=f"file_list_group_{window_id}")
+                    continue
                 impedance = DH.getImpedance(Data)
                 if not isinstance(impedance, str):
                     impedance_status, l, r = impedance
