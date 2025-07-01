@@ -2970,7 +2970,9 @@ def extract_timeline_features(p):
         peak = time
         key = 'Peak Frequency'
         peak = str(datetime.fromtimestamp(time).time())
+        peak = str(datetime.fromtimestamp(time).time())
     time = {key: peak}
+
 
 
     info = mean | norm_mean| picos | time
@@ -4251,11 +4253,11 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         rms = np.sqrt(np.mean(y**2))
 
         for _ in range(3):  # Iterate a few times
-            y = y[np.abs(y) <= 3 * rms]
+            y = y[np.abs(y) <= factor * rms]
             rms = np.sqrt(np.mean(y**2))
         # threshold =rms
 
-        '''USING MEDIA'''
+        '''USING MEDIAN'''
         mad = np.median(np.abs(y - np.median(y)))
         threshold = mad   # Or some scaled version
        

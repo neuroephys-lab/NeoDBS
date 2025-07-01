@@ -566,7 +566,7 @@ def removeCardiacComponent(raw, band, filterMethod="Fixed Peak Find"):
 
     #filterMethod = "Kurtosis"
 
-    [p1,p2] = ss.butter(4, band*2/fs, 'bp', output='ba')
+    [p1,p2] = ss.butter(5, band*2/fs, 'bp', output='ba')
     
 
     PredictedSignal = ss.wiener(filtered, mysize=125)
@@ -624,19 +624,3 @@ def removeCardiacComponent(raw, band, filterMethod="Fixed Peak Find"):
         return filtered, buttered
     
 
-#----------INES--------------------------------
-
-
-    '''
-    Verifies continuos time: if the point belongs to the respective day (some points are lost in days)
-    '''
-    days = list(data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'].keys())
-    for d in days:
-        for j in reversed(data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'][d]):
-            if j['DateTime'][0:10] != d[0:10]:
-                for day_ in days:
-                    if day_[0:10] == j['DateTime'][0:10]:
-                        data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'][day_].insert(0,j)
-                        data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'][d].pop(-1)
-    
-    return data
