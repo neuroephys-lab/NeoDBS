@@ -113,6 +113,9 @@ def extract_time_offset(Data):
     else: offset= hours
     return timedelta(hours=offset)
 
+def extract_dict_offset(Data):
+    return Data['Device']['ProgrammerUtcOffset']
+
 def getData(file_path):
 
     file = open(file_path,'r',encoding='utf-8')

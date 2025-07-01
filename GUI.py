@@ -842,7 +842,6 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
     else: mode = None
 
 
-    print(parameter_values)
     with dpg.group(horizontal=True, parent = tab_label,tag=f"{tab_label}_plot_group"):
         with dpg.plot(label=f"Spectral Analysis - {func}", height=400, width=600, tag = f"{tab_label}_plot"):
             dpg.bind_colormap(f"{tab_label}_plot", 0)
@@ -2959,10 +2958,10 @@ def extract_timeline_features(p):
     #peak time
     time = psd.index(peak)
     # print(time, ' ', len(freqs))
-    time = freqs[0]
+    
     try:
         time = freqs[time]
-    except Exception: pass
+    except Exception: time = freqs[0]
 
     key = 'Peak Time'
     if isinstance(time,str):
@@ -2970,7 +2969,7 @@ def extract_timeline_features(p):
     elif isinstance(time,float):
         peak = time
         key = 'Peak Frequency'
-    else: peak = str(datetime.fromtimestamp(time).time())
+        peak = str(datetime.fromtimestamp(time).time())
     time = {key: peak}
 
 
@@ -4244,7 +4243,6 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         y = np.array(y)
         copy = np.copy(y)
 
-        
 
         '''USING RMS'''
         # threshold = np.sqrt(np.mean(np.array(y)**2))
@@ -4252,9 +4250,9 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         # '''USING ITERATIVE RMS'''
         rms = np.sqrt(np.mean(y**2))
 
-        # for _ in range(3):  # Iterate a few times
-        #     y = y[np.abs(y) <= 3 * rms]
-        #     rms = np.sqrt(np.mean(y**2))
+        for _ in range(3):  # Iterate a few times
+            y = y[np.abs(y) <= 3 * rms]
+            rms = np.sqrt(np.mean(y**2))
         # threshold =rms
 
         '''USING MEDIA'''
@@ -4471,7 +4469,7 @@ def impedance_tab(Data, tab_tag):
                 x_label = "Case - Electrode Pair"
             else: x_label = "Electrode Pair"
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label=x_label)
-            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Impedance (Ohm Ω)")
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Impedance (Ohm)")
 
             ticks = tuple((label, float(i)) for i, label in enumerate(labels))
             dpg.set_axis_ticks(x_axis, ticks)
@@ -4677,8 +4675,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             else:
                 mean_value = {key: np.mean(values,axis=0)}
 
-            mean_dict = mean_dict | mean_value
-            
+            mean_dict = mean_dict | mean_value 
 
         create_table(f"{tab_tag}_header",f"{tab_tag}_table", mean_dict, trial_label=label_left)
 
@@ -4877,6 +4874,8 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         setup_artifacts()
 
 def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
+
+    # 'Recordings Time Domain'
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     dpg.add_text(f"Total recordings: {len(signals)}", parent=tab_tag)
     with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
@@ -4894,6 +4893,78 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     add_filters_buttons(tab_tag,signal_tags)
     add_features_buttons(tab_tag, signal_tags)
     add_correlation_buttons(tab_tag)
+
+    # 'Recordings PSDs'
+    def toggle(sender,app_data,user_data):
+        what = user_data
+        labels = [dpg.get_item_label(t) for t in line_tags]
+        for l in labels:
+            if what in l:
+                dpg.configure_item(line_tags[labels.index(l)],show =app_data)
+
+
+    new_tab_tag = f"{tab_tag}_psd"
+    new_signals = getDatabyTag(tab_tag)[mode]['LFPMontage']
+    new_plot_tag = f"{plot_tag}_psd"
+    bands = getBandsByTab(tab_tag)
+    dpg.add_tab(label=f"{mode} PSD", tag=new_tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
+    dpg.add_text(f"Total recordings: {len(signals)}", parent=new_tab_tag)
+    line_tags, channels = [], []
+    child = dpg.add_child_window(height=200, width=-1, parent=new_tab_tag)
+    with dpg.group(parent=new_tab_tag, label = f"{new_tab_tag}_group", horizontal=True):
+        signal_tags = {}
+        
+        with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=new_plot_tag):
+            dpg.bind_colormap(new_plot_tag, 0)
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
+            dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag=f"x_axis_{new_tab_tag}")
+            dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µVp)", tag=f"y_axis_{new_tab_tag}")
+            
+            parent = f"y_axis_{new_tab_tag}"
+            # plot_td(new_signals,parent,new_tab_tag,signal_tags)
+            for i,signal in enumerate(new_signals):
+                side = utl.after_point(signal['Hemisphere'])
+                f = signal['LFPFrequency']
+                m = signal['LFPMagnitude']
+                channel = utl.after_point(signal['SensingElectrodes'])
+                line_label = f"{channel} | {side}"
+                line_tag = f"{new_tab_tag}_{channel}_{side}"
+                line_tags.append(line_tag)
+                channels.append(channel)
+                artifact = utl.after_point(signal['ArtifactStatus'])
+                dpg.add_line_series(f,m,label=line_label,parent=parent, tag = line_tag)
+                tt = dpg.add_text(f"{channel}: {artifact}", parent=child)
+                if artifact != 'ARTIFACT_NOT_PRESENT':
+                    dpg.bind_item_theme(tt, change_text_color(1))
+                signal_tags[line_tag] = True
+                if 'PeakFrequencyInHertz' in signal:
+                    peak = signal['PeakFrequencyInHertz']
+                    peak_m = m[f.index(peak)]
+                    dpg.add_scatter_series([peak],[peak_m],label=f"{channel} PEAK", parent=parent, tag =f"{line_tag}_peak")
+                    line_tags.append(f"{new_tab_tag}_{channel}_{side}_peak")
+
+                if not dpg.does_item_exist(f"{line_tag}_header"):
+                    header = dpg.get_item_label(line_tag)
+                    dpg.add_collapsing_header(label = header, tag =f"{line_tag}_header", parent = new_tab_tag)
+                else:
+                    dpg.delete_item(f"{line_tag}_header", children_only=True)
+
+                #TABLE CONTENT
+                p = {'X': f, 'Y': m}
+                for band in bands.items():
+                    info = extract_psd_features(p, band)
+                    create_table(f"{line_tag}_header",f"{line_tag}_header_table", info, trial_label=band[0])
+
+
+        channels = np.unique(channels)
+        with dpg.group():
+            for c in channels:
+                dpg.add_checkbox(label=c, parent=f"{new_tab_tag}_group", callback=toggle, user_data=c, default_value=True)
+
+    #     toggleDisplay(signals, signal_tags, window_id, new_tab_tag)
+    # add_filters_buttons(new_tab_tag,signal_tags)
+    # add_features_buttons(new_tab_tag, signal_tags)
+    # add_correlation_buttons(new_tab_tag)
 
 def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
@@ -5417,9 +5488,11 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                             series_tag = f"{signal_tag}_{side.lower()}"
                             app_state['windows'][window_id]['Files'][idx]['Data'][tab_tag]['Signals'][sdx][side] = sign
 
-                            # Add the line series for each side
-                            dpg.add_line_series(x, y, label=label_left, parent=y_axis, tag=series_tag)#, fill=[1.0, 0, 0, 0.5]) --> define transparency?
-                            signal_tags[series_tag] = True  # Track visibility
+                            labels = [dpg.get_item_label(k) for k in list(signal_tags.keys())]
+                            if label_left not in labels:
+                                # Add the line series for each side
+                                dpg.add_line_series(x, y, label=label_left, parent=y_axis, tag=series_tag)#, fill=[1.0, 0, 0, 0.5]) --> define transparency?
+                                signal_tags[series_tag] = True  # Track visibility
 
                             if not dpg.does_item_exist(f"{tab_tag}_header"):
                                 dpg.add_collapsing_header(tag=f"{tab_tag}_header", parent=tab_tag, label = 'Stream Metrics')
@@ -5442,6 +5515,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         dpg.bind_item_theme(t, theme)
 
         dpg.add_text(f"Total days: {len(days)}", parent=tab_tag)
+        dpg.add_text(f"Timezone/offset: {DH.extract_dict_offset(data)}", parent=tab_tag)
         days = np.unique(days).tolist()
         sides = ['Left','Right']
 
