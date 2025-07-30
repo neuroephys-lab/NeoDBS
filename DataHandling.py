@@ -119,7 +119,10 @@ def extract_dict_offset(Data):
 def getData(file_path):
 
     file = open(file_path,'r',encoding='utf-8')
-    raw = json.load(file)
+    try:
+        raw = json.load(file)
+    except Exception:
+        return 'JSON corrupted.'
     offset = extract_time_offset(raw)
     raw_data = add_utc_conversion_to_dates(raw,offset)
 
