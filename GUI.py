@@ -164,14 +164,15 @@ def add_timeline_features_buttons(tab_tag, signal_tags):
         print(f"Tab {tab_tag} does not exist yet.")
 
 def add_correlation_buttons(tab_tag):
-    if dpg.does_item_exist(tab_tag):
-        with dpg.group(parent=tab_tag, horizontal=True, width=600):
-            # "Correlation" menu simulation
-            with dpg.collapsing_header(label="Correlation", default_open=False, parent=tab_tag):
-                dpg.add_button(label="Statistical Analysis",width=-1)
-                dpg.add_button(label="Machine Learning Analysis",width=-1)
-    else:
-        print(f"Tab {tab_tag} does not exist yet.")
+    print('')
+    # if dpg.does_item_exist(tab_tag):
+    #     with dpg.group(parent=tab_tag, horizontal=True, width=600):
+    #         # "Correlation" menu simulation
+    #         with dpg.collapsing_header(label="Correlation", default_open=False, parent=tab_tag):
+    #             dpg.add_button(label="Statistical Analysis",width=-1)
+    #             dpg.add_button(label="Machine Learning Analysis",width=-1)
+    # else:
+    #     print(f"Tab {tab_tag} does not exist yet.")
 
 def add_menu_bar(tab_tag):
     if dpg.does_item_exist(tab_tag):
@@ -354,14 +355,12 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag):
         with dpg.group(parent=f"{tab_tag}_buttons", tag = f"{tab_tag}_all_streams"):
             toggleVisibility(signal_tags, tab_tag, group=f"{tab_tag}_buttons", user_data=window_id)
 
-        # Spacer to separate toggleVisibility from the buttons
         dpg.add_spacer(height=10)
 
-        # Horizontal group for types
         with dpg.group(horizontal=True, parent=f"{tab_tag}_buttons", tag=f"{tab_tag}_types"):
             
-            with dpg.group(tag=f"{tab_tag}_buttons_hours"):
-                if len(hours) > 1:
+            if len(hours) > 1:
+                with dpg.child_window(tag=f"{tab_tag}_buttons_hours", width=150, height=150):
                     dpg.add_text('By recording:')
                     for day in hours:
                         toggleType(signal_tags, parent=f"{tab_tag}_buttons_hours", user_data=(day, window_id, tab_tag))
@@ -397,7 +396,6 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
         dates.append(date)
 
     dates = np.unique(dates).tolist()
-    print(dates)
     events = np.unique(events).tolist()
     sides = ['Left', 'Right']
 
@@ -411,7 +409,7 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
             #check days
             with dpg.group(label = f"{tab_tag}_buttons_day"):
                 if len(dates)>1:
-                    with dpg.child_window(width=100, height=250):
+                    with dpg.child_window(width=100, height=150):
                         dpg.add_text('By days:')
                         for day in dates:
                             toggleType(signal_tags,parent=f"{tab_tag}_buttons_day", user_data=(day, window_id, tab_tag)) 
@@ -1461,7 +1459,7 @@ def plot_coherence(parameter_values, tab_label):
     for b,band in bands.items():
         mask2 = (freq >= band[0]) & (freq <= band[1])
         p = {'X': freq[mask2], 'Y':list(coh[mask2])}
-        info = extract_timeline_features(p)
+        info = extract_timeline_features(p, coherence=True)
         create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
 
 
@@ -1604,7 +1602,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
                 for b,band in bands.items():
                     mask2 = (freq >= band[0]) & (freq <= band[1])
                     p = {'X': freq[mask2], 'Y':list(coh[mask2])}
-                    info = extract_timeline_features(p)
+                    info = extract_timeline_features(p, coherence=True)
                     create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
 
         time.sleep(0.2)
@@ -2594,8 +2592,6 @@ def switch_theme(sender, app_data, user_data):
 def change_electrodes_names(sender, app_data, user_data):
     input_counter = [0]  # Use a list to allow mutable reference
 
-    if dpg.does_item_exist("Change Electrode Names Window"):
-        dpg.delete_item("Change Electrode Names Window")
 
     def handle_submit(sender, app_data, user_data):
         for i in range(user_data[0]):
@@ -2608,6 +2604,9 @@ def change_electrodes_names(sender, app_data, user_data):
         
     def reset(sender, app_data, user_data):
         electrodes_names.clear()
+
+    if dpg.does_item_exist("Change Channel Names Window"):
+        dpg.delete_item("Change Channel Names Window")
 
     with dpg.window(tag="Change Channel Names Window", width=400, height=300):
         dpg.add_text("Change Channel Names")
@@ -2622,6 +2621,9 @@ def change_electrodes_names(sender, app_data, user_data):
         with dpg.group(horizontal=True):
             dpg.add_button(label="Submit", callback=handle_submit, user_data=input_counter)
             dpg.add_button(label="Reset", callback=reset)
+
+        # dpg.configure_item("Change Channel Names Window",on_close=dpg.configure_item("Change Channel Names Window",show=False))
+        
 
 def change_inf_line_color(color_id):
     with dpg.theme() as theme_id:
@@ -2936,7 +2938,7 @@ def extract_psd_features(p, band):
 
     return info
 
-def extract_timeline_features(p):
+def extract_timeline_features(p, coherence=False):
     
     
     full_power = np.sum(p['Y'])
@@ -2968,12 +2970,12 @@ def extract_timeline_features(p):
         peak = str(utl.parse_datetime(time).time())
     elif isinstance(time,float):
         peak = time
+        peak = str(datetime.fromtimestamp(time).time())
+    if coherence:
         key = 'Peak Frequency'
-        peak = str(datetime.fromtimestamp(time).time())
-        peak = str(datetime.fromtimestamp(time).time())
+        peak = time
+
     time = {key: peak}
-
-
 
     info = mean | norm_mean| picos | time
 
@@ -5059,7 +5061,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     electrodes_names[ch] = ch
             dpg.add_text(f"Electrodes {DH.getSessionDate(data)} | Left: {electrodes_names[initial[0]]} | Right: {electrodes_names[initial[1]]}", parent=tab_tag)
         else: 
-            electrodes_names[ch] = ch
+            electrodes_names[initial] = initial
             dpg.add_text(f'{DH.getSessionDate(data)}: {electrodes_names[initial]}', parent=tab_tag)
 
     
@@ -5194,12 +5196,10 @@ def comb_streaming_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     signals = DH.getSignals(file['Data'],mode)
                     file['Data'][tab_tag]= {'Signals': []}
                     rdate = signals[0]['Date']
-                    dpg.add_text(f"Day: {rdate.day}/{rdate.month}/{rdate.year}", parent=tab_tag)
                     channel = extract_channel_from_series_tag(signals[0]['Channel'])
-                    dpg.add_text(f"Channel: {channel.upper()}", parent=tab_tag)
+                    dpg.add_text(f"Day: {rdate.day}/{rdate.month}/{rdate.year} | Channel: {channel.upper()}", parent=tab_tag)
                     plot_td(signals,parent,tab_tag,signal_tags,files=idx)
 
-        
         toggleDisplay(signals, signal_tags, window_id, tab_tag)
     
     with dpg.group(parent=tab_tag, tag = f"{tab_tag}_add_events", horizontal=True):
@@ -5391,7 +5391,6 @@ def comb_indefinite_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     signals = DH.getSignals(file['Data'],mode)
                     file['Data'][tab_tag]= {'Signals': []}
                     rdate = signals[0]['Date']
-                    dpg.add_text(f"Day: {rdate.day}/{rdate.month}/{rdate.year}", parent=tab_tag)
                     plot_td(signals,parent,tab_tag,signal_tags,files=idx)
                 else: 
                     app_state['windows'][window_id]['Files'][idx]['Data'][tab_tag] = []
@@ -5525,11 +5524,11 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         with dpg.group(label = f"{tab_tag}_buttons", parent=f"{tab_tag}_group"):
             toggleVisibility(signal_tags,parent=tab_tag, group=f"{tab_tag}_buttons", user_data = window_id)
             with dpg.group(horizontal=True):
-                with dpg.child_window(height=250, width=150):
+                with dpg.child_window(height=150, width=150):
                     dpg.add_text('By day: ')
                     for day in days:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag)) #check day
-                with dpg.child_window(height=250, width=150):
+                with dpg.child_window(height=150, width=150):
                     dpg.add_text('By hemisphere: ')
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag))
@@ -5945,9 +5944,8 @@ def load_main_ui():
 
     dpg.set_primary_window("Main", True)
 
-# Show the viewport and start delayed loading of main UI
 dpg.show_viewport()
-dpg.set_frame_callback(60, load_main_ui)  # Load after ~1 second (60 frames @ 60 FPS)
+dpg.set_frame_callback(60, load_main_ui)  
 
 dpg.start_dearpygui()
 dpg.destroy_context()
