@@ -3286,6 +3286,9 @@ def CustomFilter(sender,app_data,user_data):
         dpg.add_text("Required parameters: ", parent=param_container)
         parameter_values.clear()  # Reset parameter storage
         input_fields.clear()  # Reset input field storage
+        # _, documentation = fill_params_features(app_data)
+        # documentation = pre.extract_params_and_returns(documentation)
+        # dpg.add_text(documentation, parent=doc_container, tag = f"{doc_container}_doc")
 
         for param, default in params.items():
             if param == 'fs': default = 250
@@ -5280,32 +5283,32 @@ def comb_setup_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     if 'Setup' in file['Modes']: 
                         artifacts = DH.getSignals(file['Data'],'Setup')[2]
 
-                    for idx, signal in enumerate(artifacts):
-                    
-                        artifact = signal['Artifact']
-                        label = f"{signal['Channel']} | {artifact}"
-                        if extract_type_window(window_id) == 'Combined':
-                            label = label + f' {date}'
-
-                        if isinstance(artifact,str): types_artifacts.append(f"{extract_artifact_type(artifact).upper()} Artifact")
-                        channel = electrodes_names[signal['Channel']].upper()
-                        channels.append(channel) 
-                        x = signal['X']
-                        y = signal['Y']
+                        for idx, signal in enumerate(artifacts):
                         
-                        # Create a unique series tag for each side
-                        series_tag = f"{tab_tag_art}_series_{channel}_{types_artifacts[-1]}_{idx}_{date}"
+                            artifact = signal['Artifact']
+                            label = f"{signal['Channel']} | {artifact}"
+                            if extract_type_window(window_id) == 'Combined':
+                                label = label + f' {date}'
 
-                        file['Data'][tab_tag_art]['Signals'].append(signal)
-                        # Add the line series for each side
-                        dpg.add_line_series(x, y, label=label, parent=f"y_axis_{tab_tag_art}", tag=series_tag)#, fill=[1.0, 0, 0, 0.5]) --> define transparency?
-                        signal_tags[series_tag] = True  # Track visibility
+                            if isinstance(artifact,str): types_artifacts.append(f"{extract_artifact_type(artifact).upper()} Artifact")
+                            channel = electrodes_names[signal['Channel']].upper()
+                            channels.append(channel) 
+                            x = signal['X']
+                            y = signal['Y']
+                            
+                            # Create a unique series tag for each side
+                            series_tag = f"{tab_tag_art}_series_{channel}_{types_artifacts[-1]}_{idx}_{date}"
 
-                        if not dpg.does_item_exist(f"{series_tag}_header"): dpg.add_collapsing_header(tag=f"{series_tag}_header", parent=tab_tag_art,label=label)
+                            file['Data'][tab_tag_art]['Signals'].append(signal)
+                            # Add the line series for each side
+                            dpg.add_line_series(x, y, label=label, parent=f"y_axis_{tab_tag_art}", tag=series_tag)#, fill=[1.0, 0, 0, 0.5]) --> define transparency?
+                            signal_tags[series_tag] = True  # Track visibility
 
-                        for band in bands.items():
-                            info = extract_psd_features(signal, band)
-                            create_table(f"{series_tag}_header",f"{series_tag}_table", info, trial_label=band[0])
+                            if not dpg.does_item_exist(f"{series_tag}_header"): dpg.add_collapsing_header(tag=f"{series_tag}_header", parent=tab_tag_art,label=label)
+
+                            for band in bands.items():
+                                info = extract_psd_features(signal, band)
+                                create_table(f"{series_tag}_header",f"{series_tag}_table", info, trial_label=band[0])
 
                 mean_power = np.mean([signal['Y'] for signal in artifacts], axis = 0)
                 dpg.add_scatter_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag_art}", tag=f"{tab_tag_art}_mean")
