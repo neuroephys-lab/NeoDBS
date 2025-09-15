@@ -3243,7 +3243,6 @@ def DefaultFilter(sender,app_data,user_data):
     
     band = dpg.get_value(item=f"{tab_tag}_default_wn")[:2]
 
-    print("----------------")
     for series in active_series:
         signal=getSignalbyIdx(window_id,tab_tag,series,mode=signal_mode)
         clean, _ = pre.removeCardiacComponent(signal, band)

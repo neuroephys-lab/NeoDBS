@@ -552,7 +552,7 @@ def removeOutlier(data, method="zscore", zlim=3):
 def removeCardiacComponent(raw, band, filterMethod="Fixed Peak Find"):
 
     a,b = band
-    if a == 0: a = 1
+    if a == 0: a = 0.5
     if b == 0: b = 100
 
     band = np.array([a,b])
