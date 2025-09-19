@@ -28,13 +28,13 @@ def info_electrodes(data):
     
     '''
     GroupHistory=data['Device']['GroupHistory']
-    days_hemisphere_right = list(data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'].keys())
-    # for dic in GroupHistory:
-    #     if dic['SessionDate'][0:10]==days_hemisphere_right[0][0:10]:
-    #             Groups=dic["Groups"]
-    #             #print(Groups[1])
-    #             for di in Groups:
-    #                 if di.get("ActiveGroup")==True:
+    # days_hemisphere_right = list(data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'].keys())
+    # # for dic in GroupHistory:
+    # #     if dic['SessionDate'][0:10]==days_hemisphere_right[0][0:10]:
+    # #             Groups=dic["Groups"]
+    # #             #print(Groups[1])
+    # #             for di in Groups:
+    # #                 if di.get("ActiveGroup")==True:
     di = GroupHistory[0]['Groups'][0]
     Group_id=di["GroupId"][-1]
     ProgramSettings=di["ProgramSettings"]
