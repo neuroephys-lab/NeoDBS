@@ -1065,11 +1065,10 @@ def getEventsInTimeline(Data):
 
     return events_in_timeline
 
-def getTimelineIndexofEvent(timeline, events):
-
+def getTimelineIndexofEventRaw(timeline, events):
+    #Retrieving timeline RAW
     index = {}
     flag = False
-    
 
     for idx,e in enumerate(events):
         xe = utl.parse_datetime(e['DateInitial'])
@@ -1077,11 +1076,31 @@ def getTimelineIndexofEvent(timeline, events):
         for j,t in enumerate(timeline):
             xt = t['Left']['X']
             xt = [utl.parse_datetime(x) for x in xt]
-
             # Loop with enumerate to get index
             for i, x in enumerate(xt):
                 if abs(x - xe) < timedelta(minutes=10):
                     
+                    index[key] = [i,j]
+                    flag = True
+                    break
+        if flag==False:
+            index[key] = f'{xe}: Event not present in any Timeline Stream'
+
+    return index
+
+def getTimelineIndexofEvent(timeline, events):
+    #Retrieving timeline RAW
+    index = {}
+    flag = False
+
+    for idx,e in enumerate(events):
+        xe = utl.parse_datetime(e['DateInitial'])
+        key = str(idx) + f"_{e['EventName']}"
+        for j,t in enumerate(timeline):
+            xt = t['Left']['X']
+            # Loop with enumerate to get index
+            for i, x in enumerate(xt):
+                if abs(x - xe) < timedelta(minutes=10):
                     index[key] = [i,j]
                     flag = True
                     break
@@ -1101,11 +1120,13 @@ def segmentTimelineEvent2(timeline, indexes):
             segments[edx] = {}
             for side in ['Left', 'Right']:
 
+                stream = timeline[signal][side]
+
                 if x<6: 
                     mini,maxi = 0, 12
                     flags.append(True)
-                elif x+6 > len(timeline[signal][side]['X']):
-                    maxi = len(timeline[signal][side]['X'])-1
+                elif x+6 > len(stream['X']):
+                    maxi = len(stream['X'])-1
                     mini = maxi-6
                     flags.append(True)
                 else: 
@@ -1113,17 +1134,22 @@ def segmentTimelineEvent2(timeline, indexes):
                     flags.append(False)
 
                 #for dpg
-                xx = timeline[signal][side]['X'][mini:maxi]
-                temp = [utl.parse_datetime(x) for x in xx]
+                xx = stream['X'][mini:maxi]
+                # temp = [utl.parse_datetime(x) for x in xx]
+                temp = xx
                 # print(abs(temp[0]-temp[-1]))
                 # if abs(temp[0]-temp[1])<timedelta(hours=2, minutes=20):
-                #     yy = timeline[signal][side]['Y'][mini:maxi]
+                #     yy = stream['Y'][mini:maxi]
                 #     segment = {'X': xx, 'Y': yy}
                 #     segments[edx][side] =  segment
+
+
                 if isinstance(temp[0], datetime) and isinstance(temp[-1], datetime):
                     duration = abs(temp[-1] - temp[0])
                     if duration < timedelta(hours=2, minutes=20):
-                        yy = timeline[signal][side]['Y'][mini:maxi]
+                        if f'Filtered_{side}' in timeline[signal].keys():
+                            yy = timeline[signal][f'Filtered_{side}']
+                        else: yy = stream['Y'][mini:maxi]
                         segment = {'X': xx, 'Y': yy}
                         segments[edx][side] = segment
                     elif edx in segments.keys(): segments.pop(edx)
@@ -1144,7 +1170,10 @@ def segmentTimelineEvent(timeline, indexes, step_minutes=10):
 
         for side in ['Left', 'Right']:
             X_raw = timeline[signal][side]['X']
-            Y_raw = timeline[signal][side]['Y']
+            if f'Filtered_{side}' in timeline[signal].keys():
+                Y_raw = timeline[signal][f'Filtered_{side}']
+            else:
+                Y_raw = timeline[signal][side]['Y']
 
             # Convert string timestamps to datetime objects
             X_dt = [utl.parse_datetime(t) for t in X_raw]
@@ -1188,134 +1217,6 @@ def segmentTimelineEvent(timeline, indexes, step_minutes=10):
 
             segments[edx][side] = {'X': segment_x, 'Y': segment_y}
             flags.append(padded)
-
-    return segments, flags
-
-def segmentTimelineEvent3(timeline, indexes, step_minutes=10):
-    segments = {}
-    flags = []
-
-    if isinstance(indexes, str):
-        return None
-
-    for edx, idxs in indexes.items():
-        if isinstance(idxs, str):
-            print(idxs)
-            continue
-
-        x, signal = idxs
-        segments[edx] = {}
-
-        for side in ['Left', 'Right']:
-            X_raw = timeline[signal][side]['X']
-            Y_raw = timeline[signal][side]['Y']
-
-            # Parse and sort timestamps
-            X_dt = [utl.parse_datetime(ts) for ts in X_raw]
-            Y_np = np.array(Y_raw, dtype=np.float64)
-
-            # Ensure X is sorted just in case
-            sorted_data = sorted(zip(X_dt, Y_np), key=lambda p: p[0])
-            X_dt, Y_np = zip(*sorted_data)
-
-            # Re-convert to list
-            X_dt = list(X_dt)
-            Y_np = np.array(Y_np)
-
-            x_time = X_dt[x]  # Event center time
-
-            # Generate uniform time grid (13 points, spaced by step_minutes)
-            segment_x_dt = [x_time + timedelta(minutes=(i - 6) * step_minutes) for i in range(13)]
-            segment_x = [utl.full_date2str(dt) for dt in segment_x_dt]
-
-            segment_y = []
-            padded = False
-
-            for target_time in segment_x_dt:
-                # Try exact match
-                try:
-                    idx_exact = X_dt.index(target_time)
-                    y_val = Y_np[idx_exact]
-                except ValueError:
-                    # No exact match, try interpolation
-                    closest = [i for i, dt in enumerate(X_dt) if abs((dt - target_time).total_seconds()) <= step_minutes * 60]
-                    if len(closest) >= 2:
-                        i1, i2 = closest[:2]
-                        t1, t2 = X_dt[i1], X_dt[i2]
-                        y1, y2 = Y_np[i1], Y_np[i2]
-                        if t1 != t2:
-                            alpha = (target_time - t1).total_seconds() / (t2 - t1).total_seconds()
-                            y_val = y1 + alpha * (y2 - y1)
-                        else:
-                            y_val = y1
-                    else:
-                        y_val = np.nan
-                        padded = True
-
-                # Enforce ±1 hour constraint
-                if abs((target_time - x_time).total_seconds()) > 3600:
-                    y_val = np.nan
-                    padded = True
-
-                segment_y.append(y_val)
-
-            segments[edx][side] = {'X': segment_x, 'Y': segment_y}
-            flags.append(padded)
-
-    return segments, flags
-
-def segmentTimelineEvent4(timeline, indexes, step_minutes=10):
-    segments = {}
-    flags = []
-    sampling_interval_minutes = 10
-    window_hours = 2
-    
-    # Calculate the number of points for one side (1 hour = 60 minutes / 10 minutes/point = 6 points)
-    # Total points for a 2-hour window = 120 minutes / 10 minutes/point = 12 points + 1 (center) = 13 points
-    points_per_side = int((window_hours / 2) * (60 / sampling_interval_minutes)) # 1 hour = 6 points
-    total_points_in_segment = (points_per_side * 2) + 1 # 13 points
-
-    for edx, idxs in indexes.items():
-        if isinstance(idxs, str):
-            print(idxs)
-            continue
-
-        x, signal = idxs
-        segments[edx] = {}
-
-        for side_key in ['Left', 'Right']:
-            full_x_data = timeline[signal][side_key]['X']
-            full_y_data = timeline[signal][side_key]['Y']
-
-            # Ensure x is within bounds
-            if not (0 <= x < len(full_x_data)):
-                print(f"Warning: Index {x} for signal {signal}, side {side_key} is out of bounds.")
-                flags.append(True)
-                continue
-
-            center_datetime = full_x_data[x]
-
-            segment_x = []
-            segment_y = []
-
-            # Generate expected datetimes and corresponding Y values
-            for i in range(-points_per_side, points_per_side + 1):
-                expected_datetime = utl.parse_datetime(center_datetime) + timedelta(minutes=i * sampling_interval_minutes)
-                segment_x.append(expected_datetime.strftime('%Y-%m-%d %H:%M:%S'))
-
-                # Find if the expected_datetime exists in the full_x_data
-                try:
-                    # Find the index of the expected_datetime in the original data
-                    # This assumes full_x_data is sorted chronologically
-                    original_data_index = full_x_data.index(expected_datetime)
-                    segment_y.append(full_y_data[original_data_index])
-                except ValueError:
-                    # If not found, append NaN
-                    segment_y.append(np.nan)
-
-            segment = {'X': segment_x, 'Y': segment_y}
-            segments[edx][side_key] = segment
-            flags.append(False) # A segment was successfully created, even if padded
 
     return segments, flags
 
