@@ -1364,9 +1364,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
 
             with dpg.group(parent=tab_label, tag = f"{tab_label}_merged"): 
 
-                with dpg.theme() as alpha_theme:
-                    with dpg.theme_component(0):
-                        dpg.add_theme_style(dpg.mvPlotStyleVar_FillAlpha, 0.5, category=dpg.mvThemeCat_Plots)
+                alpha_theme = create_alpha_theme()
                 
                 dpg.add_text('Band Power over Time', parent=f"{tab_label}_merged")
                 dpg.add_separator(parent=f"{tab_label}_merged")
@@ -1712,9 +1710,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
 
             with dpg.collapsing_header(tag=header_tag, parent=tab_label, label='Coherence over time'):
 
-                with dpg.theme() as alpha_theme:
-                    with dpg.theme_component(0):
-                        dpg.add_theme_style(dpg.mvPlotStyleVar_FillAlpha, 0.5, category=dpg.mvThemeCat_Plots)
+                alpha_theme = create_alpha_theme()
 
                 with dpg.plot(label='Coherence over time', width=-1):
                     dpg.add_plot_legend()
@@ -1994,9 +1990,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
 
             with dpg.group(parent=tab_label, tag = f"{tab_label}_merged"): 
 
-                with dpg.theme() as alpha_theme:
-                    with dpg.theme_component(0):
-                        dpg.add_theme_style(dpg.mvPlotStyleVar_FillAlpha, 0.5, category=dpg.mvThemeCat_Plots)
+                alpha_theme = create_alpha_theme()
                 
                 dpg.add_text('Band Power over Time', parent=f"{tab_label}_merged")
                 dpg.add_separator(parent=f"{tab_label}_merged")
@@ -2282,9 +2276,7 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
                             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Power (dB)")
 
-                            with dpg.theme() as alpha_theme:
-                                with dpg.theme_component(0):
-                                    dpg.add_theme_style(dpg.mvPlotStyleVar_FillAlpha, 0.5, category=dpg.mvThemeCat_Plots)
+                            alpha_theme = create_alpha_theme()
 
                             for b,v in bands.items():
                                 frequencies = parameter_values['freqs']
@@ -2413,9 +2405,8 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
                             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Power (dB)")
 
-                            with dpg.theme() as alpha_theme:
-                                with dpg.theme_component(0):
-                                    dpg.add_theme_style(dpg.mvPlotStyleVar_FillAlpha, 0.5, category=dpg.mvThemeCat_Plots)
+                            alpha_theme = create_alpha_theme()
+
                             sxx = np.flipud(sxx)
                             for b,v in bands.items():
                                 frequencies = parameter_values['freqs']
@@ -2623,6 +2614,20 @@ def before_vs_after(sender,app_data,user_data):
     plot_filtered_signal(signal_tags,tab_label,func,tab_tag,parameter_values)
 
 #------------GUI PRETTY-----------------
+def create_alpha_theme(alpha=0.5):
+    """
+    Create and return a DearPyGui plot alpha theme.
+    
+    Parameters:
+        alpha (float): Opacity value between 0.0 and 1.0
+    
+    Returns:
+        int: The theme ID
+    """
+    with dpg.theme() as alpha_theme:
+        with dpg.theme_component(dpg.mvAll):
+            dpg.add_theme_style(dpg.mvPlotStyleVar_FillAlpha, alpha, category=dpg.mvThemeCat_Plots)
+    return alpha_theme
 
 def switch_theme(sender, app_data, user_data):
     dpg.bind_theme(user_data)
@@ -3933,10 +3938,8 @@ def circadian_rhythm(sender, app_data, user_data):
     plus = mean + std
     minus = mean - std
 
-    with dpg.theme() as alpha_theme:
-        with dpg.theme_component(0):
-            dpg.add_theme_style(dpg.mvPlotStyleVar_FillAlpha, 0.5, category=dpg.mvThemeCat_Plots)
-    
+    alpha_theme = create_alpha_theme()
+
     dpg.add_shade_series(x,minus,y2=plus,label='Standard Deviation', parent=y_axis, tag = f"{tab_label}_std")
     dpg.bind_item_theme(f"{tab_label}_std",alpha_theme)
     m = dpg.add_line_series(x, mean, label = 'Mean', parent=y_axis, tag = f"{tab_label}_mean")
@@ -4046,12 +4049,9 @@ def AnalyzeTimelineEvents2(sender,app_data,user_data):
 
     mean, mean_array, temp_tags, bva_tags, event_names, days= [], [], [], [], [], []
 
-    with dpg.theme() as alpha_theme:
-        with dpg.theme_component(0):
-            dpg.add_theme_style(dpg.mvPlotStyleVar_FillAlpha, 0.3, category=dpg.mvThemeCat_Plots)
+    alpha_theme = create_alpha_theme()
 
     def mean_info_table(mean, header_tag, table_tag):
-        # mean_y = np.nanmean([sign['Y'] for sign in mean],axis=0)
 
         ys = [np.array(sign['Y'], dtype=float) for sign in mean]
 
@@ -4332,8 +4332,108 @@ def AnalyzeTimelineEvents2(sender,app_data,user_data):
 
 def AnalyzeTimelineEvents(sender,app_data,user_data):
     tab_tag, events_tags, signal_tags = user_data
-    window_id = extract_window_id(tab_tag)
-    files = np.unique([e[1] for e in events_tags])
+    # window_id = extract_window_id(tab_tag)
+    # files = np.unique([e[1] for e in events_tags])
+
+    event_ids = [dpg.get_value(e[0])[0] for e in events_tags]
+    timelines = [dpg.get_value(t)[:2] for t in signal_tags.keys()]
+    timeline_labels = [dpg.get_item_label(t) for t in signal_tags.keys()]
+
+    segments = []
+
+    def cut_segment(x,y,event):
+
+        diff = [abs(xx-event) for xx in x]
+        ev_id = diff.index(min(diff))
+        
+        half_window = 6
+
+        if ev_id >= half_window and ev_id <= len(x) - half_window - 1:
+            start = ev_id - half_window
+            end = ev_id + half_window + 1
+            segment_x = x[start:end]
+            segment_y = y[start:end]
+        elif ev_id < half_window:
+            # Pad at the start
+            pad = np.full(half_window - ev_id, np.nan)
+            segment_x = np.concatenate([pad, x[0:ev_id + half_window + 1]])
+            segment_y = np.concatenate([pad, y[0:ev_id + half_window + 1]])
+        else:
+            # Pad at the end
+            pad = np.full(ev_id + half_window + 1 - len(x), np.nan)
+            segment_x = np.concatenate([x[ev_id - half_window:], pad])
+            segment_y = np.concatenate([y[ev_id - half_window:], pad])
+
+        onex = segment_x[0]
+        segment_x = [x - onex for x in segment_x]
+
+        return segment_x,segment_y
+
+    for event in event_ids:
+        event = event[0]
+        for timeline in timelines:
+            x, y = timeline[0], timeline[1]
+            first, last = min(x), max(x)
+            label = timeline_labels[timelines.index(timeline)]
+            if not (first <= event <= last):
+                continue
+            
+            segment = cut_segment(x,y,event)
+            segments.append([segment,label])
+
+    values = [segment[0][1] for segment in segments]
+    
+    mean_value = np.nanmean(values, axis = 0)
+    std_dev = np.nanstd(values, axis = 0)
+
+    tab_label = tab_tag+'_events'
+    plot_tag = f'{tab_label}_plot'
+
+    if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
+        dpg.add_tab_bar(parent=tab_tag, tag = f"{tab_tag}_features_bar")
+
+    if dpg.does_item_exist(tab_label):
+        dpg.delete_item(tab_label,children_only=True)
+    else:
+        dpg.add_tab(label=f"Timeline Events", parent=f"{tab_tag}_features_bar", tag=tab_label)
+
+    with dpg.group(parent=tab_label,horizontal=True):
+        dpg.add_checkbox(label='Before vs. After',tag=f"{tab_label}_bva")#, callback=beforeVafter,tag=f"{tab_label}_bva")
+
+    with dpg.group(parent=tab_label, tag=f"{plot_tag}_group", horizontal=True):
+        with dpg.plot(label = 'Event-locked Segments',tag = plot_tag,  width=600, height=400):
+            dpg.bind_colormap(plot_tag, 0)
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{plot_tag}", scale=dpg.mvPlotScale_Time)
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µVP)", tag=f"y_axis_{plot_tag}")
+
+            max_timestamp = 2*60*60
+            dpg.set_axis_limits(x_axis, 0, max_timestamp)
+
+            for segment, label in segments:
+                x,y=segment[0],segment[1]
+                dpg.add_line_series(x,y,label=label,parent=y_axis)
+                sign = {'X':x,'Y':y}                
+
+                if not dpg.does_item_exist(f"{tab_label}_header"):
+                    dpg.add_collapsing_header(tag=f"{tab_label}_header", parent=tab_label,label='Stream Metrics')
+
+                info = extract_timeline_features(sign)
+                if info != None: 
+                    create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=label)
+
+            minus = mean_value - std_dev
+            plus = mean_value + std_dev
+            std = dpg.add_shade_series(segment[0],minus, y2 = plus,label='Std. Dev', parent=y_axis)
+            dpg.bind_item_theme(std,create_alpha_theme())
+            mean = dpg.add_line_series(segment[0],mean_value,label='Mean',parent=y_axis)
+            dpg.bind_item_theme(mean, change_line_thickness(5))
+
+            mean_info = {'X': segment[0], 'Y':list(mean_value)}
+            mean_info = extract_timeline_features(mean_info)
+            create_table(f"{tab_label}_header",f"{tab_label}_table", mean_info, trial_label='Mean')
+    
+
     
 
 def RemoveTimelineOutliers(sender,app_data,user_data):
