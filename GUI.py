@@ -979,7 +979,6 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                         display_error(tab_tag,e)
                         return
                     
-                    
                     power.append(p) 
                     freqs, psd = p['X'], p['Y']      
                     ploted_tags.append(f"{tab_label}_{series_label}_{func}")
@@ -1036,9 +1035,15 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     
                     # Compute mean PSD across trials (ignoring NaNs)
                     all_mean = np.nanmean(binned_psds, axis=0)
+                    all_std = np.nanstd(binned_psds, axis=0)
                     freqs = np.arange(0,len(all_mean),1)
                 
-                else: all_mean = np.mean([p['Y'] for p in power], axis=0)
+                else: 
+                    all_mean = np.mean([p['Y'] for p in power], axis=0)
+                    all_std = np.std([p['Y'] for p in power], axis=0)
+
+                minus = all_mean - all_std
+                plus = all_mean + all_std
 
                 mean_power = {
                     'Y': all_mean,
@@ -1050,7 +1055,6 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 else:
                     dpg.delete_item(f"{tab_label}_mean_metric", children_only=True)
 
-
                 for band in bands.items():
                     info = extract_psd_features(mean_power, band)
                     create_table(f"{tab_label}_mean_metric",f"{tab_label}_mean_metric_table", info, trial_label=band[0])
@@ -1060,7 +1064,9 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 
                 freqs = np.asarray(freqs, dtype=np.float32)
                 all_mean = np.asarray(all_mean, dtype=np.float32)
-                # all_mean = all_mean*max_p/np.max(all_mean) --> makes it like an envelope, not a mean
+                
+                s = dpg.add_shade_series(freqs.tolist(),y1=minus.tolist(),y2=plus.tolist(),label = 'Std. Dev', tag=f"{tab_label}_std", parent=y_axis)
+                dpg.bind_item_theme(s, create_alpha_theme())
                 m = dpg.add_line_series(freqs.tolist(), all_mean.tolist(), label="Mean Power", parent=y_axis, tag=f"{tab_label}_mean")
                 dpg.bind_item_theme(m,change_line_thickness(3))
 
@@ -1088,8 +1094,17 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     power_temp.append(power[i])
 
             mean_temp = np.mean([p['Y'] for p in power_temp], axis=0)
-            dpg.configure_item(f"{tab_label}_mean",y=mean_temp)
+            std = np.std([p['Y'] for p in power_temp], axis=0)
+            times = dpg.get_value(f"{tab_label}_radio")
+            if times == '95% Confidence Interval':
+                times = 2
+            else: times = 1
 
+            minus = mean_temp - times*std
+            plus = mean_temp + times*std
+            dpg.configure_item(f"{tab_label}_mean",y=mean_temp)
+            dpg.configure_item(f"{tab_label}_std",y1=minus, y2=plus)
+   
         def toggle2(sender,app_data,user_data):
             if dpg.get_value(f"{tab_label}_hide") == True:
                 callback = dpg.get_item_callback(f"{tab_label}_hide")
@@ -1109,6 +1124,30 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             array = [dpg.get_value(t)[1] for t in _]
             mean = np.mean(array, axis=0)
             dpg.configure_item(f"{tab_label}_mean",y=mean)
+
+            std = np.std(array, axis=0)
+            times = dpg.get_value(f"{tab_label}_radio")
+            if times == '95% Confidence Interval':
+                times = 2
+            else: times = 1
+
+            minus = mean - times*std
+            plus = mean + times*std
+            dpg.configure_item(f"{tab_label}_mean",y=mean)
+            dpg.configure_item(f"{tab_label}_std",y1=minus, y2=plus)
+
+        def deviation(sender, app_data, user_data):
+            media = np.array(dpg.get_value(f"{tab_label}_mean")[1])
+            std_dev = np.array(dpg.get_value(f"{tab_label}_std")[1])
+
+            if app_data == '95% Confidence Interval':
+                dev = (std_dev - media) * -2
+            else:
+                dev = (std_dev - media) * -0.5
+
+            minus = media - dev
+            plus = media + dev  
+            dpg.configure_item(f"{tab_label}_std", y1=minus.tolist(), y2=plus.tolist())
 
         checkboxes = []
         with dpg.group(parent=f"{tab_tag}_buttons"):
@@ -1160,6 +1199,9 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                             checkboxes.append(c)
             dpg.add_separator()
             dpg.add_checkbox(label='Hide signals', callback=hide, tag = f"{tab_label}_hide", user_data=(ploted_tags, checkboxes))
+            dpg.add_separator()
+            dpg.add_text('Shaded Area')
+            dpg.add_radio_button(['Standard Deviation', '95% Confidence Interval'], horizontal=False, callback=deviation, tag = f"{tab_label}_radio")
             
     time.sleep(0.2)
     dpg.set_axis_limits_auto(x_axis)
@@ -3020,8 +3062,12 @@ def extract_timeline_features(p, coherence=False):
     key = 'Peak Time'
     if isinstance(time,str):
         peak = str(utl.parse_datetime(time).time())
-    if time is None or np.isnan(time):
-        return
+    if isinstance(time, (int, float)):
+        if np.isnan(time):
+            return
+    if isinstance(time, np.ndarray):
+        if np.any(np.isnan(time)):
+            return
     elif isinstance(time,float):
         peak = time
         peak = str(datetime.fromtimestamp(time).time())
@@ -4520,7 +4566,6 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
         dpg.add_separator()
         dpg.add_checkbox(label='Hide Signals', tag = f"{tab_label}_hide", callback=hide, user_data=(temp_tags,checkboxes))
 
-
 def RemoveTimelineOutliers(sender,app_data,user_data):
     tab_tag,signal_tags = user_data
     window_id = extract_window_id(tab_tag)
@@ -4530,7 +4575,11 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
 
     if dpg.does_item_exist(f"{tab_tag}_plot_progress"): dpg.delete_item(f"{tab_tag}_plot_progress")
 
+    # create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=label_left)
+    dpg.delete_item(f"{tab_tag}_header", children_only=True)
+
     dpg.add_progress_bar(parent=f"{tab_tag}_plot_group",overlay='Removing', default_value=0.0, width = 400, height = 50, tag = f"{tab_tag}_plot_progress")
+    
     for i, tag in enumerate(tags):
         values = dpg.get_value(tag)
         x,_= values[0], values[1]
@@ -4544,7 +4593,6 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         new_x,y = stream[side]['X'],stream[side]['Y']
 
         new_x = [utl.convert_to_timestamp(n) for n in new_x]
-        # y = np.flip(np.array(y))
         y = np.array(y)
         copy = np.copy(y)
 
@@ -4570,7 +4618,10 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         dpg.set_value(tag,[new_x,copy.tolist()])
         updateSignalbyIdx(copy.tolist(),tab_tag,tag,f'Filtered_{side}')
 
-        crazy = app_state
+        sign = {'X': new_x, 'Y':copy.tolist()}
+        info = extract_timeline_features(sign)
+        create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=dpg.get_item_label(tag))
+        
 
         progress = np.round((i+1)/len(tags),2)
         dpg.set_value(f"{tab_tag}_plot_progress", progress)
