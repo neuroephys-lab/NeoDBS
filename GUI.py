@@ -4167,10 +4167,6 @@ def AnalyzeTimelineEvents2(sender,app_data,user_data):
 
         p = []
         toggle_tags = dpg.get_item_children(f"y_axis_{plot_tag}",1)
-        # if dpg.get_value(f"{tab_label}_bva"):
-        #     toggle_tags = bva_tags
-        # else: toggle_tags = temp_tags
-
 
 
         labs = [dpg.get_item_label(tag) for tag in toggle_tags]
@@ -4336,10 +4332,13 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
     # files = np.unique([e[1] for e in events_tags])
 
     event_ids = [dpg.get_value(e[0])[0] for e in events_tags]
+    event_labels = [dpg.get_item_label(e[0]) for e in events_tags]
+    print(event_labels)
+
     timelines = [dpg.get_value(t)[:2] for t in signal_tags.keys()]
     timeline_labels = [dpg.get_item_label(t) for t in signal_tags.keys()]
 
-    segments = []
+    segments, event_names, checkboxes, days, temp_tags = [], [], [], [], []
 
     def cut_segment(x,y,event):
 
@@ -4369,17 +4368,20 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
 
         return segment_x,segment_y
 
-    for event in event_ids:
+    for ex, event in enumerate(event_ids):
         event = event[0]
         for timeline in timelines:
             x, y = timeline[0], timeline[1]
             first, last = min(x), max(x)
-            label = timeline_labels[timelines.index(timeline)]
+            label = f"{event_labels[ex]} - {timeline_labels[timelines.index(timeline)]}"
             if not (first <= event <= last):
                 continue
             
             segment = cut_segment(x,y,event)
             segments.append([segment,label])
+            event_names.append(label)
+            date = utl.date2str(datetime.fromtimestamp(event))
+            days.append(date)
 
     values = [segment[0][1] for segment in segments]
     
@@ -4389,6 +4391,84 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
     tab_label = tab_tag+'_events'
     plot_tag = f'{tab_label}_plot'
 
+    def normal(segments, plot=True, bva=False):
+        for s, seg in enumerate(segments):
+            segment, label = seg
+            x,y=segment[0],segment[1]
+            if plot:
+                dpg.add_line_series(x,y,label=label,parent=y_axis,tag=f"{tab_label}_{label}_{s}")
+                temp_tags.append(f"{tab_label}_{label}_{s}")
+            sign = {'X':x,'Y':y}                
+
+            if not bva:
+                header = f"{tab_label}_header"
+                table = f"{tab_label}_table"
+            elif 'Before' in label:
+                header = f"{tab_label}_header_before"
+                table = f"{tab_label}_table_before"
+            else: 
+                header = f"{tab_label}_header_after"
+                table = f"{tab_label}_table_after"
+
+            if not dpg.does_item_exist(f"{tab_label}_header"):
+                dpg.add_collapsing_header(tag=f"{tab_label}_header", parent=tab_label,label='Stream Metrics')
+
+            if not dpg.does_item_exist(f"{tab_label}_header_before"):
+                dpg.add_collapsing_header(tag=f"{tab_label}_header_before", parent=tab_label,label='Before | Stream Metrics')
+
+            if not dpg.does_item_exist(f"{tab_label}_header_after"):
+                dpg.add_collapsing_header(tag=f"{tab_label}_header_after", parent=tab_label,label='After | Stream Metrics')
+
+            info = extract_timeline_features(sign)
+            if info != None: 
+                create_table(header,table, info, trial_label=label)
+
+        minus = mean_value - std_dev
+        plus = mean_value + std_dev
+        if plot:
+            std = dpg.add_shade_series(segment[0],minus, y2 = plus,label='Std. Dev', parent=y_axis, tag = f"{tab_label}_std")
+            dpg.bind_item_theme(std,create_alpha_theme())
+            mean = dpg.add_line_series(segment[0],mean_value,label='Mean',parent=y_axis, tag = f"{tab_label}_mean")
+            dpg.bind_item_theme(mean, change_line_thickness(5))
+
+        mean_info = {'X': segment[0], 'Y':list(mean_value)}
+        mean_info = extract_timeline_features(mean_info)
+        create_table(f"{tab_label}_header",f"{tab_label}_table", mean_info, trial_label='Mean')
+
+    def bva(segments):
+        bva_segments = []
+        for segment, label in segments:
+            x,y = segment
+            before = [x[:6],y[:6]]
+            bva_segments.append([before,f"Before | {label}"])
+            after = [x[6:],y[6:]]
+            bva_segments.append([after,f"After | {label}"])
+        normal(bva_segments, plot=False, bva=True)
+
+    def toggle(sender,app_data,user_data):
+        name = dpg.get_item_label(sender)
+        mean_temp = []
+
+        for s, tag in enumerate(segments):
+            t, label = tag
+            if name in label:
+                dpg.configure_item(f"{tab_label}_{label}_{s}",show=app_data)
+            show = dpg.get_item_configuration(f"{tab_label}_{label}_{s}")['show']
+            if show:
+                mean_temp.append(t[1])
+            
+        new_mean = np.nanmean(mean_temp,axis=0)
+        new_std = np.nanstd(mean_temp,axis=0)
+        minus = new_mean - new_std
+        plus = new_mean + new_std
+
+        dpg.configure_item(f"{tab_label}_std",y1=minus, y2=plus)
+        dpg.configure_item(f"{tab_label}_mean",y=new_mean)
+
+        mean_info = {'X': t[0], 'Y':new_mean}
+        mean_info = extract_timeline_features(mean_info)
+        create_table(f"{tab_label}_header",f"{tab_label}_table", mean_info, trial_label='New Mean')
+
     if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
         dpg.add_tab_bar(parent=tab_tag, tag = f"{tab_tag}_features_bar")
 
@@ -4397,9 +4477,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
     else:
         dpg.add_tab(label=f"Timeline Events", parent=f"{tab_tag}_features_bar", tag=tab_label)
 
-    with dpg.group(parent=tab_label,horizontal=True):
-        dpg.add_checkbox(label='Before vs. After',tag=f"{tab_label}_bva")#, callback=beforeVafter,tag=f"{tab_label}_bva")
-
+    e_names = np.unique(event_labels).tolist()
     with dpg.group(parent=tab_label, tag=f"{plot_tag}_group", horizontal=True):
         with dpg.plot(label = 'Event-locked Segments',tag = plot_tag,  width=600, height=400):
             dpg.bind_colormap(plot_tag, 0)
@@ -4410,31 +4488,30 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
             max_timestamp = 2*60*60
             dpg.set_axis_limits(x_axis, 0, max_timestamp)
 
-            for segment, label in segments:
-                x,y=segment[0],segment[1]
-                dpg.add_line_series(x,y,label=label,parent=y_axis)
-                sign = {'X':x,'Y':y}                
+            normal(segments)
+            bva(segments)
 
-                if not dpg.does_item_exist(f"{tab_label}_header"):
-                    dpg.add_collapsing_header(tag=f"{tab_label}_header", parent=tab_label,label='Stream Metrics')
+    with dpg.group(parent=f"{plot_tag}_group"):
+        with dpg.group(horizontal=True):
+            with dpg.child_window(width=120,height=150):
+                dpg.add_text('Hemisphere: ')
+                for side in ['Left', 'Right']:
+                    c = dpg.add_checkbox(label=side,callback = toggle,default_value=True)
+                    checkboxes.append(c)
+            with dpg.child_window(width=120,height=150):
+                dpg.add_text('Events: ')
+                for side in e_names:
+                    c = dpg.add_checkbox(label=side,callback = toggle,default_value=True)
+                    checkboxes.append(c)
+            with dpg.child_window(width=120,height=150):
+                dpg.add_text('Days: ')
+                days = np.unique(days).tolist()
+                for side in days:
+                    c = dpg.add_checkbox(label=side,callback = toggle,default_value=True)
+                    checkboxes.append(c)
+        dpg.add_separator()
+        dpg.add_checkbox(label='Hide Signals', tag = f"{tab_label}_hide", callback=hide, user_data=(temp_tags,checkboxes))
 
-                info = extract_timeline_features(sign)
-                if info != None: 
-                    create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=label)
-
-            minus = mean_value - std_dev
-            plus = mean_value + std_dev
-            std = dpg.add_shade_series(segment[0],minus, y2 = plus,label='Std. Dev', parent=y_axis)
-            dpg.bind_item_theme(std,create_alpha_theme())
-            mean = dpg.add_line_series(segment[0],mean_value,label='Mean',parent=y_axis)
-            dpg.bind_item_theme(mean, change_line_thickness(5))
-
-            mean_info = {'X': segment[0], 'Y':list(mean_value)}
-            mean_info = extract_timeline_features(mean_info)
-            create_table(f"{tab_label}_header",f"{tab_label}_table", mean_info, trial_label='Mean')
-    
-
-    
 
 def RemoveTimelineOutliers(sender,app_data,user_data):
     tab_tag,signal_tags = user_data
@@ -5895,7 +5972,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         except Exception: 
                             ocd_events.append(label)
                             color = list(ocd_events).index(label)
-                        t = dpg.add_inf_line_series(x=[x_event],parent = y_axis, tag =f"{tab_tag}_{edx}_{idx}")
+                        t = dpg.add_inf_line_series(x=[x_event],parent = y_axis, tag =f"{tab_tag}_{edx}_{idx}", label=label)
                         events_tags.append([e_tag,idx])
                         theme = change_inf_line_color(color)
                         dpg.bind_item_theme(t, theme)
