@@ -2993,7 +2993,10 @@ def extract_timeline_features(p, coherence=False):
     full_power = np.sum(p['Y'])
     freqs, psd = p['X'], p['Y']
 
-    if psd == []: return None
+    if isinstance(psd, np.ndarray):
+        psd = psd.tolist()
+    elif psd is None:
+        return
     #mean power per band
     pc = np.mean(psd)
     std = np.std(psd)
@@ -3017,6 +3020,8 @@ def extract_timeline_features(p, coherence=False):
     key = 'Peak Time'
     if isinstance(time,str):
         peak = str(utl.parse_datetime(time).time())
+    if time is None or np.isnan(time):
+        return
     elif isinstance(time,float):
         peak = time
         peak = str(datetime.fromtimestamp(time).time())
@@ -4398,6 +4403,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
             if plot:
                 dpg.add_line_series(x,y,label=label,parent=y_axis,tag=f"{tab_label}_{label}_{s}")
                 temp_tags.append(f"{tab_label}_{label}_{s}")
+
             sign = {'X':x,'Y':y}                
 
             if not bva:
@@ -4419,6 +4425,8 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
             if not dpg.does_item_exist(f"{tab_label}_header_after"):
                 dpg.add_collapsing_header(tag=f"{tab_label}_header_after", parent=tab_label,label='After | Stream Metrics')
 
+            if not isinstance(y,(list,np.ndarray)) or (np.all(y) == np.nan):
+                continue
             info = extract_timeline_features(sign)
             if info != None: 
                 create_table(header,table, info, trial_label=label)
