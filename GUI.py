@@ -3937,7 +3937,8 @@ def circadian_rhythm(sender, app_data, user_data):
                 x,_ = stream[side]['X'],stream[side]['Y']
 
                 values = dpg.get_value(tag)
-                y= np.flip(np.array(values[1])).tolist()
+                y= np.array(values[1]).tolist()
+                old_x = np.array(values[0]).tolist()
                 if isinstance(stream['Date'],str):
                     try:
                         days.append(utl.date2str(utl.parse_datetime(stream['Date'])))
@@ -3950,6 +3951,8 @@ def circadian_rhythm(sender, app_data, user_data):
                 else: 
                     new_x = [utl.extract_time_from_datetime_string(str(xx.time())) for xx in x]
 
+                old_x = [utl.extract_time_from_datetime_string(str(datetime.fromtimestamp(xx).time())) for xx in old_x]
+
                 sign = {'X':new_x,'Y':y}
 
                 if not dpg.does_item_exist(f"{tab_label}_header"):
@@ -3957,18 +3960,20 @@ def circadian_rhythm(sender, app_data, user_data):
 
                 info = extract_timeline_features(sign)
                 create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=series_label)
-
+                old_y = y
                 if new_x[0]>600:
                     n_nan =  int((new_x[0] - 600)//600)+1
                     nan_array = [np.nan] * n_nan
                     new_x = list(np.arange(600,new_x[0],600)) + new_x
                     
                     y = nan_array+ y
-                dpg.add_line_series(new_x,y,label=series_label,tag=f"{tab_label}_{i}_{series_label}", parent=y_axis)
+
+
+                dpg.add_line_series(old_x,old_y,label=series_label,tag=f"{tab_label}_{i}_{series_label}", parent=y_axis)
                 toggle_tags.append(f"{tab_label}_{i}_{series_label}")
 
                 
-                mean.append(y)
+                mean.append(np.flip(y).tolist())
                 time_x.append(new_x)
       
         with dpg.group(tag = f"{tab_label}_vbuttons"): pass
@@ -4015,7 +4020,7 @@ def circadian_rhythm(sender, app_data, user_data):
             if label in tag:
                 dpg.configure_item(tag,show=app_data)
             if dpg.get_item_configuration(tag)['show']== True: 
-                mean_array.append(dpg.get_value(tag)[1])
+                mean_array.append(np.flip(dpg.get_value(tag)[1]).tolist())
                 
         padded = np.array([arr + [np.nan] * (big - len(arr)) for arr in mean_array])
 
@@ -4043,6 +4048,7 @@ def stimulation_timeline(sender,app_data,user_data):
     tab_tag, signal_tags, data = user_data
     tab_label = tab_tag+'_stimulation'
     window_id = extract_window_id(tab_tag)
+
     # data = app_state['windows'][window_id]['Data']
 
     if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
@@ -4053,6 +4059,20 @@ def stimulation_timeline(sender,app_data,user_data):
     else:
         dpg.add_tab(label=f"Stimulation", parent=f"{tab_tag}_features_bar", tag=tab_label)
     #add info here about stimulation ?
+
+    if extract_type_window(window_id) == 'Combined': 
+        tag_date_pairs = []
+        for tag in signal_tags:
+            data = getDatabyTag(tag)
+            date = data['Device']['SessionDate']
+            tag_date_pairs.append((tag, date))
+
+        tag_date_pairs.sort(key=lambda x: x[1])
+
+        signal_tags = [tag for tag, _ in tag_date_pairs]
+            
+
+
 
     tags = getActiveSeries(signal_tags)
 
@@ -4072,6 +4092,7 @@ def stimulation_timeline(sender,app_data,user_data):
 
     for side in ['Left','Right']:
         stimulation[side]['X'] = np.unique(list(reversed(stimulation[side]['X'])))
+
     with dpg.group(parent=tab_label, horizontal=True):
         with dpg.plot(label = "Stimulation", tag = f'{tab_label}_plot', width=500): 
             dpg.bind_colormap(f"{tab_label}_plot", 0)
