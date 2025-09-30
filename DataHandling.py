@@ -794,6 +794,21 @@ def getStreamingStimulation(Data,date):
             # return stimulation
     if group == None: return 'Stimulation OFF'
 
+def getStimulation(Data):
+    timeline = getModeSignals(Data,'Timeline')['HemisphereLocationDef.Right']
+    electrodes = info_electrodes(Data)['Stim_electrodes']
+    stimulation = {'X': [], 'Y': [], 'Info': []}
+
+    for _, stream in timeline.items():
+        x = list(reversed([s['DateTime'] for s in stream]))
+        y = list(reversed([s['AmplitudeInMilliAmps'] for s in stream]))
+        for xx in x: stimulation['X'].append(xx)
+        for yy in y: stimulation['Y'].append(yy)
+        text = f"{_[:10]} | Initial: {y[0]} mA | Final: {y[-1]} mA \n Electrodes: {electrodes}"
+        stimulation['Info'].append(text)
+
+    return stimulation
+
 def getEventSummary(Data):
     if 'EventSummary' in Data['Events'].keys():
         return Data['Events']['EventSummary'] 

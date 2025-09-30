@@ -2932,6 +2932,13 @@ def getDatabyTag(series_tag):
     else:
         return app_state['windows'][window_id]['Data']
 
+def getDatabyFile(window_id, file):
+    wt = extract_type_window(window_id)
+    if wt == 'Combined':
+        return app_state['windows'][window_id]['Files'][file]['Data']
+    else:
+        return app_state['windows'][window_id]['Data']
+
 def updateKeySignalbyIdx(value,tab_tag,series_tag, key):
     window_id = extract_window_id(tab_tag)
     idx = extract_idx_from_series_tag(series_tag)
@@ -4043,13 +4050,11 @@ def circadian_rhythm(sender, app_data, user_data):
         for side in ['Left', 'Right']:
             dpg.add_checkbox(label=side, default_value=True, callback=toggle)
     dpg.add_checkbox(label='Hide Days', tag = f"{tab_label}_hide", callback=hide,parent = f"{tab_label}_vbuttons", user_data=(toggle_tags,checkboxes))
-    
+
 def stimulation_timeline(sender,app_data,user_data):
     tab_tag, signal_tags, data = user_data
     tab_label = tab_tag+'_stimulation'
     window_id = extract_window_id(tab_tag)
-
-    # data = app_state['windows'][window_id]['Data']
 
     if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
         dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar")
@@ -4058,7 +4063,6 @@ def stimulation_timeline(sender,app_data,user_data):
         dpg.delete_item(f"{tab_label}_plot_group")
     else:
         dpg.add_tab(label=f"Stimulation", parent=f"{tab_tag}_features_bar", tag=tab_label)
-    #add info here about stimulation ?
 
     if extract_type_window(window_id) == 'Combined': 
         tag_date_pairs = []
@@ -4070,40 +4074,42 @@ def stimulation_timeline(sender,app_data,user_data):
         tag_date_pairs.sort(key=lambda x: x[1])
 
         signal_tags = [tag for tag, _ in tag_date_pairs]
-            
+
+        files = [extract_file_from_series_tag(tag) for tag in signal_tags]
+        files = np.unique(files)
+    else: files = [None]
+    # datas = [getDatabyFile(window_id,file) for file in files]
 
 
+    stimulation = {'X': [], 'Y': [], 'Info':[]}
+    for file in files: 
+        stimus = DH.getStimulation(getDatabyFile(window_id,file))
+        for x in stimus['X']: stimulation['X'].append(x)
+        for x in stimus['Y']: stimulation['Y'].append(x)
+        for x in stimus['Info']: 
+            if stimulation['Info']!= [] and x[:10] == stimulation['Info'][-1][:10]: 
+                stimulation['Info'][-1] = x
+                continue
+            stimulation['Info'].append(x)
 
-    tags = getActiveSeries(signal_tags)
-
-    stimulation = {'Left':{'X':[],'Y':[]},'Right':{'X':[],'Y':[]}}
-    for tag in tags:
-        stream = getSignalbyIdx(window_id,tab_tag,tag)
-        for side in ['Left','Right']:
-            y = stream[side]['Stim']
-            x = stream[side]['X']
-            if isinstance(x[0],str):
-                for xx in x: stimulation[side]['X'].append(utl.parse_datetime(xx).timestamp())
-            elif isinstance(x[0],float):
-                for xx in x: stimulation[side]['X'].append(xx)
-            else:
-                for xx in x: stimulation[side]['X'].append(xx.timestamp())
-            for yy in y: stimulation[side]['Y'].append(yy)
-
-    for side in ['Left','Right']:
-        stimulation[side]['X'] = np.unique(list(reversed(stimulation[side]['X'])))
 
     with dpg.group(parent=tab_label, horizontal=True):
-        with dpg.plot(label = "Stimulation", tag = f'{tab_label}_plot', width=500): 
+        with dpg.plot(label = "Stimulation", tag = f'{tab_label}_plot', width=500, height=400): 
             dpg.bind_colormap(f"{tab_label}_plot", 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time", scale = dpg.mvPlotScale_Time) #tag=f"{tab_label}_x_axis"
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Stimulation Amplitude (mA)", tag= f"{tab_label}_y_axis")
 
-            for side in ['Left','Right']:
-                x = stimulation[side]['X']
-                y = stimulation[side]['Y']
-                dpg.add_line_series(x,y, label = f'{side} Stimulation', parent = y_axis)
+            x = [utl.parse_datetime(x).timestamp() for x in stimulation['X']]
+            y = stimulation['Y']
+            l = dpg.add_line_series(x,y,parent=y_axis)
+            dpg.bind_item_theme(l,change_line_thickness(4))
+        with dpg.group():
+            dpg.add_text('Information')
+            with dpg.child_window(height=380):
+                for info in stimulation['Info']:
+                    dpg.add_text(info)
+                    dpg.add_separator()
 
 def AnalyzeTimelineEvents2(sender,app_data,user_data):
     tab_tag, events_tags, signal_tags = user_data
@@ -5989,7 +5995,6 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     file['Data'][tab_tag]= {'Signals': []}
                     rdate = signals[0]['Date']
                     rdate = utl.date2str(utl.parse_datetime(rdate))
-                    dpg.add_text(f"Day: {rdate}", parent=tab_tag)
 
                     for sdx, signal in enumerate(signals):
                         extra = DH.correctMissingTimeline(file['Data'], signal,'X_missing')[0]
