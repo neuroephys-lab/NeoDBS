@@ -3899,7 +3899,7 @@ def changeTimelinePlot(sender,app_data,user_data):
                         dpg.delete_item(f"{tag}_Left_added")
                         dpg.delete_item(f"{tag}_Right_added")
 
-def circadian_rhythm(sender, app_data, user_data):
+def circadian_rhythm2(sender, app_data, user_data):
     tab_tag, signal_tags, data = user_data
     tab_label = tab_tag+'_circadian'
     window_id = extract_window_id(tab_tag)
@@ -3915,12 +3915,12 @@ def circadian_rhythm(sender, app_data, user_data):
 
     tags = getActiveSeries(signal_tags)
 
-    events = [getEventsbyTag(tab_tag,serie) for serie in tags]
-    if all(e is None for e in events): events = None
+    # events = [getEventsbyTag(tab_tag,serie) for serie in tags]
+    # if all(e is None for e in events): events = None
     
-    if events: 
-        dpg.add_text('Circadian Rhythm only available for recordings, not Events', parent = tab_label)
-        return
+    # if events: 
+    #     dpg.add_text('Circadian Rhythm only available for recordings, not Events', parent = tab_label)
+    #     return
 
     mean, time_x = [], []
     days, toggle_tags = [], []
@@ -3946,6 +3946,7 @@ def circadian_rhythm(sender, app_data, user_data):
                 values = dpg.get_value(tag)
                 y= np.array(values[1]).tolist()
                 old_x = np.array(values[0]).tolist()
+                
                 if isinstance(stream['Date'],str):
                     try:
                         days.append(utl.date2str(utl.parse_datetime(stream['Date'])))
@@ -3958,7 +3959,14 @@ def circadian_rhythm(sender, app_data, user_data):
                 else: 
                     new_x = [utl.extract_time_from_datetime_string(str(xx.time())) for xx in x]
 
+
                 old_x = [utl.extract_time_from_datetime_string(str(datetime.fromtimestamp(xx).time())) for xx in old_x]
+                old_x = list(reversed(old_x))
+
+                
+                print(series_label, ' | Y: ', len(y), ' | X: ', len(old_x))
+                print(datetime.fromtimestamp(old_x[0]), ' --> ', datetime.fromtimestamp(old_x[-1]))
+                print('_ _ _ _ _ _ _ _ _ _ _ __ _ _ _ _ _ _ _ _ _ __ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ')
 
                 sign = {'X':new_x,'Y':y}
 
@@ -3968,23 +3976,33 @@ def circadian_rhythm(sender, app_data, user_data):
                 info = extract_timeline_features(sign)
                 create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=series_label)
                 old_y = y
-                if new_x[0]>600:
-                    n_nan =  int((new_x[0] - 600)//600)+1
+                if min(old_x)>600:
+                    n_nan =  int((min(old_x) - 600)//600)+1
                     nan_array = [np.nan] * n_nan
-                    new_x = list(np.arange(600,new_x[0],600)) + new_x
+                    old_x = list(np.arange(600,min(old_x),600)) + old_x
+                    old_y = nan_array + old_y
+
+                if len(old_x)<144: #24*6+1
+                    number = 144 - len(old_x) 
+                    last = old_x[-1]
+                    for i in range(number): 
+                        old_x.append(float(last + i*600))
+                        old_y.append(np.nan)
                     
-                    y = nan_array+ y
 
-
-                dpg.add_line_series(old_x,old_y,label=series_label,tag=f"{tab_label}_{i}_{series_label}", parent=y_axis)
+                # dpg.add_line_series(old_x,old_y,label=series_label,tag=f"{tab_label}_{i}_{series_label}", parent=y_axis)
+                dpg.add_line_series(new_x,y,label=series_label,tag=f"{tab_label}_{i}_{series_label}", parent=y_axis)
                 toggle_tags.append(f"{tab_label}_{i}_{series_label}")
 
-                
+                print(series_label, ' | Y: ', len(old_y), ' | X: ', len(old_x))
+                print(datetime.fromtimestamp(old_x[0]), ' --> ', datetime.fromtimestamp(old_x[-1]))
+                print('______________________________________________________________________')
                 mean.append(np.flip(y).tolist())
                 time_x.append(new_x)
       
         with dpg.group(tag = f"{tab_label}_vbuttons"): pass
         with dpg.group(tag = f"{tab_label}_buttons", parent=f"{tab_label}_vbuttons",horizontal=True): pass
+    
     max_len = max(len(arr) for arr in mean)
     
     # x = np.arange(0,len(mean)*600,600)
@@ -4050,6 +4068,83 @@ def circadian_rhythm(sender, app_data, user_data):
         for side in ['Left', 'Right']:
             dpg.add_checkbox(label=side, default_value=True, callback=toggle)
     dpg.add_checkbox(label='Hide Days', tag = f"{tab_label}_hide", callback=hide,parent = f"{tab_label}_vbuttons", user_data=(toggle_tags,checkboxes))
+
+def circadian_rhythm(sender, app_data, user_data):
+    tab_tag, signal_tags, data = user_data
+    tab_label = tab_tag+'_circadian'
+    window_id = extract_window_id(tab_tag)
+
+    if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
+        dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar")
+
+    if dpg.does_item_exist(tab_label):
+        dpg.delete_item(tab_label,children_only=True)
+    else:
+        dpg.add_tab(label=f"Circadian Rhythm", parent=f"{tab_tag}_features_bar", tag=tab_label)
+
+    tags = getActiveSeries(signal_tags)
+
+    days = {}
+    mean = []
+    for tag in tags:
+        x,y = dpg.get_value(tag)[:2]
+        x= sorted(x)
+        old_x = [utl.extract_time_from_datetime_string(str(datetime.fromtimestamp(xx).time())) for xx in x]
+        old_y = list(reversed(y))
+
+        x,y = [], []
+        for n in range(len(old_x)-1):
+            x.append(old_x[n])
+            y.append(old_y[n])
+            if old_x[n+1]-old_x[n]>660:
+                gap_times = np.arange(old_x[n]+600, old_x[n+1], 600)
+                x.extend(gap_times)
+                y.extend([np.nan]*len(gap_times))
+
+        x.append(old_x[-1])
+        y.append(old_y[-1])
+        
+        last = utl.extract_time_from_datetime_string("23:59:00")
+        if x[0]>60*10:
+            if x[0]>last:
+                x[0] = x[0]-last
+                
+            diff = int((x[0]-600)//600)+1
+            nan_array = [np.nan]*diff
+            y = nan_array + y
+            x = list(np.arange(x[0]-(diff*600),x[0],600)) + x
+
+        
+        if x[-1]<last:
+            diff = int((last - x[-1])//600)+1
+            nan_array = [np.nan]*diff
+            y = y + nan_array
+            x = x + list(np.arange(x[-1],last,600))
+
+        days[tag] = [x,y]
+        
+        mean.append(y)
+
+    mean = np.nanmean(mean,axis=0)
+    minus = mean - np.nanstd(mean,axis=0)
+    plus = mean + np.nanstd(mean,axis=0)
+
+    
+    with dpg.group(parent=tab_label, horizontal=True, tag=f"{tab_label}_CR"):
+        with dpg.plot(label = "Circadian Rhythm", tag = f'{tab_label}_plot', width=800): 
+            dpg.bind_colormap(f"{tab_label}_plot", 0)
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time", scale = dpg.mvPlotScale_Time) #tag=f"{tab_label}_x_axis"
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µVp)", tag= f"{tab_label}_y_axis")
+            
+            for tag, val in days.items():
+                label = dpg.get_item_label(tag)
+                dpg.add_line_series(val[0],val[1],label=label,parent=y_axis, tag = f"{tag}_{tab_label}",skip_nan=False)
+
+            s = dpg.add_shade_series(val[0],y1=minus,y2=plus,parent=y_axis,label='Std. Dev.',tag=f"{tab_label}_std")
+            dpg.bind_item_theme(s,create_alpha_theme())
+            m = dpg.add_line_series(val[0],mean,parent=y_axis,label='Mean',tag=f"{tab_label}_mean",skip_nan=False)
+            dpg.bind_item_theme(m,change_line_thickness(4))
 
 def stimulation_timeline(sender,app_data,user_data):
     tab_tag, signal_tags, data = user_data

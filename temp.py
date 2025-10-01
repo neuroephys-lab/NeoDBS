@@ -4,7 +4,9 @@ import dearpygui.dearpygui as dpg
 import utils as utl
 import matplotlib.pyplot as plt
 
-file1 = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
+print(599//600)
+
+'''file1 = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
 file2 = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-22\\Report_Json_Session_Report_20241125T163306.json"
 
 
@@ -37,6 +39,6 @@ dpg.create_viewport(title='Temporario', width=800, height=600)
 dpg.setup_dearpygui()
 dpg.show_viewport()
 dpg.start_dearpygui()
-dpg.destroy_context()
+dpg.destroy_context()'''
 
 
