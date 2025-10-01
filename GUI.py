@@ -3975,6 +3975,8 @@ def circadian_rhythm2(sender, app_data, user_data):
 
                 info = extract_timeline_features(sign)
                 create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=series_label)
+                
+                
                 old_y = y
                 if min(old_x)>600:
                     n_nan =  int((min(old_x) - 600)//600)+1
@@ -4085,12 +4087,17 @@ def circadian_rhythm(sender, app_data, user_data):
     tags = getActiveSeries(signal_tags)
 
     days = {}
-    mean = []
+    mean, dates = [], []
+
+    #preparing streams
     for tag in tags:
-        x,y = dpg.get_value(tag)[:2]
-        x= sorted(x)
+        dates.append(getSignalbyIdx(window_id,tab_tag,tag)['Date'][:10])
+        old_x,old_y = dpg.get_value(tag)[:2]
+        x = sorted(old_x)
+        if x[0] != old_x[0]:
+            old_y = list(reversed(old_y))
+
         old_x = [utl.extract_time_from_datetime_string(str(datetime.fromtimestamp(xx).time())) for xx in x]
-        old_y = list(reversed(y))
 
         x,y = [], []
         for n in range(len(old_x)-1):
@@ -4129,7 +4136,32 @@ def circadian_rhythm(sender, app_data, user_data):
     minus = mean - np.nanstd(mean,axis=0)
     plus = mean + np.nanstd(mean,axis=0)
 
-    
+    def toggle(sender,app_data,user_data):
+        label = dpg.get_item_label(sender)
+        new_mean = []
+        if dpg.get_value(f"{tab_label}_hide") == True:
+            callback = dpg.get_item_callback(f"{tab_label}_hide")
+            dpg.set_value(f"{tab_label}_hide",False)
+            if callback:
+                callback(f"{tab_label}_hide", None, dpg.get_item_user_data(f"{tab_label}_hide"))
+
+        toggle_tags = [f"{tag}_{tab_label}" for tag in getActiveSeries(tags)]
+
+        for t in toggle_tags:
+            taglabel = dpg.get_item_label(t) 
+            if label in taglabel:
+                dpg.configure_item(t,show=app_data)
+            show = dpg.get_item_configuration(t)['show']
+            if show: 
+                new_mean.append(dpg.get_value(t)[1])
+
+        new_mean = np.nanmean(new_mean,axis=0)
+        new_minus = new_mean - np.nanstd(new_mean,axis=0)
+        new_plus = new_mean + np.nanstd(new_mean,axis=0)
+        dpg.configure_item(f"{tab_label}_mean",y=new_mean)
+        dpg.configure_item(f"{tab_label}_std",y1=new_minus,y2=new_plus)
+
+
     with dpg.group(parent=tab_label, horizontal=True, tag=f"{tab_label}_CR"):
         with dpg.plot(label = "Circadian Rhythm", tag = f'{tab_label}_plot', width=800): 
             dpg.bind_colormap(f"{tab_label}_plot", 0)
@@ -4141,10 +4173,40 @@ def circadian_rhythm(sender, app_data, user_data):
                 label = dpg.get_item_label(tag)
                 dpg.add_line_series(val[0],val[1],label=label,parent=y_axis, tag = f"{tag}_{tab_label}",skip_nan=False)
 
+                new_x = [datetime.fromtimestamp(xx) for xx in val[0]]
+
+                sign = {'X':new_x,'Y':val[1]}
+
+                if not dpg.does_item_exist(f"{tab_label}_header"):
+                    dpg.add_collapsing_header(tag=f"{tab_label}_header", parent=tab_label, label = 'Circadian Metrics')
+
+                info = extract_timeline_features(sign)
+                create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=label)
+
+
             s = dpg.add_shade_series(val[0],y1=minus,y2=plus,parent=y_axis,label='Std. Dev.',tag=f"{tab_label}_std")
             dpg.bind_item_theme(s,create_alpha_theme())
             m = dpg.add_line_series(val[0],mean,parent=y_axis,label='Mean',tag=f"{tab_label}_mean",skip_nan=False)
             dpg.bind_item_theme(m,change_line_thickness(4))
+
+            sign = {'X':new_x,'Y':mean}
+
+            info = extract_timeline_features(sign)
+            create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label='Mean')
+
+        dates = np.unique(dates)
+        checkboxes = []
+        with dpg.group():
+            with dpg.child_window(width=120, height=250):
+                dpg.add_text('By Day:')
+                for d in dates:
+                    c = dpg.add_checkbox(label=d, default_value=True, callback=toggle)
+                    checkboxes.append(c)
+            with dpg.group():
+                for side in ['Left', 'Right']:
+                    dpg.add_checkbox(label=side, default_value=True, callback=toggle)
+            dpg.add_checkbox(label='Hide Days', tag = f"{tab_label}_hide", callback=hide,parent = f"{tab_label}_vbuttons", user_data=(tags,checkboxes))
+
 
 def stimulation_timeline(sender,app_data,user_data):
     tab_tag, signal_tags, data = user_data
