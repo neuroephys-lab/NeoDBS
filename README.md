@@ -4,7 +4,8 @@
 ### Bug fixes:
 1. Hide/toggle button in timeline events
     - if hide=True and toggle active --> hide=False and unselected streams active
-    - PAC: exception for signals w/ different length
+2. PAC: exception for signals w/ different length
+3. Coherence: restrictions for feature extraction
 
 ### GUI design:
 - Timeline combined: header shows sensing information

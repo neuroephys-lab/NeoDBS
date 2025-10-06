@@ -1454,6 +1454,7 @@ def plot_df_coherence(parameter_values,tab_tag,tags):
     window_id = extract_window_id(tab_tag)
 
     def plot():
+        labs = []
         for no in ['0','1']:
             tag = f"{tab_label}_s{no}"
             lab = dpg.get_value(tag)
@@ -1461,7 +1462,9 @@ def plot_df_coherence(parameter_values,tab_tag,tags):
             signal = getSignalbyIdx(window_id,tab_tag,tags[idx])
             if no =='0': parameter_values['x'] = signal
             else: parameter_values['y'] = signal
-
+            labs.append(lab)
+            
+        if labs[0]==labs[1]:return
         plot_coherence(parameter_values,tab_label)
         
     combos = {}
@@ -1528,16 +1531,13 @@ def plot_coherence(parameter_values, tab_label):
   
     dpg.add_line_series(freq.tolist(), coh.tolist(), label=f"Coherence | {signal1['Channel']}-{signal2['Channel']}", parent=f"{tab_label}_y_axis")
     dpg.add_line_series(freq.tolist(), IMcoh.tolist(), label=f"Imaginary Coherence | {signal1['Channel']}-{signal2['Channel']}", parent=f"{tab_label}_y_axis")
-    # dpg.add_line_series(freq.tolist(), ab.tolist(), label=f"Absolute Coherence | {signal1['Channel']}-{signal2['Channel']}", parent=f"{tab_label}_y_axis")
+    
     dpg.set_axis_limits(f"{tab_label}_y_axis",ymin=0,ymax=1)
-    # p = {'X': list(freq), 'Y':list(coh)}
-    # info = extract_timeline_features(p)
-    # create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{signal1['Channel']}-{signal2['Channel']}")
     bands = getBandsByTab(tab_label)
     for b,band in bands.items():
         mask2 = (freq >= band[0]) & (freq <= band[1])
         p = {'X': freq[mask2], 'Y':list(coh[mask2])}
-        info = extract_timeline_features(p, coherence=True)
+        info = extract_timeline_features(p,coh, coherence=True)
         create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
 
 
@@ -1680,7 +1680,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
                 for b,band in bands.items():
                     mask2 = (freq >= band[0]) & (freq <= band[1])
                     p = {'X': freq[mask2], 'Y':list(coh[mask2])}
-                    info = extract_timeline_features(p, coherence=True)
+                    info = extract_timeline_features(p,coh, coherence=True)
                     create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
 
         time.sleep(0.2)
@@ -2747,6 +2747,7 @@ def different_combo(sender,app_data,user_data):
     if atual == other:
         dpg.add_separator(parent=doc_container)
         dpg.add_text('Recordings cannot be the same!', parent=doc_container, show=True, tag = f"{sender}_pac_w")
+        return
          
 
 #--- Extract signal/identifiers
@@ -3039,10 +3040,12 @@ def extract_psd_features(p, band):
 
     return info
 
-def extract_timeline_features(p, coherence=False):
+def extract_timeline_features(p, full_power=None, coherence=False):
     
-    
-    full_power = np.sum(p['Y'])
+    if full_power is None:
+        full_power = np.sum(p['Y'])
+    else: full_power = np.sum(full_power)
+
     freqs, psd = p['X'], p['Y']
 
     if isinstance(psd, np.ndarray):
@@ -3055,7 +3058,9 @@ def extract_timeline_features(p, coherence=False):
     mean = {'Mean Power (mean, std. dev)': [np.round(pc,2), np.round(std,2)]}
 
     #normalized mean power
-    norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc*100/full_power,2), np.round(std * 100 / full_power,2)]}
+    if full_power is not None:
+        sump = np.sum(psd)
+        norm_mean = {'% Mean Power (mean, std. dev)': [np.round(sump*100/full_power,2), np.round(std * 100 / full_power,2)]}
  
     #peak power
     peak = max(psd)
