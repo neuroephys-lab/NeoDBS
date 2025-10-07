@@ -889,9 +889,10 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     stream=getSignalbyIdx(window_id,tab_tag,tag,mode='segment')
                 else: stream = getSignalbyIdx(window_id,tab_tag,tag)
 
-                channels.append(stream['Channel']) 
                 days.append(stream['Date'])
                 series_label = dpg.get_item_configuration(tag)['label']
+                channel, side = extract_channel_hemisphere(stream['Channel'])
+                channels.append(channel)
 
     	        #BEFORE AND AFTER PSD
                 if comparing == True:
@@ -983,8 +984,36 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     freqs, psd = p['X'], p['Y']      
                     ploted_tags.append(f"{tab_label}_{series_label}_{func}")
 
+
+                    if not dpg.does_item_exist(f"{tab_label}_hemisphere"):
+                                dpg.add_tree_node(tag=f"{tab_label}_hemisphere",
+                                    label="By Hemisphere",
+                                    parent=tab_label,
+                                    default_open=False
+                                )
+
+                    if not dpg.does_item_exist(f"{tab_label}_channel"):
+                                dpg.add_tree_node(tag=f"{tab_label}_channel",
+                                    label="By Channel",
+                                    parent=tab_label,
+                                    default_open=False
+                                )
+
+                    if not dpg.does_item_exist(f"{tab_label}_individual"):
+                                dpg.add_tree_node(tag=f"{tab_label}_individual",
+                                    label="Individual Streams",
+                                    parent=tab_label,
+                                    default_open=False
+                                )
+
+                    if not dpg.does_item_exist(f"{tab_label}_{side}"):
+                        dpg.add_collapsing_header(label = f'{side} HEMISPHERE', tag =f"{tab_label}_{side}", parent = f"{tab_label}_hemisphere")
+
+                    if not dpg.does_item_exist(f"{tab_label}_{stream['Channel']}"):
+                        dpg.add_collapsing_header(label = f'{stream['Channel']}', tag =f"{tab_label}_{stream['Channel']}", parent = f"{tab_label}_channel")
+
                     if not dpg.does_item_exist(f"{tab_label}_{series_label}"):
-                        dpg.add_collapsing_header(label = f'{series_label}', tag =f"{tab_label}_{series_label}", parent = tab_label)
+                        dpg.add_collapsing_header(label = f'{series_label}', tag =f"{tab_label}_{series_label}", parent = f"{tab_label}_individual")
                     else:
                         dpg.delete_item(f"{tab_label}_{series_label}", children_only=True)
 
@@ -992,8 +1021,12 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     for band in bands.items():
                         info = extract_psd_features(p, band)
                         create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table", info, trial_label=band[0])
+                        create_table(f"{tab_label}_{stream['Channel']}",f"{tab_label}_{stream['Channel']}_table", info, trial_label=f"{band[0]} | {series_label}")
+                        create_table(f"{tab_label}_{side}",f"{tab_label}_{side}_table", info, trial_label=f"{band[0]} | {series_label}")
 
                     tables.append(f"{tab_label}_{series_label}_table")
+                    tables.append(f"{tab_label}_{stream['Channel']}_table")
+                    tables.append(f"{tab_label}_{side}_table")
 
                     updateSignalbyIdx(p,tab_tag,tag,func, mode=mode)
                     
@@ -2822,6 +2855,24 @@ def extract_mode(tab_tag: str) -> str:
     else:
         raise ValueError(f"Invalid tab_tag format: {tab_tag}")
 
+def extract_channel_hemisphere(label):
+    """
+    Parses a label like 'ZERO_THREE_LEFT' into channel and hemisphere.
+    
+    Returns:
+        channel (str): The channel with underscores (e.g. 'zero_three')
+        hemisphere (str): The hemisphere (e.g. 'left')
+    """
+    parts = label.split('_')
+    
+    if len(parts) < 2:
+        raise ValueError("Label format is invalid. Expected format: CHANNEL_HEMISPHERE")
+
+    hemisphere = parts[-1]
+    channel = '_'.join(parts[:-1])
+    
+    return channel, hemisphere
+
 def getActiveSeries(signal_tags):
     active_tags = []
 
@@ -3014,19 +3065,11 @@ def extract_psd_features(p, band):
     #normalized mean power
     norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc[b]*100/full_power,2), np.round(std[b],2)]}
 
-    #auc
-    # params = pre.get_required_params('simpson', module='si')
-    # param_auc = {}
-    # for name, param in params.items(): param_auc[name] = param
     if isinstance(freqs, list): 
         freqs = np.array(freqs)
         psd = np.array(psd)
     mask = (freqs >= v[0]) & (freqs <= v[1])
-    # param_auc['y'] = psd[mask]
-    # simpson = pre.call_function('simpson', param_dict=param_auc, module='si')
     auc = {'Sum Power (AUC)': np.round(np.sum(psd[mask]),2)}
-    # auc = {'Sum Power (AUC)': f"{np.round(simpson,2)}"}
-    # print('AUC: ', np.round(np.sum(p['Y'][mask])/full_power,2))
 
     #normalized auc
     norm_auc = {'% Sum Power (AUC)': f"{np.round(np.sum(psd[mask])/full_power*100,2)}"}

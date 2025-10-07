@@ -1,5 +1,16 @@
 # NeoDBS
 
+## 07.10.2025
+
+### Bug fixes:
+1. Normalized mean power
+
+### GUI design:
+- Feature extraction in PSD (combined/individual): streams are grouped by hemisphere and channel, but also individually presented
+
+### Code structure:
+- New folder: deprecated - old docs
+
 ## 06.10.2025
 ### Bug fixes:
 1. Hide/toggle button in timeline events
