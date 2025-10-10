@@ -1,5 +1,13 @@
 # NeoDBS
 
+## 10.10.2025
+Tables into respective folders.
+
+### Bug fixes:
+1. Combined segmentation of streaming events
+2. Filtering segments of multiple files
+
+
 ## 07.10.2025
 
 ### Bug fixes:

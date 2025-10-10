@@ -460,7 +460,7 @@ def hide(sender,app_data,user_data):
         dpg.configure_item(s, show=bol)
 
 #--- Visualization functions
-def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False):
+def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False, count = []):
     '''
     Plot Time Domain signals (Streaming, Indefinite, Setup, Survey)
     '''
@@ -469,8 +469,12 @@ def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False)
     if events:
         event_types = [signal['Type'] for signal in signals]
         event_types = np.unique(event_types).tolist()
-    
+    if count != []: fdx = files
     for idx, signal in enumerate(signals):
+        if count != []:
+            files = fdx[idx]
+            idx = count[idx]
+            
         series_tag = f"{tab_tag}_series_{idx}" #+extra
         combined_tag = f"{tab_tag}_file_{files}_series_{idx}"
         
@@ -2003,7 +2007,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                 parameter_values['x'] = np.array(y)
                 signal = pre.call_function(func, parameter_values)
                 per_file[file].append(signal)
-                updateSignalbyIdx(signal,tab_tag,tag,func)
+                # updateSignalbyIdx(signal,tab_tag,tag,func)
 
                 Merge.append(signal)
 
@@ -3006,7 +3010,7 @@ def updateSignalbyIdx(value,tab_tag,series_tag, func = None, mode = None, new_ta
     window_id = extract_window_id(tab_tag)
     idx = extract_idx_from_series_tag(series_tag)
     file = extract_file_from_series_tag(series_tag)
-    edx = int(extract_edx_from_series_tag(series_tag))
+    edx = int(extract_edx_from_series_tag(series_tag))-1
     wt = extract_type_window(window_id)
     if new_tab_tag: tab_tag=new_tab_tag
 
@@ -3021,7 +3025,8 @@ def updateSignalbyIdx(value,tab_tag,series_tag, func = None, mode = None, new_ta
     else: 
         if wt == 'Combined':
             if func != None: app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Events'][edx][func] = value
-            else: app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Events'][edx]['Y'] = value
+            else: 
+                app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Events'][edx]['Y'] = value
         else:
             if func != None: app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Events'][edx][func] = value
             else: app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Events'][edx]['Y'] = value
@@ -3406,7 +3411,9 @@ def DefaultFilter(sender,app_data,user_data):
     band = dpg.get_value(item=f"{tab_tag}_default_wn")[:2]
 
     for series in active_series:
+        signal = {}
         signal=getSignalbyIdx(window_id,tab_tag,series,mode=signal_mode)
+        # signal['X'], signal['Y']=dpg.get_value(series)[:2]
         clean, _ = pre.removeCardiacComponent(signal, band)
         clean = np.ascontiguousarray(clean)
         updateSignalbyIdx(clean,tab_tag,series,mode=signal_mode)
@@ -3414,7 +3421,6 @@ def DefaultFilter(sender,app_data,user_data):
         if noise != 0:
             snr = (10*np.log10(np.sum(np.array(signal['Y'])**2)/noise))
         else: snr = 30
-        print(f"SNR: {snr:.2f} dB")
 
     title = 'Standard Filter'
     update_plot_td(tab_tag,signal_tags, title,signal_mode = plot_mode)
@@ -3755,8 +3761,7 @@ def insert_events(sender, app_data, user_data):
     if dpg.does_item_exist(f"{tab_tag}_emin"):
         min = int(dpg.get_value(f"{tab_tag}_emin"))*250
         max = int(dpg.get_value(f"{tab_tag}_emax"))*250
-   
- 
+
     window_type = extract_type_window(window_id)
 
     def read_txt(sender, app_data, user_data):
@@ -3895,16 +3900,24 @@ def align_events(sender,app_data, user_data):
     window_type = extract_type_window(window_id)
     parent = f"y_axis_{tab_tag}"
 
+    all_events, edx, fdx = [], [], []
     if window_type == 'Combined':
         files = app_state['windows'][window_id]['Files']
         for idx,_ in enumerate(files):
+            count = 0
             if 'Events' in files[idx]['Data'][tab_tag].keys():
                 events = files[idx]['Data'][tab_tag]['Events']
                 if len(events)>1:
-                    dpg.delete_item(parent,children_only=True)
-                    signal_tags.clear()
-                    dpg.configure_item(f"x_axis_{tab_tag}", scale=dpg.mvPlotScale_Linear)
-                    plot_td(events,parent,tab_tag, signal_tags,files=idx,events=True)
+                    for event in events: 
+                        all_events.append(event)
+                        edx.append(count)
+                        count+=1
+                        fdx.append(idx)
+
+        dpg.delete_item(parent,children_only=True)
+        signal_tags.clear()
+        dpg.configure_item(f"x_axis_{tab_tag}", scale=dpg.mvPlotScale_Linear)
+        plot_td(all_events,parent,tab_tag, signal_tags,files=fdx,events=True, count=edx)
                 # else: dpg.add_text('To compare events, needs at least 2 events', parent=parent)
 
         dpg.configure_item(f"{tab_tag}_add_events", show = False)
