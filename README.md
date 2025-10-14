@@ -1,5 +1,11 @@
 # NeoDBS
 
+## 14.10.2025
+Events in text files for easier combined analysis
+
+### New functionalities:
+- Mean Spectrogram
+
 ## 10.10.2025
 Tables into respective folders.
 

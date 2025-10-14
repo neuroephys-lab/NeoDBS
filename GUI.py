@@ -1197,8 +1197,8 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 with dpg.group(parent=f"{tab_tag}_buttons", horizontal=True):   
                     with dpg.group(): #Before and After
                         dpg.add_text('When:')
-                        dpg.add_checkbox(label='PSD Before', default_value=True, callback=toggle, user_data=-1)
-                        dpg.add_checkbox(label='PSD After', default_value=True, callback=toggle, user_data=-1)
+                        dpg.add_checkbox(label='Before', default_value=True, callback=toggle, user_data=-1)
+                        dpg.add_checkbox(label='After', default_value=True, callback=toggle, user_data=-1)
                     
                     with dpg.group(): #Per Event
                         dpg.add_text('Who:')
@@ -2037,6 +2037,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                     else:
                         emin = 0
                         emax = len(y)/250
+
                     per_tag[tag] = [Sxx_log,plot_tag, plot_label, stream_events, (emin, emax)]
                         
                     dpg.add_heat_series(Sxx_log.flatten(), rows=Sxx_log.shape[0], cols=Sxx_log.shape[1],
@@ -2111,10 +2112,46 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                                         dpg.add_plot_legend()
                                         dpg.add_inf_line_series(x=stamp,label=f'{type}',parent=y_axis)
                   
+        def mean_spectrogram(sender,app_data,user_data):
+            all_Sxx = user_data
+            all_Sxx = [s[2] for s in all_Sxx] 
+            shapes = [s.shape for s in all_Sxx]
+            if not all(shape == shapes[0] for shape in shapes):
+                e = "All spectrograms must have the same time length to compute the mean."
+                dpg.add_text(e, parent=f"{tab_label}_plot_group")
+                raise ValueError(e)
+
+            # Compute the mean spectrogram (linear scale)
+            mean_Sxx = np.mean(np.stack(all_Sxx), axis=0)
+
+            # Convert to dB
+            mean_Sxx_log = 10 * np.log10(mean_Sxx + 1e-10)
+            mean_Sxx_log = np.flipud(mean_Sxx_log)
+            
+            title = "Mean Spectrogram"
+            subplot_tag = f"{tab_label}_mean"
+
+            with dpg.collapsing_header(label='Mean Spectrogram', parent=tab_label):
+                with dpg.plot(label=title, width=500, height=400, tag=subplot_tag):
+                    x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
+                    y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
+
+                    if mode and wt== 'Combined':
+                        emin = -int(dpg.get_value(f"{tab_tag}_emin"))
+                        emax = int(dpg.get_value(f"{tab_tag}_emax"))
+                    else:
+                        emin = 0
+                        emax = len(y)/250
+
+                    dpg.add_heat_series(mean_Sxx_log.flatten(), rows=mean_Sxx_log.shape[0], cols=mean_Sxx_log.shape[1],
+                                        scale_min=global_min, scale_max=global_max,
+                                        parent=y_axis, format="", bounds_min=[emin,0], bounds_max=[emax,125])
+                    dpg.bind_colormap(subplot_tag, dpg.mvPlotColormap_Jet)
 
         with dpg.group(horizontal=False):
             dpg.add_checkbox(label='Synchronize Axis', callback=link)      
             dpg.add_button(label='Band Power over Time', callback=merge_spectrograms)
+            dpg.add_button(label='Mean Spectrogram', callback=mean_spectrogram, user_data=Merge)
        
 def choose(sender,app_data,user_data):
     tags, tab_label, func, tab_tag, parameter_values, mode = user_data
