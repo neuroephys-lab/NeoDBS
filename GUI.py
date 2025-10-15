@@ -512,7 +512,7 @@ def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False,
             else:
                 electrodes_names[old_channel] = old_channel
 
-            x, y, type_event, channel, serie_idx = signal['X'],signal['Y'],signal['Type'], old_channel, signal['Serie']
+            x, y, type_event, channel, serie_idx = signal['X'],signal['Y'], signal['Type'], old_channel, signal['Serie']
             if extract_type_window(window_id) == 'Combined':
                 segment_tag = f"{tab_tag}_file_{files}_series_{serie_idx}_{type_event}_{idx}"
             else:
@@ -524,6 +524,7 @@ def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False,
                 signal_tags[segment_tag] = True 
             else:
                 print(f"Skipping duplicate series: {combined_tag}")
+
 
 def plot_fd(signals, parent, tab_tag, signal_tags, files = None, events = False):
     '''
@@ -590,7 +591,6 @@ def update_plot_td(tab_tag, signal_tags, title = None, signal_mode = None):
     if title != None: dpg.set_item_label(item=plot_tag,label=f"{previous} - {title}")
 
     for i,serie in enumerate(active_series):
-        file = extract_file_from_series_tag(serie)
         if mode == 'Events':
             signal = getSignalbyIdxSide(window_id,tab_tag,serie)
         elif signal_mode == None:
@@ -969,6 +969,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
 
                         tables.append(f"{tab_label}_{series_label}_table_{states[i]}")
 
+
                 #NORMAL PSD
                 if comparing == False:
                     y = stream['Y']
@@ -1076,8 +1077,8 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     freqs = np.arange(0,len(all_mean),1)
                 
                 else: 
-                    all_mean = np.mean([p['Y'] for p in power], axis=0)
-                    all_std = np.std([p['Y'] for p in power], axis=0)
+                    all_mean = np.nanmean([p['Y'] for p in power], axis=0)
+                    all_std = np.nanstd([p['Y'] for p in power], axis=0)
 
                 minus = all_mean - all_std
                 plus = all_mean + all_std
@@ -1109,6 +1110,14 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
 
             dpg.set_axis_limits(x_axis,min(freqs),max(freqs))
             dpg.set_axis_limits(y_axis,min(psd),max(psd))
+
+        def choose_toggle(sender, app_data, user_data):
+            if dpg.does_item_exist(f"{tab_label}_bva"): 
+                comparing = dpg.get_value(f"{tab_label}_bva")
+
+                if comparing: toggle(sender,app_data,user_data)
+                else: toggle2(sender,app_data,user_data)
+            else: toggle2(sender,app_data,user_data)
 
         def toggle(sender,app_data,user_data):
             axis = user_data
@@ -1192,48 +1201,47 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             if mode == 'segment': 
                 dpg.add_checkbox(label='Before vs. After',callback=before_vs_after, user_data=(signal_tags,tab_label,func,tab_tag,parameter_values), tag = f"{tab_label}_bva", default_value=comparing)
             if comparing== True:
+                
                 dpg.add_separator()
                 dpg.add_text('Toggle Streams')
                 with dpg.group(parent=f"{tab_tag}_buttons", horizontal=True):   
                     with dpg.group(): #Before and After
                         dpg.add_text('When:')
-                        dpg.add_checkbox(label='Before', default_value=True, callback=toggle, user_data=-1)
-                        dpg.add_checkbox(label='After', default_value=True, callback=toggle, user_data=-1)
+                        cc = dpg.add_checkbox(label='Before', default_value=True, callback=toggle, user_data=-1)
+                        c = dpg.add_checkbox(label='After', default_value=True, callback=toggle, user_data=-1)
+                        checkboxes.append(cc)
+                        checkboxes.append(c)
                     
-                    with dpg.group(): #Per Event
-                        dpg.add_text('Who:')
-                        for i, name in enumerate(events_names): 
-                            dpg.add_checkbox(label=name, callback=toggle, default_value=True)
-
                     with dpg.group(): #Per Type of Event
                         events_type = [name.split(' ')[0] for name in events_names]
                         events_type = np.unique(events_type)
                         dpg.add_text('What:')
                         for i, etype in enumerate(events_type):
-                            dpg.add_checkbox(label=etype, callback=toggle, default_value=True)
-            else:
-                channels = np.unique(channels)
-                days = np.unique(days)
-                dpg.add_text('Toggle Streams')
-                with dpg.group(parent=f"{tab_tag}_buttons", horizontal=True):  
-                    if len(channels)>1: 
-                        with dpg.group(): #channels
-                            dpg.add_text('Channels: ')
-                            for ch in channels:
-                                c = dpg.add_checkbox(label=ch, callback=toggle2, default_value=True)
-                                checkboxes.append(c)
-                    if len(days)>1:
-                        with dpg.group(): #days
-                            dpg.add_text('Recordings: ')
-                            for d in days:
-                                c = dpg.add_checkbox(label=d, callback=toggle2, default_value=True)
-                                checkboxes.append(c)
-                    with dpg.group(): #side
-                        dpg.add_text('Hemisphere: ')
-                        sides = ['LEFT', 'RIGHT']
-                        for d in sides:
-                            c = dpg.add_checkbox(label=d, callback=toggle2, default_value=True)
+                            c = dpg.add_checkbox(label=etype, callback=toggle, default_value=True)
                             checkboxes.append(c)
+
+                dpg.set_item_user_data(f"{tab_label}_hide",(ploted_tags, checkboxes))
+            channels = np.unique(channels)
+            days = np.unique(days)
+            with dpg.group(parent=f"{tab_tag}_buttons", horizontal=True):  
+                if len(channels)>1: 
+                    with dpg.group(): #channels
+                        dpg.add_text('Channels: ')
+                        for ch in channels:
+                            c = dpg.add_checkbox(label=ch, callback=choose_toggle, default_value=True)
+                            checkboxes.append(c)
+                if len(days)>1:
+                    with dpg.group(): #days
+                        dpg.add_text('Recordings: ')
+                        for d in days:
+                            c = dpg.add_checkbox(label=d, callback=choose_toggle, default_value=True)
+                            checkboxes.append(c)
+                with dpg.group(): #side
+                    dpg.add_text('Hemisphere: ')
+                    sides = ['LEFT', 'RIGHT']
+                    for d in sides:
+                        c = dpg.add_checkbox(label=d, callback=choose_toggle, default_value=True)
+                        checkboxes.append(c)
             dpg.add_separator()
             dpg.add_checkbox(label='Hide signals', callback=hide, tag = f"{tab_label}_hide", user_data=(ploted_tags, checkboxes))
             dpg.add_separator()
@@ -1997,7 +2005,6 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
         with dpg.subplots(rows=num_rows, columns=num_cols, label="Spectrograms", width=800, height=400*num_rows, tag=f"{tab_label}_subplots"):
             for i,tag in enumerate(tags):
                 stream = getSignalbyIdx(window_id, tab_tag, tag, mode=mode)
-                
                 stream_events = getEventsbyTag(tab_tag,tag)
                 if stream_events!=[]: all_events = stream_events
                 file = extract_file_from_series_tag(tag)
@@ -2007,7 +2014,6 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                 parameter_values['x'] = np.array(y)
                 signal = pre.call_function(func, parameter_values)
                 per_file[file].append(signal)
-                # updateSignalbyIdx(signal,tab_tag,tag,func)
 
                 Merge.append(signal)
 
@@ -2020,7 +2026,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
 
                 # Create a new subplot for each heat series
                 if mode and wt == 'Combined':
-                    plot_label = f"{channel} - {stream['Type']} {i} - {date}"
+                    plot_label = f"{channel} | {stream['Type']} - {date}"
                     plot_tag = f"{tab_label}_{channel}_{stream['Type']}_{i}"
                 else:
                     plot_label = f"{channel} | {date}"
@@ -3047,7 +3053,7 @@ def updateSignalbyIdx(value,tab_tag,series_tag, func = None, mode = None, new_ta
     window_id = extract_window_id(tab_tag)
     idx = extract_idx_from_series_tag(series_tag)
     file = extract_file_from_series_tag(series_tag)
-    edx = int(extract_edx_from_series_tag(series_tag))-1
+    edx = int(extract_edx_from_series_tag(series_tag))
     wt = extract_type_window(window_id)
     if new_tab_tag: tab_tag=new_tab_tag
 
@@ -3447,6 +3453,18 @@ def DefaultFilter(sender,app_data,user_data):
     
     band = dpg.get_value(item=f"{tab_tag}_default_wn")[:2]
 
+    # temp = {}
+    # if signal_mode == 'segment':
+    #     for series in active_series:
+    #         temp['X'], temp['Y'] = dpg.get_value(series)[:2]
+    #         clean, _ = pre.removeCardiacComponent(temp, band)
+    #         clean = np.ascontiguousarray(clean)
+    #         dpg.configure_item(series,y=clean)
+        
+    #     prev = dpg.get_item_label(f"plot_{tab_tag}")
+    #     dpg.set_item_label(f"plot_{tab_tag}", f"{prev} - Default Filter")
+    # else:      
+
     for series in active_series:
         signal = {}
         signal=getSignalbyIdx(window_id,tab_tag,series,mode=signal_mode)
@@ -3459,7 +3477,7 @@ def DefaultFilter(sender,app_data,user_data):
             snr = (10*np.log10(np.sum(np.array(signal['Y'])**2)/noise))
         else: snr = 30
 
-    title = 'Standard Filter'
+    title = 'Default Filter'
     update_plot_td(tab_tag,signal_tags, title,signal_mode = plot_mode)
 
 def CustomFilter(sender,app_data,user_data):
@@ -3944,7 +3962,7 @@ def align_events(sender,app_data, user_data):
             count = 0
             if 'Events' in files[idx]['Data'][tab_tag].keys():
                 events = files[idx]['Data'][tab_tag]['Events']
-                if len(events)>1:
+                if len(events)>1: #why only 1?
                     for event in events: 
                         all_events.append(event)
                         edx.append(count)

@@ -1,5 +1,11 @@
 # NeoDBS
 
+## 15.10.2025
+### Bug Fixes:
+- Toggle buttons for segments (in PSD estimation) correct
+- Segment spectrogram with correct title
+- Filter segments not mixed
+
 ## 14.10.2025
 Events in text files for easier combined analysis
 
