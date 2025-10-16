@@ -233,12 +233,15 @@ def toggleVisibility(signal_tags, parent, group, user_data):
         checkboxes = {}
             
         def toggle_all(sender, app_data):
+
             for tag, checkbox in checkboxes.items():
                 dpg.set_value(checkbox, app_data)
                 dpg.configure_item(tag, show=app_data)
 
                 if dpg.does_item_exist(f"{tab_tag}_mean"): #only in events for now
-                    mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+                    mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+                    minus, plus = mean_power-std_power, mean_power+ std_power
+                    dpg.configure_item(f"{tab_tag}_std", y1=minus,y2=plus)
                     current = dpg.get_value(f"{tab_tag}_mean")
                     dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
 
@@ -252,6 +255,10 @@ def toggleVisibility(signal_tags, parent, group, user_data):
                 label = series_config.get('label', series_tag.split('_')[-1])
 
                 def toggle_visibility(sender, app_data, user_data):
+                    if dpg.does_item_exist(f"{tab_tag}_hide"):
+                        if dpg.get_value(f"{tab_tag}_hide"):
+                            hide(sender, False, (signal_tags, [None]))
+                            dpg.set_value(f"{tab_tag}_hide",False)
                     dpg.configure_item(user_data, show=app_data)
                     item_id = f"{parent}_select_all"
                     if dpg.does_item_exist(item_id):  # Check if the item exists
@@ -295,7 +302,9 @@ def toggleType2(signal_tags, parent, user_data):
 
             # Update the mean power calculation if applicable
             if dpg.does_item_exist(f"{tab_tag}_mean"):
-                mean_power = getMeanActiveSeries(window_id, tab_tag, signal_tags)
+                mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+                minus, plus = mean_power-std_power, mean_power+ std_power
+                dpg.configure_item(f"{tab_tag}_std", y1=minus,y2=plus)
                 current = dpg.get_value(f"{tab_tag}_mean")
                 dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
 
@@ -305,7 +314,14 @@ def toggleType2(signal_tags, parent, user_data):
 def toggleType(signal_tags, parent, user_data, orientation = False):
     type_filter, window_id, tab_tag = user_data  
 
+
     def toggle_filtered_series(sender, app_data, user_data):
+
+        if dpg.does_item_exist(f"{tab_tag}_hide"):
+            if dpg.get_value(f"{tab_tag}_hide"):
+                hide(sender, False, (signal_tags, [None]))
+                dpg.set_value(f"{tab_tag}_hide",False)
+
         window_id = extract_window_id(tab_tag)
         for series_tag in signal_tags:
             series_label = str(dpg.get_item_label(series_tag))
@@ -314,9 +330,13 @@ def toggleType(signal_tags, parent, user_data, orientation = False):
                 dpg.configure_item(series_tag, show=app_data)
                     
         if dpg.does_item_exist(f"{tab_tag}_mean"):
-            mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+            mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+            minus, plus = mean_power-std_power, mean_power+ std_power
             current = dpg.get_value(f"{tab_tag}_mean")
+            dpg.configure_item(f"{tab_tag}_std", y1=minus,y2=plus)
+
             dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
+            
     
     dpg.add_checkbox(label=f"{type_filter}", default_value=True, callback=toggle_filtered_series,tag = f"{tab_tag}_{type_filter}_checkbox", parent=parent)
 
@@ -402,9 +422,9 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
     dates = np.unique(dates).tolist()
     events = np.unique(events).tolist()
     sides = ['Left', 'Right']
-
     def show_mean(sender,app_data):
         dpg.configure_item(f"{tab_tag}_mean",show=app_data)
+        dpg.configure_item(f"{tab_tag}_std",show=app_data)
 
     with dpg.group(label = f"{tab_tag}_buttons"):
         toggleVisibility(signal_tags, tab_tag, group = f"{tab_tag}_buttons",user_data=window_id)
@@ -435,6 +455,7 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
         if extract_mode(tab_tag) == 'Events': 
             dpg.add_button(label='Recalculate Mean Metrics', callback=recalculateMeanMetrics, user_data=tab_tag, parent=f"{tab_tag}_buttons")
             dpg.add_checkbox(label='Mean Visibility', default_value=True, callback=show_mean, parent=f"{tab_tag}_buttons")
+            dpg.add_checkbox(label='Hide Events', default_value=False,callback=hide,parent=f"{tab_tag}_buttons",user_data=(signal_tags,[None]), tag=f"{tab_tag}_hide")
 
 def recalculateMeanMetrics(sender, app_data, user_data):
     tab_tag = user_data
@@ -449,12 +470,15 @@ def recalculateMeanMetrics(sender, app_data, user_data):
 
 def hide(sender,app_data,user_data):
     streams, checkboxes = user_data
-    if app_data == False:
-        for c in checkboxes:
-            dpg.set_value(c,True)
-            callback = dpg.get_item_callback(c)
-            if callback:
-                callback(c, True, dpg.get_item_user_data(c))
+    if checkboxes != [None]:
+
+        if app_data == False:
+            for c in checkboxes:
+                dpg.set_value(c,True)
+                callback = dpg.get_item_callback(c)
+                if callback:
+                    callback(c, True, dpg.get_item_user_data(c))
+   
     for s in streams:
         bol = not app_data
         dpg.configure_item(s, show=bol)
@@ -866,6 +890,8 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
         else: mode = None
     else: mode = None
 
+    deviation_type = 'Standard Deviation'
+
     with dpg.group(horizontal=True, parent = tab_label,tag=f"{tab_label}_plot_group"):
         with dpg.plot(label=f"Spectral Analysis - {func}", height=400, width=600, tag = f"{tab_label}_plot"):
             dpg.bind_colormap(f"{tab_label}_plot", 0)
@@ -1183,21 +1209,24 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             dpg.configure_item(f"{tab_label}_std",y1=minus, y2=plus)
 
         def deviation(sender, app_data, user_data):
-            media = np.array(dpg.get_value(f"{tab_label}_mean")[1])
-            std_dev = np.array(dpg.get_value(f"{tab_label}_std")[1])
+            if app_data!=user_data:
+                media = np.array(dpg.get_value(f"{tab_label}_mean")[1])
+                std_dev = np.array(dpg.get_value(f"{tab_label}_std")[1])
 
-            if app_data == '95% Confidence Interval':
-                dev = (std_dev - media) * -2
-            else:
-                dev = (std_dev - media) * -0.5
+                if app_data == '95% Confidence Interval':
+                    dev = (std_dev - media) * -2
+                else:
+                    dev = (std_dev - media) * -0.5
 
-            minus = media - dev
-            plus = media + dev  
-            dpg.configure_item(f"{tab_label}_std", y1=minus.tolist(), y2=plus.tolist())
+                minus = media - dev
+                plus = media + dev  
+                dpg.configure_item(f"{tab_label}_std", y1=minus.tolist(), y2=plus.tolist())
+                dpg.configure_item(f"{tab_label}_radio",user_data=app_data)
 
         checkboxes = []
         with dpg.group(parent=f"{tab_tag}_buttons"):
-            dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag,func, tab_label, tables), tag = f"{tab_label}_2db")
+            # dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag,func, tab_label, tables), tag = f"{tab_label}_2db")
+            dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(y_axis, tab_label, ploted_tags, tables), tag = f"{tab_label}_2db")
             if mode == 'segment': 
                 dpg.add_checkbox(label='Before vs. After',callback=before_vs_after, user_data=(signal_tags,tab_label,func,tab_tag,parameter_values), tag = f"{tab_label}_bva", default_value=comparing)
             if comparing== True:
@@ -1246,7 +1275,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             dpg.add_checkbox(label='Hide signals', callback=hide, tag = f"{tab_label}_hide", user_data=(ploted_tags, checkboxes))
             dpg.add_separator()
             dpg.add_text('Shaded Area')
-            dpg.add_radio_button(['Standard Deviation', '95% Confidence Interval'], horizontal=False, callback=deviation, tag = f"{tab_label}_radio")
+            dpg.add_radio_button(['Standard Deviation', '95% Confidence Interval'], horizontal=False, callback=deviation, tag = f"{tab_label}_radio",user_data=deviation_type)
             
     time.sleep(0.2)
     dpg.set_axis_limits_auto(x_axis)
@@ -3280,7 +3309,7 @@ def extract_artifact_type(s: str):
 
 #--- Process with signal
 
-def Volt2dB(sender,app_data,user_data):
+def Volt2dB2(sender,app_data,user_data):
     type = app_data
     if type == True:
         type = 'dB'
@@ -3289,7 +3318,7 @@ def Volt2dB(sender,app_data,user_data):
         type = 'Y'
         label = 'µV^2/Hz'
 
-    signal_tags,tab_tag, func, tab_label, tables = user_data
+    signal_tags, tab_tag, func, tab_label, tables = user_data
 
     if tab_label == "":
         identifier = tab_tag
@@ -3329,7 +3358,8 @@ def Volt2dB(sender,app_data,user_data):
             if app_data: 
                 norm = pre.log_normalization_db(signal)
                 signal[type] = norm
-            #     dpg.set_value(f"{tab_label}_{series_label}_{func}", [signal['X'], norm])
+            
+                dpg.set_value(f"{tab_label}_{series_label}_{func}", [signal['X'], norm])
             # else:
             #     dpg.set_value(f"{tab_label}_{series_label}_{func}", [signal['X'], signal['Y']])
 
@@ -3345,20 +3375,77 @@ def Volt2dB(sender,app_data,user_data):
                     new_y = [convert_from_db(v) for v in current[1]]
                 dpg.set_value(kid, [current[0], new_y])
     # else:
+    mean_tag = std_tag = ''
     if dpg.does_item_exist(f"{tab_tag}_mean"):
+        mean_tag = f"{tab_tag}_mean"
+        std_tag = f"{tab_tag}_std"
+    elif dpg.does_item_exist(f"{tab_label}_mean"):
+        mean_tag = f"{tab_label}_mean"
+        std_tag = f"{tab_label}_std"
+
+    if mean_tag != '':
         if type == 'Y': key = None
         else: key = type
-        mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags, key)
-        current = dpg.get_value(f"{tab_tag}_mean")
-        dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
+        mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
 
-    if dpg.does_item_exist(f"{identifier}_y_axis"):
-        dpg.configure_item(f"{identifier}_y_axis", label = f"LFP Power ({label})")
-        update_plot_feature(tab_tag,tab_label,signal_tags,func, identifier, type, events = events_flag, mode = plot_mode)
+        if type=='dB':
+            mean_power = pre.V2dB(mean_power)
+            
+        minus, plus = mean_power-std_power, mean_power+ std_power
+        dpg.configure_item(std_tag, y1=minus,y2=plus)
+        current = dpg.get_value(mean_tag)
+        dpg.set_value(mean_tag, [current[0], mean_power])
+
+    else:
+        if dpg.does_item_exist(f"{identifier}_y_axis"):
+            dpg.configure_item(f"{identifier}_y_axis", label = f"LFP Power ({label})")
+            update_plot_feature(tab_tag,tab_label,signal_tags,func, identifier, type, events = events_flag, mode = plot_mode)
 
     time.sleep(0.1)
     for table in tables:
         update_table(table,type)
+
+def Volt2dB(sender,app_data,user_data):
+    type = app_data
+    if type == True:
+        type = 'dB'
+        label = type
+    else: 
+        type = 'Y'
+        label = 'µV^2/Hz'
+    
+    y_axis, plot_tag, signal_tags, tables = user_data
+    
+    dpg.set_item_label(y_axis,label=label)
+
+    all_values = []
+    for tag in signal_tags:
+        if dpg.get_item_configuration(tag)['show']==True:
+            _,y = dpg.get_value(tag)[:2]
+            if type == 'dB':
+                y = pre.V2dB(y)
+                dpg.configure_item(tag,y=y)
+            else:
+                y = pre.dB2V(y)
+                dpg.configure_item(tag,y=y)
+            all_values.append(y)
+
+    mean = np.nanmean(all_values,axis=0)
+    std = np.nanstd(all_values,axis=0)
+    minus, plus = mean-std, mean+std
+    dpg.configure_item(f"{plot_tag}_std", y1=minus,y2=plus)
+    dpg.bind_item_theme(f"{plot_tag}_std",create_alpha_theme())
+    dpg.configure_item(f"{plot_tag}_mean", y=mean)
+    dpg.bind_item_theme(f"{plot_tag}_mean", change_line_thickness(5))
+
+    time.sleep(0.1)
+    for table in tables:
+        update_table(table,type)
+
+
+
+    
+
 
 def getMeanActiveSeries(window_id,tab_tag,signal_tags, key = None):
     active_tags = getActiveSeries(signal_tags)
@@ -3373,8 +3460,9 @@ def getMeanActiveSeries(window_id,tab_tag,signal_tags, key = None):
         active_signals.append(active)
 
     mean_power = pre.MeanSignal(active_signals, key)
+    std_power = pre.StdDevSignal(active_signals,key)
     #mean_power = [m*100/np.sum(mean_power) for m in mean_power]
-    return mean_power
+    return mean_power, std_power
 
 def segment_signal(tab_tag, signal_tags):
     with dpg.group(tag = f"{tab_tag}_segmentation"):
@@ -4683,7 +4771,12 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                 dpg.delete_item(f"{tab_label}_mean_metric", children_only=True)
 
 
-            mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+            
+            mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+            minus, plus = mean_power-std_power, mean_power+std_power
+            s = dpg.add_shade_series(x,y1=minus,y2=plus,label = 'Std. Dev', parent=f"y_axis_{tab_tag}",tag=f"{tab_tag}_std")
+            dpg.bind_item_theme(s,create_alpha_theme())
+
             m = dpg.add_line_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag}", tag=f"{tab_tag}_mean")
             dpg.bind_item_theme(m, change_line_thickness(5))
             mean_power = {'Y': mean_power, 'X': p['X']}

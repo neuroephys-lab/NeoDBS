@@ -391,7 +391,15 @@ def MeanSignal(signals, key = None):
     
     yy=[signal[key] for signal in signals]
     
-    mean_signal = np.mean(yy, axis=0)
+    mean_signal = np.nanmean(yy, axis=0)
+    return mean_signal
+
+def StdDevSignal(signals, key = None):
+    if key == None: key = 'Y'
+    
+    yy=[signal[key] for signal in signals]
+    
+    mean_signal = np.nanstd(yy, axis=0)
     return mean_signal
 
 def MeanEvents(signals):
@@ -536,7 +544,11 @@ def within_band_normalization_db(stream, freq_range):
     band_power = np.sum([y**2 for f, y in zip(stream['X'], stream['Y']) if freq_range[0] <= f <= freq_range[1]])
     return [10 * np.log10(v**2 / (band_power + 1e-6)) if band_power > 0 else -np.inf for v in stream['Y']]
 
+def V2dB(signal):
+    return np.array([10*np.log10(s + 1e-6) for s in signal])
 
+def dB2V(signal):
+    return np.array([20**(s / 10) - 1e-6 for s in signal])
 # -------------------------------------- BRAVO -------------------------------------
 
 def rangeSelection(array, minMax, type="exclusive"):

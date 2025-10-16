@@ -1,5 +1,10 @@
 # NeoDBS
 
+## 16.10.2025
+### Bug fixes:
+- dB working correctly in PSD and events (add in combined events)
+- Std. deviation e 95% IC working correctly (add in events)
+
 ## 15.10.2025
 ### Bug Fixes:
 - Toggle buttons for segments (in PSD estimation) correct
