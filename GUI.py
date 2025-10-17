@@ -224,6 +224,22 @@ def add_combo_df_features(tab_tag,signal_tags):
         dpg.add_combo(label='Spectral Default Analysis',callback = DefaultFeatures, user_data=(tab_tag,signal_tags),items = features, parent=f"{tab_tag}_df_features", tag = f"{tab_tag}_combo_df_features",width=200)
 
 #--- Toggle buttons
+def deviation(sender, app_data, user_data):
+    before, tab_label = user_data
+    if app_data!=before:
+        media = np.array(dpg.get_value(f"{tab_label}_mean")[1])
+        std_dev = np.array(dpg.get_value(f"{tab_label}_std")[1])
+
+        if app_data == '95% Confidence Interval':
+            dev = (std_dev - media) * -2
+        else:
+            dev = (std_dev - media) * -0.5
+
+        minus = media - dev
+        plus = media + dev  
+        dpg.configure_item(f"{tab_label}_std", y1=minus.tolist(), y2=plus.tolist())
+        dpg.configure_item(f"{tab_label}_radio",user_data=(app_data,tab_label))
+
 def toggleVisibility(signal_tags, parent, group, user_data):
     # Create a group for visibility controls
     window_id = user_data
@@ -411,7 +427,7 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag):
         
         segment_signal(tab_tag, signal_tags)
 
-def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
+def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None):
     events = [signal['EventName'] for signal in signals]
     dates = []
     for signal in signals: 
@@ -451,11 +467,18 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag):
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons_side", user_data=(day, window_id, tab_tag))
 
-        dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag, "", "", ""),parent=f"{tab_tag}_buttons",default_value=False)
+        # dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag, "", "", ""),parent=f"{tab_tag}_buttons",default_value=False)
+        dpg.add_separator()
+        dpg.add_text('Shaded Area')
+        dpg.add_radio_button(['Standard Deviation', '95% Confidence Interval'], horizontal=False, callback=deviation, tag = f"{tab_tag}_radio",user_data=('Standard Deviation',tab_tag))
+        dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(f"y_axis_{tab_tag}", tab_tag, signal_tags, tables),parent=f"{tab_tag}_buttons",default_value=False)
+          
+        dpg.add_separator()
         if extract_mode(tab_tag) == 'Events': 
             dpg.add_button(label='Recalculate Mean Metrics', callback=recalculateMeanMetrics, user_data=tab_tag, parent=f"{tab_tag}_buttons")
-            dpg.add_checkbox(label='Mean Visibility', default_value=True, callback=show_mean, parent=f"{tab_tag}_buttons")
-            dpg.add_checkbox(label='Hide Events', default_value=False,callback=hide,parent=f"{tab_tag}_buttons",user_data=(signal_tags,[None]), tag=f"{tab_tag}_hide")
+            with dpg.group(horizontal=True):
+                dpg.add_checkbox(label='Mean Visibility', default_value=True, callback=show_mean, parent=f"{tab_tag}_buttons")
+                dpg.add_checkbox(label='Hide Events', default_value=False,callback=hide,parent=f"{tab_tag}_buttons",user_data=(signal_tags,[None]), tag=f"{tab_tag}_hide")
 
 def recalculateMeanMetrics(sender, app_data, user_data):
     tab_tag = user_data
@@ -869,6 +892,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
     comparing = False
     if dpg.does_item_exist(f"{tab_label}_bva"): 
         comparing = dpg.get_value(f"{tab_label}_bva")
+    
     bands = getBandsByTab(tab_tag)
     dpg.delete_item(f"{tab_label}_plot_group")
 
@@ -936,16 +960,19 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     #BEFORE-------------------------------------------------
                     p = contiguous_array(pre_event, func)      
                     b_label = 'Before ' + series_label              
-                    dpg.add_line_series(p['X'],p['Y'], label=b_label, parent=y_axis, tag = f"{tab_label}_{b_label}_{func}_pre")
+                    line  = dpg.add_line_series(p['X'],p['Y'], label=b_label, parent=y_axis, tag = f"{tab_label}_{b_label}_{func}_pre")
                     events_tags.append(f"{tab_label}_{b_label}_{func}_pre")
                     power.append(p)
                     temp.append(p)
+                    ploted_tags.append(line)
 
                     #AFTER-------------------------------------------------
                     p = contiguous_array(post_event, func)      
                     a_label = 'After ' + series_label              
-                    dpg.add_line_series(p['X'],p['Y'], label=a_label, parent=y_axis, tag = f"{tab_label}_{a_label}_{func}_post")
+                    line = dpg.add_line_series(p['X'],p['Y'], label=a_label, parent=y_axis, tag = f"{tab_label}_{a_label}_{func}_post")
                     events_tags.append(f"{tab_label}_{a_label}_{func}_post")
+                    ploted_tags.append(line)
+
                     power.append(p)
                     temp.append(p)
                     max_p = max(max_p,np.max(p['Y']))
@@ -954,6 +981,8 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     states = ['Before', 'After']
                     #TABLE CONTENT
                     full_power = np.sum(p['Y'])
+                    mean_full_power = np.nanmean(p['Y'])
+                    print(series_label , ' | ', full_power)
 
                     if not dpg.does_item_exist(f"{tab_label}_{series_label}"):
                         dpg.add_collapsing_header(label = f'{series_label}', tag =f"{tab_label}_{series_label}", parent = tab_label)
@@ -969,7 +998,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                             mean = {'Mean Power (mean, std. dev)': [np.round(pc[b],2), np.round(std[b],2)]}
 
                             #normalized mean power
-                            norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc[b]*100/full_power,2), np.round(std[b],2)]}
+                            norm_mean = {'% Mean Power (mean, std. dev)': [np.round(abs(pc[b]*100)/mean_full_power,2), np.round(std[b],2)]}
 
                             #auc
                             params = pre.get_required_params('simpson', module='si')
@@ -981,7 +1010,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                             auc = {'Sum Power (AUC)': f"{np.round(simpson,2)}"}
 
                             #normalized auc
-                            norm_auc = {'% Sum Power (AUC)': f"{np.round(simpson*100/full_power,2)}"}
+                            norm_auc = {'% Sum Power (AUC)': f"{np.round(abs(simpson*100)/full_power,2)}"}
 
                             #peak power
                             peak = ft.peak_per_band(p, band)
@@ -994,7 +1023,6 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                             create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table_{states[i]}", info, trial_label=b)
 
                         tables.append(f"{tab_label}_{series_label}_table_{states[i]}")
-
 
                 #NORMAL PSD
                 if comparing == False:
@@ -1208,20 +1236,6 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             dpg.configure_item(f"{tab_label}_mean",y=mean)
             dpg.configure_item(f"{tab_label}_std",y1=minus, y2=plus)
 
-        def deviation(sender, app_data, user_data):
-            if app_data!=user_data:
-                media = np.array(dpg.get_value(f"{tab_label}_mean")[1])
-                std_dev = np.array(dpg.get_value(f"{tab_label}_std")[1])
-
-                if app_data == '95% Confidence Interval':
-                    dev = (std_dev - media) * -2
-                else:
-                    dev = (std_dev - media) * -0.5
-
-                minus = media - dev
-                plus = media + dev  
-                dpg.configure_item(f"{tab_label}_std", y1=minus.tolist(), y2=plus.tolist())
-                dpg.configure_item(f"{tab_label}_radio",user_data=app_data)
 
         checkboxes = []
         with dpg.group(parent=f"{tab_tag}_buttons"):
@@ -1229,6 +1243,7 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(y_axis, tab_label, ploted_tags, tables), tag = f"{tab_label}_2db")
             if mode == 'segment': 
                 dpg.add_checkbox(label='Before vs. After',callback=before_vs_after, user_data=(signal_tags,tab_label,func,tab_tag,parameter_values), tag = f"{tab_label}_bva", default_value=comparing)
+            
             if comparing== True:
                 
                 dpg.add_separator()
@@ -1249,7 +1264,9 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                             c = dpg.add_checkbox(label=etype, callback=toggle, default_value=True)
                             checkboxes.append(c)
 
-                dpg.set_item_user_data(f"{tab_label}_hide",(ploted_tags, checkboxes))
+                if dpg.does_item_exist(f"{tab_label}_hide"): dpg.set_item_user_data(f"{tab_label}_hide",(ploted_tags, checkboxes))
+            
+            
             channels = np.unique(channels)
             days = np.unique(days)
             with dpg.group(parent=f"{tab_tag}_buttons", horizontal=True):  
@@ -1271,11 +1288,12 @@ def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     for d in sides:
                         c = dpg.add_checkbox(label=d, callback=choose_toggle, default_value=True)
                         checkboxes.append(c)
+            
             dpg.add_separator()
             dpg.add_checkbox(label='Hide signals', callback=hide, tag = f"{tab_label}_hide", user_data=(ploted_tags, checkboxes))
             dpg.add_separator()
             dpg.add_text('Shaded Area')
-            dpg.add_radio_button(['Standard Deviation', '95% Confidence Interval'], horizontal=False, callback=deviation, tag = f"{tab_label}_radio",user_data=deviation_type)
+            dpg.add_radio_button(['Standard Deviation', '95% Confidence Interval'], horizontal=False, callback=deviation, tag = f"{tab_label}_radio",user_data=(deviation_type,tab_label))
             
     time.sleep(0.2)
     dpg.set_axis_limits_auto(x_axis)
@@ -2004,6 +2022,15 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                 combos[s] = input_id
             dpg.add_button(label='Plot Cross-Correlation', callback=plot,width=200)      
 
+def set_colormap_range(sender,app_data,user_data):
+    tab_label, spec_tags, colormap_tag = user_data
+    min_value = dpg.get_value(f"{tab_label}_emin")
+    max_value = dpg.get_value(f"{tab_label}_emax")
+
+    dpg.configure_item(colormap_tag,min_scale=min_value,max_scale=max_value)
+    for spec in spec_tags:
+        dpg.configure_item(spec,scale_max=max_value,scale_min=min_value)
+
 def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode = 'segment'):
     window_id = extract_window_id(tab_tag)
     wt = extract_type_window(window_id)
@@ -2021,6 +2048,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
     per_file = {}
     per_tag = {}
     parameter_values['fs'] = 250
+    spectrogram_tags = []
 
     for i, tag in enumerate(tags):
         file = extract_file_from_series_tag(tag)
@@ -2075,11 +2103,11 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
 
                     per_tag[tag] = [Sxx_log,plot_tag, plot_label, stream_events, (emin, emax)]
                         
-                    dpg.add_heat_series(Sxx_log.flatten(), rows=Sxx_log.shape[0], cols=Sxx_log.shape[1],
+                    t = dpg.add_heat_series(Sxx_log.flatten(), rows=Sxx_log.shape[0], cols=Sxx_log.shape[1],
                                             scale_min=global_min, scale_max=global_max, 
                                             parent=y_axis, format="", bounds_min=[emin,0], bounds_max=[emax,125])
-                                            
-                    
+                                         
+                    spectrogram_tags.append(t)
                     dpg.bind_colormap(plot_tag, dpg.mvPlotColormap_Jet)
 
                     if stream_events != None and wt == 'Individual':
@@ -2165,28 +2193,52 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
             
             title = "Mean Spectrogram"
             subplot_tag = f"{tab_label}_mean"
-
+            mother = f"{tab_label}_mean_group"
             with dpg.collapsing_header(label='Mean Spectrogram', parent=tab_label):
-                with dpg.plot(label=title, width=500, height=400, tag=subplot_tag):
-                    x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
-                    y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
 
-                    if mode and wt== 'Combined':
-                        emin = -int(dpg.get_value(f"{tab_tag}_emin"))
-                        emax = int(dpg.get_value(f"{tab_tag}_emax"))
-                    else:
-                        emin = 0
-                        emax = len(y)/250
+                with dpg.group(horizontal=True,tag=mother):
+                    dpg.add_colormap_scale(tag=f"{mother}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
+                                                min_scale = global_min, max_scale=global_max, height=400)
+                    
+                    with dpg.plot(label=title, width=500, height=400, tag=subplot_tag):
+                        x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
+                        y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
 
-                    dpg.add_heat_series(mean_Sxx_log.flatten(), rows=mean_Sxx_log.shape[0], cols=mean_Sxx_log.shape[1],
-                                        scale_min=global_min, scale_max=global_max,
-                                        parent=y_axis, format="", bounds_min=[emin,0], bounds_max=[emax,125])
-                    dpg.bind_colormap(subplot_tag, dpg.mvPlotColormap_Jet)
+                        if mode and wt== 'Combined':
+                            emin = -int(dpg.get_value(f"{tab_tag}_emin"))
+                            emax = int(dpg.get_value(f"{tab_tag}_emax"))
+                        else:
+                            emin = 0
+                            emax = len(y)/250
 
+                        mean_s = dpg.add_heat_series(mean_Sxx_log.flatten(), rows=mean_Sxx_log.shape[0], cols=mean_Sxx_log.shape[1],
+                                            scale_min=global_min, scale_max=global_max,
+                                            parent=y_axis, format="", bounds_min=[emin,0], bounds_max=[emax,125])
+                        dpg.bind_colormap(subplot_tag, dpg.mvPlotColormap_Jet)
+
+                    with dpg.group(horizontal=False):
+                        dpg.add_text('Adjust Colormap Scale:')
+                        dpg.add_input_int(label='Min: ', tag=f"{mother}_emin", width=90, default_value=global_min,callback=enforce_range, 
+                                          user_data=(mother,global_min,global_max), min_value=global_min,max_value=(global_max-5))
+                        dpg.add_input_int(label='Max: ', tag=f"{mother}_emax", width=90, default_value=global_max,callback=enforce_range, 
+                                          user_data=(mother,global_min,global_max), min_value=global_min,max_value=(global_max-5))
+                        dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(mother,mean_s,f"{mother}_colormap_scale"))
+       
         with dpg.group(horizontal=False):
             dpg.add_checkbox(label='Synchronize Axis', callback=link)      
             dpg.add_button(label='Band Power over Time', callback=merge_spectrograms)
             dpg.add_button(label='Mean Spectrogram', callback=mean_spectrogram, user_data=Merge)
+            with dpg.group(horizontal=True):
+                with dpg.group(horizontal=False):
+                    dpg.add_separator()
+                    dpg.add_text('Adjust Colormap Scale')
+                    dpg.add_input_int(label='Min: ', tag=f"{tab_label}_emin", width=90, default_value=global_min,callback=enforce_range, 
+                                      user_data=(tab_label,global_min,global_max), min_value=global_min,max_value=(global_max-5))
+                    
+                    dpg.add_input_int(label='Max: ', tag=f"{tab_label}_emax", width=90, default_value=global_max,callback=enforce_range, 
+                                      user_data=(tab_label,global_min,global_max),min_value=(global_min+5),max_value=global_min)
+                    
+                    dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,spectrogram_tags,f"{tab_label}_colormap_scale"))
        
 def choose(sender,app_data,user_data):
     tags, tab_label, func, tab_tag, parameter_values, mode = user_data
@@ -2749,6 +2801,7 @@ def update_table(table_tag, type):
  
         for i in range(1, len(row_children)):  # Skip first column (Trial)
 
+            nan = float('nan')
             value = eval(dpg.get_value(row_children[i]))
             if type == 'dB':
                 db_value = convert_to_db(value)
@@ -3128,6 +3181,28 @@ def enforce_min_max(sender, app_data, user_data):
         dpg.set_value(min_tag, min_value)
         dpg.set_value(max_tag, max_value)
 
+def enforce_range(sender, app_data, user_data):
+    tab_label, absolute_min, absolute_max = user_data
+    min_tag, max_tag = f"{tab_label}_emin", f"{tab_label}_emax"
+    diff = 5
+    min_value = dpg.get_value(min_tag)
+    max_value = dpg.get_value(max_tag)
+
+    min_value = max(min_value, absolute_min)
+    max_value = min(max_value, absolute_max)
+
+    if max_value - min_value < diff:
+        if sender == min_tag:
+            max_value = min(min_value + diff, absolute_max)
+            min_value = max(max_value - diff, absolute_min)
+        else:  # sender == max_tag
+            min_value = max(max_value - diff, absolute_min)
+            max_value = min(min_value + diff, absolute_max)
+
+    # Set adjusted values back
+    dpg.set_value(min_tag, min_value)
+    dpg.set_value(max_tag, max_value)
+
 def extract_psd_features(p, band):
     b,v = band
     band = {b: v}
@@ -3442,11 +3517,6 @@ def Volt2dB(sender,app_data,user_data):
     for table in tables:
         update_table(table,type)
 
-
-
-    
-
-
 def getMeanActiveSeries(window_id,tab_tag,signal_tags, key = None):
     active_tags = getActiveSeries(signal_tags)
     active_signals = []
@@ -3506,11 +3576,11 @@ def cut_signals(sender,app_data,user_data):
     time.sleep(0.1)
     update_plot_td(tab_tag,signal_tags,' Segment')
 
-def interval_events(tab_tag, signal_tags):
+def interval_events(tab_tag, label1, label2,mini=15,maxi=15,flag=False):
     min_dif = 2
     with dpg.group(horizontal=True):
-        dpg.add_input_int(label='T Before (s)', tag=f"{tab_tag}_emin", width=90, default_value=15, callback=enforce_min_max, user_data=(f"{tab_tag}_emin", f"{tab_tag}_emax", min_dif))
-        dpg.add_input_int(label='T After (s)', tag=f"{tab_tag}_emax", width=90, default_value=15, callback=enforce_min_max, user_data=(f"{tab_tag}_emin", f"{tab_tag}_emax", min_dif))
+        dpg.add_input_int(label=label1, tag=f"{tab_tag}_emin", width=90, default_value=mini, callback=enforce_min_max, user_data=(f"{tab_tag}_emin", f"{tab_tag}_emax", min_dif,flag))
+        dpg.add_input_int(label=label2, tag=f"{tab_tag}_emax", width=90, default_value=maxi, callback=enforce_min_max, user_data=(f"{tab_tag}_emin", f"{tab_tag}_emax", min_dif,flag))
 
 def DefaultFilter(sender,app_data,user_data):
     '''
@@ -4786,7 +4856,7 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
             tables.append(f"{tab_label}_mean_metric_table")
 
-        toggleDisplay2(signals,signal_tags,window_id,tab_tag)
+        toggleDisplay2(signals,signal_tags,window_id,tab_tag,tables)
                  
 def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
@@ -5501,7 +5571,11 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                 dpg.delete_item(f"{tab_label}_mean_metric", children_only=True)
 
 
-            mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+            mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+            minus, plus = mean_power-std_power, mean_power+std_power
+            s = dpg.add_shade_series(x,y1=minus,y2=plus, parent=f"y_axis_{tab_tag}",tag=f"{tab_tag}_std", label='Std. Dev.')
+            dpg.bind_item_theme(s,create_alpha_theme())
+
             m = dpg.add_line_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag}", tag=f"{tab_tag}_mean")
             dpg.bind_item_theme(m, change_line_thickness(5))
             mean_power = {'Y': mean_power, 'X': p['X']}
@@ -5511,7 +5585,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
 
             tables.append(f"{tab_label}_mean_metric_table")
 
-        toggleDisplay2(all_signals,signal_tags,window_id,tab_tag)
+        toggleDisplay2(all_signals,signal_tags,window_id,tab_tag,tables)
         def show_mean(sender,app_data):
             dpg.configure_item(f"{tab_tag}_mean",show=app_data)
 
@@ -5541,7 +5615,7 @@ def comb_streaming_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         toggleDisplay(signals, signal_tags, window_id, tab_tag)
     
     with dpg.group(parent=tab_tag, tag = f"{tab_tag}_add_events", horizontal=True):
-        interval_events(tab_tag,signal_tags)
+        interval_events(tab_tag,'T Before (s)','T After (s)')
         dpg.add_button(label='Analyze Streaming Events', parent=f"{tab_tag}_add_events", callback = insert_events, user_data=(window_id, tab_tag, signal_tags))
     
     add_filters_buttons(tab_tag,signal_tags)
@@ -5706,7 +5780,7 @@ def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         toggleDisplay(signals, signal_tags, window_id, tab_tag)
     
     with dpg.group(parent=tab_tag, tag = f"{tab_tag}_add_events", horizontal=True):
-        interval_events(tab_tag,signal_tags)
+        interval_events(tab_tag,'T Before (s)','T After (s)')
         dpg.add_button(label='Analyze Streaming Events', parent=f"{tab_tag}_add_events", callback = insert_events, user_data=(window_id, tab_tag, signal_tags))
     
     add_filters_buttons(tab_tag,signal_tags)
@@ -5825,7 +5899,7 @@ def comb_indefinite_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         toggleDisplay(signals, signal_tags, window_id, tab_tag)
     
     with dpg.group(parent=tab_tag, tag = f"{tab_tag}_add_events", horizontal=True):
-        interval_events(tab_tag,signal_tags)
+        interval_events(tab_tag,'T Before (s)','T After (s)')
         dpg.add_button(label='Analyze Streaming Events', parent=f"{tab_tag}_add_events", callback = insert_events, user_data=(window_id, tab_tag, signal_tags))
 
     add_filters_buttons(tab_tag,signal_tags)

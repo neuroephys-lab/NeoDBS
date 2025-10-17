@@ -548,7 +548,7 @@ def V2dB(signal):
     return np.array([10*np.log10(s + 1e-6) for s in signal])
 
 def dB2V(signal):
-    return np.array([20**(s / 10) - 1e-6 for s in signal])
+    return np.array([10**(s / 10) - 1e-6 for s in signal])
 # -------------------------------------- BRAVO -------------------------------------
 
 def rangeSelection(array, minMax, type="exclusive"):

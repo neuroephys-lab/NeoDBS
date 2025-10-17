@@ -1,8 +1,19 @@
 # NeoDBS
 
+## 17.10.2025
+### Bug fixes:
+- Combined multitaper: BvA working w/ dB
+- Tables change value correctly (correction of % mean power and AUC - absolute)
+
+### New functionalities:
+- Spectrogram: Change colormap scale
+- Events (Individual and Combined): 
+    - Std. deviation e 95% IC
+    - dB working with mean and std.dev 
+
 ## 16.10.2025
 ### Bug fixes:
-- dB working correctly in PSD and events (add in combined events)
+- dB working correctly in PSD and events
 - Std. deviation e 95% IC working correctly (add in events)
 
 ## 15.10.2025
