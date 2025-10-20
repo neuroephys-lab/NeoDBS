@@ -1,5 +1,9 @@
 # NeoDBS
 
+## 20.10.2025
+### Bug fixes:
+- PAC 
+
 ## 17.10.2025
 ### Bug fixes:
 - Combined multitaper: BvA working w/ dB

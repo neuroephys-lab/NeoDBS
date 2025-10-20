@@ -2640,6 +2640,7 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
 def plot_pac(tags,tab_tag,parameter_values,mode=None):
     window_id = extract_window_id(tab_tag)
     labels = [dpg.get_item_label(tag) for tag in tags]
+    signals = [dpg.get_value(tag)[:2] for tag in tags]
     bands = getBandsByTab(tab_tag)
 
     if mode: #if default
@@ -2652,9 +2653,12 @@ def plot_pac(tags,tab_tag,parameter_values,mode=None):
         for b in ['s','b']:
             for s in  ['1','2']:
                 label = dpg.get_value(f"{tab_label}_{b}{s}")
+                signal = {}
                 if b == 's':
                     idx = labels.index(label)
                     signal = getSignalbyIdx(window_id,tab_tag,tags[idx])
+                    temp_signal = signals[idx]
+                    signal['X'] , signal['Y'] = temp_signal
                     parameter_values[f'{b}{s}'] = signal['Y']
                     if s == '1':
                         signal1 = signal
@@ -2665,7 +2669,7 @@ def plot_pac(tags,tab_tag,parameter_values,mode=None):
                         
 
         #1st: Filter signals
-        if len(parameter_values['s1']) != (parameter_values['s2']):
+        if len(parameter_values['s1']) != len(parameter_values['s2']):
             t = dpg.add_text('Signals with different lengths!',parent=tab_label)
             dpg.bind_item_theme(t,change_text_color(1))
             return
@@ -2703,9 +2707,10 @@ def plot_pac(tags,tab_tag,parameter_values,mode=None):
 
         if dpg.does_item_exist(f"{tab_label}_pac"): dpg.delete_item(f"{tab_label}_pac")
 
+
         with dpg.group(tag=f"{tab_label}_pac", parent=tab_label):
-            dpg.add_text(f"Phase Signal: {signal1['Channel']} - {signal1['Date']} | Phase Band: {parameter_values['b1']}")
-            dpg.add_text(f"Amplitude Signal: {signal2['Channel']} - {signal2['Date']} | Phase Band: {parameter_values['b2']}")
+            dpg.add_text(f"Phase Signal: {dpg.get_value(f"{tab_label}_s1")} | Phase Band: {parameter_values['b1']}")
+            dpg.add_text(f"Amplitude Signal: {dpg.get_value(f"{tab_label}_s2")} | Phase Band: {parameter_values['b2']}")
             dpg.add_text('Modulation Index (MI): 0 = NO coupling | 1 = STRONG coupling ')
             with dpg.plot(label=f"Phase-Amplitude Coupling - MI: {mi}", height=300, width=-1,tag=f"{tab_label}_plot"):
                 dpg.add_plot_legend()
