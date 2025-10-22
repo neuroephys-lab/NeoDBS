@@ -884,7 +884,7 @@ def display_error(tab_tag,e):
         dpg.add_text(v, parent=doc_container, tag = f"{doc_container}_doc")
         dpg.bind_item_theme(ee, change_text_color(1))
 
-def plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values, mode = None):
+def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values, mode = None):
     #tab_label = f"{tab_tag}_{func}"
     window_id = extract_window_id(tab_tag)
     tags = getActiveSeries(signal_tags)
@@ -1542,6 +1542,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
 
 def plot_df_coherence(parameter_values,tab_tag,tags):
     labels = [dpg.get_item_label(tag) for tag in tags]
+    signals = [dpg.get_value(tag)[:2] for tag in tags]
     tab_label = f"{tab_tag}_df_coherence"
     window_id = extract_window_id(tab_tag)
 
@@ -1551,7 +1552,12 @@ def plot_df_coherence(parameter_values,tab_tag,tags):
             tag = f"{tab_label}_s{no}"
             lab = dpg.get_value(tag)
             idx = labels.index(lab)
-            signal = getSignalbyIdx(window_id,tab_tag,tags[idx])
+            values = signals[idx]
+            signal = {}
+            signal['X'], signal['Y'] = values
+            signal['Label'] = lab
+            # signal = getSignalbyIdx(window_id,tab_tag,tags[idx])
+
             if no =='0': parameter_values['x'] = signal
             else: parameter_values['y'] = signal
             labs.append(lab)
@@ -1588,6 +1594,7 @@ def plot_coherence(parameter_values, tab_label):
     clean = dpg.get_value(f"{tab_label}_clean")
     if clean==True: 
         dpg.delete_item(f"{tab_label}_plot_group")
+        dpg.delete_item(f"{tab_label}_plot_group_text")
 
     freq, coh = pre.call_function('coherence', parameter_values)
     mask = freq <= 100
@@ -1604,25 +1611,24 @@ def plot_coherence(parameter_values, tab_label):
     ab = np.abs(im)[mask]
     IMcoh = np.abs(np.imag(im)[mask])
 
-    if clean:
-        with dpg.group(parent=tab_label, tag=f"{tab_label}_plot_group"):
-            with dpg.group(parent=f"{tab_label}_plot_group", tag = f"{tab_label}_plot_group_text"):
-                dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
-                dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
-            with dpg.plot(label = 'Coherence', width=-1, height=400, tag=f"{tab_label}_plot"):
-                dpg.bind_colormap(f"{tab_label}_plot", 0)
-                dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
-                x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
-                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Coherence", tag= f"{tab_label}_y_axis")
-    else:
-        dpg.delete_item(f"{tab_label}_plot_group_text")
-        with dpg.group(parent=f"{tab_label}_plot_group", tag = f"{tab_label}_plot_group_text"):
-            dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
-            dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
+    if not dpg.does_item_exist(f"{tab_label}_plot_group"):
+        dpg.add_group(parent=tab_label, tag=f"{tab_label}_plot_group")
+        dpg.add_group(parent=f"{tab_label}_plot_group", tag=f"{tab_label}_plot_group_text")
 
+    # with dpg.group(parent=f"{tab_label}_plot_group", tag = f"{tab_label}_plot_group_text"):
+    dpg.add_text(f"Signal 1: {signal1['Label']}", parent=f"{tab_label}_plot_group_text")
+    dpg.add_text(f"Signal 2: {signal2['Label']}",parent=f"{tab_label}_plot_group_text")
+
+    if clean:
+        with dpg.plot(label = 'Coherence', width=-1, height=400, tag=f"{tab_label}_plot", parent=f"{tab_label}_plot_group_text"):
+            dpg.bind_colormap(f"{tab_label}_plot", 0)
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Coherence", tag= f"{tab_label}_y_axis")
+        
   
-    dpg.add_line_series(freq.tolist(), coh.tolist(), label=f"Coherence | {signal1['Channel']}-{signal2['Channel']}", parent=f"{tab_label}_y_axis")
-    dpg.add_line_series(freq.tolist(), IMcoh.tolist(), label=f"Imaginary Coherence | {signal1['Channel']}-{signal2['Channel']}", parent=f"{tab_label}_y_axis")
+    dpg.add_line_series(freq.tolist(), coh.tolist(), label=f"Coherence | {signal1['Label'][:10]}-{signal2['Label'][:10]}", parent=f"{tab_label}_y_axis")
+    dpg.add_line_series(freq.tolist(), IMcoh.tolist(), label=f"Imaginary Coherence | {signal1['Label'][:10]}-{signal2['Label'][:10]}", parent=f"{tab_label}_y_axis")
     
     dpg.set_axis_limits(f"{tab_label}_y_axis",ymin=0,ymax=1)
     bands = getBandsByTab(tab_label)
@@ -1630,7 +1636,7 @@ def plot_coherence(parameter_values, tab_label):
         mask2 = (freq >= band[0]) & (freq <= band[1])
         p = {'X': freq[mask2], 'Y':list(coh[mask2])}
         info = extract_timeline_features(p,coh, coherence=True)
-        create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
+        create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Label'][:10]}-{signal2['Label'][:10]}")
 
 
     time.sleep(0.2)
@@ -2823,7 +2829,7 @@ def update_table(table_tag, type):
 
 def before_vs_after(sender,app_data,user_data):
     signal_tags,tab_label,func,tab_tag,parameter_values = user_data
-    plot_filtered_signal(signal_tags,tab_label,func,tab_tag,parameter_values)
+    plot_featured_signal(signal_tags,tab_label,func,tab_tag,parameter_values)
 
 #------------GUI PRETTY-----------------
 def create_alpha_theme(alpha=0.5):
@@ -3792,7 +3798,7 @@ def DefaultFeatures(sender, app_data, user_data):
             case 'cross-correlation': plot_cross_correlation(parameter_values,tab_tag,tags,mode='df')
             case 'PAC': plot_pac(tags,tab_tag,parameter_values,mode='df')
             case 'coherence': plot_df_coherence(parameter_values,tab_tag,tags)
-            case _: plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values)
+            case _: plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values)
 
 def CustomFeatures(sender,app_data,user_data):
     tab_tag, signal_tags= user_data
@@ -3969,7 +3975,7 @@ def CustomFeatures(sender,app_data,user_data):
             case 'PAC': plot_pac(tags,tab_tag,parameter_values)
             case 'coherence': plot_coherence(parameter_values,tab_label)
             case 'cross-correlation': plot_cross_correlation(parameter_values,tab_tag,tags)
-            case _: plot_filtered_signal(signal_tags, tab_label, func, tab_tag, parameter_values)
+            case _: plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values)
                                      
     create_input_fields(sender,app_data)
 

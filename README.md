@@ -1,4 +1,7 @@
 # NeoDBS
+## 22.10.2025
+### Bug fixes:
+- Choosing signals for methods from different files 
 
 ## 20.10.2025
 ### Bug fixes:
