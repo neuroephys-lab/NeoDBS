@@ -1,4 +1,19 @@
 # NeoDBS
+## 24.10.2025
+### Bug fixes:
+- Wavelet: 
+    - repeated alias
+    - added colormap range selector
+- Joined spectrogram and wavelet
+- Get correct signal/event (mode was missing)
+
+### New functionalities:
+- Reset frequency bands
+
+### GUI design:
+- Individual Events: organized and grouped
+
+
 ## 22.10.2025
 ### Bug fixes:
 - Choosing signals for methods from different files 

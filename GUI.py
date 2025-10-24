@@ -83,6 +83,11 @@ def add_band(sender, app_data, user_data):
     window_id = extract_window_id(tab_tag)
     app_state['windows'][window_id]['Bands'] = t_bands
 
+def reset_bands(sender,app_data,user_data):
+    tab_tag = user_data
+    window_id = extract_window_id(tab_tag)
+    app_state['windows'][window_id]['Bands'] = ft.bands
+    
 def sanitize_filename(filename):
     """Removes or replaces invalid characters from filenames."""
     return re.sub(r'[<>:"/\\|?*]', '_', filename)  # Replace invalid characters with '_'
@@ -152,6 +157,7 @@ def add_features_buttons(tab_tag, signal_tags):
                     dpg.add_input_int(label='Hz', tag=f"{tab_tag}_band_min", width=90, default_value=0, callback=enforce_min_max, user_data=(f"{tab_tag}_band_min", f"{tab_tag}_band_max", 2))
                     dpg.add_input_int(label='Hz', tag=f"{tab_tag}_band_max", width=90, default_value=100, callback=enforce_min_max, user_data=(f"{tab_tag}_band_min", f"{tab_tag}_band_max", 2))
                     dpg.add_button(label='Insert Band of Interest', show=True, callback=add_band,user_data=(tab_tag))
+                    dpg.add_button(label='Reset Bands', show=True, callback=reset_bands,user_data=tab_tag)
     else:
         print(f"Tab {tab_tag} does not exist yet.")
 
@@ -371,7 +377,7 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag):
         day = f"{date.year}-{date.month:02d}-{date.day:02d}"
         days.append(day)
         
-    days = np.unique(days).tolist()
+    days = sorted(np.unique(days).tolist())
     hours = np.unique(hours).tolist()
 
     channels = []
@@ -435,7 +441,7 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None):
         date = f"day {date.day:02d}/{date.month:02d}"
         dates.append(date)
 
-    dates = np.unique(dates).tolist()
+    dates = sorted(np.unique(dates).tolist())
     events = np.unique(events).tolist()
     sides = ['Left', 'Right']
     def show_mean(sender,app_data):
@@ -571,7 +577,6 @@ def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False,
                 signal_tags[segment_tag] = True 
             else:
                 print(f"Skipping duplicate series: {combined_tag}")
-
 
 def plot_fd(signals, parent, tab_tag, signal_tags, files = None, events = False):
     '''
@@ -1305,8 +1310,9 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
     
     new_signal, identifiers = {}, {}
     for tag in tags:
-        signal = getSignalbyIdx(window_id,tab_tag,tag)
+        signal = getSignalbyIdx(window_id,tab_tag,tag,mode)
         ch = signal['Channel']
+        
         if ch in electrodes_names.keys():
             ch = electrodes_names[ch]
         else:
@@ -1320,7 +1326,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
  
     current_start, prev_end_time = {}, {}
     for tag in tags:
-        signal = getSignalbyIdx(window_id,tab_tag,tag)
+        signal = getSignalbyIdx(window_id,tab_tag,tag,mode)
         '''X = signal['X']
         arr = np.array(X)
         if np.issubdtype(arr.dtype, np.number):
@@ -1368,7 +1374,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
             
             if gap.total_seconds() > 0:
                 # Limit the gap to 10 min
-                gap = min(gap, timedelta(minutes=1))
+                gap = min(gap, timedelta(seconds=15))
                 
                 # Determine how many points to fill (based on sampling rate)
                 sample_rate = 250
@@ -1404,8 +1410,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
     global_min, global_max = 0,0
 
 
-
-    per_tag = {}
+    per_tag, spectrogram_tags = {}, []
     
     with dpg.group(horizontal=True, parent=f"{tab_label}", tag=f"{tab_label}_plot_group"):
 
@@ -1449,9 +1454,11 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                     global_min = min(global_min, Sxx_log.min())
                     global_max = max(global_max, Sxx_log.max())  
 
-                    dpg.add_heat_series(Sxx_log.flatten(), rows=Sxx_log.shape[0], cols=Sxx_log.shape[1],
+                    tag = dpg.add_heat_series(Sxx_log.flatten(), rows=Sxx_log.shape[0], cols=Sxx_log.shape[1],
                                     scale_min=global_min, scale_max=global_max,
                                     parent=y_axis, format="",bounds_min=[x[0],0], bounds_max=[x[-1],125])
+                    spectrogram_tags.append(tag)
+                    
                     dpg.bind_colormap(subplot_tag, dpg.mvPlotColormap_Jet)  
 
                     if not isinstance(events,str):
@@ -1538,7 +1545,16 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
             
         with dpg.group(horizontal=False):
             dpg.add_checkbox(label='Synchronize Axis', callback=link) 
-            dpg.add_button(label='Band Power over Time', callback=merge_spectrograms)     
+            dpg.add_button(label='Band Power over Time', callback=merge_spectrograms)
+            dpg.add_separator()
+            dpg.add_text('Adjust Colormap Scale')
+            dpg.add_input_int(label='Min: ', tag=f"{tab_label}_emin", width=90, default_value=global_min,callback=enforce_range, 
+                                user_data=(tab_label,global_min,global_max), min_value=global_min,max_value=(global_max-5))
+            
+            dpg.add_input_int(label='Max: ', tag=f"{tab_label}_emax", width=90, default_value=global_max,callback=enforce_range, 
+                                user_data=(tab_label,global_min,global_max),min_value=(global_min+5),max_value=global_min)
+            
+            dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,spectrogram_tags,f"{tab_label}_colormap_scale"))     
 
 def plot_df_coherence(parameter_values,tab_tag,tags):
     labels = [dpg.get_item_label(tag) for tag in tags]
@@ -2234,17 +2250,15 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
             dpg.add_checkbox(label='Synchronize Axis', callback=link)      
             dpg.add_button(label='Band Power over Time', callback=merge_spectrograms)
             dpg.add_button(label='Mean Spectrogram', callback=mean_spectrogram, user_data=Merge)
-            with dpg.group(horizontal=True):
-                with dpg.group(horizontal=False):
-                    dpg.add_separator()
-                    dpg.add_text('Adjust Colormap Scale')
-                    dpg.add_input_int(label='Min: ', tag=f"{tab_label}_emin", width=90, default_value=global_min,callback=enforce_range, 
-                                      user_data=(tab_label,global_min,global_max), min_value=global_min,max_value=(global_max-5))
-                    
-                    dpg.add_input_int(label='Max: ', tag=f"{tab_label}_emax", width=90, default_value=global_max,callback=enforce_range, 
-                                      user_data=(tab_label,global_min,global_max),min_value=(global_min+5),max_value=global_min)
-                    
-                    dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,spectrogram_tags,f"{tab_label}_colormap_scale"))
+            dpg.add_separator()
+            dpg.add_text('Adjust Colormap Scale')
+            dpg.add_input_int(label='Min: ', tag=f"{tab_label}_emin", width=90, default_value=global_min,callback=enforce_range, 
+                                user_data=(tab_label,global_min,global_max), min_value=global_min,max_value=(global_max-5))
+            
+            dpg.add_input_int(label='Max: ', tag=f"{tab_label}_emax", width=90, default_value=global_max,callback=enforce_range, 
+                                user_data=(tab_label,global_min,global_max),min_value=(global_min+5),max_value=global_min)
+            
+            dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,spectrogram_tags,f"{tab_label}_colormap_scale"))
        
 def choose(sender,app_data,user_data):
     tags, tab_label, func, tab_tag, parameter_values, mode = user_data
@@ -2273,7 +2287,6 @@ def choose(sender,app_data,user_data):
         if dpg.does_item_exist(f"{tab_label}_plot_group"): dpg.delete_item(f"{tab_label}_plot_group")
         if dpg.does_item_exist(f"{tab_label}_merged"): dpg.delete_item(f"{tab_label}_merged")
         
-
         if plot_mode == 'join':
             #plot per recording + possibility of merge all
             if func == 'spectrogram': plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mode)
@@ -2291,7 +2304,7 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
 
     '''Initializing new signal dictionary'''
     for tag in tags:
-        signal = getSignalbyIdx(window_id,tab_tag,tag)
+        signal = getSignalbyIdx(window_id,tab_tag,tag,mode)
         ch = signal['Channel']
         if ch in electrodes_names.keys():
             ch = electrodes_names[ch]
@@ -2308,7 +2321,7 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
     prev_end_time = {}
     current_start = {}
     for i,tag in enumerate(tags):
-        signal = getSignalbyIdx(window_id,tab_tag,tag)
+        signal = getSignalbyIdx(window_id,tab_tag,tag,mode)
 
         '''Good version - For individual and combined?'''
         X = signal['X']
@@ -2336,7 +2349,7 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
             
             if gap.total_seconds() > 0:
                 # Limit the gap to 10 min
-                gap = min(gap, timedelta(seconds = 20))
+                gap = min(gap, timedelta(seconds = 15))
                 
                 # Determine how many points to fill (based on sampling rate)
                 sample_rate = 250
@@ -2365,7 +2378,7 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
     num_cols = 1
     num_rows = num_plots
     global_min, global_max = 0,0   
-    per_tag = {}
+    per_tag, wavelet_tags = {}, []
     bands = getBandsByTab(tab_tag)
 
     with dpg.group(horizontal=True, parent=f"{tab_label}", tag=f"{tab_label}_plot_group"):
@@ -2408,9 +2421,10 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
                     global_min = np.min(downsampled_tfr)
                     global_max = np.max(downsampled_tfr) 
 
-                    dpg.add_heat_series(heatmap_data, rows=downsampled_tfr.shape[0], cols=downsampled_tfr.shape[1],
+                    tag = dpg.add_heat_series(heatmap_data, rows=downsampled_tfr.shape[0], cols=downsampled_tfr.shape[1],
                                     scale_min=global_min, scale_max=global_max,
                                     parent=y_axis, format="",bounds_min=[x[0],0], bounds_max=[x[-1],100])
+                    wavelet_tags.append(tag)
                     dpg.bind_colormap(subplot_tag, dpg.mvPlotColormap_Jet)  
 
                     if not isinstance(events,str):
@@ -2509,7 +2523,16 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
         with dpg.group(horizontal=False):
             dpg.add_checkbox(label='Synchronize Axis', callback=link) 
             dpg.add_button(label='Band Power over Time', callback=merge_wavelet)
-
+            dpg.add_separator()
+            dpg.add_text('Adjust Colormap Scale')
+            dpg.add_input_int(label='Min: ', tag=f"{tab_label}_emin", width=90, default_value=global_min,callback=enforce_range, 
+                                user_data=(tab_label,global_min,global_max), min_value=global_min,max_value=(global_max-5))
+            
+            dpg.add_input_int(label='Max: ', tag=f"{tab_label}_emax", width=90, default_value=global_max,callback=enforce_range, 
+                                user_data=(tab_label,global_min,global_max),min_value=(global_min+5),max_value=global_min)
+            
+            dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,wavelet_tags,f"{tab_label}_colormap_scale"))
+       
 def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
     window_id = extract_window_id(tab_tag)
     wt = extract_type_window(window_id)
@@ -2517,13 +2540,13 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
     num_cols = 2
     num_rows = (num_plots + 1) // num_cols
     events = None
-    per_tag = {}
+    per_tag, wavelet_tags = {}, []
     bands = getBandsByTab(tab_tag)
 
     with dpg.group(horizontal=True,tag = f"{tab_label}_plot_group", parent=tab_label):
         with dpg.subplots(rows=num_rows, columns=num_cols, label=f"Wavelet", width=800, height=400*num_rows, tag=f"{tab_label}_subplots"):
             
-            for tag in tags:
+            for idx, tag in enumerate(tags):
                 stream = getSignalbyIdx(window_id,tab_tag,tag,mode=mode)
 
                 if mode == None: #else the stream is the event
@@ -2543,10 +2566,10 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
                 if mode and wt=='Combined': #Plotting the events
                     date = date + timedelta(seconds=int(stream['Idx']/250))
                     plot_label = f"{channel} - {stream['Type']} - {date}"
-                    plot_tag = f"{tab_label}_{channel}_{stream['Type']}"
+                    plot_tag = f"{tab_label}_{channel}_{stream['Type']}_{idx}"
                 else:
                     plot_label = f"{channel} | {date}"
-                    plot_tag = f"{tab_label}_{channel}_{date}"
+                    plot_tag = f"{tab_label}_{channel}_{date}_{idx}"
 
                 
                 with dpg.plot(label = plot_label, width=-1, height=-1, tag =plot_tag):
@@ -2577,9 +2600,9 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
                     global_max = np.max(downsampled_tfr)
 
                     # Add downsampled heatmap series
-                    dpg.add_heat_series(heatmap_data, rows=downsampled_tfr.shape[0], cols=downsampled_tfr.shape[1], 
+                    tag = dpg.add_heat_series(heatmap_data, rows=downsampled_tfr.shape[0], cols=downsampled_tfr.shape[1], 
                                         parent=y_axis, scale_min=global_min, scale_max=global_max, format="", bounds_min=[emin,freqs[0]], bounds_max=[emax,freqs[-1]])
-
+                    wavelet_tags.append(tag)
                     dpg.bind_colormap(plot_tag, dpg.mvPlotColormap_Jet)
 
                     if isinstance(events,list):
@@ -2642,7 +2665,16 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
         with dpg.group(horizontal=False):
             dpg.add_checkbox(label='Synchronize Axis', callback=link) 
             dpg.add_button(label='Band Power over Time', callback=merge_wavelet)
-
+            dpg.add_separator()
+            dpg.add_text('Adjust Colormap Scale')
+            dpg.add_input_int(label='Min: ', tag=f"{tab_label}_emin", width=90, default_value=global_min,callback=enforce_range, 
+                                user_data=(tab_label,global_min,global_max), min_value=global_min,max_value=(global_max-5))
+            
+            dpg.add_input_int(label='Max: ', tag=f"{tab_label}_emax", width=90, default_value=global_max,callback=enforce_range, 
+                                user_data=(tab_label,global_min,global_max),min_value=(global_min+5),max_value=global_min)
+            
+            dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,wavelet_tags,f"{tab_label}_colormap_scale"))
+      
 def plot_pac(tags,tab_tag,parameter_values,mode=None):
     window_id = extract_window_id(tab_tag)
     labels = [dpg.get_item_label(tag) for tag in tags]
@@ -3064,7 +3096,9 @@ def getSignalbyIdx(window_id,tab_tag,series_tag,mode=None):
     file = extract_file_from_series_tag(series_tag)
     edx = int(extract_edx_from_series_tag(series_tag))
     wt = extract_type_window(window_id)
+    
     if wt == 'Combined': #Combined window
+        temp = app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]
         if mode == None: #signal and not events
             return app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Signals'][idx]
         else: #events
@@ -3590,8 +3624,8 @@ def cut_signals(sender,app_data,user_data):
 def interval_events(tab_tag, label1, label2,mini=15,maxi=15,flag=False):
     min_dif = 2
     with dpg.group(horizontal=True):
-        dpg.add_input_int(label=label1, tag=f"{tab_tag}_emin", width=90, default_value=mini, callback=enforce_min_max, user_data=(f"{tab_tag}_emin", f"{tab_tag}_emax", min_dif,flag))
-        dpg.add_input_int(label=label2, tag=f"{tab_tag}_emax", width=90, default_value=maxi, callback=enforce_min_max, user_data=(f"{tab_tag}_emin", f"{tab_tag}_emax", min_dif,flag))
+        dpg.add_input_int(label=label1, tag=f"{tab_tag}_emin", width=90, default_value=mini, callback=enforce_min_max, user_data=(f"{tab_tag}_emin", f"{tab_tag}_emax", min_dif))
+        dpg.add_input_int(label=label2, tag=f"{tab_tag}_emax", width=90, default_value=maxi, callback=enforce_min_max, user_data=(f"{tab_tag}_emin", f"{tab_tag}_emax", min_dif))
 
 def DefaultFilter(sender,app_data,user_data):
     '''
@@ -3721,9 +3755,10 @@ def CustomFilter(sender,app_data,user_data):
         args = pre.call_function(func, parameter_values) #gets the parameters of the filter
         
         for tag in tags:
-            if mode:
-                stream=getSignalbyIdx(window_id,tab_tag,tag,mode='segment')
-            else: stream = getSignalbyIdx(window_id,tab_tag,tag)
+            # if mode:
+            #     stream=getSignalbyIdx(window_id,tab_tag,tag,mode='segment')
+            # else: stream = getSignalbyIdx(window_id,tab_tag,tag)
+            stream=getSignalbyIdx(window_id,tab_tag,tag,mode)
             y = stream['Y']
             filtered = pre.call_function2('filtfilt', *args, y)
             updateSignalbyIdx(np.ascontiguousarray(filtered),tab_tag,tag, mode=mode)
@@ -4044,12 +4079,13 @@ def insert_events(sender, app_data, user_data):
                     if dpg.does_item_exist(f"{tab_tag}_emin"):
                         imin = tidx-min
                         imax = tidx+max
+
                         if imin<0:
                             imin = 0
                             imax = tidx+max+min
                         if imax>len(new_x)-1:
                             imax = len(new_x)-1
-                            imin = len(new_x) -1-(max+min)
+                            imin = imax-(max+min)
 
                         segment_x = new_x[imin:imax]
                         new_y = signal['Y'][imin:imax]
@@ -4066,7 +4102,6 @@ def insert_events(sender, app_data, user_data):
             # if flag:
             #     if window_type == 'Combined': app_state['windows'][window_id]['Files'][file]['Data'][tab_tag].pop('Events')
             #     else: app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx].pop('Events')
-
 
         if scatter: 
             event_types = [s[1] for s in scatter]
@@ -4310,7 +4345,7 @@ def circadian_rhythm(sender, app_data, user_data):
             info = extract_timeline_features(sign)
             create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label='Mean')
 
-        dates = np.unique(dates)
+        dates = sorted(np.unique(dates).tolist())
         checkboxes = []
         with dpg.group():
             with dpg.child_window(width=120, height=250):
@@ -4572,7 +4607,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
                     checkboxes.append(c)
             with dpg.child_window(width=120,height=150):
                 dpg.add_text('Days: ')
-                days = np.unique(days).tolist()
+                days = sorted(np.unique(days).tolist())
                 for side in days:
                     c = dpg.add_checkbox(label=side,callback = toggle,default_value=True)
                     checkboxes.append(c)
@@ -4782,7 +4817,7 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
     initial, final = DH.getEventsElectrodes(app_state['windows'][window_id]['Data'])
     
-    power, tables = [], []
+    power, tables, all_mean = [], [], {}
     bands = getBandsByTab(tab_tag)
     max_p = 0
     if not isinstance(initial, str): 
@@ -4833,16 +4868,46 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     power.append(y) 
                     max_p = max(max_p,np.max(p['Y']))      
                     series_label = series_tag
+
+                    if not dpg.does_item_exist(f"{tab_label}_grouped"):
+                        dpg.add_tree_node(tag=f"{tab_label}_grouped",
+                            label="Grouped Streams",
+                            parent=tab_label,
+                            default_open=False
+                        ) 
+
+                    if not dpg.does_item_exist(f"{tab_label}_{side}_all_mean"):
+                        dpg.add_collapsing_header(label = f'All Mean Power - {side}', tag =f"{tab_label}_{side}_all_mean", parent = f"{tab_label}_grouped")
+                        tables.append(f"{tab_label}_{side}_all_mean_table")
+
+                    if not dpg.does_item_exist(f"{tab_label}_{side}_{signal['EventName']}"):
+                        dpg.add_collapsing_header(label = f"All {signal['EventName']}s - {side}", tag =f"{tab_label}_{side}_{signal['EventName']}", parent = f"{tab_label}_grouped")
+                        tables.append(f"{tab_label}_{side}_{signal['EventName']}_table")
+
+                    if not dpg.does_item_exist(f"{tab_label}_individuals"):
+                        dpg.add_tree_node(tag=f"{tab_label}_individuals",
+                            label="Individual Streams",
+                            parent=tab_label,
+                            default_open=False
+                        )   
+
                     if not dpg.does_item_exist(f"{tab_label}_{series_label}"):
                         header = dpg.get_item_label(series_label)
-                        dpg.add_collapsing_header(label = header, tag =f"{tab_label}_{series_label}", parent = tab_label)
+                        dpg.add_collapsing_header(label = header, tag =f"{tab_label}_{series_label}", parent = f"{tab_label}_individuals")
                     else:
                         dpg.delete_item(f"{tab_label}_{series_label}", children_only=True)
 
                     #TABLE CONTENT
                     for band in bands.items():
                         info = extract_psd_features(p, band)
+                        temp = info['Mean Power (mean, std. dev)']
+                        # temp = info['Peak Power (power, frequency)']
+                        if not isinstance(temp,(int,float)): all_mean[band[0]] = temp[-1]
+                        else: all_mean[band[0]]=temp
                         create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table", info, trial_label=band[0])
+
+                    create_table(f"{tab_label}_{side}_all_mean",f"{tab_label}_{side}_all_mean_table", all_mean, trial_label=header)
+                    create_table(f"{tab_label}_{side}_{signal['EventName']}",f"{tab_label}_{side}_{signal['EventName']}_table", all_mean, trial_label=header)
 
                     tables.append(f"{tab_label}_{series_label}_table")
 
@@ -4989,7 +5054,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             date = utl.date2str(utl.parse_datetime(signal['Date']))
             days.append(date)
 
-        days = np.unique(days).tolist()
+        days = sorted(np.unique(days).tolist())
         sides = ['Left','Right']
 
         for event in events:
@@ -5537,7 +5602,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                                 dpg.add_tree_node(tag=f"{tab_label}_grouped",
                                     label="Grouped Streams",
                                     parent=tab_label,
-                                    default_open=True
+                                    default_open=False
                                 ) 
 
                             if not dpg.does_item_exist(f"{tab_label}_{side}_all_mean"):
@@ -5552,7 +5617,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                                 dpg.add_tree_node(tag=f"{tab_label}_individuals",
                                     label="Individual Streams",
                                     parent=tab_label,
-                                    default_open=True
+                                    default_open=False
                                 )   
 
                             if not dpg.does_item_exist(f"{tab_label}_{series_label}"):
@@ -5568,6 +5633,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                                 # temp = info['Peak Power (power, frequency)']
                                 if not isinstance(temp,(int,float)): all_mean[band[0]] = temp[-1]
                                 else: all_mean[band[0]]=temp
+
                                 create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table", info, trial_label=band[0])
 
                             create_table(f"{tab_label}_{side}_all_mean",f"{tab_label}_{side}_all_mean_table", all_mean, trial_label=header)
@@ -5871,7 +5937,7 @@ def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         create_table(f"{line_tag}_header",f"{line_tag}_header_table", info, trial_label=band[0])
 
         channels = np.unique(channels)
-        dates = np.unique(dates).tolist()
+        dates = sorted(np.unique(dates).tolist())
         if len(dates)>1:
             with dpg.child_window(height=150,width=120, tag =f"{new_tab_tag}day" ):
                 dpg.add_text('By Day:', parent=f"{new_tab_tag}day" )
@@ -6066,7 +6132,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                 dpg.add_text(f"Total days: {len(days)}", parent=header)
                 dpg.add_text(f"Timezone/offset: {DH.extract_dict_offset(data)}", parent=header)
                 dpg.add_separator(parent=header)
-        days = np.unique(days).tolist()
+        days = sorted(np.unique(days).tolist())
         sides = ['Left','Right']
         dpg.configure_item(legend,show=False)
 
