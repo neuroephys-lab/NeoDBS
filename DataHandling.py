@@ -20,23 +20,16 @@ file1 = open(file_path,'r',encoding='utf-8')
 json2 = json.load(file)
 '''
 
-def info_electrodes(data):
+def info_electrodes(data,version='Initial'):
     '''
     Inês Pereira - up202107421@edu.fe.up.pt
 
     Return information of the active electrodes from TIMELINE mode
-    
     '''
-    GroupHistory=data['Device']['GroupHistory']
-    # days_hemisphere_right = list(data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Right'].keys())
-    # # for dic in GroupHistory:
-    # #     if dic['SessionDate'][0:10]==days_hemisphere_right[0][0:10]:
-    # #             Groups=dic["Groups"]
-    # #             #print(Groups[1])
-    # #             for di in Groups:
-    # #                 if di.get("ActiveGroup")==True:
-    di = GroupHistory[0]['Groups'][0]
-    Group_id=di["GroupId"][-1]
+    GroupHistory=data['Device']['Groups']
+
+    di = GroupHistory[version][0]
+    Group_id=di["GroupId"]
     ProgramSettings=di["ProgramSettings"]
     GroupSettings = di["GroupSettings"]
     Rate_in_hertz=ProgramSettings["RateInHertz"]
@@ -77,9 +70,6 @@ def info_electrodes(data):
     }
     return a
 
-# def electrodes(Data):
-#     session_date = getSessionDate(Data)
-#     GH = Data['Device']['GroupHistory']
 
 def add_utc_conversion_to_dates(data, offset):
     """
@@ -796,7 +786,7 @@ def getStreamingStimulation(Data,date):
 
 def getStimulation(Data):
     timeline = getModeSignals(Data,'Timeline')['HemisphereLocationDef.Right']
-    electrodes = info_electrodes(Data)['Stim_electrodes']
+    electrodes = info_electrodes(Data,version='Final')['Stim_electrodes']
     stimulation = {'X': [], 'Y': [], 'Info': []}
 
     for _, stream in timeline.items():

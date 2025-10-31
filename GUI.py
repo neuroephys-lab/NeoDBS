@@ -1072,7 +1072,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                         dpg.add_collapsing_header(label = f'{side} HEMISPHERE', tag =f"{tab_label}_{side}", parent = f"{tab_label}_hemisphere")
 
                     if not dpg.does_item_exist(f"{tab_label}_{stream['Channel']}"):
-                        dpg.add_collapsing_header(label = f'{stream['Channel']}', tag =f"{tab_label}_{stream['Channel']}", parent = f"{tab_label}_channel")
+                        dpg.add_collapsing_header(label = f"{stream['Channel']}", tag =f"{tab_label}_{stream['Channel']}", parent = f"{tab_label}_channel")
 
                     if not dpg.does_item_exist(f"{tab_label}_{series_label}"):
                         dpg.add_collapsing_header(label = f'{series_label}', tag =f"{tab_label}_{series_label}", parent = f"{tab_label}_individual")
@@ -2745,8 +2745,8 @@ def plot_pac(tags,tab_tag,parameter_values,mode=None):
 
 
         with dpg.group(tag=f"{tab_label}_pac", parent=tab_label):
-            dpg.add_text(f"Phase Signal: {dpg.get_value(f"{tab_label}_s1")} | Phase Band: {parameter_values['b1']}")
-            dpg.add_text(f"Amplitude Signal: {dpg.get_value(f"{tab_label}_s2")} | Phase Band: {parameter_values['b2']}")
+            dpg.add_text(f"Phase Signal: {dpg.get_value(f'{tab_label}_s1')} | Phase Band: {parameter_values['b1']}")
+            dpg.add_text(f"Amplitude Signal: {dpg.get_value(f'{tab_label}_s2')} | Phase Band: {parameter_values['b2']}")
             dpg.add_text('Modulation Index (MI): 0 = NO coupling | 1 = STRONG coupling ')
             with dpg.plot(label=f"Phase-Amplitude Coupling - MI: {mi}", height=300, width=-1,tag=f"{tab_label}_plot"):
                 dpg.add_plot_legend()
@@ -3281,8 +3281,8 @@ def extract_psd_features(p, band):
 def extract_timeline_features(p, full_power=None, coherence=False):
     
     if full_power is None:
-        full_power = np.sum(p['Y'])
-    else: full_power = np.sum(full_power)
+        full_power = np.nansum(p['Y'])
+    else: full_power = np.nansum(full_power)
 
     freqs, psd = p['X'], p['Y']
 
@@ -3291,17 +3291,17 @@ def extract_timeline_features(p, full_power=None, coherence=False):
     elif psd is None:
         return
     #mean power per band
-    pc = np.mean(psd)
-    std = np.std(psd)
+    pc = np.nanmean(psd)
+    std = np.nanstd(psd)
     mean = {'Mean Power (mean, std. dev)': [np.round(pc,2), np.round(std,2)]}
 
     #normalized mean power
     if full_power is not None:
-        sump = np.sum(psd)
+        sump = np.nansum(psd)
         norm_mean = {'% Mean Power (mean, std. dev)': [np.round(sump*100/full_power,2), np.round(std * 100 / full_power,2)]}
  
     #peak power
-    peak = max(psd)
+    peak = np.nanmax(psd)
     picos = {'Peak Power': peak}
 
     #peak time
@@ -3313,24 +3313,30 @@ def extract_timeline_features(p, full_power=None, coherence=False):
     except Exception: time = freqs[0]
 
     key = 'Peak Time'
+    print(type(time))
+    print(time)
     if isinstance(time,str):
         peak = str(utl.parse_datetime(time).time())
-    if isinstance(time, (int, float)):
+    elif isinstance(time, (int, float)):
         if np.isnan(time):
             return
-    if isinstance(time, np.ndarray):
+    elif isinstance(time, np.ndarray):
         if np.any(np.isnan(time)):
             return
     elif isinstance(time,float):
-        peak = time
         peak = str(datetime.fromtimestamp(time).time())
+    else: #datetime.datetime object
+        peak=str(time.time())
+
     if coherence:
         key = 'Peak Frequency'
         peak = time
 
     time = {key: peak}
-
     info = mean | norm_mean| picos | time
+    if 'Sense' in p.keys():
+        sense = {'Sensing Freq. (Hz)': p['Sense']}
+        info = info| sense
 
     return info
 
@@ -4242,9 +4248,10 @@ def circadian_rhythm(sender, app_data, user_data):
     #preparing streams
     for tag in tags:
         signal = getSignalbyIdx(window_id,tab_tag,tag)
+        stim_info = DH.info_electrodes(getDatabyTag(tag))['Sense_frequency']
         dates.append(signal['Date'][:10])
         side = extract_side_from_series_tag(tag)
-        side = side[0].upper() + side[1:]
+        side = side[0].upper() + side[1:] #First letter in upper case
         
         # old_x, old_y = dpg.get_value(tag)[:2]
         old_x, old_y = signal[side]['X'], signal[side]['Y']
@@ -4253,7 +4260,7 @@ def circadian_rhythm(sender, app_data, user_data):
         if x[0] != old_x[0]:
             old_y = list(reversed(old_y))
 
-        if isinstance(old_x[0],int):
+        if isinstance(old_x[0],(int,float)):
             old_x = [utl.extract_time_from_datetime_string(str(datetime.fromtimestamp(xx).time())) for xx in x]
         elif isinstance(old_x[0], str):
             old_x = [utl.extract_time_from_datetime_string(xx) for xx in x]
@@ -4273,10 +4280,10 @@ def circadian_rhythm(sender, app_data, user_data):
         
         last = utl.extract_time_from_datetime_string("23:59:00")
 
-        if x[0]>60*10:
+        if x[0]>600:
             if x[0]>last:
                 x[0] = x[0]-last
-                
+               
             diff = int((x[0]-600)//600)+1
             nan_array = [np.nan]*diff
             y = nan_array + y
@@ -4289,7 +4296,7 @@ def circadian_rhythm(sender, app_data, user_data):
             y = y + nan_array
             x = x + list(np.arange(x[-1],last,600))
 
-        days[tag] = [x,y]
+        days[tag] = [x,y,stim_info]
         
         mean.append(y)
 
@@ -4322,7 +4329,6 @@ def circadian_rhythm(sender, app_data, user_data):
         dpg.configure_item(f"{tab_label}_mean",y=new_mean)
         dpg.configure_item(f"{tab_label}_std",y1=new_minus,y2=new_plus)
 
-
     with dpg.group(parent=tab_label, horizontal=True, tag=f"{tab_label}_CR"):
         with dpg.plot(label = "Circadian Rhythm", tag = f'{tab_label}_plot', width=800): 
             dpg.bind_colormap(f"{tab_label}_plot", 0)
@@ -4336,7 +4342,7 @@ def circadian_rhythm(sender, app_data, user_data):
 
                 new_x = [datetime.fromtimestamp(xx) for xx in val[0]]
 
-                sign = {'X':new_x,'Y':val[1]}
+                sign = {'X':new_x,'Y':val[1],'Sense':val[2]}
 
                 if not dpg.does_item_exist(f"{tab_label}_header"):
                     dpg.add_collapsing_header(tag=f"{tab_label}_header", parent=tab_label, label = 'Circadian Metrics')
@@ -4358,7 +4364,7 @@ def circadian_rhythm(sender, app_data, user_data):
         dates = sorted(np.unique(dates).tolist())
         checkboxes = []
         with dpg.group():
-            with dpg.child_window(width=120, height=250):
+            with dpg.child_window(width=120, height=200):
                 dpg.add_text('By Day:')
                 for d in dates:
                     c = dpg.add_checkbox(label=d, default_value=True, callback=toggle)
@@ -4732,7 +4738,7 @@ def device_window(Data, window_id, file_id = None):
 def stimulation_window(Data, window_id, file_id = None):
     wt = extract_type_window(window_id)
     try:
-        stimulation = DH.info_electrodes(Data)
+        stimulation = DH.info_electrodes(Data,version='Initial')
     except Exception as e: 
         print(e)
         return

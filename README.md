@@ -1,5 +1,14 @@
 # NeoDBS
 
+## 31.10.2025
+### Bug fixes:
+- Python versions below 3.12.00 dont allow encapsulated f-strings with the same type of "" (they need to be different) --> updated to allow versions below 3.12
+- Circadian rhythm combined: corrected (values received in float, adn if only considered ints)
+- Circadian rhythm values: 
+    - nan resistant
+    - Added sensing information
+- DH module: info_electrodes updated to retrieve info from *Initial* (default) and Final configurations
+
 ## 27.10.2025
 ### Bug fixes:
 - Get signals on combined with different types of recordings
