@@ -142,7 +142,10 @@ def date2str(d: datetime) -> str:
 
 def extract_time_from_datetime_string(dt_string):
     """Parses a datetime string and returns a timestamp of the time portion."""
-    dt = datetime.strptime(dt_string, "%H:%M:%S")
+    try:
+        dt = datetime.strptime(dt_string, "%H:%M:%S")
+    except Exception:
+        dt = datetime.strptime(dt_string, "%Y-%m-%dT%H:%M:%SZ")
     t = dt.time()
     # Convert time to timestamp (seconds since midnight)
     return t.hour * 3600 + t.minute * 60 + t.second

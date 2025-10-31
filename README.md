@@ -1,4 +1,10 @@
 # NeoDBS
+
+## 27.10.2025
+### Bug fixes:
+- Get signals on combined with different types of recordings
+- Circadian Rhythm: get signals corrected --> values still = nan
+
 ## 24.10.2025
 ### Bug fixes:
 - Wavelet: 

@@ -438,10 +438,12 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None):
     dates = []
     for signal in signals: 
         date = utl.parse_datetime(signal['DateInitial'])
-        date = f"day {date.day:02d}/{date.month:02d}"
+        date = f"day {date.month:02d}/{date.day:02d}"
         dates.append(date)
 
+
     dates = sorted(np.unique(dates).tolist())
+
     events = np.unique(events).tolist()
     sides = ['Left', 'Right']
     def show_mean(sender,app_data):
@@ -455,7 +457,7 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None):
             #check days
             if len(dates)>1:
                 with dpg.child_window(width=120, height=150):
-                    dpg.add_text('By days:')
+                    dpg.add_text('By days \n (Month/Day):')
                     for day in dates:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons_day", user_data=(day, window_id, tab_tag)) 
 
@@ -519,6 +521,7 @@ def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False,
     '''
     #extra =  len(signal_tags)
     window_id = extract_window_id(tab_tag)
+
     if events:
         event_types = [signal['Type'] for signal in signals]
         event_types = np.unique(event_types).tolist()
@@ -907,15 +910,10 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
 
     if not 'Data' in app_state['windows'][window_id]:
         for j in app_state['windows'][window_id]['Files']:
-            if isinstance(j['Data'][tab_tag], dict) and 'Events' in j['Data'][tab_tag].keys():
-                mode = 'segment'
-                break
-        # for j in app_state['windows'][window_id]['Files']:
-        #     if 'Events' in j['Data'][tab_tag].keys():
-        #         signal_mode = plot_mode = 'segment'
-        #         if config['scale'] == 1: #if were plotting in datetime (signal w marked events) and not seconds (cutted events)
-        #             signal_mode = plot_mode = None
-        #         break
+            if tab_tag in j['Data'].keys():
+                if isinstance(j['Data'][tab_tag], dict) and 'Events' in j['Data'][tab_tag].keys():
+                    mode = 'segment'
+                    break
         else: mode = None
     else: mode = None
 
@@ -3642,11 +3640,12 @@ def DefaultFilter(sender,app_data,user_data):
     if wt == 'Combined':
         config = dpg.get_item_configuration(f"x_axis_{tab_tag}")
         for j in app_state['windows'][window_id]['Files']:
-            if isinstance(j['Data'][tab_tag], dict) and 'Events' in j['Data'][tab_tag].keys():
-                signal_mode = plot_mode = 'segment'
-                if config['scale'] == 1: #if were plotting in datetime (signal w marked events) and not seconds (cutted events)
-                    signal_mode = plot_mode = None
-                break
+            if tab_tag in j['Data'].keys():
+                if isinstance(j['Data'][tab_tag], dict) and 'Events' in j['Data'][tab_tag].keys():
+                    signal_mode = plot_mode = 'segment'
+                    if config['scale'] == 1: #if were plotting in datetime (signal w marked events) and not seconds (cutted events)
+                        signal_mode = plot_mode = None
+                    break
        
     else: 
         signals = app_state['windows'][window_id]['Data'][tab_tag]['Signals']
@@ -4242,15 +4241,25 @@ def circadian_rhythm(sender, app_data, user_data):
 
     #preparing streams
     for tag in tags:
-        dates.append(getSignalbyIdx(window_id,tab_tag,tag)['Date'][:10])
-        old_x,old_y = dpg.get_value(tag)[:2]
+        signal = getSignalbyIdx(window_id,tab_tag,tag)
+        dates.append(signal['Date'][:10])
+        side = extract_side_from_series_tag(tag)
+        side = side[0].upper() + side[1:]
+        
+        # old_x, old_y = dpg.get_value(tag)[:2]
+        old_x, old_y = signal[side]['X'], signal[side]['Y']
         x = sorted(old_x)
+
         if x[0] != old_x[0]:
             old_y = list(reversed(old_y))
 
-        old_x = [utl.extract_time_from_datetime_string(str(datetime.fromtimestamp(xx).time())) for xx in x]
+        if isinstance(old_x[0],int):
+            old_x = [utl.extract_time_from_datetime_string(str(datetime.fromtimestamp(xx).time())) for xx in x]
+        elif isinstance(old_x[0], str):
+            old_x = [utl.extract_time_from_datetime_string(xx) for xx in x]
 
         x,y = [], []
+
         for n in range(len(old_x)-1):
             x.append(old_x[n])
             y.append(old_y[n])
@@ -4263,6 +4272,7 @@ def circadian_rhythm(sender, app_data, user_data):
         y.append(old_y[-1])
         
         last = utl.extract_time_from_datetime_string("23:59:00")
+
         if x[0]>60*10:
             if x[0]>last:
                 x[0] = x[0]-last
@@ -5581,7 +5591,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         for side in ['Left', 'Right']:
                             
                             sign = signal[side]
-                            label = f"day {date.day:02d}/{date.month:02d} | {date.minute:02d} | {side} | {signal['EventName']}"
+                            label = f"day {date.month:02d}/{date.day:02d} | {date.minute:02d} | {side} | {signal['EventName']}"
                             x = sign['X']
                             y = sign['Y']
                             
@@ -5683,6 +5693,7 @@ def comb_streaming_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
             for idx, file in enumerate(files):
                 if mode in file['Modes']: 
                     signals = DH.getSignals(file['Data'],mode)
+                    print(tab_tag)
                     file['Data'][tab_tag]= {'Signals': []}
                     rdate = signals[0]['Date']
                     channel = extract_channel_from_series_tag(signals[0]['Channel'])
