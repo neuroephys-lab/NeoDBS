@@ -50,7 +50,8 @@ def info_electrodes(data,version='Initial'):
     right_e=SensingChannel[0]["ElectrodeState"]
     Left,Right=[], []
     for d in left_e:
-        Left.append(re.split('\.|_',d['Electrode'])[-1]+'-'+d["ElectrodeStateResult"].split('.')[-1])
+        Left.append(re.split(r'\.|_', d['Electrode'])[-1] + '-' + d["ElectrodeStateResult"].split('.')[-1])
+
     # for d in right_e:
     #     Right.append(re.split('\.|_',d['Electrode'])[-1]+'-'+d["ElectrodeStateResult"].split('.')[-1])
     type_stimulation = GroupSettings['Cycling']['Enabled']

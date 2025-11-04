@@ -808,16 +808,17 @@ def apply_feat(func, parameter_values, raw):
             if not isinstance(raw,float):
                 parameter_values['M'] = len(np.array(raw))
             try:
-                nfft = int(parameter_values['nfft'])
-                window_len = nfft
+                window_len = nfft = int(parameter_values['nfft'])
             except Exception: 
-                window_len = 512
-                step = window_len // 4
-                nfft = window_len
-                kmax = 2*parameter_values['NW'] - 1
-                parameter_values['Kmax'] = kmax
-                parameter_values['M'] = window_len
+                window_len = nfft = 512
 
+            step = window_len // 4 #75% overlap (since step = ¼ of window)
+            kmax = 2*int(parameter_values['NW']) - 1
+
+            if parameter_values['Kmax'] == ' ':
+                parameter_values['Kmax'] = kmax
+
+            parameter_values['M'] = window_len
             windows = pre.call_function(func, parameter_values, module = 'ssw')
             Sxx_sum = np.zeros(nfft//2+1)
             n_windows = 0
@@ -838,18 +839,6 @@ def apply_feat(func, parameter_values, raw):
             freq = np.fft.rfftfreq(nfft, d=1/250)
             signal = freq, Sxx
             return signal
-            # for order, taper in enumerate(windows):
-                #     X = np.fft.rfft(raw * taper, n=nfft)
-                #     psd = (np.abs(X)**2)/( 250 * np.array(X))
-                #     power_combined.append(psd)
-                #     # parameter_values['window'] = taper
-                #     # try: 
-                #     #     freq, psd = pre.call_function('welch', parameter_values,module='ss')
-                #     # except Exception as e: print(e)
-                #     # power_combined.append(psd)
-                #     #power_sum = np.abs(psd).mean()
-                # freq = np.fft.rfftfreq(nfft,d=1/250)
-                # signal = freq, np.mean(power_combined, axis=0)
         case 'wavelet':
             func = 'tfr_array_morlet'
             a = np.array(raw)
@@ -1630,8 +1619,8 @@ def plot_coherence(parameter_values, tab_label):
         dpg.add_group(parent=f"{tab_label}_plot_group", tag=f"{tab_label}_plot_group_text")
 
     # with dpg.group(parent=f"{tab_label}_plot_group", tag = f"{tab_label}_plot_group_text"):
-    dpg.add_text(f"Signal 1: {signal1['Label']}", parent=f"{tab_label}_plot_group_text")
-    dpg.add_text(f"Signal 2: {signal2['Label']}",parent=f"{tab_label}_plot_group_text")
+    dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}", parent=f"{tab_label}_plot_group_text")
+    dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}",parent=f"{tab_label}_plot_group_text")
 
     if clean:
         with dpg.plot(label = 'Coherence', width=-1, height=400, tag=f"{tab_label}_plot", parent=f"{tab_label}_plot_group_text"):
@@ -1641,8 +1630,8 @@ def plot_coherence(parameter_values, tab_label):
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Coherence", tag= f"{tab_label}_y_axis")
         
   
-    dpg.add_line_series(freq.tolist(), coh.tolist(), label=f"Coherence | {signal1['Label'][:10]}-{signal2['Label'][:10]}", parent=f"{tab_label}_y_axis")
-    dpg.add_line_series(freq.tolist(), IMcoh.tolist(), label=f"Imaginary Coherence | {signal1['Label'][:10]}-{signal2['Label'][:10]}", parent=f"{tab_label}_y_axis")
+    dpg.add_line_series(freq.tolist(), coh.tolist(), label=f"Coherence | {signal1['Channel']}-{signal2['Channel']}", parent=f"{tab_label}_y_axis")
+    dpg.add_line_series(freq.tolist(), IMcoh.tolist(), label=f"Imaginary Coherence | {signal1['Channel']}-{signal2['Channel']}", parent=f"{tab_label}_y_axis")
     
     dpg.set_axis_limits(f"{tab_label}_y_axis",ymin=0,ymax=1)
     bands = getBandsByTab(tab_label)
@@ -1650,7 +1639,7 @@ def plot_coherence(parameter_values, tab_label):
         mask2 = (freq >= band[0]) & (freq <= band[1])
         p = {'X': freq[mask2], 'Y':list(coh[mask2])}
         info = extract_timeline_features(p,coh, coherence=True)
-        create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Label'][:10]}-{signal2['Label'][:10]}")
+        create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
 
 
     time.sleep(0.2)
@@ -1658,11 +1647,10 @@ def plot_coherence(parameter_values, tab_label):
 
 def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
     labels = [dpg.get_item_label(tag) for tag in tags]
-    if flag == None:
+    if flag == None: #flag is None if default feature
         tab_label = f"{tab_tag}_df_multitaper coherence"
     else: tab_label = f"{tab_tag}_multitaper coherence"
     window_id = extract_window_id(tab_tag)
-    wt = extract_type_window(window_id)
     bands = getBandsByTab(tab_tag)
 
     def calculate():
@@ -1701,11 +1689,15 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
             parameter_values['Kmax'] = kmax
             parameter_values['M'] = window_len
         else:
-            step = int(parameter_values['step'])
+            step = parameter_values['step']
             nfft = parameter_values['nfft']
-            if step == ' ': step =2
-            if nfft == ' ': nfft = 256
-            parameter_values['step'] = window_len//step
+            if step in [' ','']: 
+                step =8
+                parameter_values['step'] = window_len//step
+            else: step = int(step)
+            if nfft in [' ','']: nfft = 256
+            else: nfft = int(nfft)
+            
             parameter_values['nfft'] = max(window_len,int(nfft))
             parameter_values['M'] = window_len
 
@@ -1739,9 +1731,9 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
             coh_segments.append(coh_seg)
             imcoh_segments.append(imcoh_seg)
 
-        Sxx = Sxx_sum.real / n_windows
-        Syy = Syy_sum.real / n_windows
-        Sxy = Sxy_sum / n_windows
+        # Sxx = Sxx_sum.real / n_windows
+        # Syy = Syy_sum.real / n_windows
+        # Sxy = Sxy_sum / n_windows
 
         # coh = np.abs(Sxy)**2 / (Sxx * Syy)
 
@@ -1752,14 +1744,6 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
         freq = np.fft.rfftfreq(nfft, d=1/250)
         mask = freq <= 100
         freq, coh = freq[mask], coh[mask]
-
-        #1st
-        # im = Sxy/np.sqrt(Sxx*Syy)
-        # imcoh = np.abs(np.imag(im)[mask])
-        # ab = np.abs(im)[mask]
-
-        #2nd
-        # imcoh = np.abs(np.imag(Sxy) / np.sqrt(Sxx * Syy))
         
         #3rd
         imcoh = np.mean(imcoh_segments, axis=0)
@@ -1814,7 +1798,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
             nfft = max(window_len, 512)
             step = window_len // step
         else: 
-            step = parameter_values['step']
+            step = int(parameter_values['step'])
             nfft = int(parameter_values['nfft'])
         freqs = np.fft.rfftfreq(nfft, d=1/250)
         mask = freqs <= 100
@@ -1847,14 +1831,14 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
         header_tag = f"{tab_label}_cot"
         with dpg.group(parent=tab_label, tag=f"{tab_label}_spec_group", horizontal=True):
             dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Viridis,
-                                            min_scale = 0, max_scale=1, height=400)
+                                            min_scale = np.min(matrix), max_scale=np.max(matrix), height=400)
 
             with dpg.plot(label='Coherogram', width=-1, height=400, tag=f"{tab_label}_spec"):
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                 y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
 
                 dpg.add_heat_series(matrix.flatten(), rows=len(freqs), cols=len(times),
-                                            scale_min=0, scale_max=1, 
+                                            scale_min=np.min(matrix), scale_max=np.max(matrix), 
                                             parent=y_axis, format="",bounds_min=[0,0], bounds_max=[int(len(signal1['Y'])/250),100])
                                             
                     
@@ -1885,7 +1869,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
                             dpg.bind_item_theme(l, change_line_thickness(3))
                   
     combos = {}
-    if flag == None:
+    if flag == None: #Default
         with dpg.group(horizontal=True,parent=tab_label):
             for i,s in enumerate(['Signal 1','Signal 2']):
                 input_id = dpg.add_combo(
@@ -1914,6 +1898,7 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
     def toggle(sender,app_data,user_data):
         # print(toggle_tags)
         labs = [dpg.get_item_label(tag) for tag in toggle_tags]
+        
         name_band = dpg.get_item_label(sender)
         for idx,l in enumerate(labs):
             if name_band in l:
@@ -1921,20 +1906,29 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
 
     def plot():
         nonlocal toggle_tags
+        toggle_tags.clear()
         plot_mode = dpg.get_value(f"{tab_label}_band")
         signal1, signal2 = None, None
         if mode:
             for i,key in enumerate(['a','v']):
                 lab = dpg.get_value(f"{tab_label}_s{i}")
-                index = labels.index(lab)
+                try:
+                    index = labels.index(lab)
+                    parameter_values[f'label_{key}'] = lab
+                except Exception:
+                    index = labels.index(parameter_values[f'label_{key}'])
                 signal = getSignalbyIdx(window_id,tab_tag,tags[index])
                 parameter_values[key] = signal['Y']
                 if key == 'a': signal1 = signal
                 else: signal2 = signal
         else: 
-            for key in ['a','v']:
+            for i,key in enumerate(['a','v']):
                 lab = parameter_values[key]
-                index = labels.index(lab)
+                try:
+                    index = labels.index(lab)
+                    parameter_values[f'label_{key}'] = lab
+                except Exception:
+                    index = labels.index(parameter_values[f'label_{key}'])
                 signal = getSignalbyIdx(window_id,tab_tag,tags[index])
                 parameter_values[key] = signal['Y']
                 if key == 'a': signal1 = signal
@@ -1988,6 +1982,7 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                     # dislocation = np.arange((-len(signal1['Y'])+d)/250,(len(signal1['Y'])/250),1/250)
                 case 'same': dislocation = (np.arange(N) - D//2) / 250
                 case 'valid': dislocation = np.arange(N-D+1) / 250
+
             if normalize == 'True':
                 correlation = correlation / np.max(np.abs(correlation))
 
@@ -2016,13 +2011,12 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
 
             create_table(f"{tab_label}_header",f"{tab_label}_table",info,b)
 
-
     if not dpg.does_item_exist(f"{tab_label}_band"): 
-        dpg.add_checkbox(label='Band Cross-Correlation', parent=tab_label, tag = f"{tab_label}_band")
+        dpg.add_checkbox(label='Band Cross-Correlation', parent=tab_label, tag = f"{tab_label}_band", callback=plot)
 
     if mode==None:
         plot()
-    else:
+    else: #Default
         combos = {}
         with dpg.group(horizontal=True,parent=tab_label):
             parameter_values['mode'] = 'full'
@@ -2702,7 +2696,6 @@ def plot_pac(tags,tab_tag,parameter_values,mode=None):
                         signal2 = signal
                 else:
                     parameter_values[f'{b}{s}'] = bands[label]
-                        
 
         #1st: Filter signals
         if len(parameter_values['s1']) != len(parameter_values['s2']):
@@ -2739,7 +2732,7 @@ def plot_pac(tags,tab_tag,parameter_values,mode=None):
         # Normaliza
         amp_dist = amp_means / np.sum(amp_means + 1e-16)
         entropy = -np.sum(amp_dist * np.log(amp_dist + 1e-16)) #shannon entropy
-        mi = (np.log(n_bins) - entropy) / np.log(n_bins) #modulation index
+        mi = np.round((np.log(n_bins) - entropy) / np.log(n_bins),3) #modulation index
 
         if dpg.does_item_exist(f"{tab_label}_pac"): dpg.delete_item(f"{tab_label}_pac")
 
@@ -3313,8 +3306,6 @@ def extract_timeline_features(p, full_power=None, coherence=False):
     except Exception: time = freqs[0]
 
     key = 'Peak Time'
-    print(type(time))
-    print(time)
     if isinstance(time,str):
         peak = str(utl.parse_datetime(time).time())
     elif isinstance(time, (int, float)):
@@ -3349,16 +3340,9 @@ def extract_cc_features(p, y_axis, tab_label ,mode = None):
     half = np.round(max_value/2,2)
     temp = [np.round(y,2) for y in p['Y']]
     start, inf, hlf = None, None, None
-    # start = list(reversed(temp[:idx])).index(half) 
-    # start = p['X'][idx-start]
-    # end = temp[idx:].index(half) + idx
-    # end = p['X'][end]
 
     Y, X = p['Y'], p['X']
 
-    # hilbert = pre.call_function('hilbert',{'x': np.array(p['Y'])})
-    # envelope = np.abs(hilbert)
-    
 
     for i in range(idx, 0, -1):
         if Y[i] >= half and Y[i-1] < half:
@@ -3380,17 +3364,17 @@ def extract_cc_features(p, y_axis, tab_label ,mode = None):
         ext = mode
     else: ext = ''
 
-    if start: inf = dpg.add_inf_line_series([start,end],parent=y_axis, label = ext + ' Half Max Width', tag = f"{tab_label}_{ext}_HMW")
-    if half: hlf = dpg.add_inf_line_series([half],parent=y_axis,horizontal=True,label= ext +' Half Max', tag = f"{tab_label}_{ext}_HW")
+    if start: 
+        inf = dpg.add_inf_line_series([start,end],parent=y_axis, label = ext + ' Half Max Width', tag = f"{tab_label}_{ext}_HMW")
+        tags.append(f"{tab_label}_{ext}_HMW")
+
+    if half: 
+        hlf = dpg.add_inf_line_series([half],parent=y_axis,horizontal=True,label= ext +' Half Max', tag = f"{tab_label}_{ext}_HW")
+        tags.append(f"{tab_label}_{ext}_HW")
     # dpg.add_line_series(p['X'], envelope.tolist(),label=f"{ext} Envelope", parent=y_axis,tag=f"{tab_label}_{ext}_env")
 
-
-    tags.append(f"{tab_label}_{ext}_HMW")
-    tags.append(f"{tab_label}_{ext}_HW")
-    tags.append(f"{tab_label}_{ext}_peaks")
-
     red = change_inf_line_color(0)
-    green = change_inf_line_color(1)
+    green = change_inf_line_color(3)
     if inf: dpg.bind_item_theme(inf,red)
     if hlf: dpg.bind_item_theme(hlf,green)
     
@@ -3399,16 +3383,20 @@ def extract_cc_features(p, y_axis, tab_label ,mode = None):
     else: width = 0
     parameters, _ = fill_params_features('find_peaks')
     parameters['x'] = p['Y']
-    parameters['distance'] = 120
+    parameters['distance'] = 125
+    
     peaks = pre.call_function('find_peaks',parameters)
-    true_peaks = [(x+0.5-len(p['Y'])/2)/250 for x in peaks[0]]
+    true_peaks = [(x-(len(p['Y'])+1)/2)/250 for x in peaks[0]]
     above_peaks = [p['Y'][x] for x in peaks[0]]
 
     rms = np.sqrt(np.mean(np.array(p['Y'])**2))
-    mask = np.array(above_peaks) >= 3*rms
+    # mask = np.array(above_peaks) >= 3*rms
+    mask = np.array(above_peaks) >= np.max(p['Y'])/2
     true_peaks = np.array(true_peaks)[mask]
     
-    dpg.add_scatter_series(true_peaks.tolist() ,np.ones(len(peaks[0])).tolist(),parent=y_axis,label = ext +' Peaks', tag = f"{tab_label}_{ext}_peaks")
+    if len(true_peaks)>0:
+        dpg.add_scatter_series(true_peaks.tolist() ,np.zeros(len(peaks[0])).tolist(),parent=y_axis,label = ext +' Peaks', tag = f"{tab_label}_{ext}_peaks")
+        tags.append(f"{tab_label}_{ext}_peaks")
     diff = np.diff(true_peaks)
     if diff.size == 0: diff = [1]
     freq_mean = np.round(1/np.mean(diff),2)
@@ -3892,8 +3880,8 @@ def CustomFeatures(sender,app_data,user_data):
             for k in ['step', 'nfft','y']:
                 params[k] = None
         elif app_data == 'cross-correlation': 
-            params['method'] = 'Choose: auto/direct/fft'
-            params['mode'] = 'Choose: full/same/valid'
+            params['method'] = 'auto'
+            params['mode'] = 'full'
             params['dislocation'] = None
             params['normalization'] = None
             
@@ -3911,12 +3899,13 @@ def CustomFeatures(sender,app_data,user_data):
         input_fields.clear()  # Reset input field storage
         
         combos = {}   
-        
+        params = {k: params[k] for k in sorted(params)}
+
         for param, default in params.items():
             # Set defaults
             if param == 'x' or param == 'data':
                 default = '---'
-            if param == 'y' and app_data == 'coherence':
+            if param == 'y' and (app_data == 'coherence' or app_data=='multitaper coherence'):
                 default = '---'
             if param == 'fs' or param == 'sfreq':
                 default = 250

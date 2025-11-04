@@ -1,5 +1,24 @@
 # NeoDBS
 
+## 04.11.2025
+
+### New functionalities:
+- Closing (recording mode) tab --> reset to original raw signals
+
+### Bug fixes:
+- Data Handling: info electrode string handling
+- Custom dpss: receiving parameters
+- Custom multitaper coherence: receiving parameters, range of colormap
+- Custom coherence
+- Custom PAC
+- Custom/Default Cross-correlation: 
+    - correct peaks
+    - per band
+    - toggle
+
+### GUI design:
+- Survey PSD: organized and grouped
+
 ## 31.10.2025
 ### Bug fixes:
 - Python versions below 3.12.00 dont allow encapsulated f-strings with the same type of "" (they need to be different) --> updated to allow versions below 3.12
