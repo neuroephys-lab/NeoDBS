@@ -5315,17 +5315,42 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                 channels.append(channel)
                 artifact = utl.after_point(signal['ArtifactStatus'])
                 dpg.add_line_series(f,m,label=line_label,parent=parent, tag = line_tag)
-                tt = dpg.add_text(f"{channel}: {artifact}", parent=child)
+                tt = dpg.add_text(f"{channel}_{side}: {artifact}", parent=child)
                 if artifact != 'ARTIFACT_NOT_PRESENT':
                     dpg.bind_item_theme(tt, change_text_color(1))
                 signal_tags[line_tag] = True
                 if 'PeakFrequencyInHertz' in signal:
                     peak = signal['PeakFrequencyInHertz']
                     peak_m = m[f.index(peak)]
-                    dpg.add_scatter_series([peak],[peak_m],label=f"{channel} PEAK", parent=parent, tag =f"{line_tag}_peak")
+                    dpg.add_scatter_series([peak],[peak_m],label=f"{channel} | {side} | Peak", parent=parent, tag =f"{line_tag}_peak")
                     line_tags.append(f"{new_tab_tag}_{channel}_{side}_peak")
 
+                if not dpg.does_item_exist(f"side_{new_tab_tag}"):
+                        dpg.add_tree_node(label = f"By Hemisphere", tag =f"side_{new_tab_tag}", parent = new_tab_tag,default_open=False)
+
+                if not dpg.does_item_exist(f"ind_{new_tab_tag}"):
+                    dpg.add_tree_node(label = f"Individual Streams", tag =f"ind_{new_tab_tag}", parent = new_tab_tag,default_open=False)
+
+                
+
+                if not dpg.does_item_exist(f"{side}_{new_tab_tag}"):
+                    dpg.add_collapsing_header(label = f"{side} Hemisphere", tag =f"{side}_{new_tab_tag}", parent = f"side_{new_tab_tag}")
+
                 if not dpg.does_item_exist(f"{line_tag}_header"):
+                    header = dpg.get_item_label(line_tag)
+                    dpg.add_collapsing_header(label = header, tag =f"{line_tag}_header", parent = f"ind_{new_tab_tag}")
+                else:
+                    dpg.delete_item(f"{line_tag}_header", children_only=True)
+
+                #TABLE CONTENT
+                p = {'X': f, 'Y': m}
+                for band in bands.items():
+                    info = extract_psd_features(p, band)
+                    create_table(f"{line_tag}_header",f"{line_tag}_header_table", info, trial_label=band[0]) #individual
+                    create_table(f"{side}_{new_tab_tag}",f"{side}_{new_tab_tag}_table", info, trial_label=f"{band[0]} | {channel}") #hemisphere
+
+
+                '''if not dpg.does_item_exist(f"{line_tag}_header"):
                     header = dpg.get_item_label(line_tag)
                     dpg.add_collapsing_header(label = header, tag =f"{line_tag}_header", parent = new_tab_tag)
                 else:
@@ -5336,13 +5361,13 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                 for band in bands.items():
                     info = extract_psd_features(p, band)
                     create_table(f"{line_tag}_header",f"{line_tag}_header_table", info, trial_label=band[0])
-
+'''
 
         channels = np.unique(channels)
-        with dpg.child_window(height=150,width=120):
+        with dpg.child_window(height=150,width=150):
             for c in channels:
                 dpg.add_checkbox(label=c, parent=f"{new_tab_tag}_group", callback=toggle, user_data=c, default_value=True)
-        with dpg.child_window(height=150,width=120):
+        with dpg.child_window(height=150,width=150):
             for c in ['Left', 'Right', 'PEAK']:
                 dpg.add_checkbox(label=c, parent=f"{new_tab_tag}_group", callback=toggle, user_data=c, default_value=True)
 
@@ -5921,10 +5946,10 @@ def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
 
                     artifact_info = f"{date}_{tab_tag}"
                     if dpg.does_item_exist(artifact_info):
-                        tt = dpg.add_text(f"{channel}: {artifact}", parent=artifact_info)
+                        tt = dpg.add_text(f"{channel}_{side}: {artifact}", parent=artifact_info)
                     else:
                         dpg.add_collapsing_header(label = date, tag=artifact_info, parent=child)
-                        tt = dpg.add_text(f"{channel}: {artifact}", parent=artifact_info)
+                        tt = dpg.add_text(f"{channel}_{side}: {artifact}", parent=artifact_info)
 
                     if artifact != 'ARTIFACT_NOT_PRESENT':
                         dpg.bind_item_theme(tt, change_text_color(1))
@@ -5932,12 +5957,30 @@ def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     if 'PeakFrequencyInHertz' in signal:
                         peak = signal['PeakFrequencyInHertz']
                         peak_m = m[f.index(peak)]
-                        dpg.add_scatter_series([peak],[peak_m],label=f"{channel} PEAK", parent=parent, tag =f"{line_tag}_peak")
+                        dpg.add_scatter_series([peak],[peak_m],label=f"{channel}_{side} | Peak ({date})", parent=parent, tag =f"{line_tag}_peak")
                         line_tags.append(f"{line_tag}_peak")
+
+                    
+                    if not dpg.does_item_exist(f"side_{new_tab_tag}"):
+                        dpg.add_tree_node(label = f"By Hemisphere", tag =f"side_{new_tab_tag}", parent = new_tab_tag,default_open=False)
+
+                    if not dpg.does_item_exist(f"channel_{new_tab_tag}"):
+                        dpg.add_tree_node(label = f"By Channel", tag =f"channel_{new_tab_tag}", parent = new_tab_tag,default_open=False)
+
+                    if not dpg.does_item_exist(f"ind_{new_tab_tag}"):
+                        dpg.add_tree_node(label = f"Individual Streams", tag =f"ind_{new_tab_tag}", parent = new_tab_tag,default_open=False)
+
+                    
+
+                    if not dpg.does_item_exist(f"{side}_{new_tab_tag}"):
+                        dpg.add_collapsing_header(label = f"{side} Hemisphere", tag =f"{side}_{new_tab_tag}", parent = f"side_{new_tab_tag}")
+
+                    if not dpg.does_item_exist(f"{channel}_{side}_{new_tab_tag}"):
+                        dpg.add_collapsing_header(label = f"{channel} | {side}", tag =f"{channel}_{side}_{new_tab_tag}", parent = f"channel_{new_tab_tag}")
 
                     if not dpg.does_item_exist(f"{line_tag}_header"):
                         header = dpg.get_item_label(line_tag)
-                        dpg.add_collapsing_header(label = header, tag =f"{line_tag}_header", parent = new_tab_tag)
+                        dpg.add_collapsing_header(label = header, tag =f"{line_tag}_header", parent = f"ind_{new_tab_tag}")
                     else:
                         dpg.delete_item(f"{line_tag}_header", children_only=True)
 
@@ -5945,7 +5988,10 @@ def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     p = {'X': f, 'Y': m}
                     for band in bands.items():
                         info = extract_psd_features(p, band)
-                        create_table(f"{line_tag}_header",f"{line_tag}_header_table", info, trial_label=band[0])
+                        create_table(f"{line_tag}_header",f"{line_tag}_header_table", info, trial_label=band[0]) #individual
+                        create_table(f"{side}_{new_tab_tag}",f"{side}_{new_tab_tag}_table", info, trial_label=f"{band[0]} | {channel} | {date[:10]}") #hemisphere
+                        create_table(f"{channel}_{side}_{new_tab_tag}",f"{channel}_{side}_{new_tab_tag}_table", info, trial_label=f"{band[0]} | {date[:10]}") #by channel
+
 
         channels = np.unique(channels)
         dates = sorted(np.unique(dates).tolist())
@@ -6457,9 +6503,11 @@ def create_individual_window():
 
         if dpg.does_item_exist(tab_tag): #check if its already created
             if not dpg.is_item_shown(tab_tag):  # If closed, show it again
-                dpg.configure_item(tab_tag, show=True)
+                # dpg.configure_item(tab_tag, show=True)
+                # dpg.add_tab_button(label='X',parent=f"tab_bar_window_{window_id}")
+                dpg.delete_item(tab_tag)
                 '''maybe delete tab, create a new one from scrath enabling reset (?)'''
-            return
+            else: return
 
         Data = app_state['windows'][window_id]['Data']
         if mode == 'Impedance':
