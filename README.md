@@ -1,7 +1,17 @@
 # NeoDBS
 
-## 04.11.2025
+## 05.11.2025
 
+### New functionalities:
+- Sensing PSD new tab (when events or timeline pressed)
+
+### Bug fixes:
+- Custom parameters finalized
+- Custom coherence
+- Custom PAC
+
+
+## 04.11.2025
 ### New functionalities:
 - Closing (recording mode) tab --> reset to original raw signals
 

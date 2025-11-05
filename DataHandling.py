@@ -20,13 +20,16 @@ file1 = open(file_path,'r',encoding='utf-8')
 json2 = json.load(file)
 '''
 
-def info_electrodes(data,version='Initial'):
+def info_electrodes(data,version='Initial',side=0):
     '''
     Inês Pereira - up202107421@edu.fe.up.pt
 
     Return information of the active electrodes from TIMELINE mode
+    side 0 - Left
+    side 1 - Right
     '''
     GroupHistory=data['Device']['Groups']
+
 
     di = GroupHistory[version][0]
     Group_id=di["GroupId"]
@@ -35,19 +38,22 @@ def info_electrodes(data,version='Initial'):
     Rate_in_hertz=ProgramSettings["RateInHertz"]
     try:
         SensingChannel=ProgramSettings['SensingChannel']
-        Sensing_electrodes=SensingChannel[0]["Channel"]
+        Sensing_electrodes=SensingChannel[side]["Channel"]
         Sensing_electrodes=Sensing_electrodes.split('.')[-1]
-        Suspend_amplitude_in_miliamps = SensingChannel[0]['SuspendAmplitudeInMilliAmps']
-        Sensing_freq = SensingChannel[0]['SensingSetup']['FrequencyInHertz']
-    except Exception: #when electrodes dont allow sensing
+        Suspend_amplitude_in_miliamps = SensingChannel[side]['SuspendAmplitudeInMilliAmps']
+        Sensing_freq = SensingChannel[side]['SensingSetup']['FrequencyInHertz']
+        ChannelPSD = SensingChannel[side]['SensingSetup']['ChannelSignalResult']
+    
+    except Exception as e: #when electrodes dont allow sensing
+        print(e)
         SensingChannel = ProgramSettings['LeftHemisphere']['Programs']
         Suspend_amplitude_in_miliamps=SensingChannel[0]["AmplitudeInMilliAmps"]
         Sensing_electrodes = 'Sensing Disabled'
         Sensing_freq = ''
-    Pulse_width_in_microseconds=SensingChannel[0]["PulseWidthInMicroSecond"]
+    Pulse_width_in_microseconds=SensingChannel[side]["PulseWidthInMicroSecond"]
     
-    left_e=SensingChannel[0]["ElectrodeState"]
-    right_e=SensingChannel[0]["ElectrodeState"]
+    left_e=SensingChannel[side]["ElectrodeState"]
+    right_e=SensingChannel[side]["ElectrodeState"]
     Left,Right=[], []
     for d in left_e:
         Left.append(re.split(r'\.|_', d['Electrode'])[-1] + '-' + d["ElectrodeStateResult"].split('.')[-1])
@@ -67,7 +73,8 @@ def info_electrodes(data,version='Initial'):
         'Stim_electrodes': Left, 
         'Sense_electrodes': Sensing_electrodes,
         'Sense_frequency': Sensing_freq,
-        'Type': type_stimulation
+        'Type': type_stimulation,
+        'PSD': ChannelPSD
     }
     return a
 

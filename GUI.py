@@ -2007,9 +2007,9 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
             
 
             if not dpg.does_item_exist(f"{tab_label}_header"): 
-                dpg.add_collapsing_header(tag = f"{tab_label}_header", parent=tab_label, label=label)
+                dpg.add_collapsing_header(tag = f"{tab_label}_header", parent=tab_label, label='Features')
 
-            create_table(f"{tab_label}_header",f"{tab_label}_table",info,b)
+            create_table(f"{tab_label}_header",f"{tab_label}_table",info,f"{b} | {label}")
 
     if not dpg.does_item_exist(f"{tab_label}_band"): 
         dpg.add_checkbox(label='Band Cross-Correlation', parent=tab_label, tag = f"{tab_label}_band", callback=plot)
@@ -3884,8 +3884,10 @@ def CustomFeatures(sender,app_data,user_data):
             params['mode'] = 'full'
             params['dislocation'] = None
             params['normalization'] = None
-            
+                
         elif app_data == 'PAC': 
+            extra = "\nInput: \n        ________\n        s1: signal 1\n        s2: signal 2\n        b1: Phase Band\n        b2: Amplitude Band\n"
+            documentation = extra + documentation
             for k in ['s1', 's2','b1', 'b2','n_bins']:
                 params[k] = 'choose'
 
@@ -3944,6 +3946,8 @@ def CustomFeatures(sender,app_data,user_data):
                             parent=param_container,
                         )
                     combos[param] = input_id
+                elif (param == 'data' and app_data=='wavelet') or (param=='x' and app_data in ['dpss', 'spectrogram','welch','periodogram']): 
+                    continue
                 else:
                     # Default to input text
                     input_id = dpg.add_input_text(
@@ -5536,6 +5540,75 @@ def impedance_tab(Data, tab_tag):
             build_result_table("Bipolar", r["Bipolar"])
             build_result_bar_graph("Bipolar", r["Bipolar"])
 
+def electrode_tab(Data,tab_tag):
+    window_id = extract_window_id(tab_tag)
+
+    plot_tag = f"{tab_tag}_plot"
+    bands = getBandsByTab(tab_tag)
+    signal_tags, all_mean, mean, tables, signals = [], {}, [], [], []
+
+    if dpg.does_item_exist(tab_tag): return
+    
+    dpg.add_tab(label='Sensing PSD', tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
+    
+    with dpg.group(parent=tab_tag, horizontal=True ):
+        with dpg.plot(label="Sensing PSD", height=400, width=600, tag=plot_tag):
+            dpg.bind_colormap(plot_tag, 0)
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
+            dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag=f"x_axis_{tab_tag}")
+            dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µVp)", tag=f"y_axis_{tab_tag}")
+            y_axis = f"y_axis_{tab_tag}"
+            for side in [0,1]:
+                values = DH.info_electrodes(Data,side=side)['PSD']
+                freq,psd = values['SignalFrequencies'], values['SignalPsdValues']
+                channel = utl.after_point(values['Channel'])
+                tag = dpg.add_line_series(freq,psd,label=channel,parent=y_axis)
+                signal_tags.append(tag)
+                mean.append(psd)
+
+                if not dpg.does_item_exist(f"{tab_tag}_{channel}"):
+                    dpg.add_collapsing_header(label = channel, tag =f"{tab_tag}_{channel}", parent = tab_tag)
+                else:
+                    dpg.delete_item(f"{tab_tag}_{tag}")
+
+                #TABLE CONTENT                
+                sign = {
+                    'X': values['SignalFrequencies'],
+                    'Y': values['SignalPsdValues'],
+                    'Channel': channel,
+                    'Date': DH.getSessionDate(Data)
+                }
+                signals.append(sign)
+                for band in bands.items():
+                    info = extract_psd_features(sign, band)
+                    temp = info['Mean Power (mean, std. dev)']
+                    if not isinstance(temp,(int,float)): all_mean[band[0]] = temp[-1]
+                    else: all_mean[band[0]]=temp
+                    create_table(f"{tab_tag}_{channel}",f"{tab_tag}_{channel}_table", info, trial_label=band[0])
+                tables.append(f"{tab_tag}_{channel}_table")
+
+            mean_power, std_power = np.nanmean(mean,axis=0), np.nanstd(mean,axis=0)
+            minus, plus = mean_power-std_power, mean_power+std_power
+            mean_dict = {'X': freq, 'Y':mean_power}
+            s = dpg.add_shade_series(freq,y1=minus,y2=plus,label = 'Std. Dev', parent=y_axis,tag=f"{tab_tag}_std")
+            dpg.bind_item_theme(s,create_alpha_theme())
+
+            m = dpg.add_line_series(freq, mean_power, label="Mean Power", parent=y_axis, tag=f"{tab_tag}_mean")
+            dpg.bind_item_theme(m, change_line_thickness(5))
+
+            if not dpg.does_item_exist(f"{tab_tag}_mean_metric"):
+                dpg.add_collapsing_header(label = 'MEAN POWER', tag =f"{tab_tag}_mean_metric", parent = tab_tag)
+            else:
+                dpg.delete_item(f"{tab_tag}_mean_metric", children_only=True)
+
+            for band in bands.items():
+                info = extract_psd_features(mean_dict, band)
+                create_table(f"{tab_tag}_mean_metric",f"{tab_tag}_mean_metric_table", info, trial_label=band[0])
+            tables.append(f"{tab_tag}_mean_metric_table")
+
+        # toggleDisplay(signals,signal_tags,window_id,tab_tag)
+
+     
 #--------------------------------------COMBINED TABS--------------------------------------------
 def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
     
@@ -6566,9 +6639,13 @@ def create_individual_window():
                     
                 case 'Indefinite': indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
             
-                case 'Events': event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+                case 'Events': 
+                    event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+                    electrode_tab(Data,f"tab_electrode_{window_id}")
                 
-                case 'Timeline': timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+                case 'Timeline': 
+                    timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+                    electrode_tab(Data,f"tab_electrode_{window_id}")
 
         dpg.set_item_width(item=f"window_{window_id}",width=-1)
         dpg.set_item_height(item=f"window_{window_id}",height=-1)
