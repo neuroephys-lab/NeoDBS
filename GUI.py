@@ -5540,6 +5540,50 @@ def impedance_tab(Data, tab_tag):
             build_result_table("Bipolar", r["Bipolar"])
             build_result_bar_graph("Bipolar", r["Bipolar"])
 
+def toggle(signals, tab_tag, group_parent):
+    channels, days = [], []
+    for signal in signals:
+        channels.append(signal['Channel'])
+        days.append(str(signal['Date'])[:10])
+
+    days = sorted(np.unique(days).tolist())
+    channels = np.unique(channels).tolist()
+
+    def tog(sender,app_data,user_data):
+        children = dpg.get_item_children(f"y_axis_{tab_tag}")[1][:-2]
+        active = [dpg.get_item_label(child) for child in children]
+        all_mean = []
+        label = dpg.get_item_label(sender)
+
+        for tag in active:
+            stream = children[active.index(tag)]
+            if label in tag:
+                dpg.configure_item(stream,show=app_data)
+            if dpg.get_item_configuration(stream)['show']==True:
+                all_mean.append(dpg.get_value(stream)[1])
+
+        mean = np.nanmean(all_mean,axis=0)
+        std = np.nanstd(all_mean,axis=0)
+        minus,plus = mean-std,mean+std
+
+        dpg.configure_item(f"{tab_tag}_std",y1=minus,y2=plus)
+        dpg.configure_item(f"{tab_tag}_mean",y=mean)
+        
+
+    with dpg.group(parent=group_parent):
+        sides = ['LEFT', 'RIGHT']
+        groups = {
+            'Days': days,
+            'Channels': channels,
+            'Hemisphere': sides
+        }
+        for name,group in groups.items():
+            if len(group)>1:
+                with dpg.child_window(width=150, height=120):
+                    dpg.add_text(f'By {name}:')
+                    for item in group:
+                        dpg.add_checkbox(label=item,callback=tog,default_value=True)
+
 def electrode_tab(Data,tab_tag):
     window_id = extract_window_id(tab_tag)
 
@@ -5551,7 +5595,7 @@ def electrode_tab(Data,tab_tag):
     
     dpg.add_tab(label='Sensing PSD', tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     
-    with dpg.group(parent=tab_tag, horizontal=True ):
+    with dpg.group(parent=tab_tag, horizontal=True,tag=f"{tab_tag}_group"):
         with dpg.plot(label="Sensing PSD", height=400, width=600, tag=plot_tag):
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
@@ -5607,7 +5651,7 @@ def electrode_tab(Data,tab_tag):
             tables.append(f"{tab_tag}_mean_metric_table")
 
         # toggleDisplay(signals,signal_tags,window_id,tab_tag)
-
+        toggle(signals,tab_tag,f"{tab_tag}_group")
      
 #--------------------------------------COMBINED TABS--------------------------------------------
 def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):

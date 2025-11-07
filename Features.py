@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 #from spectrum import pyule
 
 bands = {
@@ -161,6 +162,202 @@ def psd_fft(filtered_eeg, fs=250):
     psd = psd[mask]
 
     return freqs, psd
+
+def export_2D(info):
+    signals,labels,colors,title,axis = info
+    plt.figure()
+    plt.title(title)
+    plt.xlabel(axis[0])
+    plt.ylabel(axis[1])
+    for i,signal in enumerate(signals):
+        label = labels[i]
+        x,y = signal['X'],signal['Y']
+        plt.plot(x,y,label=label,color=colors[i])
+    plt.legend()
+    plt.savefig('Example.png')
+
+def plot_spectrogram(data, channel_params, *args):
+    """
+    Compute and plot the spectrogram for each channel.
+
+    Parameters:
+    data : ndarray
+        2D array where each column corresponds to a channel's data.
+    channel_params : dict
+        Dictionary containing channel parameters with keys:
+        - 'Fs': Sampling frequency (Hz).
+        - 'nChannels': Number of channels.
+        - 'channel_names': List of channel names.
+        - 'channel_map': 2D array specifying subplot arrangement.
+        - 'time': Array of time values.
+    args : tuple
+        Optional arguments. Pass 'normalize' to normalize power values.
+
+    Returns:
+    spectro_fig : matplotlib.figure.Figure
+        The figure object containing the spectrogram plots.
+    """
+    normalize_power = 'normalize' in args
+
+    # Default spectrogram parameters
+    window = int(round(0.5 * 250))  # 0.5 second
+    noverlap = int(round(window / 2))
+    fmin = 1  # Hz
+    fmax = 125  # Hz
+
+    # Initialize figure
+    spectro_fig, axes = plt.subplots(
+        *channel_params['channel_map'].shape, figsize=(12, 8), squeeze=False
+    )
+    axes_flat = axes.flatten()
+
+    for ch_id in range(len(data)):
+        channel_pos = np.argwhere(channel_params['channel_map'] == ch_id + 1).flatten()
+        ax = axes[channel_pos[0], channel_pos[1]]
+
+        # Compute spectrogram
+        f, t, Sxx = signal.spectrogram(
+            data[:, ch_id],
+            fs=channel_params['Fs'],
+            window='hann',
+            nperseg=window,
+            noverlap=noverlap,
+            scaling='density',
+            mode='psd'
+        )
+
+        # Filter frequencies
+        freq_mask = (f >= fmin) & (f <= fmax)
+        f = f[freq_mask]
+        Sxx = Sxx[freq_mask, :]
+
+        # Normalize power if requested
+        if normalize_power:
+            power_to_plot = 10 * np.log10(Sxx / np.mean(Sxx, axis=1, keepdims=True))
+        else:
+            power_to_plot = 10 * np.log10(Sxx)
+
+        # Plot spectrogram
+        img = ax.imshow(
+            power_to_plot,
+            aspect='auto',
+            extent=[t[0], t[-1], f[0], f[-1]],
+            origin='lower',
+            cmap='viridis'
+        )
+
+        ax.set_title(channel_params['channel_names'][ch_id])
+        ax.set_xlabel('Time (s)')
+        ax.set_ylabel('Frequency (Hz)')
+        ax.grid(False)
+
+        # Add colorbar
+        cbar = plt.colorbar(img, ax=ax)
+        cbar.set_label('Power/Frequency (dB/Hz)')
+
+    # Link axes
+    for ax in axes_flat:
+        ax.label_outer()
+    plt.tight_layout()
+
+    return spectro_fig
+
+def export_plot_old(info, plot_type):
+    signals, labels, colors, title, axis = info
+    
+    plt.figure()
+    plt.suptitle(title)
+
+    match plot_type:
+        case '2D':
+            plt.xlabel(axis[0])
+            plt.ylabel(axis[1])
+            for i, signal in enumerate(signals):
+                label = labels[i]
+                x, y = signal['X'], signal['Y']
+                plt.plot(x, y, label=label, color=colors[i])
+            plt.legend()
+
+        case '3D':
+            n_signals = len(signals)
+            fig, axs = plt.subplots(
+                n_signals, 1,
+                figsize=(8, 3 * n_signals),
+                constrained_layout=True,
+                sharex=True
+            )
+            
+            # If there's only one signal, axs is not iterable
+            if n_signals == 1:
+                axs = [axs]
+
+            for i, signal in enumerate(signals):
+                f, t, sxx = signal
+                ax = axs[i]
+                pcm = ax.pcolormesh(
+                    t, f, sxx,
+                    shading='gouraud',
+                    cmap='viridis'
+                )
+                ax.set_ylabel(axis[1])
+                ax.set_title(labels[i])
+                fig.colorbar(pcm, ax=ax, label=axis[2])
+
+            axs[-1].set_xlabel(axis[0])
+
+            plt.close()
+            plt.figure(fig.number)
+
+    plt.savefig('Example.png', bbox_inches='tight', dpi=300)
+    plt.show()
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+def export_plot(info, plot_type, show=False):
+    signals, labels, colors, title, axis = info
+
+    if plot_type == '2D':
+        fig, ax = plt.subplots()
+        ax.set_title(title)
+        ax.set_xlabel(axis[0])
+        ax.set_ylabel(axis[1])
+
+        for i, signal in enumerate(signals):
+            label = labels[i]
+            x, y = signal['X'], signal['Y']
+            ax.plot(x, y, label=label, color=colors[i])
+
+        ax.legend()
+        fig.tight_layout()
+
+    elif plot_type == '3D':
+        n_signals = len(signals)
+        fig, axs = plt.subplots(
+            n_signals, 1,
+            figsize=(8, 3 * n_signals),
+            constrained_layout=True,
+            sharex=True
+        )
+        if n_signals == 1:
+            axs = [axs]
+
+        fig.suptitle(title)
+        for i, signal in enumerate(signals):
+            f, t, sxx = signal
+            ax = axs[i]
+            pcm = ax.pcolormesh(t, f, sxx, shading='gouraud', cmap='viridis')
+            fig.colorbar(pcm, ax=ax, label=axis[2])
+            ax.set_ylabel(axis[1])
+            ax.set_title(labels[i])
+        axs[-1].set_xlabel(axis[0])
+
+    fig.savefig('Example.png', bbox_inches='tight', dpi=300)
+
+    if show:
+        plt.show()
+
+    plt.close(fig)
 
 
 def wave(frequency = 10, sampling_rate = 1000, duration = 1, amplitude = 1):

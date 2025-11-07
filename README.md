@@ -1,7 +1,12 @@
 # NeoDBS
 
-## 05.11.2025
+## 07.11.2025
+### New functionalities:
+- Sensing PSD
+    - toggle correct
+- Export 2D and 3D signals
 
+## 05.11.2025
 ### New functionalities:
 - Sensing PSD new tab (when events or timeline pressed)
 
