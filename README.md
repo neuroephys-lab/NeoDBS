@@ -2,6 +2,10 @@
 
 ## 10.11.2025
 
+## To Add:
+- Event Summat tab (/being developed in temp)
+
+
 ### Bug fixes:
 - Toggle buttons (setup artifacts tab)
 - Session duration

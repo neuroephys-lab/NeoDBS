@@ -660,11 +660,13 @@ def getModeSignals(dictionary, mode):
             
         case 'Events': #✅
             recs = []
+            previous_session = utl.parse_datetime(dictionary['Device']['GroupHistory'][1]['SessionDate'])
             temp = dictionary[mode]['LfpFrequencySnapshotEvents']
             paths = utl.find_key_path(temp,'LfpFrequencySnapshotEvents')
             for path in paths:
                 path = utl.parse_path(path)
                 event = utl.access_by_path(temp,path)
+                if previous_session>utl.parse_datetime(event['DateTime']): continue
                 recs.append(event)
             '''
             Usage:

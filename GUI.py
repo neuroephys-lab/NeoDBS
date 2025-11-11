@@ -4835,8 +4835,10 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     if not isinstance(signals, dict) and len(signals)==0: return
     if isinstance(signals, dict): 
         dpg.add_text('Event Summary', parent=tab_tag)
+        breakpoint()
         return
-    else: dpg.add_text(f"Total events: {len(signals)}", parent=tab_tag, tag = f"{tab_tag}_text_recordings")
+    else: 
+        dpg.add_text(f"Total events: {len(signals)}", parent=tab_tag, tag = f"{tab_tag}_text_recordings")
 
     initial, final = DH.getEventsElectrodes(app_state['windows'][window_id]['Data'])
     
@@ -5602,6 +5604,10 @@ def toggle(signals, tab_tag, group_parent):
 
 def electrode_tab(Data,tab_tag):
     window_id = extract_window_id(tab_tag)
+
+    try:
+        DH.info_electrodes(Data)['PSD']
+    except Exception: return
 
     plot_tag = f"{tab_tag}_plot"
     bands = getBandsByTab(tab_tag)
@@ -6702,7 +6708,6 @@ def create_individual_window():
                 case 'Events': 
                     if len(signals)>0:   
                         event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
-
                         if not isinstance(signals,dict): electrode_tab(Data,f"tab_electrode_{window_id}")
                 
                 case 'Timeline': 
