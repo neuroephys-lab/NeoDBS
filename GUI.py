@@ -67,6 +67,7 @@ colors = [
         (255, 51, 255, 255), #pink
         (102, 0, 204, 255), #purple
         (0, 255, 255, 255), #cian
+        (34, 139, 34, 255), #forest green
     ]
 #-----------------------------------------UTILS----------------------------------------
 
@@ -4730,15 +4731,17 @@ def device_window(Data, window_id, file_id = None):
 
 def stimulation_window(Data, window_id, file_id = None):
     wt = extract_type_window(window_id)
+    info_parent = f"stimulation_parameteres_{window_id}"
     try:
         stimulation = DH.info_electrodes(Data,version='Initial')
     except Exception as e: 
-        print(e)
+        d = dpg.add_text('Stimulation OFF/not set up!', parent=info_parent)
+        dpg.bind_item_theme(d,change_text_color(1))
+        dpg.configure_item(f"{info_parent}_title", show=True)
+        dpg.configure_item(info_parent, show=True)
         return
-    
-    
-    date = DH.getSessionDate(Data)
-    info_parent = f"stimulation_parameteres_{window_id}"
+        
+    date = DH.getSessionDate(Data)    
     
     dpg.configure_item(f"{info_parent}_title", show=True)
 
@@ -4752,11 +4755,13 @@ def stimulation_window(Data, window_id, file_id = None):
         dpg.add_collapsing_header(tag=header_tag, parent=info_parent, label = date)
         info_parent = header_tag
             
-    ch = stimulation['Sense_electrodes']
-    if ch in electrodes_names.keys():
-        ch = electrodes_names[ch]
-    else:
-        electrodes_names[ch] = ch
+    try:
+        ch = stimulation['Sense_electrodes']
+        if ch in electrodes_names.keys():
+            ch = electrodes_names[ch]
+        else:
+            electrodes_names[ch] = ch
+    except Exception: pass
     
     dpg.add_text(f"Active Group: {stimulation['Group_id']}", parent=info_parent)
     dpg.add_text(f"Frequency: {stimulation['Frequency']} Hz", parent=info_parent)
@@ -4764,12 +4769,17 @@ def stimulation_window(Data, window_id, file_id = None):
     dpg.add_text(f"Pulse Width: {stimulation['Pulse']} µs", parent=info_parent)
     dpg.add_text(f"Type: {stimulation['Type']}", parent=info_parent)
     dpg.add_text(f"Electrodes: {stimulation['Stim_electrodes']}", parent=info_parent)
-    dpg.add_separator(parent=info_parent)
-    dpg.add_text(f"Sensing Channel: {ch}", parent=info_parent)
-    f = stimulation['Sense_frequency']
-    if f != '': 
-        f1, f2 = f-2.5,f+2.5
+    if 'PSD' in stimulation.keys():
+        dpg.add_separator(parent=info_parent)
+        d = dpg.add_text('At-home BrainSense: ON', parent=info_parent)
+        dpg.bind_item_theme(d,change_text_color(-1))
+        dpg.add_text(f"Sensing Channel: {ch}", parent=info_parent)
+        f = stimulation['Sense_frequency']
+        f1, f2 = np.round(f-2.5,2),np.round(f+2.5,2)
         dpg.add_text(f"Sensing Band: [{f1}, {f2}] Hz", parent=info_parent)
+    else:
+        d = dpg.add_text('At-home BrainSense: OFF', parent=info_parent)
+        dpg.bind_item_theme(d,change_text_color(1))
     
     dpg.configure_item(info_parent, show=True)
 
@@ -4821,8 +4831,12 @@ def session_window(Data, window_id, file_id = None):
 def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     app_state['windows'][window_id]['Data'][tab_tag]['Signals'] = {'left': [], 'right': []}
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)   
-    dpg.add_text(f"Total events: {len(signals)}", parent=tab_tag, tag = f"{tab_tag}_text_recordings")
-    if len(signals)==0: return
+    
+    if not isinstance(signals, dict) and len(signals)==0: return
+    if isinstance(signals, dict): 
+        dpg.add_text('Event Summary', parent=tab_tag)
+        return
+    else: dpg.add_text(f"Total events: {len(signals)}", parent=tab_tag, tag = f"{tab_tag}_text_recordings")
 
     initial, final = DH.getEventsElectrodes(app_state['windows'][window_id]['Data'])
     
@@ -5194,7 +5208,9 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     if isinstance(artifact,str): types_artifacts.append(f"{extract_artifact_type(artifact).upper()} Artifact")
                     # channel = electrodes_names[extract_channel_from_series_tag(signal['Channel'])].upper()
                     channel = electrodes_names[signal['Channel']].upper()
-                    channels.append(channel) 
+                    first = channel.find('_')
+                    second = channel[(first+1):].find('_')
+                    channels.append(channel[:(first+second+1)]) 
                     x = signal['X']
                     y = signal['Y']
                     
@@ -6684,12 +6700,15 @@ def create_individual_window():
                 case 'Indefinite': indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
             
                 case 'Events': 
-                    event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
-                    electrode_tab(Data,f"tab_electrode_{window_id}")
+                    if len(signals)>0:   
+                        event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+
+                        if not isinstance(signals,dict): electrode_tab(Data,f"tab_electrode_{window_id}")
                 
                 case 'Timeline': 
-                    timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
-                    electrode_tab(Data,f"tab_electrode_{window_id}")
+                    if len(signals)>0:
+                        timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
+                        electrode_tab(Data,f"tab_electrode_{window_id}")
 
         dpg.set_item_width(item=f"window_{window_id}",width=-1)
         dpg.set_item_height(item=f"window_{window_id}",height=-1)

@@ -66,16 +66,23 @@ def info_electrodes(data,version='Initial',side=0):
     else: type_stimulation = 'Cycling'
     
     a = {
-        'Group_id': Group_id,
+        'Group_id': utl.after_point(Group_id),
         'Frequency': Rate_in_hertz,
         'Pulse': Pulse_width_in_microseconds,
         'Amplitude': Suspend_amplitude_in_miliamps,
         'Stim_electrodes': Left, 
-        'Sense_electrodes': Sensing_electrodes,
-        'Sense_frequency': Sensing_freq,
         'Type': type_stimulation,
-        'PSD': ChannelPSD
     }
+
+    if not isinstance(Sensing_freq,str):
+        temp = {
+            'PSD': ChannelPSD,
+            'Sense_electrodes': Sensing_electrodes,
+            'Sense_frequency': Sensing_freq,
+        }
+        a = a | temp
+
+
     return a
 
 
@@ -185,6 +192,12 @@ def getModes(Data):
 
     def add_mode(Data):
         for key, value in Data.items():
+            if key == 'Events':
+                if 'LfpFrequencySnapshotEvents' not in Data[key].keys(): #sensing capacities not yet setup
+                    continue
+                # elif not isinstance (Data[key]['LfpFrequencySnapshotEvents'], dict): #sensing capacities off
+                #     continue
+
             if key != 'Device' and value:  # Ensure it's not empty
                 if (
                     key == 'Setup'
@@ -238,7 +251,7 @@ def getSessionDuration(Data):
         beginning = utl.parse_datetime(Data['Device']['SessionDate'])
 
         print(beginning , '-->', end)
-        return end - beginning
+        return abs(end - beginning)
     else: return "No dates stored!"
 
 def getPatientInfo(Data):
@@ -429,7 +442,7 @@ def getElectrodes(list):
     return Electrodes
 
 def getEventsElectrodes(data):
-    if 'Events' not in getModes(data):
+    if ('Events' or 'Timeline') not in getModes(data):
         return None
 
     if 'SensingChannel' not in data['Device']['Groups']['Initial'][0]['ProgramSettings'].keys():
@@ -527,13 +540,11 @@ def correctMissingData(dictionary,path): #unused
     '''
     NaN where there is missing data, path: path of previously identified missing data, by checkingMissingData
     '''
-    print(path)
     path_parts = utl.parse_path(path)[:-1] #until the key before
     #signal = access_by_path(dictionary,path_parts)
     new_path = ""
     for part in path_parts:
         new_path = new_path + f"[{part}]"
-    print('\n' , new_path)
     mode = path_parts[0]
 
     match mode:
@@ -726,6 +737,8 @@ def getSignals(Data, mode):
 
     elif mode=='Events':
         signals = []
+        # if (recs is None) or (recs== []): return None
+        # if 'HemisphereLocationDef.Left' not in recs[0]: return None
         for rec in recs: 
 
             left_side = rec['LfpFrequencySnapshotEvents']['HemisphereLocationDef.Left']
@@ -753,6 +766,8 @@ def getSignals(Data, mode):
             }
 
             signals.append(dict)
+        if recs == [] and 'LfpFrequencySnapshotEvents' in Data[mode].keys():
+            signals = {'Marked': Data[mode]['LfpFrequencySnapshotEvents']}
 
     elif mode=='Timeline': #falta adicionar canal
         signal = {}

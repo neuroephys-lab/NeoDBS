@@ -1,5 +1,13 @@
 # NeoDBS
 
+## 10.11.2025
+
+### Bug fixes:
+- Toggle buttons (setup artifacts tab)
+- Session duration
+- Stimulation window always appears with correct info
+- Survey tab
+
 ## 07.11.2025
 ### New functionalities:
 - Sensing PSD
