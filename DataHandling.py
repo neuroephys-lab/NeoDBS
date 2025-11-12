@@ -32,6 +32,8 @@ def info_electrodes(data,version='Initial',side=0):
 
 
     di = GroupHistory[version][0]
+    # di = data['Device']['GroupHistory'][0]
+
     Group_id=di["GroupId"]
     ProgramSettings=di["ProgramSettings"]
     GroupSettings = di["GroupSettings"]
@@ -42,7 +44,7 @@ def info_electrodes(data,version='Initial',side=0):
         Sensing_electrodes=Sensing_electrodes.split('.')[-1]
         Suspend_amplitude_in_miliamps = SensingChannel[side]['SuspendAmplitudeInMilliAmps']
         Sensing_freq = SensingChannel[side]['SensingSetup']['FrequencyInHertz']
-        ChannelPSD = SensingChannel[side]['SensingSetup']['ChannelSignalResult']
+        # ChannelPSD = SensingChannel[side]['SensingSetup']['ChannelSignalResult']
     
     except Exception as e: #when electrodes dont allow sensing
         print(e)
@@ -50,6 +52,7 @@ def info_electrodes(data,version='Initial',side=0):
         Suspend_amplitude_in_miliamps=SensingChannel[0]["AmplitudeInMilliAmps"]
         Sensing_electrodes = 'Sensing Disabled'
         Sensing_freq = ''
+    
     Pulse_width_in_microseconds=SensingChannel[side]["PulseWidthInMicroSecond"]
     
     left_e=SensingChannel[side]["ElectrodeState"]
@@ -74,11 +77,20 @@ def info_electrodes(data,version='Initial',side=0):
         'Type': type_stimulation,
     }
 
+    
+
     if not isinstance(Sensing_freq,str):
+        
+        ChannelPSD = data['Device']['GroupHistory'][0]['Groups'][0]['ProgramSettings']['SensingChannel'][side]['SensingSetup']['ChannelSignalResult']
+        date = utl.parse_datetime(data['Device']['GroupHistory'][0]['SessionDate']).date()
+        if ChannelPSD == {}:
+            ChannelPSD = SensingChannel[side]['SensingSetup']['ChannelSignalResult']
+            date = 'Most Recent Signal'
         temp = {
             'PSD': ChannelPSD,
             'Sense_electrodes': Sensing_electrodes,
             'Sense_frequency': Sensing_freq,
+            'PSDdate': date
         }
         a = a | temp
 
@@ -110,7 +122,10 @@ def add_utc_conversion_to_dates(data, offset):
     return data
 
 def extract_time_offset(Data):
-    offset = Data['ProgrammerUtcOffset']
+    try:
+        offset = Data['ProgrammerUtcOffset']
+    except Exception:
+        offset = Data['Device']['ProgrammerUtcOffset']
     sign = offset[0]
     hours = int(offset[1:].split(':')[0])
     if sign=='-':
@@ -190,6 +205,7 @@ def getData(file_path):
 
 def getModes(Data):
 
+    past = getLastSessionDate(Data)
     def add_mode(Data):
         for key, value in Data.items():
             if key == 'Events':
@@ -197,6 +213,11 @@ def getModes(Data):
                     continue
                 # elif not isinstance (Data[key]['LfpFrequencySnapshotEvents'], dict): #sensing capacities off
                 #     continue
+            if key == 'Timeline':
+                if 'LFPTrendLogs' not in Data['Timeline'].keys(): continue
+                first = list(Data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Left'].keys())[0]
+                last_time = Data['Timeline']['LFPTrendLogs']['HemisphereLocationDef.Left'][first][0]['DateTime']
+                if past>last_time: continue
 
             if key != 'Device' and value:  # Ensure it's not empty
                 if (
@@ -259,6 +280,11 @@ def getPatientInfo(Data):
 
 def getDeviceInfo(Data):
     return Data['Device']['DeviceInformation']['Final']
+
+def getLastSessionDate(Data):
+    if 'GroupHistory' not in Data['Device'].keys(): 
+        return 'This is First Session.'
+    return Data['Device']['GroupHistory'][1]['SessionDate']
 
 def getBatteryInfo(Data):
     return Data['Device']['BatteryInformation']
@@ -650,7 +676,13 @@ def getRealTime(mode, recording): #unused
         else: Warning('Unable to convert for lack of data!')
         return Times
 
+def getEventLog(dictionary):
+    data = dictionary['Events']['LfpFrequencySnapshotEvents']
+    return [event for event in data if 'LfpFrequencySnapshotEvents' not in event.keys()]
+    
+
 def getModeSignals(dictionary, mode):
+    previous_session = utl.parse_datetime(getLastSessionDate(dictionary))
     match mode:
         case 'Streaming': #✅
             recs  = dictionary[mode]['BrainSenseTimeDomain']
@@ -660,9 +692,9 @@ def getModeSignals(dictionary, mode):
             
         case 'Events': #✅
             recs = []
-            previous_session = utl.parse_datetime(dictionary['Device']['GroupHistory'][1]['SessionDate'])
+            
             temp = dictionary[mode]['LfpFrequencySnapshotEvents']
-            paths = utl.find_key_path(temp,'LfpFrequencySnapshotEvents')
+            paths = utl.find_key_path(temp,'LfpFrequencySnapshotEvents') #events snapshots have this key 2x, rest is only event timestamp
             for path in paths:
                 path = utl.parse_path(path)
                 event = utl.access_by_path(temp,path)
@@ -689,7 +721,7 @@ def getModeSignals(dictionary, mode):
 
 def getSignals(Data, mode):
     recs = getModeSignals(Data, mode)
-
+    previous = utl.parse_datetime(getLastSessionDate(Data)).date()
     signals = []
 
     def get(rec):
@@ -775,6 +807,9 @@ def getSignals(Data, mode):
         signal = {}
         for side in recs:
             for day, logs in recs[side].items():
+                if previous>utl.parse_datetime(day).date(): 
+                    print(previous, ' --> ', utl.parse_datetime(day).date())
+                    continue
                 if day not in signal:
                     signal[day] = {'Left': {'X': [], 'Y': [], 'Stim': []}, 'Right': {'X': [], 'Y': [], 'Stim': []}}
 

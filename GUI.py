@@ -1560,6 +1560,7 @@ def plot_df_coherence(parameter_values,tab_tag,tags):
             signal = {}
             signal['X'], signal['Y'] = values
             signal['Label'] = lab
+            signal['Channel'] = lab[:lab.find(' ')]
             # signal = getSignalbyIdx(window_id,tab_tag,tags[idx])
 
             if no =='0': parameter_values['x'] = signal
@@ -1620,8 +1621,8 @@ def plot_coherence(parameter_values, tab_label):
         dpg.add_group(parent=f"{tab_label}_plot_group", tag=f"{tab_label}_plot_group_text")
 
     # with dpg.group(parent=f"{tab_label}_plot_group", tag = f"{tab_label}_plot_group_text"):
-    dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}", parent=f"{tab_label}_plot_group_text")
-    dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}",parent=f"{tab_label}_plot_group_text")
+    dpg.add_text(f"Signal 1: {signal1['Label']}", parent=f"{tab_label}_plot_group_text")
+    dpg.add_text(f"Signal 2: {signal2['Label']}",parent=f"{tab_label}_plot_group_text")
 
     if clean:
         with dpg.plot(label = 'Coherence', width=-1, height=400, tag=f"{tab_label}_plot", parent=f"{tab_label}_plot_group_text"):
@@ -2895,7 +2896,7 @@ def change_electrodes_names(sender, app_data, user_data):
 
     with dpg.window(tag="Change Channel Names Window", width=400, height=300):
         dpg.add_text("Change Channel Names")
-        dpg.add_spacing(count=2)
+        dpg.add_spacer(count=2)
         channels = ['ONE_THREE','ZERO_THREE','ZERO_TWO']
         for row_id, ch in enumerate(channels):
             input_counter[0]+=1
@@ -3974,6 +3975,9 @@ def CustomFeatures(sender,app_data,user_data):
                 index = ls.index(value)
                 tag = labels[index][1]
                 signal = getSignalbyIdx(window_id,tab_tag,tag)
+                channel = extract_channel_from_series_tag(tag)
+                extra = {'Channel': channel}
+                signal = signal | extra
                 parameter_values[param] = signal
 
             else: parameter_values[param] = value
@@ -4258,9 +4262,12 @@ def circadian_rhythm(sender, app_data, user_data):
             old_x = [utl.extract_time_from_datetime_string(str(datetime.fromtimestamp(xx).time())) for xx in x]
         elif isinstance(old_x[0], str):
             old_x = [utl.extract_time_from_datetime_string(xx) for xx in x]
+        else: #datetime
+            old_x = [utl.extract_time_from_datetime_string(utl.full_date2str(xx)) for xx in x]
 
         x,y = [], []
 
+        
         for n in range(len(old_x)-1):
             x.append(old_x[n])
             y.append(old_y[n])
@@ -4735,6 +4742,7 @@ def stimulation_window(Data, window_id, file_id = None):
     try:
         stimulation = DH.info_electrodes(Data,version='Initial')
     except Exception as e: 
+        print(e)
         d = dpg.add_text('Stimulation OFF/not set up!', parent=info_parent)
         dpg.bind_item_theme(d,change_text_color(1))
         dpg.configure_item(f"{info_parent}_title", show=True)
@@ -4828,6 +4836,48 @@ def session_window(Data, window_id, file_id = None):
     return l
 
 #--------------------------------------INDIVIDUAL TABS-----------------------------------------
+def show_event_summary(mode,tab_tag,plot_tag):
+    Data = getDatabyTag(tab_tag)
+    daylight_savings = DH.extract_time_offset(Data)
+    temp = DH.getEventLog(Data)
+    names = [event['EventName'] for event in temp]
+    names = np.unique(names).tolist()
+    event_summary = {name: {} for name in names}
+    for event in temp:
+    # if utl.parse_datetime(previous_session).date()>utl.parse_datetime(event['DateTime']).date(): continue
+        if event['DateTime'] in event_summary[event['EventName']].keys():
+            event_summary[event['EventName']][event['DateTime']] = event_summary[event['EventName']][event['DateTime']] +1
+        else:
+            event_summary[event['EventName']][event['DateTime']] = 1
+
+    def toggle_plot(sender,app_data,user_data):
+        if app_data == user_data: return
+        for name, events in event_summary.items():
+            if app_data == 'Days':
+                x = [(utl.parse_datetime(key)+daylight_savings).timestamp() for key in events.keys()]
+                weight = 200
+            else:
+                x = [utl.extract_time_from_datetime_string(key) for key in events.keys()]
+                weight = 75
+            dpg.configure_item(f"{name}_{tab_tag}",x=x, weight=weight)
+        dpg.configure_item(f"{tab_tag}_xaxis",label=app_data)
+        dpg.set_item_user_data(f"axis_{tab_tag}",app_data)
+    
+    with dpg.group(label = f"{tab_tag}_group", parent=tab_tag, horizontal=True ):
+        with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis,scale=dpg.mvPlotScale_Time,label='Days',tag=f"{tab_tag}_xaxis")
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis,label='Events',tag = f"{tab_tag}_yaxis")
+            for name, events in event_summary.items():
+                # x = [utl.extract_time_from_datetime_string(key) for key in events.keys()]
+                x = [(utl.parse_datetime(key)+daylight_savings).timestamp() for key in events.keys()]
+                y = [events[key] for key in events.keys()]
+                b = dpg.add_bar_series(x,y,label=name,parent=y_axis,weight=200,tag=f"{name}_{tab_tag}")
+        with dpg.group():
+            dpg.add_text('Type of Plot:')
+            dpg.add_radio_button(items=['Days','Hours'],tag=f"axis_{tab_tag}",callback=toggle_plot,user_data='Days')
+
+
 def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     app_state['windows'][window_id]['Data'][tab_tag]['Signals'] = {'left': [], 'right': []}
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)   
@@ -4835,7 +4885,7 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     if not isinstance(signals, dict) and len(signals)==0: return
     if isinstance(signals, dict): 
         dpg.add_text('Event Summary', parent=tab_tag)
-        breakpoint()
+        show_event_summary(mode,tab_tag,plot_tag)
         return
     else: 
         dpg.add_text(f"Total events: {len(signals)}", parent=tab_tag, tag = f"{tab_tag}_text_recordings")
@@ -5606,8 +5656,11 @@ def electrode_tab(Data,tab_tag):
     window_id = extract_window_id(tab_tag)
 
     try:
-        DH.info_electrodes(Data)['PSD']
-    except Exception: return
+        alpha = DH.info_electrodes(Data)
+        alpha['PSD']
+    except Exception as e: 
+        print(e)
+        return
 
     plot_tag = f"{tab_tag}_plot"
     bands = getBandsByTab(tab_tag)
@@ -5615,10 +5668,10 @@ def electrode_tab(Data,tab_tag):
 
     if dpg.does_item_exist(tab_tag): return
     
-    dpg.add_tab(label='Sensing PSD', tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
+    dpg.add_tab(label="Sensing PSD", tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     
     with dpg.group(parent=tab_tag, horizontal=True,tag=f"{tab_tag}_group"):
-        with dpg.plot(label="Sensing PSD", height=400, width=600, tag=plot_tag):
+        with dpg.plot(label=f"Sensing PSD - {alpha['PSDdate']}", height=400, width=600, tag=plot_tag):
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
             dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)", tag=f"x_axis_{tab_tag}")
@@ -6567,13 +6620,13 @@ def create_multiple_window():
         with dpg.group(horizontal=True):
             with dpg.group():
                 dpg.add_text(f"Session Information", show=False, tag = f"session_parameteres_{window_id}_title")
-                dpg.add_child_window(tag = f"session_parameteres_{window_id}",  height= 150, width=300, show=False)
+                dpg.add_child_window(tag = f"session_parameteres_{window_id}",  height= 150, width=300, show=False,horizontal_scrollbar=True)
             with dpg.group(): 
                 dpg.add_text(f"Device Information", show=False, tag = f"device_parameteres_{window_id}_title")
-                dpg.add_child_window(tag = f"device_parameteres_{window_id}",  height= 150, width=300, show=False)
+                dpg.add_child_window(tag = f"device_parameteres_{window_id}",  height= 150, width=300, show=False,horizontal_scrollbar=True)
             with dpg.group():
                 dpg.add_text(f"Stimulation Information", show=False, tag = f"stimulation_parameteres_{window_id}_title")
-                dpg.add_child_window(tag = f"stimulation_parameteres_{window_id}",  height= 150, width=-1, show=False)
+                dpg.add_child_window(tag = f"stimulation_parameteres_{window_id}",  height= 150, width=-1, show=False,horizontal_scrollbar=True)
         with dpg.group(horizontal=True,tag = f"mode_list_group_{window_id}"): pass  
         with dpg.tab_bar(tag=f"tab_bar_window_{window_id}"): pass
 
@@ -6781,13 +6834,13 @@ def create_individual_window():
         with dpg.group(horizontal=True):
             with dpg.group():
                 dpg.add_text(f"Session Information", show=False, tag = f"session_parameteres_{window_id}_title")
-                dpg.add_child_window(tag = f"session_parameteres_{window_id}",  height= 150, width=300, show=False)
+                dpg.add_child_window(tag = f"session_parameteres_{window_id}",  height= 150, width=300, show=False,horizontal_scrollbar=True)
             with dpg.group(): 
                 dpg.add_text(f"Device Information", show=False, tag = f"device_parameteres_{window_id}_title")
-                dpg.add_child_window(tag = f"device_parameteres_{window_id}",  height= 150, width=300, show=False)
+                dpg.add_child_window(tag = f"device_parameteres_{window_id}",  height= 150, width=300, show=False,horizontal_scrollbar=True)
             with dpg.group():
                 dpg.add_text(f"Stimulation Information", show=False, tag = f"stimulation_parameteres_{window_id}_title")
-                dpg.add_child_window(tag = f"stimulation_parameteres_{window_id}",  height= 150, width=-1, show=False)
+                dpg.add_child_window(tag = f"stimulation_parameteres_{window_id}",  height= 150, width=-1, show=False,horizontal_scrollbar=True)
         # damage_text = ''
         # if warning_text != '': damage_text == warning_text
         dpg.add_text('', tag=f"damage_{window_id}", show=True)
@@ -6847,7 +6900,7 @@ def load_main_ui():
     dpg.set_primary_window("Main", True)
 
 dpg.show_viewport()
-dpg.set_frame_callback(60, load_main_ui)  
+dpg.set_frame_callback(120, load_main_ui)  
 
 dpg.start_dearpygui()
 dpg.destroy_context()

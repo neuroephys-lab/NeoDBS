@@ -1,9 +1,25 @@
 # NeoDBS
 
+## 12.11.2025
+
+### New Functionalities:
+- Event Summary tab 
+
+### Design:
+- Horizontal scrollbars on information windows
+
+### Bug fixes:
+- Circadian Rhhythm accepting correctly values (mean still to be corrected)
+- Modes only appear with data between sessions (Events and Timeline)
+- Verification if data is previous to the last session
+- Survey get Signal corrected
+- Coherence: get labels and channels correctly
+
+
 ## 10.11.2025
 
 ## To Add:
-- Event Summat tab (/being developed in temp)
+- Event Summary tab (/being developed in temp)
 
 
 ### Bug fixes:
