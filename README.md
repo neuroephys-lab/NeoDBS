@@ -1,5 +1,17 @@
 # NeoDBS
 
+## 13.11.2025
+
+Electrode tab/Group History for now deprecated while waiting for medtronic response
+
+### New Functionalities:
+- Event Summary tab finished
+- Change window name
+
+### Design:
+- Setup artifacts tab: child window + mean + std.dev/95th percentile
+
+
 ## 12.11.2025
 
 ### New Functionalities:

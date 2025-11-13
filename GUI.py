@@ -2910,6 +2910,24 @@ def change_electrodes_names(sender, app_data, user_data):
 
         # dpg.configure_item("Change Channel Names Window",on_close=dpg.configure_item("Change Channel Names Window",show=False))
 
+def change_window_name(sender,app_data,user_data):
+    window_id = user_data
+    old_name = dpg.get_item_label(window_id)
+    if dpg.does_item_exist(f"{window_id}_name_change"):
+        dpg.delete_item(f"{window_id}_name_change")
+
+    def handle_submit(sender,app_data,user_data):
+        name = dpg.get_value(f"{window_id}_name")
+        dpg.set_item_label(window_id,name)
+
+    with dpg.window(tag=f"{window_id}_name_change", autosize=True,no_collapse=True):
+        dpg.add_text("Change Window Name")
+        with dpg.group(horizontal=True):
+            dpg.add_text('New name: ')
+            dpg.add_input_text(default_value=old_name, width=120,tag=f"{window_id}_name")
+        with dpg.group(horizontal=True):
+                dpg.add_button(label="Submit", callback=handle_submit)
+
 def change_inf_line_color(color_id):
     with dpg.theme() as theme_id:
         with dpg.theme_component(dpg.mvInfLineSeries):
@@ -4835,6 +4853,14 @@ def session_window(Data, window_id, file_id = None):
 
     return l
 
+def window_menu(window_id):
+    with dpg.menu_bar(label='Settings'):
+        with dpg.menu(label='Change',tag=f"{window_id}_change"):
+            dpg.add_menu_item(label='Change Window Name',parent=f"{window_id}_change",callback=change_window_name,user_data=f"window_{window_id}")
+            dpg.add_menu_item(label='Change Event/Group Name')
+            dpg.add_menu_item(label='Change Window Theme')
+            
+        
 #--------------------------------------INDIVIDUAL TABS-----------------------------------------
 def show_event_summary(mode,tab_tag,plot_tag):
     Data = getDatabyTag(tab_tag)
@@ -4852,12 +4878,37 @@ def show_event_summary(mode,tab_tag,plot_tag):
 
     def toggle_plot(sender,app_data,user_data):
         if app_data == user_data: return
+        if app_data=='Days':
+            values=[len(event_summary[key]) for key in event_summary.keys()]       # numerical values
+            labels=list(event_summary.keys())
+            title = 'Event Count'
+            dpg.bind_colormap(f"{tab_tag}_pie_plot", 0)
+        else:
+            new = {}
+            for _,events in event_summary.items():
+                for day in events.keys():
+                    dt = int(utl.parse_datetime(day).hour)
+                    if dt in new.keys():
+                        new[dt] = new[dt] + events[day]
+                    else:
+                        new[dt] = events[day]
+            sorted_items = sorted(new.items()) 
+            labels, values = zip(*sorted_items)
+            labels = list(labels)
+            values = list(values)
+
+            title = 'Event Circadian Rhythm'
+            dpg.bind_colormap(f"{tab_tag}_pie_plot", 3)
+        
+        dpg.configure_item(f"{tab_tag}_pie",values=values,labels=labels)
+        dpg.configure_item(f"{tab_tag}_pie_plot",label=title)
+
         for name, events in event_summary.items():
             if app_data == 'Days':
                 x = [(utl.parse_datetime(key)+daylight_savings).timestamp() for key in events.keys()]
                 weight = 200
             else:
-                x = [utl.extract_time_from_datetime_string(key) for key in events.keys()]
+                x = [utl.extract_time_from_datetime_string(key)+(daylight_savings.seconds) for key in events.keys()]
                 weight = 75
             dpg.configure_item(f"{name}_{tab_tag}",x=x, weight=weight)
         dpg.configure_item(f"{tab_tag}_xaxis",label=app_data)
@@ -4872,11 +4923,27 @@ def show_event_summary(mode,tab_tag,plot_tag):
                 # x = [utl.extract_time_from_datetime_string(key) for key in events.keys()]
                 x = [(utl.parse_datetime(key)+daylight_savings).timestamp() for key in events.keys()]
                 y = [events[key] for key in events.keys()]
-                b = dpg.add_bar_series(x,y,label=name,parent=y_axis,weight=200,tag=f"{name}_{tab_tag}")
+                dpg.add_bar_series(x,y,label=name,parent=y_axis,weight=200,tag=f"{name}_{tab_tag}")
+
+
         with dpg.group():
             dpg.add_text('Type of Plot:')
             dpg.add_radio_button(items=['Days','Hours'],tag=f"axis_{tab_tag}",callback=toggle_plot,user_data='Days')
-
+            with dpg.plot(label = 'Event Count',height=300,width=300,tag = f"{tab_tag}_pie_plot"):
+                dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+                x_axis = dpg.add_plot_axis(dpg.mvXAxis,no_gridlines=True,no_tick_labels=True,no_tick_marks=True)
+                y_axis = dpg.add_plot_axis(dpg.mvYAxis,no_gridlines=True,no_tick_labels=True,no_tick_marks=True)
+                dpg.add_pie_series(
+                    x=0.0,
+                    y=0.0,  # (x, y) center coordinates
+                    radius=1.0,         # relative radius of the pie
+                    values=[len(event_summary[key]) for key in event_summary.keys()],       # numerical values
+                    labels=list(event_summary.keys()),       # corresponding labels
+                    normalize=True,      # ensures the values sum to 1
+                    parent=y_axis,
+                    label='Events',
+                    tag=f"{tab_tag}_pie"
+                )
 
 def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     app_state['windows'][window_id]['Data'][tab_tag]['Signals'] = {'left': [], 'right': []}
@@ -4991,8 +5058,6 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             else:
                 dpg.delete_item(f"{tab_label}_mean_metric", children_only=True)
 
-
-            
             mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
             minus, plus = mean_power-std_power, mean_power+std_power
             s = dpg.add_shade_series(x,y1=minus,y2=plus,label = 'Std. Dev', parent=f"y_axis_{tab_tag}",tag=f"{tab_tag}_std")
@@ -5231,6 +5296,10 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         def toggle2(sender,app_data,user_data):
             _ = []
             ch = dpg.get_item_label(sender)
+            dd = dpg.get_value(f"{tab_tag_art}_radio")
+            if dd == 'Standard Deviation':
+                dev = 1
+            else: dev = 2
             for tag in signal_tags:
                 if ch in tag:
                     dpg.configure_item(tag, show=app_data)
@@ -5239,7 +5308,10 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     _.append(tag)
 
             array = [dpg.get_value(t)[1] for t in _]
-            mean = np.mean(array, axis=0)
+            mean = np.nanmean(array, axis=0)
+            std = np.nanstd(array, axis=0)
+            minus, plus = mean - dev*std, mean+dev*std
+            dpg.configure_item(f"{tab_tag_art}_std",y1=minus,y2=plus)
             dpg.configure_item(f"{tab_tag_art}_mean",y=mean)
 
         dpg.add_tab(label='Setup ARTIFACTS', tag=tab_tag_art, parent=f"tab_bar_window_{window_id}", closable=True)
@@ -5284,9 +5356,13 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                         info = extract_psd_features(signal, band)
                         create_table(f"{series_tag}_header",f"{series_tag}_table", info, trial_label=band[0])
 
-                
-                mean_power = np.mean([signal['Y'] for signal in artifacts], axis = 0)
-                m = dpg.add_line_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag_art}", tag=f"{tab_tag_art}_mean")
+                power = [signal['Y'] for signal in artifacts]
+                std = np.nanstd(power,axis=0)
+                mean_power = np.nanmean(power, axis = 0)
+                minus,plus = mean_power-std,mean_power+std
+                s = dpg.add_shade_series(x,y1=minus,y2=plus,label='Std. Dev.', parent=y_axis, tag=f"{tab_tag_art}_std")
+                dpg.bind_item_theme(s,create_alpha_theme())
+                m = dpg.add_line_series(x, mean_power, label="Mean Power", parent=y_axis, tag=f"{tab_tag_art}_mean")
                 dpg.bind_item_theme(m, change_line_thickness(5))
                 mean_power = {'Y': mean_power, 'X':x}
 
@@ -5296,24 +5372,30 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     info = extract_psd_features(mean_power, band)
                     create_table(f"{tab_tag_art}_mean_metric",f"{tab_tag_art}_mean_metric_table", info, trial_label=band[0])
 
-            with dpg.group(tag=f"{tab_tag_art}_buttons", horizontal=True):
+            with dpg.group(tag=f"{tab_tag_art}_buttons"):
                 types_artifacts = np.unique(types_artifacts)
                 channels = np.unique(channels)
-                if len(channels)>1: 
-                    with dpg.group(): #channels
-                        dpg.add_text('Channels: ')
-                        for ch in channels:
-                            dpg.add_checkbox(label=ch, callback=toggle2, default_value=True)
-                if len(types_artifacts)>1:
-                    with dpg.group(): #type of artifact
-                        dpg.add_text('Artifacts: ')
-                        for d in types_artifacts:
-                            dpg.add_checkbox(label=d, callback=toggle2, default_value=True)
-                with dpg.group():
-                    dpg.add_text('Hemisphere: ')
-                    for s in ['LEFT', 'RIGHT']:
-                        dpg.add_checkbox(label=s, callback=toggle2, default_value=True)
-
+                with dpg.group(horizontal=True):
+                    if len(channels)>1: 
+                        with dpg.child_window(width=120, height=120): #channels
+                            dpg.add_text('Channels: ')
+                            for ch in channels:
+                                dpg.add_checkbox(label=ch, callback=toggle2, default_value=True)
+                    if len(types_artifacts)>1:
+                        with dpg.child_window(width=120, height=120): #type of artifact
+                            dpg.add_text('Artifacts: ')
+                            for d in types_artifacts:
+                                dpg.add_checkbox(label=d, callback=toggle2, default_value=True)
+                    with dpg.child_window(width=120, height=120):
+                        dpg.add_text('Hemisphere: ')
+                        for s in ['LEFT', 'RIGHT']:
+                            dpg.add_checkbox(label=s, callback=toggle2, default_value=True)
+                dpg.add_separator()
+                dpg.add_text('Shaded Area')
+                dpg.add_radio_button(['Standard Deviation', '95% Confidence Interval'], horizontal=False, 
+                                     callback=deviation, tag = f"{tab_tag_art}_radio", 
+                                     user_data=('Standard Deviation',tab_tag_art))
+   
     if sense:
         setup_off_tab()
     if calibration:
@@ -6608,6 +6690,7 @@ def create_multiple_window():
         dpg.set_item_height(item=f"window_{window_id}",height=-1)
                     
     with dpg.window(label=f"Window {window_id + 1}", width=400, height=300, tag=f"window_{window_id}"):
+        window_menu(window_id)
         dpg.add_button(label="Add File", callback=lambda: dpg.show_item(f"file_dialog_{window_id}"), tag = f"{window_id}_add_file")
         dpg.add_text("No file selected", tag=f"file_list_{window_id}")
 
@@ -6761,12 +6844,12 @@ def create_individual_window():
                 case 'Events': 
                     if len(signals)>0:   
                         event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
-                        if not isinstance(signals,dict): electrode_tab(Data,f"tab_electrode_{window_id}")
+                        # if not isinstance(signals,dict): electrode_tab(Data,f"tab_electrode_{window_id}")
                 
                 case 'Timeline': 
                     if len(signals)>0:
                         timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
-                        electrode_tab(Data,f"tab_electrode_{window_id}")
+                        # electrode_tab(Data,f"tab_electrode_{window_id}")
 
         dpg.set_item_width(item=f"window_{window_id}",width=-1)
         dpg.set_item_height(item=f"window_{window_id}",height=-1)
@@ -6827,6 +6910,7 @@ def create_individual_window():
                 app_state['windows'][window_id]['PreviousFilePath'] = file_path
 
     with dpg.window(label=f"Window {window_id + 1}", width=400, height=300, tag=f"window_{window_id}"): #individual window 
+        window_menu(window_id)
         dpg.add_button(label="File Selector", callback=lambda: dpg.show_item(f"file_dialog_{window_id}"), tag = f"file_selector_{window_id}")
         dpg.add_text("No file selected", tag=f"file_list_{window_id}")
         dpg.add_button(label="Open File", callback=open_file_callback,
