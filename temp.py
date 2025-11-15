@@ -114,7 +114,6 @@ with dpg.window():
         x_axis = dpg.add_plot_axis(dpg.mvXAxis,scale=dpg.mvPlotScale_Time)
         y_axis = dpg.add_plot_axis(dpg.mvYAxis)
         for name, events in event_summary.items():
-            # x = [utl.extract_time_from_datetime_string(key) for key in events.keys()]
             x = [(utl.parse_datetime(key)+daylight_savings).timestamp() for key in events.keys()]
             y = [events[key] for key in events.keys()]
             b = dpg.add_bar_series(x,y,label=name,parent=y_axis,weight=70)

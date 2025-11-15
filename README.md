@@ -1,7 +1,16 @@
 # NeoDBS
 
+## 14.11.2025
+
+### GUI Design
+- Setup tab, Timeline tab 
+
+### New functionalities:
+- Show mean power
+
 ## 13.11.2025
 
+### GUI Desing
 Electrode tab/Group History for now deprecated while waiting for medtronic response
 
 ### New Functionalities:
