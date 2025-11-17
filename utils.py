@@ -108,6 +108,19 @@ def find_closest_index(new_time, target_hour, target_minute, target_second = 0):
     
     return closest_idx
 
+def read_lines(filename):
+    info = {}
+    name = ""
+    with open(filename, 'r', encoding='utf-8') as file:
+        for idx,line in enumerate(file):
+            line = line.strip()
+            if idx==0: 
+                info[line] = []
+                name=line
+            else:
+                info[name].append(line)
+    return info
+
 def read_event_file(filename):
     """Reads a text file and returns a list of (hour, minute, second, event) tuples.
     If seconds are not provided, they default to 0."""

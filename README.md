@@ -1,5 +1,20 @@
 # NeoDBS
 
+## 17.11.2025
+
+### New functionalities:
+- Event Summary Tab on Combined
+- Show mean power 
+    - save values into txt file ready to plot in graphpad
+    - toggle buttons
+    - Add extra values --> for example Y-BOCS/VAS to the plot, in a new axis
+    - 2nd X and Y axis --> so the user can drag and visually inspect the best correlation between mean power and the added events/values
+
+### Debugs:
+- Circadian rhythm
+- Band Mean power channel
+- Correção: aceder aos modos de cada ficheiro e não falhar ao alinhar eventos
+
 ## 14.11.2025
 
 ### GUI Design
