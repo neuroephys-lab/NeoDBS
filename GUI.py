@@ -1336,7 +1336,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
 
                 last_x = dpg.get_value(dpg.get_item_children(yy,1)[0])[0]
                 label = list(info.keys())[0]
-                values = [int(v) for v in info[label]]
+                values = [float(v) for v in info[label]]
                 y_title = dpg.get_item_label(y2)
                 if y_title == '':
                     y_title=label
@@ -7237,13 +7237,13 @@ with dpg.texture_registry(show=False):
 
 
 # Create window that matches image size exactly
-with dpg.window(label="", tag="Splash", no_title_bar=True, no_resize=True, no_close=True,
+with dpg.window(label="", tag="Logo", no_title_bar=True, no_resize=True, no_close=True,
                 no_collapse=True, no_move=True, width=width, height=height):
     dpg.add_image("logo_tex", width=width, height=height, pos=[0, 0])
 
 
 def load_main_ui():
-    dpg.delete_item("Splash")
+    dpg.delete_item("Logo")
 
     light_theme = themes.create_theme_imgui_light()
     dark_theme = themes.create_theme_imgui_dark()
