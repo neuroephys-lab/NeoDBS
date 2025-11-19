@@ -466,6 +466,11 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag):
 
 def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None):
     events = [signal['EventName'] for signal in signals]
+    for i,e in enumerate(events):
+        if e in all_event_names.keys():
+            events[i] = all_event_names[e]
+        else:
+            all_event_names[e] = e
     dates = []
     for signal in signals: 
         date = utl.parse_datetime(signal['DateInitial'])
@@ -533,7 +538,6 @@ def recalculateMeanMetrics(sender, app_data, user_data):
 def hide(sender,app_data,user_data):
     streams, checkboxes = user_data
     if checkboxes != [None]:
-
         if app_data == False:
             for c in checkboxes:
                 dpg.set_value(c,True)
@@ -1289,7 +1293,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
 
             with dpg.group(parent=tab_tag, horizontal=True,tag=f"{tab_label}_smp"):
                 with dpg.plot(label='Band Mean Power over Time',height=400, width=700,tag=f"{tab_label}_smp_plot"):
-                    dpg.add_plot_legend()
+                    dpg.add_plot_legend(horizontal=True)
                     xx = dpg.add_plot_axis(dpg.mvXAxis,label='Session Days')
                     yy = dpg.add_plot_axis(dpg.mvYAxis,label='Band Mean Power (uV/Hz)') #y axis always links to the x axis above!
 
@@ -1299,15 +1303,13 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                         ch.append(channel)
 
                         for band, power in info.items():
-                            ticks = ()
                             bds.append(band)
                             dates, values = [utl.parse_datetime(p[0]).timestamp() for p in power], [p[1][0] for p in power]
                             dates_array = np.arange(0,len(dates),1)
-                            for i,p in enumerate(power):
-                                ticks += ((p[0], i),)
+                            # for i,p in enumerate(power):
+                            #     ticks += ((p[0], i),)
                             if band=='Beta': label=f"{band}  | {channel}"
                             else: label=f"{band} | {channel}"
-                            dpg.set_axis_ticks(xx,ticks)
                             t = dpg.add_line_series(dates_array.tolist(),values,parent=yy,label=label)
                             mean_tags.append(t)
 
@@ -1324,13 +1326,19 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                                     dpg.add_text(title)
                                     for c in array: dpg.add_checkbox(label=c,callback=toggle_over_time,user_data=mean_tags,default_value=True)
                     dpg.add_separator()
-                    dpg.add_button(label='Insert Line Series',width=-1,callback=insert_line_series,user_data=(ticks,x2,y2,yy))
+                    dpg.add_button(label='Insert Line Series',width=-1,callback=insert_line_series,user_data=(x2,y2,yy))
                     dpg.add_button(label='Save Plot Values',width=-1,callback=save_band_powers_to_txt, user_data=(all_info,filename))
+                    dpg.add_separator()
+                    with dpg.child_window(label="X Axis Dates",width=-1, height=200):
+                        dpg.add_text("Index: Date")
+                        dpg.add_separator()
+                        for i, date in enumerate(dates):
+                            dpg.add_text(f"{i}: {dates[i]}")
 
         def insert_line_series(sender, app_data, user_data):
 
             def read_txt(sender, app_data, user_data):
-                ticks,x2,y2,yy = user_data
+                x2,y2,yy = user_data
                 streaming_file = app_data['file_path_name']
                 info =utl.read_lines(streaming_file)
 
@@ -1343,10 +1351,10 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 else:
                     y_title=y_title+' & '+label
                 dpg.configure_item(y2,show=True,label=y_title)
-                dpg.set_axis_ticks(x2,ticks)
+                # dpg.set_axis_ticks(x2,ticks)
                 dpg.configure_item(x2,show=True)
                 line = dpg.add_line_series(last_x,values,label=label,parent=y2)
-                dpg.bind_item_theme(line,change_line_thickness(5))
+                dpg.bind_item_theme(line,change_line_thickness(4))
 
             def create_file_dialog(user_data):
                 with dpg.file_dialog(
@@ -1422,7 +1430,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             dpg.add_separator()
             if len(days)>1:
                 dpg.add_button(label='Show Mean Power Across Time',width=-1,callback=show_power_over_time,user_data=all_info)
-            
+            dpg.add_button(label = 'Save Plot Figure',callback = save_plot,user_data = '2D')
     time.sleep(0.2)
     dpg.set_axis_limits_auto(x_axis)
     dpg.set_axis_limits_auto(y_axis)
@@ -1436,10 +1444,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
         signal = getSignalbyIdx(window_id,tab_tag,tag,mode)
         ch = signal['Channel']
         
-        if ch in electrodes_names.keys():
-            ch = electrodes_names[ch]
-        else:
-            electrodes_names[ch] = ch
+        ch = getUpdatedElectrodeName(ch)
 
         if func in signal.keys(): signal.pop(func)
         temp = {key: np.array([]) for key in signal.keys()}
@@ -1482,11 +1487,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
         else:
             # 'X' is in Unix timestamp
             signal['dX'] = [datetime.fromtimestamp(val) for val in X]
-        ch = signal['Channel']
-        if ch in electrodes_names.keys():
-            ch = electrodes_names[ch]
-        else:
-            electrodes_names[ch] = ch
+        ch = getUpdatedElectrodeName(signal['Channel'])
         prev = len(new_signal[ch]['dX'])
 
         current_start[ch] = signal['dX'][0]
@@ -2217,7 +2218,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                 if stream_events!=[]: all_events = stream_events
                 file = extract_file_from_series_tag(tag)
                 y = stream['Y']
-                channel = stream['Channel']
+                channel = getUpdatedElectrodeName(stream['Channel'])
                 date = stream['Date']
                 parameter_values['x'] = np.array(y)
                 signal = pre.call_function(func, parameter_values)
@@ -2869,7 +2870,7 @@ def plot_pac(tags,tab_tag,parameter_values,mode=None):
         # Normaliza
         amp_dist = amp_means / np.sum(amp_means + 1e-16)
         entropy = -np.sum(amp_dist * np.log(amp_dist + 1e-16)) #shannon entropy
-        mi = np.round((np.log(n_bins) - entropy) / np.log(n_bins),3) #modulation index
+        mi = np.round((np.log(n_bins) - entropy) / np.log(n_bins),5) #modulation index
 
         if dpg.does_item_exist(f"{tab_label}_pac"): dpg.delete_item(f"{tab_label}_pac")
 
@@ -3022,6 +3023,7 @@ def change_electrodes_names(sender, app_data, user_data):
 
             for side in ['LEFT','RIGHT']:
                 electrodes_names[f'{old_name}_{side}'] = f'{new_name}_{side}'
+        dpg.delete_item("Change Channel Names Window")
         
     def reset(sender, app_data, user_data):
         electrodes_names.clear()
@@ -3031,7 +3033,7 @@ def change_electrodes_names(sender, app_data, user_data):
 
     with dpg.window(tag="Change Channel Names Window", width=400, height=300):
         dpg.add_text("Change Channel Names")
-        dpg.add_spacer(count=2)
+        dpg.add_separator()
         channels = ['ONE_THREE','ZERO_THREE','ZERO_TWO']
         for row_id, ch in enumerate(channels):
             input_counter[0]+=1
@@ -3054,6 +3056,7 @@ def change_window_name(sender,app_data,user_data):
     def handle_submit(sender,app_data,user_data):
         name = dpg.get_value(f"{window_id}_name")
         dpg.set_item_label(window_id,name)
+        dpg.delete_item(f"{window_id}_name_change")
 
     with dpg.window(tag=f"{window_id}_name_change", autosize=True,no_collapse=True):
         dpg.add_text("Change Window Name")
@@ -3067,7 +3070,7 @@ def change_event_name(sender,app_data,user_data):
     this = "event_name_change"
     row_id = 0
     if dpg.does_item_exist(this):
-        dpg.configure_item(this,show=True)
+        dpg.delete_item(this)
     
     def add(sender,app_data,user_data):
         row_id=dpg.get_item_user_data('submit event name') +1
@@ -3082,6 +3085,7 @@ def change_event_name(sender,app_data,user_data):
             new_name = dpg.get_value(f"new_name_{i}")
             if new_name == '': new_name = old_name
             all_event_names[old_name] = new_name
+        dpg.delete_item(this)
 
     with dpg.window(tag=this, autosize=True,no_collapse=True):
         dpg.add_text("Change Marked Events Name")
@@ -3329,6 +3333,25 @@ def getEventsbyTag(tab_tag,series_tag):
 def getBandsByTab(tab_tag):
     window_id = extract_window_id(tab_tag)
     return app_state['windows'][window_id]['Bands']
+
+def getUpdatedAllEventsName(events):
+    
+    for i,e in enumerate(events):
+        if e in all_event_names.keys():
+            events[i] = all_event_names[e]
+        else:
+            all_event_names[e] = e
+    return events
+
+def getUpdatedEventName(event):
+    if event not in all_event_names.keys():
+        all_event_names[event] = event
+    return all_event_names[event]
+
+def getUpdatedElectrodeName(electrode):
+    if electrode not in electrodes_names.keys():
+        electrodes_names[electrode] = electrode
+    return electrodes_names[electrode]
 
 def getDatabyTag(series_tag):
     window_id = extract_window_id(series_tag)
@@ -3607,6 +3630,22 @@ def extract_artifact_type(s: str):
     return None  # fallback for unexpected format
 
 #--- Process with signal
+
+def save_plot(sender,app_data,user_data):
+    plot_type, plot_tag, y_axis, colormap_int = user_data
+    tags = dpg.get_item_children(y_axis)[1]
+    labels = [dpg.get_item_label(tag) for tag in tags]
+    colors = (dpg.get_colormap_color(colormap_int,i) for i in range(len(tags)))
+    signals = []
+    title = dpg.get_item_label(plot_tag)
+    axis = [dpg.get_item_label(child) for child in dpg.get_item_children(plot_tag)]
+    for tag in tags:
+        x,y = dpg.get_value(tag)[:2]
+        signals.append({'X':x,'Y':y})
+
+    info = signals,labels,colors,title,axis
+    #signals, labels, colors, title, axis = info
+    ft.export_plot(info,plot_type)
 
 def Volt2dB2(sender,app_data,user_data):
     type = app_data
@@ -3965,7 +4004,7 @@ def DefaultFeatures(sender, app_data, user_data):
     
     tab_label = f"{tab_tag}_df_{func}"
     if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
-        dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar")
+        dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar",reorderable=True)
 
     if dpg.does_item_exist(tab_label):
         dpg.delete_item(tab_label, children_only=True)
@@ -4166,7 +4205,7 @@ def CustomFeatures(sender,app_data,user_data):
         tags = getActiveSeries(signal_tags)
         tab_label = f"{tab_tag}_{func}"
         if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
-            dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar")
+            dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar",reorderable=True)
 
         if dpg.does_item_exist(tab_label):
             dpg.delete_item(tab_label, children_only=True)
@@ -4407,7 +4446,7 @@ def circadian_rhythm(sender, app_data, user_data):
     window_id = extract_window_id(tab_tag)
 
     if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
-        dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar")
+        dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar",reorderable=True)
 
     if dpg.does_item_exist(tab_label):
         dpg.delete_item(tab_label,children_only=True)
@@ -4417,18 +4456,20 @@ def circadian_rhythm(sender, app_data, user_data):
     tags = getActiveSeries(signal_tags)
 
     days = {}
-    mean, dates = [], []
+    mean, dates, circadian_tags = [], [], []
     complete = True
     #preparing streams
     for tag in tags:
-        signal = getSignalbyIdx(window_id,tab_tag,tag)
+        # signal = getSignalbyIdx(window_id,tab_tag,tag)
+        old_x,old_y = dpg.get_value(tag)[:2]
+        label = dpg.get_item_label(tag)
         stim_info = DH.info_electrodes(getDatabyTag(tag))['Sense_frequency']
-        dates.append(signal['Date'][:10])
-        side = extract_side_from_series_tag(tag)
-        side = side[0].upper() + side[1:] #First letter in upper case
+        dates.append(label[-10:])
+        # side = extract_side_from_series_tag(tag)
+        # side = side[0].upper() + side[1:] #First letter in upper case
         
-        # old_x, old_y = dpg.get_value(tag)[:2]
-        old_x, old_y = signal[side]['X'], signal[side]['Y']
+        # # old_x, old_y = dpg.get_value(tag)[:2]
+        # old_x, old_y = signal[side]['X'], signal[side]['Y']
         x = sorted(old_x)
 
         if x[0] != old_x[0]:
@@ -4469,18 +4510,19 @@ def circadian_rhythm(sender, app_data, user_data):
             x = list(np.arange(x[0]-(diff*600),x[0],600)) + x
         if x[-1]<last:
             complete = False
-            diff = int((last - x[-1])//600)+1
+            diff = int((last - x[-1])//600)
             nan_array = [np.nan]*diff
             y = y + nan_array
             x = x + list(np.arange(x[-1],last,600))
 
-        x=x[:145]
-        y=y[:145]
+        x=x[:144]
+        y=y[:144]
 
         days[tag] = [x,y,stim_info]
         
         mean.append(y)
 
+    # breakpoint()
     std = np.nanstd(mean,axis=0)
     mean = np.nanmean(mean,axis=0)
     minus = mean - std
@@ -4521,6 +4563,7 @@ def circadian_rhythm(sender, app_data, user_data):
             
             for tag, val in days.items():
                 label = dpg.get_item_label(tag)
+                circadian_tags.append(f"{tag}_{tab_label}")
                 dpg.add_line_series(val[0],val[1],label=label,parent=y_axis, tag = f"{tag}_{tab_label}",skip_nan=False)
 
                 new_x = [datetime.fromtimestamp(xx) for xx in val[0]]
@@ -4555,7 +4598,7 @@ def circadian_rhythm(sender, app_data, user_data):
             with dpg.group():
                 for side in ['Left', 'Right']:
                     dpg.add_checkbox(label=side, default_value=True, callback=toggle)
-            dpg.add_checkbox(label='Hide Days', tag = f"{tab_label}_hide", callback=hide,parent = f"{tab_label}_vbuttons", user_data=(tags,checkboxes))
+            dpg.add_checkbox(label='Hide Days', tag = f"{tab_label}_hide", callback=hide,parent = f"{tab_label}_vbuttons", user_data=(circadian_tags,checkboxes))
 
 def stimulation_timeline(sender,app_data,user_data):
     tab_tag, signal_tags, data = user_data
@@ -4563,7 +4606,7 @@ def stimulation_timeline(sender,app_data,user_data):
     window_id = extract_window_id(tab_tag)
 
     if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
-        dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar")
+        dpg.add_tab_bar(parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar",reorderable=True)
 
     if dpg.does_item_exist(tab_label):
         dpg.delete_item(tab_label)
@@ -4771,7 +4814,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
         create_table(f"{tab_label}_header",f"{tab_label}_table", mean_info, trial_label='New Mean')
 
     if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
-        dpg.add_tab_bar(parent=tab_tag, tag = f"{tab_tag}_features_bar")
+        dpg.add_tab_bar(parent=tab_tag, tag = f"{tab_tag}_features_bar",reorderable=True)
 
     if dpg.does_item_exist(tab_label):
         dpg.delete_item(tab_label,children_only=True)
@@ -5027,6 +5070,7 @@ def window_menu(window_id):
 def show_event_summary(mode,tab_tag,plot_tag,files=None):
     window_id = extract_window_id(tab_tag)
     wt = extract_type_window(window_id)
+    
 
     if wt == 'Individual':
         Data = getDatabyTag(tab_tag)
@@ -5048,17 +5092,19 @@ def show_event_summary(mode,tab_tag,plot_tag,files=None):
 
     event_summary = {name: {} for name in names}
     for event in temp:
+        eventname = getUpdatedEventName(event['EventName'])
     # if utl.parse_datetime(previous_session).date()>utl.parse_datetime(event['DateTime']).date(): continue
-        if event['DateTime'] in event_summary[event['EventName']].keys():
-            event_summary[event['EventName']][event['DateTime']] = event_summary[event['EventName']][event['DateTime']] +1
+        if event['DateTime'] in event_summary[eventname].keys():
+            event_summary[eventname][event['DateTime']] = event_summary[eventname][event['DateTime']] +1
         else:
-            event_summary[event['EventName']][event['DateTime']] = 1
+            event_summary[eventname][event['DateTime']] = 1
 
     def toggle_plot(sender,app_data,user_data):
         if app_data == user_data: return
         if app_data=='Days':
             values=[len(event_summary[key]) for key in event_summary.keys()]       # numerical values
             labels=list(event_summary.keys())
+            labels = [getUpdatedEventName(l) for l in labels]
             title = 'Event Count'
             dpg.bind_colormap(f"{tab_tag}_pie_plot", 0)
         else:
@@ -5073,6 +5119,7 @@ def show_event_summary(mode,tab_tag,plot_tag,files=None):
             sorted_items = sorted(new.items()) 
             labels, values = zip(*sorted_items)
             labels = list(labels)
+            labels = [getUpdatedEventName(l) for l in labels]
             values = list(values)
 
             title = 'Event Circadian Rhythm'
@@ -5098,10 +5145,7 @@ def show_event_summary(mode,tab_tag,plot_tag,files=None):
             x_axis = dpg.add_plot_axis(dpg.mvXAxis,scale=dpg.mvPlotScale_Time,label='Days',tag=f"{tab_tag}_xaxis")
             y_axis = dpg.add_plot_axis(dpg.mvYAxis,label='Number of Events',tag = f"{tab_tag}_yaxis")
             for name, events in event_summary.items():
-                if name in all_event_names.keys():
-                    name = all_event_names[name]
-                else:
-                    all_event_names[name] = name
+                name = getUpdatedEventName(name)
                 # x = [utl.extract_time_from_datetime_string(key) for key in events.keys()]
                 x = [(utl.parse_datetime(key)+daylight_savings).timestamp() for key in events.keys()]
                 y = [events[key] for key in events.keys()]
@@ -5114,12 +5158,13 @@ def show_event_summary(mode,tab_tag,plot_tag,files=None):
                 dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis,no_gridlines=True,no_tick_labels=True,no_tick_marks=True)
                 y_axis = dpg.add_plot_axis(dpg.mvYAxis,no_gridlines=True,no_tick_labels=True,no_tick_marks=True)
+                labels = [getUpdatedEventName(e) for e in list(event_summary.keys())]
                 dpg.add_pie_series(
                     x=0.0,
                     y=0.0,  # (x, y) center coordinates
                     radius=1.0,         # relative radius of the pie
                     values=[len(event_summary[key]) for key in event_summary.keys()],       # numerical values
-                    labels=list(event_summary.keys()),       # corresponding labels
+                    labels=labels,       # corresponding labels
                     normalize=True,      # ensures the values sum to 1
                     parent=y_axis,
                     label='Events',
@@ -5168,7 +5213,8 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
                 for side in ['Left', 'Right']:
                     sign = signal[side]
-                    label = f"day {date.day:02d}/{date.month:02d}/{date.year} | {date.minute} | {side} | {signal['EventName']}"
+                    name = getUpdatedEventName(signal['EventName'])
+                    label = f"day {date.day:02d}/{date.month:02d}/{date.year} | {date.minute} | {side} | {name}"
                     x = sign['X']
                     y = sign['Y']
                     
@@ -5203,9 +5249,9 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                         dpg.add_collapsing_header(label = f'All Mean Power - {side}', tag =f"{tab_label}_{side}_all_mean", parent = f"{tab_label}_grouped")
                         tables.append(f"{tab_label}_{side}_all_mean_table")
 
-                    if not dpg.does_item_exist(f"{tab_label}_{side}_{signal['EventName']}"):
-                        dpg.add_collapsing_header(label = f"All {signal['EventName']}s - {side}", tag =f"{tab_label}_{side}_{signal['EventName']}", parent = f"{tab_label}_grouped")
-                        tables.append(f"{tab_label}_{side}_{signal['EventName']}_table")
+                    if not dpg.does_item_exist(f"{tab_label}_{side}_{name}"):
+                        dpg.add_collapsing_header(label = f"All {name}s - {side}", tag =f"{tab_label}_{side}_{name}", parent = f"{tab_label}_grouped")
+                        tables.append(f"{tab_label}_{side}_{name}_table")
 
                     if not dpg.does_item_exist(f"{tab_label}_individuals"):
                         dpg.add_tree_node(tag=f"{tab_label}_individuals",
@@ -5230,7 +5276,7 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                         create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table", info, trial_label=band[0])
 
                     create_table(f"{tab_label}_{side}_all_mean",f"{tab_label}_{side}_all_mean_table", all_mean, trial_label=header)
-                    create_table(f"{tab_label}_{side}_{signal['EventName']}",f"{tab_label}_{side}_{signal['EventName']}_table", all_mean, trial_label=header)
+                    create_table(f"{tab_label}_{side}_{name}",f"{tab_label}_{side}_{name}_table", all_mean, trial_label=header)
 
                     tables.append(f"{tab_label}_{series_label}_table")
 
@@ -5264,7 +5310,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     evt = DH.getEventSummary(data)
     events = DH.getSignals(data,'Events')
     ocd_events = np.unique([event['EventName'] for event in events])
-    ocd_events = ocd_events.tolist()
+    ocd_events = [getUpdatedEventName(o) for o in ocd_events.tolist()]
     # bands = DH.getTimelineBand(data)
 
     if 'Eventos' in evt.keys():
@@ -5291,19 +5337,13 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         ri = change_text_color(-3)
         dpg.bind_item_theme(right, ri)
 
-
     initial, _ = DH.getEventsElectrodes(data)
     
     if not isinstance(initial, str): 
-        for ch in initial:
-            if ch in electrodes_names.keys():
-                ch = electrodes_names[ch]
-            else:
-                electrodes_names[ch] = ch
-        dpg.add_text(f"Electrodes | Left: {electrodes_names[initial[0]]} | Right: {electrodes_names[initial[1]]}", parent=tab_tag)
+        e1,e2 = getUpdatedElectrodeName(initial[0]), getUpdatedElectrodeName(initial[1])
+        dpg.add_text(f"Electrodes | Left: {e1} | Right: {e2}", parent=tab_tag)
     else: 
-        electrodes_names[initial] = initial
-        dpg.add_text(f'{electrodes_names[initial]}', parent=tab_tag)
+        dpg.add_text(f'{getUpdatedElectrodeName(initial)}', parent=tab_tag)
 
     with dpg.group(label = f"{tab_tag}_group" , parent=tab_tag, horizontal=True):
         
@@ -5412,7 +5452,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             x_event = utl.convert_to_timestamp(event['DateInitial'])
             if event['DateInitial'][:10] < signals[0][side]['X'][0][:10]:
                 continue
-            label = event['EventName']
+            label = getUpdatedEventName(event['EventName'])
             color = list(ocd_events).index(label)
             e = dpg.add_inf_line_series(x=[x_event], parent = y_left)
             theme = change_inf_line_color(color)
@@ -6133,7 +6173,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         for side in ['Left', 'Right']:
                             
                             sign = signal[side]
-                            label = f"day {date.month:02d}/{date.day:02d} | {date.minute:02d} | {side} | {signal['EventName']}"
+                            label = f"day {date.month:02d}/{date.day:02d} | {date.minute:02d} | {side} | {name}"
                             x = sign['X']
                             y = sign['Y']
                             
@@ -6161,9 +6201,9 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                                 dpg.add_collapsing_header(label = f'All Mean Power - {side}', tag =f"{tab_label}_{side}_all_mean", parent = f"{tab_label}_grouped")
                                 tables.append(f"{tab_label}_{side}_all_mean_table")
 
-                            if not dpg.does_item_exist(f"{tab_label}_{side}_{signal['EventName']}"):
-                                dpg.add_collapsing_header(label = f"All {signal['EventName']}s - {side}", tag =f"{tab_label}_{side}_{signal['EventName']}", parent = f"{tab_label}_grouped")
-                                tables.append(f"{tab_label}_{side}_{signal['EventName']}_table")
+                            if not dpg.does_item_exist(f"{tab_label}_{side}_{name}"):
+                                dpg.add_collapsing_header(label = f"All {name}s - {side}", tag =f"{tab_label}_{side}_{name}", parent = f"{tab_label}_grouped")
+                                tables.append(f"{tab_label}_{side}_{name}_table")
 
                             if not dpg.does_item_exist(f"{tab_label}_individuals"):
                                 dpg.add_tree_node(tag=f"{tab_label}_individuals",
@@ -6189,7 +6229,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                                 create_table(f"{tab_label}_{series_label}",f"{tab_label}_{series_label}_table", info, trial_label=band[0])
 
                             create_table(f"{tab_label}_{side}_all_mean",f"{tab_label}_{side}_all_mean_table", all_mean, trial_label=header)
-                            create_table(f"{tab_label}_{side}_{signal['EventName']}",f"{tab_label}_{side}_{signal['EventName']}_table", all_mean, trial_label=header)
+                            create_table(f"{tab_label}_{side}_{name}",f"{tab_label}_{side}_{name}_table", all_mean, trial_label=header)
 
                             tables.append(f"{tab_label}_{series_label}_table")
        
@@ -6592,7 +6632,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
 
         events = DH.getSignals(file['Data'],'Events')       
         for edx, event in enumerate(events):
-            ocd_events.append(event['EventName'])
+            ocd_events.append(getUpdatedEventName(event['EventName']))
 
     days = []
     
@@ -6732,7 +6772,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         if event['DateInitial'][:10]<rdate[:10]:
                             print(event['DateInitial'])
                             continue
-                        label = event['EventName']
+                        label = getUpdatedEventName(event['EventName'])
                         e_tag = f"{tab_tag}_{edx}_{idx}"
                         try:
                             color = list(ocd_events).index(label)

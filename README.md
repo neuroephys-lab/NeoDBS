@@ -1,5 +1,15 @@
 # NeoDBS
 
+## 19.11.2025
+
+Start function to apply export_plot from features
+
+### Debugs:
+- Change show mean power to simple index and axis legend on the side (its not possible to rotate ticks)
+- Finish updating electrode and group/events names
+- Others
+- Close on handle submit
+
 ## 17.11.2025
 
 ### New functionalities:
