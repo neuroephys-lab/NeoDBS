@@ -3,6 +3,7 @@ import sys
 import importlib
 import os
 import re
+import json
 
 def is_package_installed(package_name):
     try:
@@ -70,9 +71,19 @@ colors = [
         (34, 139, 34, 255), #forest green
     ]
 #-----------------------------------------UTILS----------------------------------------
+# def save_init():
+#     dpg.save_init_file("previous.ini")
 
-def print_me(sender, app_data):
-    print(f"Menu item {sender} clicked!")
+def save_init():
+    # open_windows = []
+    # for w in dpg.get_windows():
+    #     if dpg.is_item_shown(w):
+    #         open_windows.append(w)
+
+    # with open("session.json", "w") as f:
+    #     json.dump(open_windows, f)
+
+    dpg.save_init_file("previous.ini")
 
 def add_band(sender, app_data, user_data):
     tab_tag = user_data
@@ -159,6 +170,69 @@ def save_band_powers_to_txt(sender, app_data, user_data):
                 f.write(",".join(row) + "\n")
             f.write("\n")  # space between channels
     print(f"Saved file: {filename}")
+
+def save_plot(sender,app_data,user_data):
+    plot_type, plot_tag, y_axis, colormap_int = user_data
+    tags = dpg.get_item_children(y_axis)[1]
+    labels = [dpg.get_item_label(tag) for tag in tags]
+    colors = (dpg.get_colormap_color(colormap_int,i) for i in range(len(tags)))
+    signals = []
+    title = dpg.get_item_label(plot_tag)
+    axis = [dpg.get_item_label(child) for child in dpg.get_item_children(plot_tag)]
+    for tag in tags:
+        x,y = dpg.get_value(tag)[:2]
+        signals.append({'X':x,'Y':y})
+
+    info = signals,labels,colors,title,axis
+    #signals, labels, colors, title, axis = info
+    ft.export_plot(info,plot_type)
+
+def save_signals(sender,app_data,user_data):
+    '''
+    parent, plot, plot_type = user_data
+    '''
+    
+    def get_limits(children):
+        xx = [dpg.get_value(tag)[0] for tag in children]
+        lengths = [len(x) for x in xx]
+        maxX = xx[lengths.index(max(lengths))] #get the longest array
+        
+        mini = np.abs(np.array(maxX) - limits[0]).argmin()  # closest index 
+        maxi = np.abs(np.array(maxX) - limits[1]).argmin()
+        return mini,maxi,maxX
+    
+    parent, plot, plot_type = user_data
+    file_name = dpg.get_item_label(plot)
+    children = dpg.get_item_children(parent)[1]
+    limits = dpg.get_axis_limits(dpg.get_item_children(plot)[1][0])
+    match plot_type:
+        case '2D':
+            #only save signals shown in plot
+            children = [c for c in children if dpg.get_item_configuration(c)['show'] == True]
+            labels = [dpg.get_item_label(tag) for tag in children]
+            signals = [dpg.get_value(tag)[1] for tag in children]
+            
+            mini,maxi,maxX = get_limits(children)
+            info = {'X': maxX[mini:maxi]}
+            more = {labels[i]: signals[i][mini:maxi] for i in range(len(signals))}
+            info = info | more
+
+        case 'Stimulation':
+            x,stim = dpg.get_value(children[0])[:2]
+            mini,maxi,_=get_limits(children)
+            x,stim = x[mini:maxi],stim[mini:maxi]
+            new_x,new_s = [],[]
+            for i in range(1,len(x)):
+                if i==len(x): continue
+                if stim[i-1] ==stim[i]:continue
+                new_x.append(str(datetime.fromtimestamp(x[i-1])))
+                new_s.append(stim[i-1])
+            new_x.append(str(datetime.fromtimestamp(x[-1])))
+            new_s.append(stim[-1])
+            info = {'X':new_x,'Stimulation (mA)': new_s}
+            
+
+    ft.export_signals(info,file_name)
 
 #--- Add common buttons
 def add_filters_buttons(tab_tag,signal_tags):
@@ -461,6 +535,7 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag):
                             toggleType(signal_tags, parent=f"{tab_tag}_buttons_side", user_data=(day, window_id, tab_tag))
 
             # with dpg.child_window(tag=f"{tab_tag}_buttons_events"): pass
+            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(f"y_axis_{tab_tag}",f"plot_{tab_tag}",'2D'))
         
         segment_signal(tab_tag, signal_tags)
 
@@ -518,6 +593,7 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None):
         dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(f"y_axis_{tab_tag}", tab_tag, signal_tags, tables),parent=f"{tab_tag}_buttons",default_value=False)
           
         dpg.add_separator()
+        dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(f"y_axis_{tab_tag}",f"plot_{tab_tag}",'2D'))
         if extract_mode(tab_tag) == 'Events': 
             dpg.add_button(label='Recalculate Mean Metrics', callback=recalculateMeanMetrics, user_data=tab_tag, parent=f"{tab_tag}_buttons")
             with dpg.group(horizontal=True):
@@ -945,9 +1021,10 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
     deviation_type = 'Standard Deviation'
 
     all_info={}
+    plot_tag = f"{tab_label}_plot"
     with dpg.group(horizontal=True, parent = tab_label,tag=f"{tab_label}_plot_group"):
-        with dpg.plot(label=f"Spectral Analysis - {func}", height=400, width=600, tag = f"{tab_label}_plot"):
-            dpg.bind_colormap(f"{tab_label}_plot", 0)
+        with dpg.plot(label=f"Spectral Analysis - {func}", height=400, width=600, tag = plot_tag):
+            dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label=f"LFP Power ({units})", tag= f"{tab_label}_y_axis")
@@ -1431,6 +1508,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             if len(days)>1:
                 dpg.add_button(label='Show Mean Power Across Time',width=-1,callback=show_power_over_time,user_data=all_info)
             dpg.add_button(label = 'Save Plot Figure',callback = save_plot,user_data = '2D')
+            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(y_axis,plot_tag,'2D'))
     time.sleep(0.2)
     dpg.set_axis_limits_auto(x_axis)
     dpg.set_axis_limits_auto(y_axis)
@@ -1759,10 +1837,10 @@ def plot_coherence(parameter_values, tab_label):
     # with dpg.group(parent=f"{tab_label}_plot_group", tag = f"{tab_label}_plot_group_text"):
     dpg.add_text(f"Signal 1: {signal1['Label']}", parent=f"{tab_label}_plot_group_text")
     dpg.add_text(f"Signal 2: {signal2['Label']}",parent=f"{tab_label}_plot_group_text")
-
+    plot_tag = f"{tab_label}_plot"
     if clean:
-        with dpg.plot(label = 'Coherence', width=-1, height=400, tag=f"{tab_label}_plot", parent=f"{tab_label}_plot_group_text"):
-            dpg.bind_colormap(f"{tab_label}_plot", 0)
+        with dpg.plot(label = 'Coherence', width=-1, height=400, tag=plot_tag, parent=f"{tab_label}_plot_group_text"):
+            dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Coherence", tag= f"{tab_label}_y_axis")
@@ -1779,7 +1857,7 @@ def plot_coherence(parameter_values, tab_label):
         info = extract_timeline_features(p,coh, coherence=True)
         create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
 
-
+    dpg.add_button(label='Export Signals',width=-1,callback=save_signals,parent=tab_label,user_data=(y_axis,plot_tag,'2D'))
     time.sleep(0.2)
     dpg.set_axis_limits_auto(f"{tab_label}_y_axis")
 
@@ -1896,11 +1974,12 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
             dpg.set_item_user_data(f"{tab_label}_coh_spec", user_data=(signal1,signal2, tapers, freq, mask))
 
     def plot(signal1,signal2,freq,coh,imcoh,label):
+        plot_tag = f"{tab_label}_plot"
         with dpg.group(parent=tab_label, tag=f"{tab_label}_plot_group"):
             dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
             dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
-            with dpg.plot(label = 'Multitaper Coherence', width=-1, height=400, tag=f"{tab_label}_plot"):
-                dpg.bind_colormap(f"{tab_label}_plot", 0)
+            with dpg.plot(label = 'Multitaper Coherence', width=-1, height=400, tag=plot_tag):
+                dpg.bind_colormap(plot_tag, 0)
                 dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
                 y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Coherence", tag= f"{tab_label}_y_axis")
@@ -1917,6 +1996,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
                     info = extract_timeline_features(p,coh, coherence=True)
                     create_table(tab_label,f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
 
+        dpg.add_button(label='Export Signals',width=-1,callback=save_signals,parent=tab_label,user_data=(y_axis,plot_tag,'2D'))
         time.sleep(0.2)
         dpg.set_axis_limits_auto(y_axis)
 
@@ -2148,6 +2228,8 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                 dpg.add_collapsing_header(tag = f"{tab_label}_header", parent=tab_label, label='Features')
 
             create_table(f"{tab_label}_header",f"{tab_label}_table",info,f"{b} | {label}")
+        
+        dpg.add_button(label='Export Signals',width=-1,callback=save_signals,parent=tab_label,user_data=(cross_y,f"{tab_label}_cc",'2D'))
 
     if not dpg.does_item_exist(f"{tab_label}_band"): 
         dpg.add_checkbox(label='Band Cross-Correlation', parent=tab_label, tag = f"{tab_label}_band", callback=plot)
@@ -2879,7 +2961,8 @@ def plot_pac(tags,tab_tag,parameter_values,mode=None):
             dpg.add_text(f"Phase Signal: {dpg.get_value(f'{tab_label}_s1')} | Phase Band: {parameter_values['b1']}")
             dpg.add_text(f"Amplitude Signal: {dpg.get_value(f'{tab_label}_s2')} | Phase Band: {parameter_values['b2']}")
             dpg.add_text('Modulation Index (MI): 0 = NO coupling | 1 = STRONG coupling ')
-            with dpg.plot(label=f"Phase-Amplitude Coupling - MI: {mi}", height=300, width=-1,tag=f"{tab_label}_plot"):
+            plot_tag = f"{tab_label}_plot"
+            with dpg.plot(label=f"Phase-Amplitude Coupling - MI: {mi}", height=300, width=-1,tag=plot_tag):
                 dpg.add_plot_legend()
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Phase (rad)")
                 y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Amplitude (microV)")
@@ -2888,7 +2971,7 @@ def plot_pac(tags,tab_tag,parameter_values,mode=None):
                 # for p,a in zip(phase,amp):
                 #     dpg.add_bar_series([p], [a], parent=y_axis)
                 dpg.add_bar_series(phase,amp,parent=y_axis)
-                # dpg.bind_colormap(f"{tab_label}_plot", dpg.mvPlotColormap_Jet)
+                # dpg.bind_colormap(plot_tag, dpg.mvPlotColormap_Jet)
 
         peak_a = max(amp)
         peak_p = phase[amp.index(peak_a)]
@@ -3630,22 +3713,6 @@ def extract_artifact_type(s: str):
     return None  # fallback for unexpected format
 
 #--- Process with signal
-
-def save_plot(sender,app_data,user_data):
-    plot_type, plot_tag, y_axis, colormap_int = user_data
-    tags = dpg.get_item_children(y_axis)[1]
-    labels = [dpg.get_item_label(tag) for tag in tags]
-    colors = (dpg.get_colormap_color(colormap_int,i) for i in range(len(tags)))
-    signals = []
-    title = dpg.get_item_label(plot_tag)
-    axis = [dpg.get_item_label(child) for child in dpg.get_item_children(plot_tag)]
-    for tag in tags:
-        x,y = dpg.get_value(tag)[:2]
-        signals.append({'X':x,'Y':y})
-
-    info = signals,labels,colors,title,axis
-    #signals, labels, colors, title, axis = info
-    ft.export_plot(info,plot_type)
 
 def Volt2dB2(sender,app_data,user_data):
     type = app_data
@@ -4555,8 +4622,9 @@ def circadian_rhythm(sender, app_data, user_data):
         dpg.configure_item(f"{tab_label}_std",y1=new_minus,y2=new_plus)
 
     with dpg.group(parent=tab_label, horizontal=True, tag=f"{tab_label}_CR"):
-        with dpg.plot(label = "Circadian Rhythm", tag = f'{tab_label}_plot', width=800): 
-            dpg.bind_colormap(f"{tab_label}_plot", 0)
+        plot_tag = f"{tab_label}_plot"
+        with dpg.plot(label = "Circadian Rhythm", tag = plot_tag, width=800): 
+            dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time", scale = dpg.mvPlotScale_Time) #tag=f"{tab_label}_x_axis"
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µVp)", tag= f"{tab_label}_y_axis")
@@ -4599,6 +4667,7 @@ def circadian_rhythm(sender, app_data, user_data):
                 for side in ['Left', 'Right']:
                     dpg.add_checkbox(label=side, default_value=True, callback=toggle)
             dpg.add_checkbox(label='Hide Days', tag = f"{tab_label}_hide", callback=hide,parent = f"{tab_label}_vbuttons", user_data=(circadian_tags,checkboxes))
+            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,parent=tab_label,user_data=(y_axis,plot_tag,'2D'))
 
 def stimulation_timeline(sender,app_data,user_data):
     tab_tag, signal_tags, data = user_data
@@ -4643,8 +4712,9 @@ def stimulation_timeline(sender,app_data,user_data):
 
 
     with dpg.group(parent=tab_label, horizontal=True):
-        with dpg.plot(label = "Stimulation", tag = f'{tab_label}_plot', width=500, height=400): 
-            dpg.bind_colormap(f"{tab_label}_plot", 0)
+        plot_tag = f"{tab_label}_plot"
+        with dpg.plot(label = "Stimulation", tag = plot_tag, width=500, height=400): 
+            dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time", scale = dpg.mvPlotScale_Time) #tag=f"{tab_label}_x_axis"
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Stimulation Amplitude (mA)", tag= f"{tab_label}_y_axis")
@@ -4659,6 +4729,7 @@ def stimulation_timeline(sender,app_data,user_data):
                 for info in stimulation['Info']:
                     dpg.add_text(info)
                     dpg.add_separator()
+        dpg.add_button(label='Export Signals',width=-1,callback=save_signals,parent=tab_label,user_data=(y_axis,plot_tag,'Stimulation'))
 
 def AnalyzeTimelineEvents(sender,app_data,user_data):
     tab_tag, events_tags, signal_tags = user_data
@@ -7266,9 +7337,12 @@ def create_individual_window():
 #---------------------------------------MAIN WINDOW---------------------------------------
 
 dpg.create_context()
+
+
 dpg.create_viewport(title="NeoDBS", width=500, height=500)
 dpg.set_viewport_large_icon('NeoDBS.ico')
 dpg.set_viewport_small_icon('NeoDBS.ico')
+# dpg.configure_app(init_file="previous.ini")
 dpg.setup_dearpygui()
 
 with dpg.texture_registry(show=False):
@@ -7291,17 +7365,19 @@ def load_main_ui():
 
     # Main window
     with dpg.window(label="NeoDBS", width=1000, height=600, tag="Main"):
+        dpg.set_exit_callback(save_init)
         with dpg.menu_bar():
             with dpg.menu(label="Themes"):
                 dpg.add_menu_item(label="Classic", callback=switch_theme, user_data=default_classic_theme)
                 dpg.add_menu_item(label="Light", callback=switch_theme, user_data=light_theme)
                 dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
-            with dpg.menu(label="Settings"):
+            with dpg.menu(label="Edit"):
                 dpg.add_menu_item(label="Change electrodes' names", callback=change_electrodes_names)
                 dpg.add_menu_item(label='Change Event/Group Name',callback = change_event_name)
-                # dpg.add_menu_item(label="Save All Plots")
-                # dpg.add_menu_item(label="Save All Tables")
-                # dpg.add_menu_item(label="Save Workspace")
+            with dpg.menu(label="Save"):
+                dpg.add_menu_item(label="Save All Plots")
+                dpg.add_menu_item(label="Save All Tables")
+                dpg.add_menu_item(label="Save Workspace")
 
         with dpg.group(horizontal=True, pos=[250, 250]):
             dpg.add_button(label="Individual/Recording Analysis", callback=create_individual_window)
@@ -7318,6 +7394,76 @@ dpg.set_frame_callback(120, load_main_ui)
 
 dpg.start_dearpygui()
 dpg.destroy_context()
+
+'''
+# Tentativa
+dpg.create_context()
+
+# 1. Build all windows FIRST
+with dpg.texture_registry(show=False):
+    width, height, channels, data = dpg.load_image("NeoDBS.png")
+    dpg.add_static_texture(width, height, data, tag="logo_tex")
+
+with dpg.window(label="", tag="Logo", no_title_bar=True, no_resize=True, no_close=True,
+                no_collapse=True, no_move=True, width=width, height=height):
+    dpg.add_image("logo_tex", width=width, height=height)
+
+
+def load_previous():
+    print('Loading')
+    dpg.load_init_file("previous.ini")
+    # dpg.configure_app(init_file="previous.ini", load_init_file=True)
+
+def load_main_ui():
+    dpg.delete_item("Logo")
+
+    light_theme = themes.create_theme_imgui_light()
+    dark_theme = themes.create_theme_imgui_dark()
+    default_classic_theme = dpg.add_theme()  # DPG default
+
+    # Main window
+    with dpg.window(label="NeoDBS", width=1000, height=600, tag="Main"):
+        dpg.set_exit_callback(save_init)
+        with dpg.menu_bar():
+            with dpg.menu(label="Themes"):
+                dpg.add_menu_item(label="Classic", callback=switch_theme, user_data=default_classic_theme)
+                dpg.add_menu_item(label="Light", callback=switch_theme, user_data=light_theme)
+                dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
+            with dpg.menu(label="Settings"):
+                dpg.add_menu_item(label='Load Previous Session',callback=load_previous)
+                dpg.add_menu_item(label="Change electrodes' names", callback=change_electrodes_names)
+                dpg.add_menu_item(label='Change Event/Group Name',callback = change_event_name)
+                # dpg.add_menu_item(label="Save All Plots")
+                # dpg.add_menu_item(label="Save All Tables")
+                # dpg.add_menu_item(label="Save Workspace")
+
+        with dpg.group(horizontal=True, pos=[250, 250]):
+            dpg.add_button(label="Individual/Recording Analysis", callback=create_individual_window)
+            dpg.add_spacer(indent=2)
+            dpg.add_button(label="Combined/Event Analysis", callback=create_multiple_window)
+
+    dpg.set_primary_window("Main", True)
+
+load_main_ui()
+
+
+# 2. Load layout AFTER windows exist, BEFORE setup_dearpygui
+dpg.configure_app(init_file="previous.ini")
+
+
+# 3. Now create viewport and start gui
+dpg.create_viewport(title="NeoDBS", width=500, height=500)
+dpg.set_viewport_width(1000)
+dpg.set_viewport_height(600)
+dpg.set_viewport_large_icon('NeoDBS.ico')
+dpg.set_viewport_small_icon('NeoDBS.ico')
+
+dpg.setup_dearpygui()
+dpg.show_viewport()
+
+dpg.start_dearpygui()
+dpg.destroy_context()'''
+
 
 '''light_theme = themes.create_theme_imgui_light()
 dark_theme = themes.create_theme_imgui_dark()

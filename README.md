@@ -1,5 +1,13 @@
 # NeoDBS
 
+## 21.11.2025
+
+### New functionalities:
+- Save signals and buttons
+    - 2D
+    - Stimulation
+- Save workspace (in construction --> cannot be without json)
+
 ## 19.11.2025
 
 Start function to apply export_plot from features
