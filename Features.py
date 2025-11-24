@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 #from spectrum import pyule
 
@@ -311,22 +313,32 @@ def export_plot_old(info, plot_type):
     plt.savefig('Example.png', bbox_inches='tight', dpi=300)
     plt.show()
 
-import matplotlib.pyplot as plt
-import numpy as np
+def export_plot(info, plot_type, show=True):
 
-def export_plot(info, plot_type, show=False):
-    signals, labels, colors, title, axis = info
+    signals, labels, colors, title, axis, limits  = info
+
+    ys = [signal['Y'] for signal in signals if 'Y' in signal.keys()]
+    miny = min(np.min(y) for y in ys)
+    maxy = max(np.max(y) for y in ys)
 
     if plot_type == '2D':
         fig, ax = plt.subplots()
         ax.set_title(title)
         ax.set_xlabel(axis[0])
         ax.set_ylabel(axis[1])
+        ax.set_xlim(*limits[0])
+        ax.set_ylim(*limits[1])
 
         for i, signal in enumerate(signals):
             label = labels[i]
-            x, y = signal['X'], signal['Y']
-            ax.plot(x, y, label=label, color=colors[i])
+            if 'Y1' in signal.keys():
+                x, y1,y2 = signal['X'], signal['Y1'], signal['Y2']
+                ax.fill_between(x,y1,y2,label=label,color=colors[i][:3],alpha=colors[i][-1])
+            elif len(list(signal.keys()))==1: #infinte lines
+                ax.vlines(signal['X'],miny,maxy,label=label,color=colors[i])
+            else:
+                x, y = signal['X'], signal['Y']
+                ax.plot(x, y, label=label, color=colors[i])
 
         ax.legend()
         fig.tight_layout()
@@ -352,10 +364,11 @@ def export_plot(info, plot_type, show=False):
             ax.set_title(labels[i])
         axs[-1].set_xlabel(axis[0])
 
-    fig.savefig('Example.png', bbox_inches='tight', dpi=300)
+    fig.savefig(f'{title}.png', bbox_inches='tight', dpi=300)
 
-    if show:
-        plt.show()
+    # Because of matplotlib.use("Agg") theres no GUI for matplotlib and plot cannot be shown with plt
+    # if show:
+    #     plt.show()
 
     plt.close(fig)
 

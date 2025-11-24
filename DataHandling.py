@@ -680,7 +680,6 @@ def getEventLog(dictionary):
     data = dictionary['Events']['LfpFrequencySnapshotEvents']
     return [event for event in data if 'LfpFrequencySnapshotEvents' not in event.keys()]
     
-
 def getModeSignals(dictionary, mode):
     previous_session = utl.parse_datetime(getLastSessionDate(dictionary))
     match mode:
