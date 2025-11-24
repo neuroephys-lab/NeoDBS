@@ -171,7 +171,7 @@ def save_band_powers_to_txt(sender, app_data, user_data):
             f.write("\n")  # space between channels
     print(f"Saved file: {filename}")
 
-def save_plot(sender,app_data,user_data):
+def save_plot1(sender,app_data,user_data):
     plot_type, plot_tag, y_axis, colormap_int = user_data
     tags = dpg.get_item_children(y_axis)[1]
     labels = [dpg.get_item_label(tag) for tag in tags]
@@ -184,6 +184,39 @@ def save_plot(sender,app_data,user_data):
         signals.append({'X':x,'Y':y})
 
     info = signals,labels,colors,title,axis
+    #signals, labels, colors, title, axis = info
+    ft.export_plot(info,plot_type)
+
+def save_plot(sender,app_data,user_data):
+    plot_type, plot_tag, y_axis, colormap_int = user_data
+    tags = dpg.get_item_children(y_axis)[1]
+    line_type = [dpg.get_item_info(tag)['type'] for tag in tags]
+    colors = [dpg.get_colormap_color(colormap_int,i) for i in range(len(tags))]
+    tags = [tag for tag in tags if dpg.get_item_configuration(tag)['show']==True]
+    labels = [dpg.get_item_label(tag) for tag in tags]
+
+    signals = []
+    title = dpg.get_item_label(plot_tag)
+    # legend = dpg.get_item_configuration(dpg.get_item_children(plot_tag)[0])['show']
+    # print(legend)
+    children = dpg.get_item_children(plot_tag)[1]
+    axis = [dpg.get_item_label(child) for child in children]
+    limits = [dpg.get_axis_limits(child) for child in children]
+    for i,tag in enumerate(tags):
+        values = dpg.get_value(tag)
+        if labels[i] == 'Std. Dev':
+            colors[i][-1]=0.5
+            x,y1,y2 = values[:3]
+            sign = {'X':x,'Y1':y1,'Y2':y2}
+        elif 'InfLine' in line_type[i]:
+            print(dpg.get_item_configuration(tag).get('color'))
+            sign = {'X': values[0]}
+        else:
+            x,y = values[:2]
+            sign = {'X':x,'Y':y}
+        signals.append(sign)
+
+    info = signals,labels,colors,title,axis, limits
     #signals, labels, colors, title, axis = info
     ft.export_plot(info,plot_type)
 
@@ -1021,17 +1054,10 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
     deviation_type = 'Standard Deviation'
 
     all_info={}
-<<<<<<< HEAD
-    colormap_int = 0
-    with dpg.group(horizontal=True, parent = tab_label,tag=f"{tab_label}_plot_group"):
-        with dpg.plot(label=f"Spectral Analysis - {func}", height=400, width=600, tag = f"{tab_label}_plot"):
-            dpg.bind_colormap(f"{tab_label}_plot", colormap_int)
-=======
     plot_tag = f"{tab_label}_plot"
     with dpg.group(horizontal=True, parent = tab_label,tag=f"{tab_label}_plot_group"):
         with dpg.plot(label=f"Spectral Analysis - {func}", height=400, width=600, tag = plot_tag):
             dpg.bind_colormap(plot_tag, 0)
->>>>>>> e1f0f9e158f0f2dfb1ca81f8bc135d7c5edd87e3
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label=f"LFP Power ({units})", tag= f"{tab_label}_y_axis")
@@ -1514,12 +1540,8 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             dpg.add_separator()
             if len(days)>1:
                 dpg.add_button(label='Show Mean Power Across Time',width=-1,callback=show_power_over_time,user_data=all_info)
-<<<<<<< HEAD
-            dpg.add_button(label = 'Save Plot Figure',width=-1,callback = save_plot,user_data =('2D', f"{tab_label}_plot", y_axis,colormap_int))
-=======
             dpg.add_button(label = 'Save Plot Figure',callback = save_plot,user_data = '2D')
             dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(y_axis,plot_tag,'2D'))
->>>>>>> e1f0f9e158f0f2dfb1ca81f8bc135d7c5edd87e3
     time.sleep(0.2)
     dpg.set_axis_limits_auto(x_axis)
     dpg.set_axis_limits_auto(y_axis)
@@ -3724,42 +3746,7 @@ def extract_artifact_type(s: str):
 
 #--- Process with signal
 
-<<<<<<< HEAD
-def save_plot(sender,app_data,user_data):
-    plot_type, plot_tag, y_axis, colormap_int = user_data
-    tags = dpg.get_item_children(y_axis)[1]
-    line_type = [dpg.get_item_info(tag)['type'] for tag in tags]
-    colors = [dpg.get_colormap_color(colormap_int,i) for i in range(len(tags))]
-    tags = [tag for tag in tags if dpg.get_item_configuration(tag)['show']==True]
-    labels = [dpg.get_item_label(tag) for tag in tags]
 
-    signals = []
-    title = dpg.get_item_label(plot_tag)
-    # legend = dpg.get_item_configuration(dpg.get_item_children(plot_tag)[0])['show']
-    # print(legend)
-    children = dpg.get_item_children(plot_tag)[1]
-    axis = [dpg.get_item_label(child) for child in children]
-    limits = [dpg.get_axis_limits(child) for child in children]
-    for i,tag in enumerate(tags):
-        values = dpg.get_value(tag)
-        if labels[i] == 'Std. Dev':
-            colors[i][-1]=0.5
-            x,y1,y2 = values[:3]
-            sign = {'X':x,'Y1':y1,'Y2':y2}
-        elif 'InfLine' in line_type[i]:
-            print(dpg.get_item_configuration(tag).get('color'))
-            sign = {'X': values[0]}
-        else:
-            x,y = values[:2]
-            sign = {'X':x,'Y':y}
-        signals.append(sign)
-
-    info = signals,labels,colors,title,axis, limits
-    #signals, labels, colors, title, axis = info
-    ft.export_plot(info,plot_type)
-
-=======
->>>>>>> e1f0f9e158f0f2dfb1ca81f8bc135d7c5edd87e3
 def Volt2dB2(sender,app_data,user_data):
     type = app_data
     if type == True:
