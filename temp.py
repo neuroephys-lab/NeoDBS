@@ -24,7 +24,8 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 
 '''
 
-file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
+# file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
+file = "C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
 Data = DH.getData(file_path=file)
 Streaming = DH.getSignals(Data,'Streaming')
 
@@ -75,11 +76,46 @@ def create(sender,app_data,user_data):
     with dpg.child_window(parent=user_data):
         dpg.add_text('Another item')
 
+def edit_item(item='Button'):
+    
+    with dpg.theme() as theme:
+        match item:
+            case 'Button':
+                with dpg.theme_component(dpg.mvButton):
+                    dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 12)   # round corners
+                    dpg.add_theme_color(dpg.mvThemeCol_Button, (50, 150, 250))
+                    dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (75, 175, 255))
+                    dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (40, 130, 220))
+            case 'Window':
+                with dpg.theme_component(dpg.mvWindowAppItem):
+                    dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 12) 
+
+    return theme
+
+def edit_all():
+    with dpg.theme() as theme:
+        with dpg.theme_component(dpg.mvAll):
+            dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 10)
+            dpg.add_theme_style(dpg.mvStyleVar_WindowRounding,10) 
+            dpg.add_theme_style(dpg.mvStyleVar_WindowTitleAlign,0.5)
+        with dpg.theme_component(dpg.mvCheckbox):
+            dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 0)
+    return theme
+
+
 dpg.create_context()
 
-dpg.configure_app(init_file="dpg.ini")
+dpg.show_documentation()
+dpg.show_style_editor()
+dpg.show_debug()
+dpg.show_about()
+dpg.show_metrics()
+dpg.show_font_manager()
+dpg.show_item_registry()
 
 with dpg.window(label='Main',tag='main'):
+    bt = edit_all()
+    dpg.bind_item_theme('main',edit_all())
     with dpg.group(tag='group'):
         with dpg.plot(label='Streaming - All Day',tag = 'plot_tag'):
             dpg.add_plot_legend()
@@ -90,9 +126,10 @@ with dpg.window(label='Main',tag='main'):
                 y = stream['Y']
                 channel = stream['Channel']
                 dpg.add_line_series(x,y,label=channel,parent=y_axis)
-        dpg.add_button(label='Save Signals into TXT',callback=create,user_data='group')
-    
-    dpg.add_button(label='saev', callback=save_all)
+        b = dpg.add_button(label='Save Signals into TXT',callback=create,user_data='group')
+        dpg.bind_item_theme(b,bt)
+        dpg.add_button(label='Save',callback=create,user_data='group')
+
 dpg.create_viewport(title='Temporario', width=800, height=600)
 dpg.setup_dearpygui()
 dpg.show_viewport()

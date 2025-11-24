@@ -1,5 +1,11 @@
 # NeoDBS
 
+## 24.11.2025
+### New functionalities:
+- Font resizer
+- Design binded to classic theme (themes given by dpg cannot be edited)
+
+
 ## 21.11.2025
 
 ### New functionalities:

@@ -531,7 +531,13 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None):
     channels = [ch.upper() for ch in channels]
 
     sides = ['Left','Right']
-    
+    types = [hours,days,channels,sides]
+    label_types=['By Recording:','By Day:','By Channel:','By Hemisphere:']
+    all_toggles = {}
+    for l, array in zip(label_types,types):
+        if len(array)>1:
+            all_toggles[l] = array
+
     with dpg.group(label=f"{tab_tag}_buttons"):
         # Ensure toggleVisibility is inside a vertical group
         with dpg.group(parent=f"{tab_tag}_buttons", tag = f"{tab_tag}_all_streams"):
@@ -539,6 +545,34 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None):
 
         dpg.add_spacer(height=10)
 
+        with dpg.group(horizontal=True, parent=f"{tab_tag}_buttons", tag=f"{tab_tag}_types"):
+            no_groups = len(list(all_toggles.keys()))
+            if no_groups<4:
+                for text, values in all_toggles.items():
+                    with dpg.child_window(tag=f"{tab_tag}_{text}_buttons", width=120, height=120):
+                        dpg.add_text(text)
+                        for v in values:
+                            toggleType(signal_tags,parent=f"{tab_tag}_{text}_buttons", user_data=(v, window_id, tab_tag))
+            
+            else:
+                g1 = dpg.add_group(parent=f"{tab_tag}_buttons")
+                g2 = dpg.add_group(parent=f"{tab_tag}_buttons")
+                for i in range(4):
+                    if i<2: parent=g1
+                    else: parent=g2
+                    text, values = label_types[i], types[i]
+                    with dpg.child_window(tag=f"{tab_tag}_{text}_buttons", width=120, height=120,parent=parent):
+                        dpg.add_text(text)
+                        for v in values:
+                            toggleType(signal_tags,parent=f"{tab_tag}_{text}_buttons", user_data=(v, window_id, tab_tag))
+        segment_signal(tab_tag, signal_tags,plot_tag)
+        with dpg.group():
+            dpg.add_separator(label='Export')
+            dpg.add_spacer()
+            dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",0))
+            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(f"y_axis_{tab_tag}",f"plot_{tab_tag}",'2D'))
+        
+        '''
         with dpg.group(horizontal=True, parent=f"{tab_tag}_buttons", tag=f"{tab_tag}_types"):
             with dpg.group():
                 if len(hours) > 1:
@@ -565,12 +599,9 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None):
                         dpg.add_text('By hemisphere:')
                         for day in sides:
                             toggleType(signal_tags, parent=f"{tab_tag}_buttons_side", user_data=(day, window_id, tab_tag))
-            dpg.add_separator()
-            dpg.add_button(label = 'Save Plot Figure',width=-1,callback = save_plot,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",0))
-            # with dpg.child_window(tag=f"{tab_tag}_buttons_events"): pass
-            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(f"y_axis_{tab_tag}",f"plot_{tab_tag}",'2D'))
+            
+        '''
         
-        segment_signal(tab_tag, signal_tags)
 
 def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None,plot_tag=None):
     events = [signal['EventName'] for signal in signals]
@@ -3109,6 +3140,16 @@ def before_vs_after(sender,app_data,user_data):
     plot_featured_signal(signal_tags,tab_label,func,tab_tag,parameter_values)
 
 #------------GUI PRETTY-----------------
+def design():
+    with dpg.theme() as theme:
+        with dpg.theme_component(dpg.mvAll):
+            dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 10) 
+            dpg.add_theme_style(dpg.mvStyleVar_WindowRounding,10)
+            dpg.add_theme_style(dpg.mvStyleVar_WindowTitleAlign,0.5)
+        with dpg.theme_component(dpg.mvCheckbox):
+            dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 0)
+    return theme
+
 def create_alpha_theme(alpha=0.5):
     """
     Create and return a DearPyGui plot alpha theme.
@@ -3248,7 +3289,28 @@ def different_combo(sender,app_data,user_data):
         dpg.add_separator(parent=doc_container)
         dpg.add_text('Recordings cannot be the same!', parent=doc_container, show=True, tag = f"{sender}_pac_w")
         return
-         
+
+def resize_font(sender,app_data,user_data):
+    window_id = user_data
+    this = f"{window_id}_font_size"
+    if dpg.does_item_exist(this):
+        dpg.delete_item(this)
+
+    def set_size(sender,app_data,user_data):
+        value = dpg.get_value(sender)
+        dpg.set_global_font_scale(value)
+
+    def reset(sender,app_data,user_data):
+        dpg.set_global_font_scale(1.0)
+        dpg.set_value(user_data,1.0)
+
+
+    with dpg.window(label="Resize Font",tag=this, autosize=True,no_collapse=True):
+        dpg.add_text("Resize Font")
+        with dpg.group(horizontal=True,width=90):
+            slider = dpg.add_slider_float(default_value=1.0,min_value=0.0,max_value=2.0,callback=set_size,width=80)
+            dpg.add_button(label='Reset',callback= reset,small=True,user_data=slider)
+
 #--- Extract signal/identifiers
 def extract_idx_from_series_tag(series_tag: str) -> int:
     match = re.search(r'_series_(\d+)(?:_|$)', series_tag)  # Match _series_<number> with or without trailing underscore
@@ -3897,16 +3959,20 @@ def getMeanActiveSeries(window_id,tab_tag,signal_tags, key = None):
     #mean_power = [m*100/np.sum(mean_power) for m in mean_power]
     return mean_power, std_power
 
-def segment_signal(tab_tag, signal_tags):
+def segment_signal(tab_tag, signal_tags,plot_tag):
+    with dpg.theme() as theme:
+        with dpg.theme_component(dpg.mvAll):
+            dpg.add_theme_style(dpg.mvStyleVar_SeparatorTextAlign,1)
+
     with dpg.group(tag = f"{tab_tag}_segmentation"):
         time.sleep(0.1)
-        dpg.add_spacer(height=10)
-        dpg.add_text('SEGMENTATION: minimum of 10s')
+        s = dpg.add_separator(label='SEGMENTATION: minimum of 10s')
+        dpg.bind_item_theme(s,theme)
         dpg.add_checkbox(label='Use only visible signals:', default_value=True,show=True, tag=f"{tab_tag}_flag_signals")
         mmax = int(dpg.get_axis_limits(axis=f"x_axis_{tab_tag}")[1])
         with dpg.group(horizontal=True):
-            dpg.add_input_int(label='Start', tag=f"{tab_tag}_min", width=90, default_value=0, callback=enforce_min_max, user_data=(f"{tab_tag}_min", f"{tab_tag}_max", 10))
-            dpg.add_input_int(label='End', tag=f"{tab_tag}_max", width=90, default_value=mmax, callback=enforce_min_max, user_data=(f"{tab_tag}_min", f"{tab_tag}_max", 10))
+            dpg.add_slider_int(label='Start', tag=f"{tab_tag}_min", width=60, default_value=0, callback=enforce_min_max, user_data=(f"{tab_tag}_min", f"{tab_tag}_max", 10))
+            dpg.add_slider_int(label='End', tag=f"{tab_tag}_max", width=60,max_value=1000, default_value=mmax, callback=enforce_min_max, user_data=(f"{tab_tag}_min", f"{tab_tag}_max", 10))
             dpg.add_button(label='Segment Signal', show=True, callback=cut_signals,user_data=(tab_tag, signal_tags))
 
 def cut_signals(sender,app_data,user_data):   
@@ -6992,6 +7058,7 @@ def create_multiple_window():
     def file_dialog_callback(sender, app_data, user_data):
         window_id = user_data  # Get window-specific ID
         files = app_data['selections']  # Dict { "full_path": "file_name" }
+        print(files)
         for file in files:
             app_state["windows"][window_id]["Files"].append(
                 {"name": file, "path": files[file]})
@@ -7025,6 +7092,7 @@ def create_multiple_window():
     def create_file_dialog(window_id):
         """Creates a file dialog for a given window."""
         with dpg.file_dialog(
+            label='Multiple files can only be selected simultaneously if from the same folder!',
             directory_selector=False, 
             show=False, 
             callback=file_dialog_callback, 
@@ -7161,7 +7229,7 @@ def create_individual_window():
     warning_text = ''
 
     def file_dialog_callback(sender, app_data, user_data):
-            
+        window_id = user_data
         if isinstance(app_data['selections'], dict):  # Check if files were selected
             selected_files = list(app_data['selections'].values())
             
@@ -7169,7 +7237,7 @@ def create_individual_window():
                 dpg.set_value(f"file_list_{window_id}","Only one file can be selected! Please try again.")
             else:
                 print(f"Selected file: {selected_files[0]}")
-                window_id = user_data  # Get window-specific ID
+                  # Get window-specific ID
                 files = app_data['selections']  # Dict { "full_path": "file_name" }
 
                 # Store full paths and filenames per window
@@ -7198,7 +7266,7 @@ def create_individual_window():
             user_data=window_id  # Pass window ID for tracking
         ):
             dpg.add_file_extension(".*")
-            dpg.add_file_extension("*.json", color=(0, 255, 0, 255), custom_text="[JSON File]")
+            dpg.add_file_extension(".json", color=(0, 255, 0, 255), custom_text="[JSON File]")
 
     def open_tab_mode(sender, app_data, user_data): #create tab
         mode, window_id = user_data
@@ -7402,15 +7470,18 @@ def load_main_ui():
 
     # Main window
     with dpg.window(label="NeoDBS", width=1000, height=600, tag="Main"):
+        dpg.bind_theme(design())
         dpg.set_exit_callback(save_init)
+        theme = design()
         with dpg.menu_bar():
             with dpg.menu(label="Themes"):
                 dpg.add_menu_item(label="Classic", callback=switch_theme, user_data=default_classic_theme)
                 dpg.add_menu_item(label="Light", callback=switch_theme, user_data=light_theme)
                 dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
             with dpg.menu(label="Edit"):
-                dpg.add_menu_item(label="Change electrodes' names", callback=change_electrodes_names)
-                dpg.add_menu_item(label='Change Event/Group Name',callback = change_event_name)
+                dpg.add_menu_item(label='Resize Font',callback=resize_font)
+                dpg.add_menu_item(label="Rename Electrodes", callback=change_electrodes_names)
+                dpg.add_menu_item(label='Rename Event/Group',callback = change_event_name)
             with dpg.menu(label="Save"):
                 dpg.add_menu_item(label="Save All Plots")
                 dpg.add_menu_item(label="Save All Tables")
@@ -7418,16 +7489,18 @@ def load_main_ui():
 
         with dpg.group(horizontal=True, pos=[250, 250]):
             dpg.add_button(label="Individual/Recording Analysis", callback=create_individual_window)
-            dpg.add_spacer(indent=2)
+            dpg.add_spacer(indent=5)
             dpg.add_button(label="Combined/Event Analysis", callback=create_multiple_window)
+            
 
         dpg.set_viewport_width(1000)
         dpg.set_viewport_height(600)
 
+    
     dpg.set_primary_window("Main", True)
 
 dpg.show_viewport()
-dpg.set_frame_callback(120, load_main_ui)  
+dpg.set_frame_callback(70, load_main_ui)  
 
 dpg.start_dearpygui()
 dpg.destroy_context()
