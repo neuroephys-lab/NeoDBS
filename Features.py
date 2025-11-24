@@ -372,6 +372,23 @@ def export_plot(info, plot_type, show=True):
 
     plt.close(fig)
 
+def export_signals(info,filename):
+    filename = filename.replace(' - ','_')
+    filename = filename.replace(' ','_')
+    filename = 'Signals_'+filename + ".txt"
+    with open(filename, "w") as f:
+        f.write(",".join(list(info.keys())) + "\n")
+        n_lines = len(info['X'])
+        for i in range(n_lines):
+            row = []
+            for column in info.keys():
+                try:
+                    row.append(str(info[column][i]))
+                except:
+                    row.append(' ')
+            f.write(",".join(row) + "\n")
+
+    print(f"Saved file: {filename}")
 
 def wave(frequency = 10, sampling_rate = 1000, duration = 1, amplitude = 1):
     
