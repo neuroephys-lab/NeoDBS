@@ -1,5 +1,30 @@
 # NeoDBS
 
+## 25.11.2025
+### New functionalities:
+- Fonts (available in https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/tree/master)
+
+### Debugs:
+- Font resizer --> not scale, but actual resize (better quality)
+- Features:
+    - export_plot :
+        - includes 'peaks' from Survey PSD
+        - mean thickness corrected
+    - export_signals:
+        - Std. Dev is the actual difference, not y1/y2
+        - handles label empty (peaks in survey)
+- Survey opens all corresponding tabs 
+- Export plot and signals in:
+    - Individual:
+        - Setup Artifacts
+        - Survey PSD
+        - Timeline
+    - Combined:
+        - Setup Artifacts
+        - Survey PSD
+        - Timeline
+    
+
 ## 24.11.2025
 ### New functionalities:
 - Font resizer

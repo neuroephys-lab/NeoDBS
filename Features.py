@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from datetime import datetime
 #from spectrum import pyule
 
 bands = {
@@ -328,19 +329,30 @@ def export_plot(info, plot_type, show=True):
         ax.set_ylabel(axis[1])
         ax.set_xlim(*limits[0])
         ax.set_ylim(*limits[1])
+        if 'Timeline' in title: 
+            ax.set_xlim(*[datetime.fromtimestamp(l) for l in limits[0]])
+            fig.autofmt_xdate()
 
         for i, signal in enumerate(signals):
             label = labels[i]
-            if 'Y1' in signal.keys():
+            if 'Y1' in signal.keys(): #std.dev or shaded series
                 x, y1,y2 = signal['X'], signal['Y1'], signal['Y2']
                 ax.fill_between(x,y1,y2,label=label,color=colors[i][:3],alpha=colors[i][-1])
             elif len(list(signal.keys()))==1: #infinte lines
                 ax.vlines(signal['X'],miny,maxy,label=label,color=colors[i])
-            else:
+             
+            elif label in ['',' ']:
                 x, y = signal['X'], signal['Y']
-                ax.plot(x, y, label=label, color=colors[i])
+                ax.scatter(x,y,label=label,color=colors[i-1])
+            else: 
+                x, y = signal['X'], signal['Y']
+                thick = 1
+                if 'mean' in label.lower(): thick = 3
+                ax.plot(x, y, label=label, color=colors[i],linewidth=thick)
 
-        ax.legend()
+        # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        fig.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=3, frameon=False)
+
         fig.tight_layout()
 
     elif plot_type == '3D':
@@ -366,10 +378,6 @@ def export_plot(info, plot_type, show=True):
 
     fig.savefig(f'{title}.png', bbox_inches='tight', dpi=300)
 
-    # Because of matplotlib.use("Agg") theres no GUI for matplotlib and plot cannot be shown with plt
-    # if show:
-    #     plt.show()
-
     plt.close(fig)
 
 def export_signals(info,filename):
@@ -388,7 +396,7 @@ def export_signals(info,filename):
                     row.append(' ')
             f.write(",".join(row) + "\n")
 
-    print(f"Saved file: {filename}")
+    # print(f"Saved file: {filename}")
 
 def wave(frequency = 10, sampling_rate = 1000, duration = 1, amplitude = 1):
     
