@@ -1,9 +1,10 @@
-# Updating ft.export_plot()
-
 import DataHandling as DH
 import dearpygui.dearpygui as dpg
-import numpy as np
+import Features as ft
 import matplotlib.pyplot as plt
+import numpy as np
+from scipy.signal import spectrogram
+
 '''
 BASE
 
@@ -21,82 +22,89 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 # # file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2025-01-23\\Report_Json_Session_Report_20250212T122746.json"
 
 '''
-file = "C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2025-01-23\\Report_Json_Session_Report_20250212T122746.json"
-summary = DH.getEventSummary(DH.getData(file))
 
-def export_plot(info, plot_type, show=True):
+file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
 
-    signals, labels, colors, title, axis, limits  = info
+Data = DH.getData(file)
 
-    ys = [signal['Y'] for signal in signals if 'Y' in signal.keys()]
-    miny = min(np.min(y) for y in ys)
-    maxy = max(np.max(y) for y in ys)
+dpg.create_context()
 
-    if plot_type == '2D':
-        fig, ax = plt.subplots()
-        ax.set_title(title)
-        ax.set_xlabel(axis[0])
-        ax.set_ylabel(axis[1])
-        ax.set_xlim(*limits[0])
-        ax.set_ylim(*limits[1])
+tab_label = "this"
 
-        for i, signal in enumerate(signals):
-            label = labels[i]
-            if 'Y1' in signal.keys():
-                x, y1,y2 = signal['X'], signal['Y1'], signal['Y2']
-                ax.fill_between(x,y1,y2,label=label,color=colors[i][:3],alpha=colors[i][-1])
-            elif len(list(signal.keys()))==1: #infinte lines
-                ax.vlines(signal['X'],miny,maxy,label=label,color=colors[i])
-            else:
-                x, y = signal['X'], signal['Y']
-                ax.plot(x, y, label=label, color=colors[i])
+signals,labels,colors = [],[],[]
 
-        ax.legend()
-        fig.tight_layout()
+# Generate a test signal: sum of two sine waves
+fs = 250  # sampling frequency (Hz)
+# t = np.linspace(0, 15, 2 * fs, endpoint=False)
+# signal = np.sin(2 * np.pi * 100 * t) + 0.5 * np.sin(2 * np.pi * 102 * t)
+# signal = 0.5 * np.sin(2 * np.pi * 101 * t)
 
-    elif plot_type == '3D':
-        n_signals = len(signals)
-        fig, axs = plt.subplots(
-            n_signals, 1,
-            figsize=(8, 3 * n_signals),
-            constrained_layout=True,
-            sharex=True
-        )
-        if n_signals == 1:
-            axs = [axs]
 
-        fig.suptitle(title)
-        for i, signal in enumerate(signals):
-            f, t, sxx = signal
-            ax = axs[i]
-            pcm = ax.pcolormesh(t, f, sxx, shading='gouraud', cmap='viridis')
-            fig.colorbar(pcm, ax=ax, label=axis[2])
-            ax.set_ylabel(axis[1])
-            ax.set_title(labels[i])
-        axs[-1].set_xlabel(axis[0])
+signal_info = DH.getSignals(Data,'Streaming')
 
-    fig.savefig(f'{title}.png', bbox_inches='tight', dpi=300)
+for stream in signal_info:
 
-    plt.close(fig)
+    signal = np.array(stream['Y'])
+    # Compute spectrogram
+    t = np.array(stream['X'])
+    f, t_spec, Sxx = spectrogram(signal, fs=fs)
 
-import datetime
+    signals.append([f, t_spec, Sxx])
 
-# create data
-customdate = datetime.datetime(2016, 1, 1, 13, 30)
-y = [ 2,4,6,8,10,12,14,16,18,20 ]
-x = [customdate + datetime.timedelta(hours=i) for i in range(len(y))]
-print(x)
-#datetime.datetime(2024, 11, 8, 23, 59, 44)
-# plot
-plt.plot(x,y)
-plt.gcf().autofmt_xdate()
-plt.show()
+num_plots = len(signals)
+num_cols = 2
+num_rows = (num_plots + 1) // num_cols 
+limits = []
+ploted_signals, labels = [],  []
+with dpg.window():
+    with dpg.group(horizontal=True, parent=f"{tab_label}", tag=f"{tab_label}_plot_group"):
 
-# dpg.create_context()
-# # with dpg.window():
+        dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
+                                            height=400*num_rows)
+        
+        with dpg.subplots(rows=num_rows, columns=num_cols, label="Spectrograms", width=800, height=400*num_rows, tag=f"{tab_label}_subplots"):
+            for _,signal in enumerate(signals):
+                frequencies, times, Sxx = signal
+                Sxx_log = 10 * np.log10(Sxx + 1e-10)  # Convert to dB scale
+                ploted_signals.append([frequencies, times,Sxx_log])
+                Sxx_log = np.flipud(Sxx_log)
+                
+                plot_tag = f"{tab_label}_{_}"
+                with dpg.plot(label='Spectrogram', width=-1, height=-1, tag = plot_tag):
+                    dpg.add_plot_legend()
+                    x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
+                    y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
 
-# dpg.create_viewport(title='Temporario', width=800, height=600)
-# dpg.setup_dearpygui()
-# dpg.show_viewport()
-# dpg.start_dearpygui()
-# dpg.destroy_context()
+                    t = dpg.add_heat_series(Sxx_log.flatten(), rows=len(frequencies), cols=len(times),
+                                            scale_min=np.min(Sxx_log), scale_max=np.max(Sxx_log), 
+                                            parent=y_axis, format="", bounds_min=[0,0], bounds_max=[times[-1],125])
+                                         
+                    dpg.bind_colormap(plot_tag, dpg.mvPlotColormap_Jet)
+                    config = dpg.get_item_configuration(t)
+                    mins = config.get('bounds_min')
+                    maxs = config.get('bounds_max')
+                    xlim = [mins[0],maxs[0]]
+                    ylim = [mins[1],maxs[1]]
+                    density = [config.get('scale_min'),config.get('scale_max')]
+                    limits.append([xlim,ylim,density])
+                    labels.append('Spectrogram')
+                    # plot_limits = [dpg.get_axis_limits(t) for t in [x_axis,y_axis]]
+                    # plot_limits.append([np.min(Sxx_log),np.max(Sxx_log)])
+                    # limits.append(plot_limits)
+                    # print(dpg.get_item_configuration(t))
+
+            
+
+title = dpg.get_item_label(plot_tag)
+axis_labels = [dpg.get_item_label(x_axis),dpg.get_item_label(y_axis), dpg.get_item_label(f"{tab_label}_colormap_scale")]
+colors = []
+
+info = ploted_signals,labels,colors,title,axis_labels, limits
+ft.export_plot(info,'3D')
+
+dpg.create_viewport(title='Temporario', width=800, height=600)
+dpg.setup_dearpygui()
+dpg.show_viewport()
+dpg.start_dearpygui()
+dpg.destroy_context()
+

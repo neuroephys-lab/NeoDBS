@@ -1,5 +1,23 @@
 # NeoDBS
 
+## 26.11.2025
+
+### Organization:
+- Started to remove unused functions and save them in deprecated-specific files
+
+### Design:
+- Plot coherence button colored
+
+### Debugs:
+- Export plot and signals in:
+    - Circadian Rhythm
+    - Stimulation
+- Features | export_plot:
+    - Get correct colors and plot size
+    - '3D' (TBC: Correct resolution, make design as close as possible, make it handle coherogram) is almost complete, but matplotlib and dpg show different spectrograms to same signal :/
+
+_______________________________________________________________________
+
 ## 25.11.2025
 ### New functionalities:
 - Fonts (available in https://github.com/sahibjotsaggu/San-Francisco-Pro-Fonts/tree/master)
@@ -11,7 +29,7 @@
         - includes 'peaks' from Survey PSD
         - mean thickness corrected
     - export_signals:
-        - Std. Dev is the actual difference, not y1/y2
+        - Std. Dev is the actual difference, not y1 and y2
         - handles label empty (peaks in survey)
 - Survey opens all corresponding tabs 
 - Export plot and signals in:
@@ -36,7 +54,7 @@
 ### New functionalities:
 - Save signals and buttons
     - 2D
-    - Stimulation
+    - Stimulation (only saves the moments of amplitude change)
 - Save workspace (in construction --> cannot be without json)
 
 ## 19.11.2025

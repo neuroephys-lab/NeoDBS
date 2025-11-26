@@ -314,24 +314,37 @@ def export_plot_old(info, plot_type):
     plt.savefig('Example.png', bbox_inches='tight', dpi=300)
     plt.show()
 
-def export_plot(info, plot_type, show=True):
+def export_plot(info, plot_type, size=None):
 
     signals, labels, colors, title, axis, limits  = info
 
-    ys = [signal['Y'] for signal in signals if 'Y' in signal.keys()]
-    miny = min(np.min(y) for y in ys)
-    maxy = max(np.max(y) for y in ys)
-
     if plot_type == '2D':
-        fig, ax = plt.subplots()
+        ys = [signal['Y'] for signal in signals if 'Y' in signal.keys()]
+        miny = min(np.min(y) for y in ys)
+        maxy = max(np.max(y) for y in ys)
+        if size:
+            size = [(s/100 if (s is not None and s > 0) else None) for s in size]
+            default_fig = plt.figure()
+            width_default, height_default = default_fig.get_size_inches()
+            plt.close(default_fig)
+
+            width  = size[0] if size[0] is not None else width_default
+            height = size[1] if size[1] is not None else height_default
+
+            fig, ax = plt.subplots(figsize=(width, height))
+        else:
+            fig, ax = plt.subplots()
+
         ax.set_title(title)
         ax.set_xlabel(axis[0])
         ax.set_ylabel(axis[1])
         ax.set_xlim(*limits[0])
         ax.set_ylim(*limits[1])
-        if 'Timeline' in title: 
+        # if ('Timeline' or 'Circadian' or 'Stimulation') in title:
+        if 'Timeline' in title or 'Circadian' in title or 'Stimulation' in title:
             ax.set_xlim(*[datetime.fromtimestamp(l) for l in limits[0]])
             fig.autofmt_xdate()
+        if 'Timeline' in title: labels = [None for _ in labels]
 
         for i, signal in enumerate(signals):
             label = labels[i]
@@ -350,7 +363,6 @@ def export_plot(info, plot_type, show=True):
                 if 'mean' in label.lower(): thick = 3
                 ax.plot(x, y, label=label, color=colors[i],linewidth=thick)
 
-        # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         fig.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=3, frameon=False)
 
         fig.tight_layout()
@@ -358,8 +370,8 @@ def export_plot(info, plot_type, show=True):
     elif plot_type == '3D':
         n_signals = len(signals)
         fig, axs = plt.subplots(
-            n_signals, 1,
-            figsize=(8, 3 * n_signals),
+            n_signals//2, 2,
+            figsize=(12, 3 * n_signals),
             constrained_layout=True,
             sharex=True
         )
@@ -370,10 +382,12 @@ def export_plot(info, plot_type, show=True):
         for i, signal in enumerate(signals):
             f, t, sxx = signal
             ax = axs[i]
-            pcm = ax.pcolormesh(t, f, sxx, shading='gouraud', cmap='viridis')
+            pcm = ax.pcolormesh(t, f, sxx, shading='gouraud', cmap='jet')
             fig.colorbar(pcm, ax=ax, label=axis[2])
             ax.set_ylabel(axis[1])
             ax.set_title(labels[i])
+            ax.set_xlim(*limits[i][0])
+            ax.set_ylim(*limits[i][1])
         axs[-1].set_xlabel(axis[0])
 
     fig.savefig(f'{title}.png', bbox_inches='tight', dpi=300)
@@ -396,7 +410,6 @@ def export_signals(info,filename):
                     row.append(' ')
             f.write(",".join(row) + "\n")
 
-    # print(f"Saved file: {filename}")
 
 def wave(frequency = 10, sampling_rate = 1000, duration = 1, amplitude = 1):
     
