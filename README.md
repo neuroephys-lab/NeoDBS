@@ -1,5 +1,19 @@
 # NeoDBS
 
+## 27.11.2025
+
+### Debug:
+- Export plot:
+    - Cross-correlatoin
+    - Spectrogram (individual/joined)
+    - Coherogram (individual/joined)
+- Export signals:
+    - Impedance table
+- Features | export_plot 
+    - '3D': 
+        - matplotlib had smoothin ON making it seem like it had different time resolutions. Smoothing is now OFF
+        - correct figsize
+        
 ## 26.11.2025
 
 ### Organization:
@@ -16,7 +30,6 @@
     - Get correct colors and plot size
     - '3D' (TBC: Correct resolution, make design as close as possible, make it handle coherogram) is almost complete, but matplotlib and dpg show different spectrograms to same signal :/
 
-_______________________________________________________________________
 
 ## 25.11.2025
 ### New functionalities:

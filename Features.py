@@ -314,32 +314,31 @@ def export_plot_old(info, plot_type):
     plt.savefig('Example.png', bbox_inches='tight', dpi=300)
     plt.show()
 
-def export_plot(info, plot_type, size=None):
+def export_plot(info, plot_type, size=None, line_types = None):
 
     signals, labels, colors, title, axis, limits  = info
 
-    if plot_type == '2D':
-        ys = [signal['Y'] for signal in signals if 'Y' in signal.keys()]
-        miny = min(np.min(y) for y in ys)
-        maxy = max(np.max(y) for y in ys)
-        if size:
-            size = [(s/100 if (s is not None and s > 0) else None) for s in size]
-            default_fig = plt.figure()
-            width_default, height_default = default_fig.get_size_inches()
-            plt.close(default_fig)
+    default_fig = plt.figure()
+    width_default, height_default = default_fig.get_size_inches()
+    plt.close(default_fig)
 
-            width  = size[0] if size[0] is not None else width_default
-            height = size[1] if size[1] is not None else height_default
+    if size:
+        size = [(s/100 if (s is not None and s > 0) else None) for s in size]
 
-            fig, ax = plt.subplots(figsize=(width, height))
-        else:
-            fig, ax = plt.subplots()
+        width  = size[0] if size[0] is not None else width_default
+        height = size[1] if size[1] is not None else height_default
+        size = (width,height)
+    else:
+        size = (width_default,height_default)
+    
 
-        ax.set_title(title)
-        ax.set_xlabel(axis[0])
-        ax.set_ylabel(axis[1])
-        ax.set_xlim(*limits[0])
-        ax.set_ylim(*limits[1])
+    if plot_type in ['2D','CC']:
+        # ys = [signal['Y'] for signal in signals if 'Y' in signal.keys()]
+        # miny = min(np.min(y) for y in ys)
+        # maxy = max(np.max(y) for y in ys)
+
+        fig, ax = plt.subplots(figsize=(size[0],size[1]))
+        
         # if ('Timeline' or 'Circadian' or 'Stimulation') in title:
         if 'Timeline' in title or 'Circadian' in title or 'Stimulation' in title:
             ax.set_xlim(*[datetime.fromtimestamp(l) for l in limits[0]])
@@ -351,43 +350,57 @@ def export_plot(info, plot_type, size=None):
             if 'Y1' in signal.keys(): #std.dev or shaded series
                 x, y1,y2 = signal['X'], signal['Y1'], signal['Y2']
                 ax.fill_between(x,y1,y2,label=label,color=colors[i][:3],alpha=colors[i][-1])
-            elif len(list(signal.keys()))==1: #infinte lines
-                ax.vlines(signal['X'],miny,maxy,label=label,color=colors[i])
-             
-            elif label in ['',' ']:
+            # elif len(list(signal.keys()))==1: #infinte lines
+            elif 'InfLine' in line_types[i]:
+                if labels[i] == 'Half Max':
+                    ax.hlines(signal['X'],*limits[0],label=label,color=colors[i])
+                else: ax.vlines(signal['X'],*limits[1],label=label,color=colors[i])
+            elif (label in ['',' ']) or ('Scatter' in line_types[i]):
                 x, y = signal['X'], signal['Y']
-                ax.scatter(x,y,label=label,color=colors[i-1])
+                ax.scatter(x,y,label=label,color=colors[i-1],zorder=len(signals))
             else: 
                 x, y = signal['X'], signal['Y']
                 thick = 1
                 if 'mean' in label.lower(): thick = 3
                 ax.plot(x, y, label=label, color=colors[i],linewidth=thick)
 
+        ax.set_title(title)
+        ax.set_xlabel(axis[0])
+        ax.set_ylabel(axis[1])
+        ax.set_xlim(*limits[0])
+        ax.set_ylim(*limits[1])
+
         fig.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=3, frameon=False)
 
         fig.tight_layout()
 
-    elif plot_type == '3D':
+    elif plot_type in ['3D','3DC']:
         n_signals = len(signals)
+        if n_signals>1:
+            rows, cols = n_signals//2, 2
+        else:
+            rows, cols = n_signals, 1
+
         fig, axs = plt.subplots(
-            n_signals//2, 2,
-            figsize=(12, 3 * n_signals),
+            rows, cols,
+            figsize=(size[0]*cols,size[1]*rows),
             constrained_layout=True,
             sharex=True
         )
-        if n_signals == 1:
-            axs = [axs]
+        if n_signals==1: axs = [axs]
 
         fig.suptitle(title)
         for i, signal in enumerate(signals):
             f, t, sxx = signal
             ax = axs[i]
-            pcm = ax.pcolormesh(t, f, sxx, shading='gouraud', cmap='jet')
+            pcm = ax.pcolormesh(t, f, sxx,cmap=colors,vmin=limits[i][2][0],vmax=limits[i][2][1])
             fig.colorbar(pcm, ax=ax, label=axis[2])
             ax.set_ylabel(axis[1])
             ax.set_title(labels[i])
-            ax.set_xlim(*limits[i][0])
-            ax.set_ylim(*limits[i][1])
+            ax.set_xlim(limits[i][0])
+            ax.set_ylim(limits[i][1])
+            if n_signals>1:
+                ax.set_title(labels[i])
         axs[-1].set_xlabel(axis[0])
 
     fig.savefig(f'{title}.png', bbox_inches='tight', dpi=300)
@@ -397,7 +410,7 @@ def export_plot(info, plot_type, size=None):
 def export_signals(info,filename):
     filename = filename.replace(' - ','_')
     filename = filename.replace(' ','_')
-    filename = 'Signals_'+filename + ".txt"
+    filename = 'Signals_'+filename + ".csv"
     with open(filename, "w") as f:
         f.write(",".join(list(info.keys())) + "\n")
         n_lines = len(info['X'])

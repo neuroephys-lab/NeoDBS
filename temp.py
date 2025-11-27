@@ -23,7 +23,7 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 
 '''
 
-file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
+file = "C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
 
 Data = DH.getData(file)
 
@@ -40,7 +40,7 @@ fs = 250  # sampling frequency (Hz)
 # signal = 0.5 * np.sin(2 * np.pi * 101 * t)
 
 
-signal_info = DH.getSignals(Data,'Streaming')
+signal_info = DH.getSignals(Data,'Streaming')[:1]
 
 for stream in signal_info:
 
@@ -56,6 +56,11 @@ num_cols = 2
 num_rows = (num_plots + 1) // num_cols 
 limits = []
 ploted_signals, labels = [],  []
+
+def exp(sender,app_data,user_data):
+    info,type = user_data
+    ft.export_plot(info,type)
+
 with dpg.window():
     with dpg.group(horizontal=True, parent=f"{tab_label}", tag=f"{tab_label}_plot_group"):
 
@@ -67,15 +72,13 @@ with dpg.window():
                 frequencies, times, Sxx = signal
                 Sxx_log = 10 * np.log10(Sxx + 1e-10)  # Convert to dB scale
                 ploted_signals.append([frequencies, times,Sxx_log])
-                Sxx_log = np.flipud(Sxx_log)
-                
                 plot_tag = f"{tab_label}_{_}"
                 with dpg.plot(label='Spectrogram', width=-1, height=-1, tag = plot_tag):
                     dpg.add_plot_legend()
                     x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                     y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
-
-                    t = dpg.add_heat_series(Sxx_log.flatten(), rows=len(frequencies), cols=len(times),
+                    Sxx_log = np.flipud(Sxx_log)
+                    t = dpg.add_heat_series(Sxx_log.flatten(), rows=Sxx.shape[0], cols=Sxx.shape[1],
                                             scale_min=np.min(Sxx_log), scale_max=np.max(Sxx_log), 
                                             parent=y_axis, format="", bounds_min=[0,0], bounds_max=[times[-1],125])
                                          
@@ -95,12 +98,13 @@ with dpg.window():
 
             
 
-title = dpg.get_item_label(plot_tag)
-axis_labels = [dpg.get_item_label(x_axis),dpg.get_item_label(y_axis), dpg.get_item_label(f"{tab_label}_colormap_scale")]
-colors = []
+            title = dpg.get_item_label(plot_tag)
+            axis_labels = [dpg.get_item_label(x_axis),dpg.get_item_label(y_axis), dpg.get_item_label(f"{tab_label}_colormap_scale")]
+            colors = []
 
-info = ploted_signals,labels,colors,title,axis_labels, limits
-ft.export_plot(info,'3D')
+            info = ploted_signals,labels,colors,title,axis_labels, limits
+    dpg.add_button(label='Save',callback=exp,user_data=(info,'3D'),parent=tab_label)
+            
 
 dpg.create_viewport(title='Temporario', width=800, height=600)
 dpg.setup_dearpygui()

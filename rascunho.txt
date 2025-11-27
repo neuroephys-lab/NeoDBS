@@ -1,0 +1,51 @@
+signals = []
+    title = dpg.get_item_label(plot_tag)
+    children = dpg.get_item_children(plot_tag)[1]
+    axis = [dpg.get_item_label(child) for child in children]
+    limits = [dpg.get_axis_limits(child) for child in children]
+    size = dpg.get_item_width(plot_tag), dpg.get_item_height(plot_tag)
+
+    # for '3D'
+    plot_title = dpg.get_item_label(plot_tag)
+    children = dpg.get_item_children(plot_tag)
+    breakpoint()
+    
+    
+
+    if plot_type=='3D':
+        limits = []
+        subplots = dpg.get_item_parent(plot_tag)
+        group = dpg.get_item_parent(subplots)
+        colormap = dpg.get_item_children(group)[1][0]
+        axis.append(dpg.get_item_label(colormap))
+        
+        title = dpg.get_item_label(subplots)
+        plots = dpg.get_item_children(subplots)[1]
+        labels = [dpg.get_item_label(l) for l in plots] #gets label from subplots, not plots
+        if 'spectrogram' in title.lower():
+            tags = [dpg.get_item_children(dpg.get_item_children(l)[1][1])[1][0] for l in plots]
+
+        for _,tag in enumerate(tags):
+            values = dpg.get_value(tag)
+            config = dpg.get_item_configuration(tag)
+            density = [config.get('scale_min'),config.get('scale_max')]
+            rows = int(config.get('rows'))
+            cols = int(config.get('cols'))
+            sxx = values[0]
+            sxx = np.flipud(np.array(sxx)).reshape(rows,cols)
+
+            mins = config.get('bounds_min')
+            maxs = config.get('bounds_max')
+            xlim = [mins[0],maxs[0]]
+            ylim = [mins[1],maxs[1]]
+            freqs = np.linspace(*ylim,rows)
+            time = np.linspace(*xlim,cols)
+
+            #get actual axis limits values
+            xlim = dpg.get_axis_limits(dpg.get_item_children(plots[_])[1][0])
+            ylim = dpg.get_axis_limits(dpg.get_item_children(plots[_])[1][1])
+            
+            signals.append([freqs,time,sxx])
+            
+            limits.append([xlim,ylim,density])
+            labels.append(dpg.get_item_label(tag))
