@@ -333,17 +333,12 @@ def export_plot(info, plot_type, size=None, line_types = None):
     
 
     if plot_type in ['2D','CC']:
-        # ys = [signal['Y'] for signal in signals if 'Y' in signal.keys()]
-        # miny = min(np.min(y) for y in ys)
-        # maxy = max(np.max(y) for y in ys)
-
         fig, ax = plt.subplots(figsize=(size[0],size[1]))
         
         # if ('Timeline' or 'Circadian' or 'Stimulation') in title:
-        if 'Timeline' in title or 'Circadian' in title or 'Stimulation' in title:
-            ax.set_xlim(*[datetime.fromtimestamp(l) for l in limits[0]])
-            fig.autofmt_xdate()
-        if 'Timeline' in title: labels = [None for _ in labels]
+        
+        if 'Timeline' in title: 
+            labels = [None for _ in labels]
 
         for i, signal in enumerate(signals):
             label = labels[i]
@@ -361,8 +356,11 @@ def export_plot(info, plot_type, size=None, line_types = None):
             else: 
                 x, y = signal['X'], signal['Y']
                 thick = 1
-                if 'mean' in label.lower(): thick = 3
-                ax.plot(x, y, label=label, color=colors[i],linewidth=thick)
+                if label is None:
+                    ax.plot(x, y, color=colors[i],linewidth=thick)
+                else:
+                    if 'mean' in label.lower(): thick = 3
+                    ax.plot(x, y, label=label, color=colors[i],linewidth=thick)
 
         ax.set_title(title)
         ax.set_xlabel(axis[0])
@@ -370,8 +368,13 @@ def export_plot(info, plot_type, size=None, line_types = None):
         ax.set_xlim(*limits[0])
         ax.set_ylim(*limits[1])
 
-        fig.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=3, frameon=False)
+        if 'Timeline' in title or 'Circadian' in title or 'Stimulation' in title:
+            ax.set_xlim(*[datetime.fromtimestamp(l) for l in limits[0]])
+            fig.autofmt_xdate()
 
+        if any(label is not None for label in labels):
+            fig.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=3, frameon=False)
+        
         fig.tight_layout()
 
     elif plot_type in ['3D','3DC']:
@@ -403,17 +406,52 @@ def export_plot(info, plot_type, size=None, line_types = None):
                 ax.set_title(labels[i])
         axs[-1].set_xlabel(axis[0])
 
-    fig.savefig(f'{title}.png', bbox_inches='tight', dpi=300)
+    elif plot_type == 'Bar':
+        fig, ax = plt.subplots(figsize=(size[0],size[1]))
+        for i,signal in enumerate(signals):
+            x,y = signal['X'], signal['Y']
+            ax.bar(x,y,color=colors[i],width=1)
+        ax.set_title(title)
+        ax.set_xlabel(axis[0])
+        ax.set_ylabel(axis[1])
+        ax.set_xlim(limits[0])
+        ax.set_ylim(limits[1])
+        if len(axis)>2:
+            ax.set_xticks(axis[2][0], labels=axis[2][1])
+    fig.savefig(f'{title}.png', bbox_inches='tight',dpi=300) #
 
     plt.close(fig)
 
-def export_signals(info,filename):
+def export_signals(info,filename, tfd = False):
     filename = filename.replace(' - ','_')
     filename = filename.replace(' ','_')
     filename = 'Signals_'+filename + ".csv"
+    if tfd:
+        with open(filename, "w") as f:
+            # f.write(",".join(list(info.keys())) + "\n")
+            for spec in info:
+                (plot_title, value), = spec.items()
+                frequencies,time,sxx = value
+                t = ['Freq (Hz)/Time (s)']
+                for tp in time: 
+                    t.append(str(tp))
+                f.write(f"{plot_title} \n")
+                f.write(",".join(t) + "\n")
+                for line, freq in enumerate(frequencies): 
+                    row = []
+                    row.append(f"{freq}")
+                    for col in range(len(time)):
+                        try:
+                            row.append(str(sxx[line][col]))
+                        except:
+                            row.append(' ')
+                    f.write(",".join(row) + "\n")
+
+                f.write("--------------------------------\n\n")
+        return
     with open(filename, "w") as f:
         f.write(",".join(list(info.keys())) + "\n")
-        n_lines = len(info['X'])
+        n_lines = len(info[list(info.keys())[0]])
         for i in range(n_lines):
             row = []
             for column in info.keys():
@@ -422,7 +460,6 @@ def export_signals(info,filename):
                 except:
                     row.append(' ')
             f.write(",".join(row) + "\n")
-
 
 def wave(frequency = 10, sampling_rate = 1000, duration = 1, amplitude = 1):
     

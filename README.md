@@ -1,12 +1,30 @@
 # NeoDBS
 
+## 28.11.2025
+
+### TBF:
+- Export Timeline Signals: 'X' is different for every day. See min of all and max of all --> create x array that encapsulates all streams
+
+### Debug/Finish:
+- Export plot and signals:
+    - Impedance
+    - PAC
+    - Spectrogram (individual/joined)
+    - Wavelet (individual/joined)
+    - Coherogram
+    - Timeline
+    
+- Features | export_plot:
+    - 'Bar' completed with colors, figsize and ticks
+
 ## 27.11.2025
 
 ### Debug:
 - Export plot:
     - Cross-correlatoin
     - Spectrogram (individual/joined)
-    - Coherogram (individual/joined)
+    - Coherogram
+    - Wavelet (individual/joined)
 - Export signals:
     - Impedance table
 - Features | export_plot 

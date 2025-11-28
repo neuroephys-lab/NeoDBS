@@ -358,7 +358,21 @@ def save_plot(sender,app_data,user_data):
             signals.append(sign)
 
     elif plot_type == 'Bar':
-        print(len(tags))
+        labels = []
+        values = [dpg.get_value(tag)[:2] for tag in tags]
+        signals = [{'X': v[0], 'Y': v[1]} for v in values]
+        title = dpg.get_item_label(plot_tag)
+        axis_tags = dpg.get_item_children(plot_tag)[1]
+        axis = [dpg.get_item_label(ax) for ax in axis_tags]
+        ticks = np.array(dpg.get_item_user_data(axis_tags[0]))
+        if ticks:
+            ticks_pos = [float(t) for t in ticks[:,1]]
+            ticks = ticks[:,0]
+            axis.append([ticks_pos, ticks.tolist()])
+        limits = [dpg.get_axis_limits(ax) for ax in axis_tags]
+        size = dpg.get_item_width(plot_tag), dpg.get_item_height(plot_tag)
+        line_type = [dpg.get_item_info(tag)['type'] for tag in tags]
+
     info = signals,labels,colors,title,axis,limits
 
     #signals, labels, colors, title, axis = info
@@ -375,20 +389,61 @@ def save_signals(sender,app_data,user_data):
     parent, plot, plot_type = user_data
     file_name = dpg.get_item_label(plot)
     children = dpg.get_item_children(parent)[1]
+    tfd = False
     match plot_type:
         case '2D':
             #only save signals shown in plot
             children = [c for c in children if dpg.get_item_configuration(c)['show'] == True]
             labels = [dpg.get_item_label(tag) for tag in children]
-            for i,l in enumerate(labels): #Specifically for Survey Peaks
-                if l in ['', ' ']: labels[i] = f"{labels[i-1]} Peak"
+            if ('Timeline' not in file_name) and ('Circadian' not in file_name):  
+                for i,l in enumerate(labels): #Specifically for Survey Peaks
+                    if l in ['', ' ']: labels[i] = f"{labels[i-1]} Peak"
             signals = [dpg.get_value(tag)[1] for tag in children]
             if labels[-2] in ['Std. Dev','Std. Dev.']: #get the actual standard deviation, not the min/max
                 signals[-2] = list(np.array(signals[-1]) - np.array(signals[-2]))
             mini,maxi,maxX = get_limits(children,plot)
-            info = {'X': maxX[mini:maxi]}
+            cut = maxX[mini:maxi]
+            if 'Timeline' in file_name:
+                cut = [datetime.fromtimestamp(c) for c in cut]
+            elif 'Circadian' in file_name:
+                cut = [str(utl.extract_time(datetime.fromtimestamp(c))) for c in cut]
+            info = {'X': cut}
             more = {labels[i]: signals[i][mini:maxi] for i in range(len(signals))}
             info = info | more
+
+        case 'CC':
+            children = [c for c in children if dpg.get_item_configuration(c)['show'] == True]
+            labels = [dpg.get_item_label(tag) for tag in children]
+            types = [dpg.get_item_info(tag)['type'] for tag in children]
+            signals = []
+            mini,maxi,maxX = get_limits(children,plot)
+            for i,tag in enumerate(children):
+                if 'Half Max' == labels[i]:
+                    signals.append([dpg.get_value(tag)[0][0]]*len(maxX))
+                elif ('Scatter' in types[i]) or ('Half Max Width' == labels[i]):
+                    x,_ = dpg.get_value(tag)[:2]
+                    if 'Half Max Width' == labels[i]: 
+                        x = np.round(np.array(x),3).tolist()
+                    new_y = [''] * len(maxX)
+                    for xx in x:
+                        if xx in maxX:
+                            new_y[maxX.index(xx)] = 0
+                        else:
+                            temp = np.abs(np.array(maxX)-xx).tolist()
+                            idx = min(temp)
+                            if idx < 1/250:
+                                new_y[temp.index(idx)] = 0
+                    signals.append(new_y)
+                else:
+                    signals.append(dpg.get_value(tag)[1])
+            info, more = {'X': maxX}, {label: signals[i] for i, label in enumerate(labels)}
+            info = info | more
+
+        case 'PAC':
+            signal = dpg.get_value(children[0])[:2] 
+            axis = dpg.get_item_children(plot)[1]
+            labels = [dpg.get_item_label(ax) for ax in axis]
+            info = {labels[i]: signal[i] for i in range(len(axis))}
 
         case 'Stimulation':
             x,stim = dpg.get_value(children[0])[:2]
@@ -404,7 +459,36 @@ def save_signals(sender,app_data,user_data):
             new_s.append(stim[-1])
             info = {'X':new_x,'Stimulation (mA)': new_s}
             
-    ft.export_signals(info,file_name)
+        case '3D' | '3DC':
+            # group = plot
+            # subplots = parent
+            file_name = dpg.get_item_label(parent)
+            tfd = True
+            plots = children
+            if plot_type=='3DC': 
+                plots = [parent]
+            y_axis = [dpg.get_item_children(plot)[1][1] for plot in plots]
+            signals = [dpg.get_item_children(y)[1][0] for y in y_axis]
+            plot_title = [dpg.get_item_label(plot) for plot in plots]
+            info = []
+            for i,signal in enumerate(signals):
+                values = dpg.get_value(signal)
+                config = dpg.get_item_configuration(signal)
+                rows = int(config.get('rows'))
+                cols = int(config.get('cols'))
+                sxx = values[0]
+                sxx = np.array(sxx).reshape(rows,cols)
+
+                mins = config.get('bounds_min')
+                maxs = config.get('bounds_max')
+                xlim = [mins[0],maxs[0]]
+                ylim = [mins[1],maxs[1]]
+                freqs = np.linspace(*ylim,rows).tolist()
+                time = np.linspace(*xlim,cols).tolist()
+                info.append({plot_title[i]: [freqs[::-1],time,sxx]})
+            
+            
+    ft.export_signals(info,file_name,tfd=tfd)
     if not dpg.does_item_exist(f"{sender}_toast"):
         with dpg.tooltip(parent=sender,tag=f"{sender}_toast"):
             dpg.add_text(f"Saved file: {file_name}.txt!")
@@ -1954,6 +2038,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
             dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,spectrogram_tags,f"{tab_label}_colormap_scale")) 
             dpg.add_separator(label='Export')
             dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('3D', group_tag, y_axis,'jet'))
+            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(f"{tab_label}_subplots",group_tag,'3D'))
          
 def plot_df_coherence(parameter_values,tab_tag,tags):
     labels = [dpg.get_item_label(tag) for tag in tags]
@@ -2271,6 +2356,8 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
 
             dpg.add_separator(label='Export',parent=tab_label)
             dpg.add_button(label = 'Export Plot Figure',width=-1,parent=tab_label,callback = save_plot,user_data =('3DC', group_tag, y_axis,'viridis'))
+            dpg.add_button(label='Export Signals',width=-1,parent=tab_label,callback=save_signals,user_data=(f"{tab_label}_spec",group_tag,'3DC'))
+
          
             with dpg.collapsing_header(tag=header_tag, parent=tab_label, label='Coherence over time'):
 
@@ -2375,7 +2462,8 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
         with dpg.group(tag=f"{tab_label}_text", parent=tab_label):
             dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}",parent=f"{tab_label}_text")
             dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}",parent=f"{tab_label}_text")
-        with dpg.plot(label="Cross-correlation", height=300, width=800, parent=f"{tab_label}_cc"):
+        plot_tag = f"{tab_label}_ccplot"
+        with dpg.plot(label="Cross-correlation", height=300, width=800, tag = plot_tag, parent=f"{tab_label}_cc"):
             dpg.add_plot_legend()
             cross_x = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
             cross_y = dpg.add_plot_axis(dpg.mvYAxis, label="Cross-Correlation Ratio")
@@ -2437,8 +2525,8 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
             create_table(f"{tab_label}_header",f"{tab_label}_table",info,f"{b} | {label}")
         
         dpg.add_separator(label='Export',parent=tab_label)
-        dpg.add_button(label = 'Export Plot Figure',parent=tab_label,width=-1,callback = save_plot,user_data =('CC', dpg.get_item_parent(cross_y), cross_y,0))
-        dpg.add_button(label='Export Signals',width=-1,callback=save_signals,parent=tab_label,user_data=(cross_y,f"{tab_label}_cc",'2D'))
+        dpg.add_button(label = 'Export Plot Figure',parent=tab_label,width=-1,callback = save_plot,user_data =('CC', plot_tag, cross_y,0))
+        dpg.add_button(label='Export Signals',width=-1,callback=save_signals,parent=tab_label,user_data=(cross_y,plot_tag,'CC'))
 
     if not dpg.does_item_exist(f"{tab_label}_band"): 
         dpg.add_checkbox(label='Band Cross-Correlation', parent=tab_label, tag = f"{tab_label}_band", callback=plot)
@@ -2683,7 +2771,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
             dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,spectrogram_tags,f"{tab_label}_colormap_scale"),width=-1)
             dpg.add_separator(label='Export')
             dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('3D', group_tag, y_axis,'jet'))
-            # dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(f"y_axis_{tab_tag}",f"plot_{tab_tag}",'2D'))
+            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(subplot_tag,group_tag,'3D'))
            
 def choose(sender,app_data,user_data):
     tags, tab_label, func, tab_tag, parameter_values, mode = user_data
@@ -2961,6 +3049,7 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
             dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,wavelet_tags,f"{tab_label}_colormap_scale"))
             dpg.add_separator(label='Export')
             dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('3D', group_tag, y_axis,'jet'))
+            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(f"{tab_label}_subplots",group_tag,'3D'))
          
 def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
     window_id = extract_window_id(tab_tag)
@@ -2979,7 +3068,8 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
         dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
                             min_scale=global_min, max_scale=global_max, height=400*num_rows)
 
-        with dpg.subplots(rows=num_rows, columns=num_cols, label=f"Wavelet", width=800, height=400*num_rows, tag=f"{tab_label}_subplots"):
+        subplot_tag = f"{tab_label}_subplots"
+        with dpg.subplots(rows=num_rows, columns=num_cols, label=f"Wavelet", width=800, height=400*num_rows, tag=subplot_tag):
             
             for idx, tag in enumerate(tags):
                 stream = getSignalbyIdx(window_id,tab_tag,tag,mode=mode)
@@ -3103,6 +3193,7 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
             dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,wavelet_tags,f"{tab_label}_colormap_scale"))
             dpg.add_separator(label='Export')
             dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('3D', group_tag, y_axis,'jet'))
+            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(subplot_tag,group_tag,'3D'))        
                
 def plot_pac(tags,tab_tag,parameter_values,mode=None):
     window_id = extract_window_id(tab_tag)
@@ -3175,21 +3266,24 @@ def plot_pac(tags,tab_tag,parameter_values,mode=None):
 
 
         with dpg.group(tag=f"{tab_label}_pac", parent=tab_label):
+            dpg.add_separator()
             dpg.add_text(f"Phase Signal: {dpg.get_value(f'{tab_label}_s1')} | Phase Band: {parameter_values['b1']}")
             dpg.add_text(f"Amplitude Signal: {dpg.get_value(f'{tab_label}_s2')} | Phase Band: {parameter_values['b2']}")
             dpg.add_text('Modulation Index (MI): 0 = NO coupling | 1 = STRONG coupling ')
             plot_tag = f"{tab_label}_plot"
-            with dpg.plot(label=f"Phase-Amplitude Coupling - MI: {mi}", height=300, width=-1,tag=plot_tag):
+            with dpg.plot(label=f"Phase-Amplitude Coupling (MI = {mi})", height=300, width=-1,tag=plot_tag):
                 dpg.add_plot_legend()
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Phase (rad)")
                 y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Amplitude (microV)")
                 phase = centers.tolist()
                 amp = amp_means.tolist()
-                # for p,a in zip(phase,amp):
-                #     dpg.add_bar_series([p], [a], parent=y_axis)
                 dpg.add_bar_series(phase,amp,parent=y_axis)
-                # dpg.bind_colormap(plot_tag, dpg.mvPlotColormap_Jet)
 
+            dpg.add_separator(label='Export')
+            dpg.add_button(label = 'Export Plot Figure', callback = save_plot,user_data =('Bar', plot_tag, y_axis,0),width=-1)
+            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(y_axis,plot_tag,'PAC'))
+
+         
         peak_a = max(amp)
         peak_p = phase[amp.index(peak_a)]
         bandwidth = 360/n_bins
@@ -3734,14 +3828,18 @@ def getDatabyFile(window_id, file):
         return app_state['windows'][window_id]['Data']
 
 def get_limits(children,plot_tag):
-    limits = dpg.get_axis_limits(dpg.get_item_children(plot_tag)[1][0])
+    axis = dpg.get_item_children(plot_tag)[1][0]
+    label = dpg.get_item_label(axis)
+    limits = dpg.get_axis_limits(axis)
     xx = [dpg.get_value(tag)[0] for tag in children]
     lengths = [len(x) for x in xx]
     maxX = xx[lengths.index(max(lengths))] #get the longest array
     mini = np.abs(np.array(maxX) - limits[0]).argmin()  # closest index 
     maxi = np.abs(np.array(maxX) - limits[1]).argmin()
+    tmin = min(mini,maxi)
+    tmax = max(mini,maxi)
 
-    return mini,maxi,maxX
+    return tmin,tmax,maxX
 
 def updateKeySignalbyIdx(value,tab_tag,series_tag, key):
     window_id = extract_window_id(tab_tag)
@@ -6314,7 +6412,7 @@ def impedance_tab(Data, tab_tag):
                     unique_results[key] = 0.0  # Fallback if non-numeric
 
         labels = [f"{e1}-\n{e2}" for (e1, e2) in unique_results.keys()]
-        if title == 'Monopolar':
+        if 'Monopolar' in title:
             labels = [f"{_}" for (_, e2) in unique_results.keys()]
         
         values = list(unique_results.values())
@@ -6330,31 +6428,31 @@ def impedance_tab(Data, tab_tag):
 
             ticks = tuple((label, float(i)) for i, label in enumerate(labels))
             dpg.set_axis_ticks(x_axis, ticks)
+            dpg.set_item_user_data(x_axis,ticks) #had to manually set ticks to user_data cause dpg doesnt properly save info to memory, only GUI
 
             for i, val in enumerate(values):
                 dpg.add_bar_series([float(i)], [val], parent=y_axis)
         
-            plot = dpg.get_item_parent(y_axis)
-            dpg.bind_colormap(plot, dpg.mvPlotColormap_Viridis)
-        dpg.add_button(label = 'Export Plot Figure', parent=parent, callback = save_plot,user_data =('Bar', plot_tag, y_axis,0),width=-1)
+            dpg.bind_colormap(plot_tag, dpg.mvPlotColormap_Viridis)
+        dpg.add_button(label = 'Export Plot Figure', parent=parent, callback = save_plot,user_data =('Bar', plot_tag, y_axis,dpg.mvPlotColormap_Viridis),width=-1)
                     
     with dpg.tab(tag = tab_tag, label = mode, parent=f"tab_bar_window_{window_id}", closable=True):
         dpg.add_text(f"Impedance Status: {impedance_status}", parent=tab_tag, show=True)
         with dpg.collapsing_header(label='Monopolar Left',tag = f"{tab_tag}_ml"): 
             build_result_table(f"{tab_tag}_ml", l["Monopolar"])
-            build_result_bar_graph("Monopolar", l["Monopolar"],f"{tab_tag}_ml")
+            build_result_bar_graph("Monopolar Left", l["Monopolar"],f"{tab_tag}_ml")
 
         with dpg.collapsing_header(label='Monopolar Right',tag = f"{tab_tag}_mr"):
             build_result_table(f"{tab_tag}_mr", r["Monopolar"])
-            build_result_bar_graph("Monopolar", r["Monopolar"],f"{tab_tag}_mr")
+            build_result_bar_graph("Monopolar Right", r["Monopolar"],f"{tab_tag}_mr")
 
         with dpg.collapsing_header(label='Bipolar Left',tag = f"{tab_tag}_bl"): 
             build_result_table(f"{tab_tag}_bl", l["Bipolar"])
-            build_result_bar_graph("Bipolar", l["Bipolar"],f"{tab_tag}_bl")
+            build_result_bar_graph("Bipolar Left", l["Bipolar"],f"{tab_tag}_bl")
 
         with dpg.collapsing_header(label='Bipolar Right',tag = f"{tab_tag}_br"): 
             build_result_table(f"{tab_tag}_br", r["Bipolar"])
-            build_result_bar_graph("Bipolar", r["Bipolar"],f"{tab_tag}_br")
+            build_result_bar_graph("Bipolar Right", r["Bipolar"],f"{tab_tag}_br")
 
 def toggle(signals, tab_tag, group_parent):
     channels, days = [], []

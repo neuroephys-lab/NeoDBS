@@ -4,6 +4,7 @@ import Features as ft
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import spectrogram
+from datetime import datetime
 
 '''
 BASE
@@ -26,6 +27,10 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 file = "C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
 
 Data = DH.getData(file)
+
+print(datetime.fromtimestamp(1731086848.0))
+print(datetime.fromtimestamp(1731321984.0))
+    
 
 dpg.create_context()
 
@@ -60,6 +65,7 @@ ploted_signals, labels = [],  []
 def exp(sender,app_data,user_data):
     info,type = user_data
     ft.export_plot(info,type)
+    
 
 with dpg.window():
     with dpg.group(horizontal=True, parent=f"{tab_label}", tag=f"{tab_label}_plot_group"):
