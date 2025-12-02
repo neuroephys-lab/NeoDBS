@@ -1,5 +1,14 @@
 # NeoDBS
 
+## 02.12.2025
+
+### TBF:
+- First, try creating documentation from functions docs
+- Finish documenting all functions of NeoDBS (start at extract_idx_from_series_tag)
+
+### Debug/Finish:
+- Export plot and signals, in all plots/tabs
+
 ## 28.11.2025
 
 ### TBF:

@@ -335,7 +335,6 @@ def export_plot(info, plot_type, size=None, line_types = None):
     if plot_type in ['2D','CC']:
         fig, ax = plt.subplots(figsize=(size[0],size[1]))
         
-        # if ('Timeline' or 'Circadian' or 'Stimulation') in title:
         
         if 'Timeline' in title: 
             labels = [None for _ in labels]
@@ -406,18 +405,40 @@ def export_plot(info, plot_type, size=None, line_types = None):
                 ax.set_title(labels[i])
         axs[-1].set_xlabel(axis[0])
 
-    elif plot_type == 'Bar':
+    elif plot_type in ['Bar','Events']:
         fig, ax = plt.subplots(figsize=(size[0],size[1]))
+        if plot_type=='Events':
+            ax.set_xlim(*[datetime.fromtimestamp(l) for l in limits[0]])
+            fig.autofmt_xdate()
+            
+            width = 0.2
+            if axis[0] == 'Hours': 
+                width = 0.002
+        else:
+            ax.set_xlim(limits[0])
+            width =1
+            labels = []*len(signals)
         for i,signal in enumerate(signals):
             x,y = signal['X'], signal['Y']
-            ax.bar(x,y,color=colors[i],width=1)
+            ax.bar(x,y,color=colors[i],width=width,label=labels[i])
+
+        if any(label is not None for label in labels):
+            fig.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=3, frameon=False)
+        
         ax.set_title(title)
         ax.set_xlabel(axis[0])
         ax.set_ylabel(axis[1])
-        ax.set_xlim(limits[0])
         ax.set_ylim(limits[1])
         if len(axis)>2:
             ax.set_xticks(axis[2][0], labels=axis[2][1])
+    
+    elif plot_type == 'Pie':
+        fig = plt.figure(figsize=(size[0],size[1]))
+        plt.pie(signals,labels=labels,colors=colors,
+                autopct=lambda pct: f'{signals[int(pct/100*len(signals))]:.1f}', 
+                startangle=90)
+        plt.title(title)
+
     fig.savefig(f'{title}.png', bbox_inches='tight',dpi=300) #
 
     plt.close(fig)
@@ -451,7 +472,10 @@ def export_signals(info,filename, tfd = False):
         return
     with open(filename, "w") as f:
         f.write(",".join(list(info.keys())) + "\n")
-        n_lines = len(info[list(info.keys())[0]])
+        n = info[list(info.keys())[0]]
+        if isinstance(n,(list,np.ndarray)):
+            n_lines = len(n)
+        else: n_lines=1
         for i in range(n_lines):
             row = []
             for column in info.keys():
@@ -471,6 +495,31 @@ def wave(frequency = 10, sampling_rate = 1000, duration = 1, amplitude = 1):
 
     return np.array(t), np.array(signal)
 
+
+def convert_to_db(value):
+    """Convert a value to dB scale using 10 * log10.
+    :param value: int/float"""
+     # if isinstance(value, (list, np.ndarray)):
+     #     return [round(10 * np.log10(v +1e-6), 2) for v in value]
+    if isinstance(value, (list, np.ndarray,tuple)):  # Handle peak values (power, frequency)
+        return (round(10 * np.log10(value[0]+1e-6), 2), value[1])
+    elif isinstance(value, (int, float)):
+        return round(10 * np.log10(value+1e-6), 2)
+    return value  # Return unchanged if it's a string or invalid type
+ 
+def convert_from_db(value):
+ 
+    """Convert a dB value back to linear scale using 10^(dB/10).
+    :param value: int/float"""
+     # if isinstance(value, (list, np.ndarray,tuple)):  
+     #     return [round(10**(v / 10), 2) if v != float('-inf') else 0 for v in value]
+ 
+    if isinstance(value, (list, np.ndarray,tuple)):  # Handle peak values (power, frequency)
+        return (round(10**(value[0] / 10), 2) if value[0] != float('-inf') else 0, value[1])
+    elif isinstance(value, (int, float)):
+        return round(10**(value / 10), 2) if value != float('-inf') else 0
+    return value  # Return unchanged if it's a string or invalid type
+ 
 
 #----------- BRAVO ------------------------------------------------------------
 def MedtronicPSD(data, fs=250): 
