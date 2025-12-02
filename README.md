@@ -8,6 +8,9 @@
 
 ### Debug/Finish:
 - Export plot and signals, in all plots/tabs
+- Deleted unused functions
+- Deleted unused parameters
+- Organized functions into proper modules, and replaced callbacks
 
 ## 28.11.2025
 

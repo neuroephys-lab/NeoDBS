@@ -4902,7 +4902,7 @@ def insert_events(sender, app_data, user_data):
                 with dpg.group(parent=new_parent, tag = f"{new_parent}_events"):
                     dpg.add_text('By Event:')
                     for day in types:
-                        toggleType(signal_tags,parent=f"{new_parent}_events", orientation=True, user_data=(day, window_id, tab_tag))  
+                        toggleType(signal_tags,parent=f"{new_parent}_events",user_data=(day, window_id, tab_tag))  
             if window_type == 'Combined': align_events(sender,app_data,(tab_tag,signal_tags))  
         else: 
             dpg.add_text("No Events in the present recordings!", parent=f"{tab_tag}_add_events")
