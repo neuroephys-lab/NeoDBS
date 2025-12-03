@@ -3,20 +3,25 @@ import sys
 import importlib
 import os
 import re
-import json
 
 def is_package_installed(package_name):
+    '''
+    Checks if package installed: tries to import package, if exception thrown return False (signalizes for package to be installed)
+    
+    :param package_name: str, package name
+    '''
     try:
         importlib.import_module(package_name)
         return True
     except ImportError:
         return False
 
-def parse_package_name(requirement_line):
-    # Extract package name from line like "numpy>=1.20" or "dearpygui_ext==1.0.0"
-    return re.split(r'[<>=]', requirement_line.strip())[0]
-
 def install_requirements_if_needed(requirements_file="requirements.txt"):
+    '''
+    Checks requirements, installs packages missing.
+    
+    :param requirements_file: .txt file, 
+    '''
     if not os.path.exists(requirements_file):
         print(f"{requirements_file} not found.")
         return
@@ -26,7 +31,7 @@ def install_requirements_if_needed(requirements_file="requirements.txt"):
 
     missing = []
     for line in lines:
-        package = parse_package_name(line)
+        package = re.split(r'[<>=]', line.strip())[0]
         if not is_package_installed(package):
             missing.append(line)
 
@@ -56,7 +61,7 @@ import csv
 
 #----------------------------------------GLOBAL-----------------------------
 global_bands = ft.bands
-electrodes_names, all_event_names, unchecked_channels = {}, {}, {}
+electrodes_names, all_event_names = {}, {}
 app_state = {"windows": {}}
 colors = [
         (0, 0, 255, 255),      # blue
@@ -73,7 +78,7 @@ colors = [
 #-----------------------------------------UTILS----------------------------------------
 def add_band(sender, app_data, user_data):
     '''
-    Internal: Add user-defined band to internal memory
+    Internal: Add user-defined band to internal app_state memory dictinary
     '''
     tab_tag = user_data
     old = getBandsByTab(tab_tag)
@@ -86,18 +91,18 @@ def add_band(sender, app_data, user_data):
 
 def reset_bands(sender,app_data,user_data):
     '''
-    Internal: reset to default bands (D,T,A,B,G) to internal memory
+    Internal: reset to default bands (D,T,A,B,G) to internal app_state memory dictinary
     '''
     tab_tag = user_data
     window_id = extract_window_id(tab_tag)
     app_state['windows'][window_id]['Bands'] = ft.bands
     
 def sanitize_filename(filename):
-    """Internal: Removes or replaces invalid characters from filenames."""
+    '''Internal: Removes or replaces invalid characters from filenames.'''
     return re.sub(r'[<>:"/\\|?*]', '_', filename)  # Replace invalid characters with '_'
 
 def save_table_to_file(sender, app_data, user_data):
-    """Internal: Saves DPG table data to a .csv or .txt file"""
+    '''Internal: Saves DPG table data to a .csv or .txt file'''
     table_id, file_type = user_data  # Unpack table ID and file type
 
     # Get table columns (headers)
@@ -134,13 +139,13 @@ def save_table_to_file(sender, app_data, user_data):
     print(f"Table saved as {filename}")
 
 def save_band_powers_to_txt(sender, app_data, user_data):
-    """
+    '''
     Internal: saves band mean power over day signals
     info[channel][band] = {
         timestamp: [mean, std],
-        ...
+        
     }
-    """
+    '''
     info, filename=user_data
     filename = filename + ".txt"
 
@@ -166,7 +171,7 @@ def save_band_powers_to_txt(sender, app_data, user_data):
 
 def save_plot(sender,app_data,user_data):
     '''
-    Internal: Prepares data from selected plot to be exported into png file.
+    Prepares data from selected plot to be exported into png file.
     plot_type, plot_tag, y_axis, colormap_int = user_data
     colomap_int: 
         - int: for regular plots
@@ -651,9 +656,16 @@ def toggleVisibility(signal_tags, parent, group, user_data):
                         pass
                     mode = extract_mode(tab_tag)
                     if mode == 'Events':
-                        mean_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+                        mean_power, std_dev = getMeanActiveSeries(window_id,tab_tag,signal_tags)
                         current = dpg.get_value(f"{tab_tag}_mean")
+                        dev = dpg.get_value(f"{tab_tag}_deviation")
+                        if 'Standard' in dev:
+                            dev = 1
+                        else: dev = 2
+                        minus,plus = mean_power-(dev*std_dev), mean_power+(dev*std_dev)
+                        
                         dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
+                        dpg.configure_item(f"{tab_tag}_std", y1=minus,y2=plus)
                     
 
                 checkbox = dpg.add_checkbox(label=label, default_value=visible,
@@ -845,7 +857,7 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None,plot_ta
         # dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag, "", "", ""),parent=f"{tab_tag}_buttons",default_value=False)
         dpg.add_separator()
         dpg.add_text('Shaded Area')
-        dpg.add_radio_button(['Standard Deviation', '95% Confidence Interval'], horizontal=False, callback=deviation, tag = f"{tab_tag}_radio",user_data=('Standard Deviation',tab_tag))
+        dpg.add_radio_button(['Standard Deviation', '95% Confidence Interval'], horizontal=False, callback=deviation, tag = f"{tab_tag}_deviation",user_data=('Standard Deviation',tab_tag))
         dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(f"y_axis_{tab_tag}", tab_tag, signal_tags, tables),parent=f"{tab_tag}_buttons",default_value=False)
         dpg.add_separator(label='Export')
         dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",0))
@@ -871,7 +883,7 @@ def recalculateMeanMetrics(sender, app_data, user_data):
         mean_power = {'X': x, 'Y': y}     
         dpg.delete_item(f"{tab_tag}_mean_metric", children_only=True)
         for band in bands.items():
-            info = extract_psd_features(mean_power, band)
+            info = ft.extract_psd_features(mean_power, band,bands)
             create_table(f"{tab_tag}_mean_metric",f"{tab_tag}_mean_metric_table", info, trial_label=band[0])
 
 def hide(sender,app_data,user_data):
@@ -1408,7 +1420,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     #TABLE CONTENT
                     
                     for band in bands.items():
-                        info = extract_psd_features(p, band)
+                        info = ft.extract_psd_features(p, band,bands=bands)
                         key = list(info.keys())[0]
 
                         if band[0] not in all_info[full_channel].keys():
@@ -1485,7 +1497,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     dpg.delete_item(f"{tab_label}_mean_metric", children_only=True)
 
                 for band in bands.items():
-                    info = extract_psd_features(mean_power, band)
+                    info = ft.extract_psd_features(mean_power, band,bands=bands)
                     create_table(f"{tab_label}_mean_metric",f"{tab_label}_mean_metric_table", info, trial_label=band[0])
 
                 tables.append(f"{tab_label}_mean_metric_table")
@@ -1785,7 +1797,6 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
             else:
                new_signal[ch][key] = np.append(new_signal[ch][key], signal[key])'''
         
-        '''Good version - For individual and combined?'''
         X = signal['X']
         arr = np.array(X)
         
@@ -2106,9 +2117,11 @@ def plot_coherence(parameter_values, tab_label):
         dpg.add_collapsing_header(tag=f"{tab_label}_header",parent=tab_label,label='Extracted Features',default_open=False)
 
     for b,band in bands.items():
-        mask2 = (freq >= band[0]) & (freq <= band[1])
-        p = {'X': freq[mask2], 'Y':list(coh[mask2])}
-        info = extract_timeline_features(p,coh, coherence=True)
+        # mask2 = (freq >= band[0]) & (freq <= band[1])
+        # p = {'X': freq[mask2], 'Y':coh[mask2]}
+        p = {'X': freq, 'Y':coh}
+        # info = ft.extract_timeline_features(p,coh, coherence=True)
+        info = ft.extract_psd_features(p,[b,band],bands=bands)
         create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
 
     dpg.add_separator(label='Export',parent=tab_label)
@@ -2255,8 +2268,9 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
 
                 for b,band in bands.items():
                     mask2 = (freq >= band[0]) & (freq <= band[1])
-                    p = {'X': freq[mask2], 'Y':list(coh[mask2])}
-                    info = extract_timeline_features(p,coh, coherence=True)
+                    p = {'X': freq[mask2], 'Y':coh[mask2]}
+                    # info = ft.extract_timeline_features(p,coh, coherence=True)
+                    info = ft.extract_psd_features(p,[b,band],bands=bands)
                     create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
 
         dpg.add_separator(label='Export',parent=tab_label)
@@ -3448,7 +3462,7 @@ def change_button_color(color_id=4):
     return theme
 
 def create_alpha_theme(alpha=0.5):
-    """
+    '''
     Create and return a DearPyGui plot alpha theme, to be binded to line series.
     
     
@@ -3456,7 +3470,7 @@ def create_alpha_theme(alpha=0.5):
     
     Returns:
         int: The theme ID
-    """
+    '''
     with dpg.theme() as alpha_theme:
         with dpg.theme_component(dpg.mvAll):
             dpg.add_theme_style(dpg.mvPlotStyleVar_FillAlpha, alpha, category=dpg.mvThemeCat_Plots)
@@ -3472,7 +3486,7 @@ def switch_theme(sender, app_data, user_data):
 
 def change_electrodes_names(sender, app_data, user_data):
     '''
-    Adds user-defined name into dictionary, so its used withou memory loss. 
+    Adds user-defined name into dictionary, so its used without app_state memory dictinary loss. 
     Channels are to be renamed are hardcoded.
     
     '''
@@ -3688,6 +3702,12 @@ def set_font(size=16):
 
 #--- Extract signal/identifiers
 def extract_idx_from_series_tag(series_tag: str) -> int:
+    '''
+    Gets id of series/recording, from tag of series plot.
+    
+    :param series_tag: str, series id
+    :return: int, number of series (in app_state memory dictinary)
+    '''
     match = re.search(r'_series_(\d+)(?:_|$)', series_tag)  # Match _series_<number> with or without trailing underscore
     if match:
         return int(match.group(1))  # Extract and return the idx as an integer
@@ -3695,6 +3715,12 @@ def extract_idx_from_series_tag(series_tag: str) -> int:
         raise ValueError(f"Invalid series_tag format: {series_tag}")
     
 def extract_side_from_series_tag(series_tag: str) -> int:
+    '''
+    Gets hemisphere of series/recording, from tag of series plot.
+    
+    :param series_tag: str, series id
+    :return: int, left=0, right=1
+    '''
     match = re.search(r'_(left|right)$', series_tag.lower())  # Match 'left' or 'right' at the end
     if match:
         return match.group(1)
@@ -3702,19 +3728,34 @@ def extract_side_from_series_tag(series_tag: str) -> int:
         raise ValueError("Invalid series_tag format or missing side")
     
 def extract_file_from_series_tag(series_tag: str):
-    """Extracts the 'file' value from a formatted filename string."""
+    '''
+    Gets file of series/recording, from tag of series plot.
+    
+    :param series_tag: str, series id
+    :return: int, file id (in app_state memory dictinary)
+    '''
     match = re.search(r'_file_(\d+)_series_', series_tag)  # Ensure only digits
     return int(match.group(1)) if match else None  # Return integer or None
 
-def extract_edx_from_series_tag(series_tag: str) -> str:
-    """
-    Extracts last group of string bla_bla_bla_group
-    """
+def extract_edx_from_series_tag(series_tag: str) -> str: #unused, past usages could be correctly done with extract_idx_from_series_tag
+    '''
+    Gets id of event, from tag of series plot.
+    
+    :param series_tag: str, series id
+    :return: int, event id (in app_state memory dictinary)
+    '''
+    
     if series_tag.split('_')[-1] in ['left','right']:
         return series_tag.split('_')[-2]
     return series_tag.split('_')[-1]
 
 def extract_event_from_series_tag(event_string):
+    '''
+    Gets name of event, from tag of series plot.
+    
+    :param series_tag: str, series id (ex.: tab_Streaming_0_series_0)
+    :return: str, event name (ex.: series_0)
+    '''
     parts = event_string.split('_')
     
     # Skip the first three (e.g., tab, Streaming, 0), then look for the next non-number
@@ -3724,6 +3765,12 @@ def extract_event_from_series_tag(event_string):
     return None
 
 def extract_channel_from_series_tag(series_tag: str) -> str:
+    '''
+    Gets channel, without hemisphere, of series/recording, from channel (ex.: 'ONE_THREE_LEFT' --> 'ONE_THREE').
+    
+    :param series_tag: str, series id
+    :return: str, channel name
+    '''
     match = re.search(r'^(.*?)(?=_(left|right))', series_tag.lower())  # Look for '_left' or '_right' without including them
     
     if match:
@@ -3732,10 +3779,12 @@ def extract_channel_from_series_tag(series_tag: str) -> str:
         return series_tag
 
 def extract_window_id(tab_tag: str) -> int:
-    """
+    '''
     Extracts window_id as an integer from a tab_tag formatted as 'tab_{mode}_{window_id}' 
     or 'tab_{mode}_{window_id}_{suffix}'.
-    """
+
+    :param tab_tag: Description
+    '''
     match = re.match(r"tab_[^_]+_(\d+)(?:_.+)?$", tab_tag)  # Capture window_id, ignore optional suffix
     if match:
         return int(match.group(1))  # Convert extracted value to an integer
@@ -3743,6 +3792,12 @@ def extract_window_id(tab_tag: str) -> int:
         raise ValueError(f"Invalid tab_tag format: {tab_tag}")
 
 def extract_type_window(window_id):
+    '''
+    Gets type of window: 'Individual' or 'Combined'
+    return str
+    
+    :param window_id: Description
+    '''
     if app_state['windows'][window_id]['Files'] == []:
         return None
     if 'Data' in app_state['windows'][window_id].keys():
@@ -3750,10 +3805,14 @@ def extract_type_window(window_id):
     else: return 'Combined'
 
 def extract_mode(tab_tag: str) -> str:
-    """
+    '''
     Extracts the mode from a tab_tag formatted as 'tab_{mode}_{window_id}' 
     or 'tab_{mode}_{window_id}_{suffix}'.
-    """
+
+    Return str
+
+    :param tab_tag: Description
+    '''
     match = re.match(r"tab_([^_]+)_\d+(?:_.+)?$", tab_tag)  # Capture mode, ignore optional suffix
     if match:
         return match.group(1)  # Return the extracted mode
@@ -3761,13 +3820,15 @@ def extract_mode(tab_tag: str) -> str:
         raise ValueError(f"Invalid tab_tag format: {tab_tag}")
 
 def extract_channel_hemisphere(label):
-    """
+    '''
     Parses a label like 'ZERO_THREE_LEFT' into channel and hemisphere.
     
     Returns:
         channel (str): The channel with underscores (e.g. 'zero_three')
         hemisphere (str): The hemisphere (e.g. 'left')
-    """
+
+    :param label: str, channel_hemisphere = 'ZERO_THREE_LEFT'
+    '''
     parts = label.split('_')
     
     if len(parts) < 2:
@@ -3779,12 +3840,16 @@ def extract_channel_hemisphere(label):
     return channel, hemisphere
 
 def getActiveSeries(signal_tags):
+    '''
+    From signal's id, returns only a list of the visible tags.
+    
+    :param signal_tags: dict/list, if dict the tags are keys
+    '''
     active_tags = []
 
     if type(signal_tags) == dict:
         tags = signal_tags.keys()
     elif type(signal_tags) == list:
-
         tags = signal_tags.copy()
 
     for tag in tags:
@@ -3792,20 +3857,17 @@ def getActiveSeries(signal_tags):
         if info['show'] == True: 
             active_tags.append(tag)
     keywords = ['series', 'file', 'OFF', 'ON']
+    
     active_tags = [tag for tag in active_tags if extract_event_from_series_tag(tag) in keywords]
-
-    return active_tags
-
-def getInactiveSeries(signal_tags):
-    active_tags = []
-
-    for tag, visible in signal_tags.items():
-        info = dpg.get_item_configuration(tag)
-        if info['show'] == False: 
-            active_tags.append(tag)
     return active_tags
 
 def getActiveSignals(tab_tag,signal_tags):
+    '''
+    From Active Series, returns the data of the series in app_state memory dictinary.
+    
+    :param tab_tag: Description
+    :param signal_tags: Description
+    '''
     window_id = extract_window_id(tab_tag)
     active_series = getActiveSeries(signal_tags)
     signals = []
@@ -3825,9 +3887,18 @@ def getActiveSignals(tab_tag,signal_tags):
     return signals
 
 def getSignalbyIdx(window_id,tab_tag,series_tag,mode=None):
+    '''
+    Gets signal data, from app_state memory dictinary, from series_tag
+    
+    :param window_id: Description
+    :param tab_tag: Description
+    :param series_tag: Description
+    :param mode: Description
+    '''
     idx = extract_idx_from_series_tag(series_tag)
     file = extract_file_from_series_tag(series_tag)
-    edx = int(extract_edx_from_series_tag(series_tag))
+    # edx = int(extract_edx_from_series_tag(series_tag))
+    edx = extract_idx_from_series_tag(series_tag)
     wt = extract_type_window(window_id)
     
     if wt == 'Combined': #Combined window
@@ -3839,19 +3910,14 @@ def getSignalbyIdx(window_id,tab_tag,series_tag,mode=None):
     else: #Individual - always signal
         return app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]
 
-def getCleanTimelinebyIdx(window_id,tab_tag,series_tag,mode=None):
-    wt = extract_type_window(window_id)
-    idx = extract_idx_from_series_tag(series_tag)
-    file = extract_file_from_series_tag(series_tag)
-    edx = int(extract_edx_from_series_tag(series_tag))
-    if wt == 'Combined':
-        if mode == None: #signal and not events
-            return app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Clean'][idx]
-        else: #events
-            return app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['CleanEvents'][edx]
-    else: return app_state['windows'][window_id]['Data'][tab_tag]['Clean'][idx]
-
 def getSignalbyIdxSide(window_id,tab_tag,series_tag):
+    '''
+    Gets signal data, for Events, from series_tag.
+    
+    :param window_id: Description
+    :param tab_tag: Description
+    :param series_tag: Description
+    '''
     idx = extract_idx_from_series_tag(series_tag)
     side = extract_side_from_series_tag(series_tag)
     wt = extract_type_window(window_id)
@@ -3860,6 +3926,12 @@ def getSignalbyIdxSide(window_id,tab_tag,series_tag):
     else: return app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Signals'][idx][side]
 
 def getEventsbyIdx(tab_tag,idx):
+    '''
+    Gets Events in signal idx, by id of signal
+
+    :param tab_tag: Description
+    :param idx: int, signal id in app_state memory dictinary
+    '''
     window_id = extract_window_id(tab_tag)
     dictionary = {}
     if extract_type_window(window_id) == 'Combined':
@@ -3870,6 +3942,12 @@ def getEventsbyIdx(tab_tag,idx):
     else: return None
 
 def getEventsbyTag(tab_tag,series_tag):
+    '''
+    Gets Events in signal idx, by series tag
+    
+    :param tab_tag: Description
+    :param series_tag: Description
+    '''
     window_id = extract_window_id(tab_tag)
     idx = extract_idx_from_series_tag(series_tag)
     file = extract_file_from_series_tag(series_tag)
@@ -3883,29 +3961,40 @@ def getEventsbyTag(tab_tag,series_tag):
     else: return None
 
 def getBandsByTab(tab_tag):
+    '''
+    Gets frequency bands (used for spectral analysis), associated to window or tab.
+    
+    :param tab_tag: Description
+    '''
     window_id = extract_window_id(tab_tag)
     return app_state['windows'][window_id]['Bands']
 
-def getUpdatedAllEventsName(events):
-    
-    for i,e in enumerate(events):
-        if e in all_event_names.keys():
-            events[i] = all_event_names[e]
-        else:
-            all_event_names[e] = e
-    return events
-
 def getUpdatedEventName(event):
+    '''
+    Gets user-defined event name, from original name defined in json file.
+    
+    :param event: str, original name 
+    '''
     if event not in all_event_names.keys():
         all_event_names[event] = event
     return all_event_names[event]
 
 def getUpdatedElectrodeName(electrode):
+    '''
+    Gets user-defined electrode name, from original electrode name defined in json file.
+    
+    :param electrode: str, original name 
+    '''
     if electrode not in electrodes_names.keys():
         electrodes_names[electrode] = electrode
     return electrodes_names[electrode]
 
 def getDatabyTag(series_tag):
+    '''
+    Return Data dicitionary (from json file), from series tag
+    
+    :param series_tag: Description
+    '''
     window_id = extract_window_id(series_tag)
     wt = extract_type_window(window_id)
     if wt == 'Combined':
@@ -3915,6 +4004,12 @@ def getDatabyTag(series_tag):
         return app_state['windows'][window_id]['Data']
 
 def getDatabyFile(window_id, file):
+    '''
+    Return Data dicitionary (from json file), from file id in app_state memory dictinary
+    
+    :param window_id: Description
+    :param file: Description
+    '''
     wt = extract_type_window(window_id)
     if wt == 'Combined':
         return app_state['windows'][window_id]['Files'][file]['Data']
@@ -3922,8 +4017,13 @@ def getDatabyFile(window_id, file):
         return app_state['windows'][window_id]['Data']
 
 def get_limits(children,plot_tag):
+    '''
+    Returns absolute axis limits, and indexes to create mask on signals and return only the visible parts of the signals.
+    
+    :param children: list, signals tags id (children of y axis)
+    :param plot_tag: str/id, plot id (parent of axis)
+    '''
     axis = dpg.get_item_children(plot_tag)[1][0]
-    label = dpg.get_item_label(axis)
     limits = dpg.get_axis_limits(axis)
     xx = [dpg.get_value(tag)[0] for tag in children]
     lengths = [len(x) for x in xx]
@@ -3935,7 +4035,15 @@ def get_limits(children,plot_tag):
 
     return tmin,tmax,maxX
 
-def updateKeySignalbyIdx(value,tab_tag,series_tag, key):
+def updateKeySignalbyIdx(value,tab_tag,series_tag, key): #check need of this
+    '''
+    Updates app_state memory dictionary with processed signal (cut or new events)
+    
+    :param value: list, new signal
+    :param tab_tag: Description
+    :param series_tag: Description
+    :param key: str, key onto the value will be updated, must exist
+    '''
     window_id = extract_window_id(tab_tag)
     idx = extract_idx_from_series_tag(series_tag)
     file = extract_file_from_series_tag(series_tag)
@@ -3943,11 +4051,22 @@ def updateKeySignalbyIdx(value,tab_tag,series_tag, key):
         app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx][key] = value
     else: app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Signals'][idx][key] = value
 
-def updateSignalbyIdx(value,tab_tag,series_tag, func = None, mode = None, new_tab_tag = None):
+def updateSignalbyIdx(value,tab_tag,series_tag, func = None, mode = None, new_tab_tag = None): #check need of this
+    '''
+    Updates signal after filtering and saves wavelet into app_state memory.
+    
+    :param value: list, new signal
+    :param tab_tag: Description
+    :param series_tag: Description
+    :param func: Description
+    :param mode: Description
+    :param new_tab_tag: Description
+    '''
     window_id = extract_window_id(tab_tag)
     idx = extract_idx_from_series_tag(series_tag)
     file = extract_file_from_series_tag(series_tag)
-    edx = int(extract_edx_from_series_tag(series_tag))
+    # edx = int(extract_edx_from_series_tag(series_tag))
+    edx = extract_idx_from_series_tag(series_tag)
     wt = extract_type_window(window_id)
     if new_tab_tag: tab_tag=new_tab_tag
 
@@ -3969,7 +4088,11 @@ def updateSignalbyIdx(value,tab_tag,series_tag, func = None, mode = None, new_ta
             else: app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Events'][edx]['Y'] = value
 
 def enforce_min_max(sender, app_data, user_data):
-    """Ensure max is always at least 10 units greater than min, and min is never below 0."""
+    '''Ensure max is always at least diff units greater than min, and min is never below 0.
+
+    sender: min_tag or max_tag
+    min_tag, max_tag, diff = user_data
+    '''
     min_tag, max_tag, diff = user_data  # Extract tag references
     
     min_value = max(0, dpg.get_value(min_tag))  # Ensure min is at least 0
@@ -3994,6 +4117,13 @@ def enforce_min_max(sender, app_data, user_data):
         dpg.set_value(max_tag, max_value)
 
 def enforce_range(sender, app_data, user_data):
+    '''
+    Enforces range of colormap, diff of 5 units.
+    
+    :param sender: Description
+    :param app_data: Description
+    :param user_data: tab_label (parent of sender), absolute_min (int/float), absolute_max (int/float)
+    '''
     tab_label, absolute_min, absolute_max = user_data
     min_tag, max_tag = f"{tab_label}_emin", f"{tab_label}_emax"
     diff = 5
@@ -4015,98 +4145,25 @@ def enforce_range(sender, app_data, user_data):
     dpg.set_value(min_tag, min_value)
     dpg.set_value(max_tag, max_value)
 
-def extract_psd_features(p, band):
-    b,v = band
-    band = {b: v}
-    full_power = np.sum(p['Y'])
-    freqs, psd = p['X'], p['Y']
+def extract_cc_features(p, y_axis, tab_label ,mode = None) -> dict: 
+    '''
+    Extracts features of computed cross-correlation, plots respective features and returns features in a dictionary: info.
 
-    #mean power per band
-    pc = ft.mean_power_all_bands(p, band)
-    std = ft.std_dev_streams(p, band)
-    mean = {'Mean Power (mean, std. dev)': [np.round(pc[b],2), np.round(std[b],2)]}
-
-    #normalized mean power
-    norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc[b]*100/full_power,2), np.round(std[b],2)]}
-
-    if isinstance(freqs, list): 
-        freqs = np.array(freqs)
-        psd = np.array(psd)
-    mask = (freqs >= v[0]) & (freqs <= v[1])
-    auc = {'Sum Power (AUC)': np.round(np.sum(psd[mask]),2)}
-
-    #normalized auc
-    norm_auc = {'% Sum Power (AUC)': f"{np.round(np.sum(psd[mask])/full_power*100,2)}"}
-
-    #peak power
-    peak = ft.peak_per_band(p, band)
-    picos = {'Peak Power (power, frequency)': p for p in peak.values()}
-
-
-    info = mean | norm_mean| auc | norm_auc| picos
-
-    return info
-
-def extract_timeline_features(p, full_power=None, coherence=False):
+    info = {
+        'RMS Correlation': rms,
+        'Max Correlation': max_value,
+        'Lag til Max (s)': lag,
+        'Half Max Width (s)': width,
+        'Peak Frequency (mean, std)': [freq_mean,freq_std]
+    }
     
-    if full_power is None:
-        full_power = np.nansum(p['Y'])
-    else: full_power = np.nansum(full_power)
-
-    freqs, psd = p['X'], p['Y']
-
-    if isinstance(psd, np.ndarray):
-        psd = psd.tolist()
-    elif psd is None:
-        return
-    #mean power per band
-    pc = np.nanmean(psd)
-    std = np.nanstd(psd)
-    mean = {'Mean Power (mean, std. dev)': [np.round(pc,2), np.round(std,2)]}
-
-    #normalized mean power
-    if full_power is not None:
-        sump = np.nansum(psd)
-        norm_mean = {'% Mean Power (mean, std. dev)': [np.round(sump*100/full_power,2), np.round(std * 100 / full_power,2)]}
- 
-    #peak power
-    peak = np.nanmax(psd)
-    picos = {'Peak Power': peak}
-
-    #peak time
-    time = psd.index(peak)
-    
-    try:
-        time = freqs[time]
-    except Exception: time = freqs[0]
-
-    key = 'Peak Time'
-    if isinstance(time,str):
-        peak = str(utl.parse_datetime(time).time())
-    elif isinstance(time, (int, float)):
-        if np.isnan(time):
-            return
-    elif isinstance(time, np.ndarray):
-        if np.any(np.isnan(time)):
-            return
-    elif isinstance(time,float):
-        peak = str(datetime.fromtimestamp(time).time())
-    else: #datetime.datetime object
-        peak=str(time.time())
-
-    if coherence:
-        key = 'Peak Frequency'
-        peak = time
-
-    time = {key: peak}
-    info = mean | picos | time
-    if 'Sense' in p.keys():
-        sense = {'Sensing Freq. (Hz)': p['Sense']}
-        info = info| sense
-
-    return info
-
-def extract_cc_features(p, y_axis, tab_label ,mode = None):
+    :param p: computed signal dictionary
+    :param y_axis: parent for plot
+    :param tab_label: parent of plot, adding table of features
+    :param mode: general cc or band-specific cc
+    :return: Description
+    :rtype: dict
+    '''
 
     tags = []
     max_value = max(p['Y'])
@@ -4463,7 +4520,7 @@ def CustomFilter(sender,app_data,user_data):
     def create_input_fields(sender, app_data):
 
         
-        """Dynamically create input fields for selected function."""
+        '''Dynamically create input fields for selected function.'''
         #global parameter_values, input_fields
         
         dpg.delete_item(param_container, children_only=True)  # Clear previous inputs
@@ -4493,7 +4550,7 @@ def CustomFilter(sender,app_data,user_data):
         dpg.add_button(label="Save Parameters", callback=save_parameters, parent=param_container, user_data = app_data)
 
     def save_parameters(sender, app_data, user_data):
-        """Saves input values to the dictionary and prints them."""
+        '''Saves input values to the dictionary and prints them.'''
         parameter_values.clear()  # Reset before saving
 
         for param, input_id in input_fields.items():
@@ -4633,7 +4690,7 @@ def CustomFeatures(sender,app_data,user_data):
 
     def create_input_fields(sender, app_data):
 
-        """Dynamically create input fields for selected function."""
+        '''Dynamically create input fields for selected function.'''
         if app_data == 'multitaper coherence':
             params, documentation = fill_params_features('dpss') 
         elif app_data == 'cross-correlation':
@@ -4731,7 +4788,7 @@ def CustomFeatures(sender,app_data,user_data):
         dpg.add_button(label="Save Parameters", callback=save_parameters, parent=param_container, user_data = app_data)
 
     def save_parameters(sender, app_data, user_data):
-        """Saves input values to the dictionary and prints them."""
+        '''Saves input values to the dictionary and prints them.'''
         parameter_values.clear()  # Reset before saving
 
         for param, input_id in input_fields.items():
@@ -5126,7 +5183,7 @@ def circadian_rhythm(sender, app_data, user_data):
                 if not dpg.does_item_exist(f"{tab_label}_header"):
                     dpg.add_collapsing_header(tag=f"{tab_label}_header", parent=tab_label, label = 'Circadian Metrics')
 
-                info = extract_timeline_features(sign)
+                info = ft.extract_timeline_features(sign)
                 create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=label)
 
 
@@ -5137,7 +5194,7 @@ def circadian_rhythm(sender, app_data, user_data):
 
             sign = {'X':new_x,'Y':mean}
 
-            info = extract_timeline_features(sign)
+            info = ft.extract_timeline_features(sign)
             create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label='Mean')
 
         dates = sorted(np.unique(dates).tolist())
@@ -5316,7 +5373,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
 
             if not isinstance(y,(list,np.ndarray)) or (np.all(y) == np.nan):
                 continue
-            info = extract_timeline_features(sign)
+            info = ft.extract_timeline_features(sign)
             if info != None: 
                 create_table(header,table, info, trial_label=label)
 
@@ -5329,7 +5386,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
             dpg.bind_item_theme(mean, change_line_thickness(5))
 
         mean_info = {'X': segment[0], 'Y':list(mean_value)}
-        mean_info = extract_timeline_features(mean_info)
+        mean_info = ft.extract_timeline_features(mean_info)
         create_table(f"{tab_label}_header",f"{tab_label}_table", mean_info, trial_label='Mean')
 
     def bva(segments):
@@ -5371,7 +5428,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
         dpg.configure_item(f"{tab_label}_mean",y=new_mean)
 
         mean_info = {'X': t[0], 'Y':new_mean}
-        mean_info = extract_timeline_features(mean_info)
+        mean_info = ft.extract_timeline_features(mean_info)
         create_table(f"{tab_label}_header",f"{tab_label}_table", mean_info, trial_label='New Mean')
 
     if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
@@ -5470,7 +5527,7 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         updateSignalbyIdx(copy.tolist(),tab_tag,tag,f'Filtered_{side}')
 
         sign = {'X': new_x, 'Y':copy.tolist()}
-        info = extract_timeline_features(sign)
+        info = ft.extract_timeline_features(sign)
         create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=dpg.get_item_label(tag))
         
 
@@ -5736,7 +5793,6 @@ def show_event_summary(mode,tab_tag,plot_tag,files=None):
             dpg.add_button(label = 'Export Plot Figure',width=300,callback = save_plot,user_data =('Pie', plot_tag, y_axis,0))
             dpg.add_button(label='Export Signals',width=300,callback=save_signals,user_data=(y_axis,plot_tag,'Pie'))
 
-
 def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     app_state['windows'][window_id]['Data'][tab_tag]['Signals'] = {'left': [], 'right': []}
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)   
@@ -5834,7 +5890,7 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
                     #TABLE CONTENT
                     for band in bands.items():
-                        info = extract_psd_features(p, band)
+                        info = ft.extract_psd_features(p, band,bands=bands)
                         temp = info['Mean Power (mean, std. dev)']
                         # temp = info['Peak Power (power, frequency)']
                         if not isinstance(temp,(int,float)): all_mean[band[0]] = temp[-1]
@@ -5860,7 +5916,7 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             dpg.bind_item_theme(m, change_line_thickness(5))
             mean_power = {'Y': mean_power, 'X': p['X']}
             for band in bands.items():
-                info = extract_psd_features(mean_power, band)
+                info = ft.extract_psd_features(mean_power, band,bands=bands)
                 create_table(f"{tab_label}_mean_metric",f"{tab_label}_mean_metric_table", info, trial_label=band[0])
 
             tables.append(f"{tab_label}_mean_metric_table")
@@ -5989,7 +6045,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     if not dpg.does_item_exist(f"{tab_tag}_header"):
                         dpg.add_collapsing_header(tag=f"{tab_tag}_header", parent=f"{tab_tag}_individual", label = 'Streams Metrics')
 
-                    info = extract_timeline_features(sign)
+                    info = ft.extract_timeline_features(sign)
                     create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=label_left)
                     create_table(f"{tab_tag}_{side}",f"{tab_tag}_{side}_table", info, trial_label=datestr)
                     create_table(f"{tab_tag}_{datestr}",f"{tab_tag}_{datestr}_table", info, trial_label=side)
@@ -6202,7 +6258,7 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                         dpg.add_collapsing_header(tag=f"{series_tag}_header", parent=f"{tab_tag_art}_individual",label=label)
 
                     for band in bands.items():
-                        info = extract_psd_features(signal, band)
+                        info = ft.extract_psd_features(signal, band,bands=bands)
                         create_table(f"{series_tag}_header",f"{series_tag}_table", info, trial_label=band[0])
                         create_table(f"{tab_tag_art}_{side}",f"{tab_tag_art}_{side}_table", info, trial_label=f"{band[0]} | label")
                         create_table(f"{tab_tag_art}_{channel}_{side}",f"{tab_tag_art}_{channel}_{side}_table", info, trial_label=band[0])
@@ -6220,7 +6276,7 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                 if not dpg.does_item_exist(f"{tab_tag_art}_mean_metric"): dpg.add_collapsing_header(tag=f"{tab_tag_art}_mean_metric",parent=tab_tag_art,label = 'Mean')
 
                 for band in bands.items():
-                    info = extract_psd_features(mean_power, band)
+                    info = ft.extract_psd_features(mean_power, band,bands=bands)
                     create_table(f"{tab_tag_art}_mean_metric",f"{tab_tag_art}_mean_metric_table", info, trial_label=band[0])
 
             with dpg.group(tag=f"{tab_tag_art}_buttons"):
@@ -6353,7 +6409,7 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                 #TABLE CONTENT
                 p = {'X': f, 'Y': m}
                 for band in bands.items():
-                    info = extract_psd_features(p, band)
+                    info = ft.extract_psd_features(p, band,bands=bands)
                     create_table(f"{line_tag}_header",f"{line_tag}_header_table", info, trial_label=band[0]) #individual
                     create_table(f"{side}_{new_tab_tag}",f"{side}_{new_tab_tag}_table", info, trial_label=f"{band[0]} | {channel}") #hemisphere
 
@@ -6367,7 +6423,7 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                 #TABLE CONTENT
                 p = {'X': f, 'Y': m}
                 for band in bands.items():
-                    info = extract_psd_features(p, band)
+                    info = ft.extract_psd_features(p, band)
                     create_table(f"{line_tag}_header",f"{line_tag}_header_table", info, trial_label=band[0])
 '''
 
@@ -6648,7 +6704,7 @@ def electrode_tab(Data,tab_tag):
                 }
                 signals.append(sign)
                 for band in bands.items():
-                    info = extract_psd_features(sign, band)
+                    info = ft.extract_psd_features(sign, band,bands=bands)
                     temp = info['Mean Power (mean, std. dev)']
                     if not isinstance(temp,(int,float)): all_mean[band[0]] = temp[-1]
                     else: all_mean[band[0]]=temp
@@ -6670,7 +6726,7 @@ def electrode_tab(Data,tab_tag):
                 dpg.delete_item(f"{tab_tag}_mean_metric", children_only=True)
 
             for band in bands.items():
-                info = extract_psd_features(mean_dict, band)
+                info = ft.extract_psd_features(mean_dict, band,bands=bands)
                 create_table(f"{tab_tag}_mean_metric",f"{tab_tag}_mean_metric_table", info, trial_label=band[0])
             tables.append(f"{tab_tag}_mean_metric_table")
 
@@ -6806,7 +6862,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
 
                             #TABLE CONTENT
                             for band in bands.items():
-                                info = extract_psd_features(p, band)
+                                info = ft.extract_psd_features(p, band,bands=bands)
                                 temp = info['Mean Power (mean, std. dev)']
                                 # temp = info['Peak Power (power, frequency)']
                                 if not isinstance(temp,(int,float)): all_mean[band[0]] = temp[-1]
@@ -6835,7 +6891,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
             dpg.bind_item_theme(m, change_line_thickness(5))
             mean_power = {'Y': mean_power, 'X': p['X']}
             for band in bands.items():
-                info = extract_psd_features(mean_power, band)
+                info = ft.extract_psd_features(mean_power, band,bands=bands)
                 create_table(f"{tab_label}_mean_metric",f"{tab_label}_mean_metric_table", info, trial_label=band[0])
 
             tables.append(f"{tab_label}_mean_metric_table")
@@ -6968,7 +7024,7 @@ def comb_setup_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                             if not dpg.does_item_exist(f"{series_tag}_header"): dpg.add_collapsing_header(tag=f"{series_tag}_header", parent=tab_tag_art,label=label)
 
                             for band in bands.items():
-                                info = extract_psd_features(signal, band)
+                                info = ft.extract_psd_features(signal, band,bands=bands)
                                 create_table(f"{series_tag}_header",f"{series_tag}_table", info, trial_label=band[0])
 
                 mean_power = np.mean([signal['Y'] for signal in artifacts], axis = 0)
@@ -6978,7 +7034,7 @@ def comb_setup_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                 if not dpg.does_item_exist(f"{tab_tag_art}_mean_metric"): dpg.add_collapsing_header(tag=f"{tab_tag_art}_mean_metric",parent=tab_tag_art,label = 'Mean')
 
                 for band in bands.items():
-                    info = extract_psd_features(mean_power, band)
+                    info = ft.extract_psd_features(mean_power, band,bands=bands)
                     create_table(f"{tab_tag_art}_mean_metric",f"{tab_tag_art}_mean_metric_table", info, trial_label=band[0])
 
                 
@@ -7138,7 +7194,7 @@ def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     #TABLE CONTENT
                     p = {'X': f, 'Y': m}
                     for band in bands.items():
-                        info = extract_psd_features(p, band)
+                        info = ft.extract_psd_features(p, band,bands=bands)
                         create_table(f"{line_tag}_header",f"{line_tag}_header_table", info, trial_label=band[0]) #individual
                         create_table(f"{side}_{new_tab_tag}",f"{side}_{new_tab_tag}_table", info, trial_label=f"{band[0]} | {channel} | {date[:10]}") #hemisphere
                         create_table(f"{channel}_{side}_{new_tab_tag}",f"{channel}_{side}_{new_tab_tag}_table", info, trial_label=f"{band[0]} | {date[:10]}") #by channel
@@ -7356,7 +7412,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                             if not dpg.does_item_exist(f"{tab_tag}_header"):
                                 dpg.add_collapsing_header(tag=f"{tab_tag}_header", parent=f"{tab_tag}_individual", label = 'Streams Metrics')
 
-                            info = extract_timeline_features(sign)
+                            info = ft.extract_timeline_features(sign)
                             create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=label_left)
                             create_table(f"{tab_tag}_{side}",f"{tab_tag}_{side}_table", info, trial_label=f"{date} | {channel}")
                             create_table(f"{tab_tag}_{channel}",f"{tab_tag}_{channel}_table", info, trial_label=f"{date} | {sensing_band}")
@@ -7513,7 +7569,7 @@ def create_multiple_window():
             dpg.configure_item(f"open_file_btn_{window_id}", show=True)
 
     def create_file_dialog(window_id):
-        """Creates a file dialog for a given window."""
+        '''Creates a file dialog for a given window.'''
         with dpg.file_dialog(
             label='Multiple files can only be selected simultaneously if from the same folder!',
             directory_selector=False, 
@@ -7647,7 +7703,7 @@ def create_multiple_window():
 
 #-----------------------------------INDIVIDUAL ANALISYS-----------------------------------
 def create_individual_window():
-    """Dynamically creates a new independent window."""
+    '''Dynamically creates a new independent window.'''
     window_id = len(app_state["windows"])  # Unique ID
     app_state["windows"][window_id] = {"Files": []}  # Track window state
     app_state['windows'][window_id]['Bands'] = global_bands
@@ -7678,7 +7734,7 @@ def create_individual_window():
                 dpg.configure_item(f"open_file_btn_{window_id}", show=True)
 
     def create_file_dialog(window_id):
-        """Creates a file dialog for a given window."""
+        '''Creates a file dialog for a given window.'''
         with dpg.file_dialog(
             directory_selector=False, 
             show=False, 
@@ -7868,69 +7924,72 @@ def create_individual_window():
    
 #---------------------------------------MAIN WINDOW---------------------------------------
 
-dpg.create_context()
+if __name__ == "__main__":
+    # rest of your runtime code
+
+    dpg.create_context()
 
 
-dpg.create_viewport(title="NeoDBS", width=500, height=500)
-dpg.set_viewport_large_icon('NeoDBS.ico')
-dpg.set_viewport_small_icon('NeoDBS.ico')
-# dpg.configure_app(init_file="previous.ini")
-dpg.setup_dearpygui()
+    dpg.create_viewport(title="NeoDBS", width=500, height=500)
+    dpg.set_viewport_large_icon('NeoDBS.ico')
+    dpg.set_viewport_small_icon('NeoDBS.ico')
+    # dpg.configure_app(init_file="previous.ini")
+    dpg.setup_dearpygui()
 
-with dpg.texture_registry(show=False):
-    width, height, channels, data = dpg.load_image("NeoDBS.png")
-    dpg.add_static_texture(width, height, data, tag="logo_tex")
+    with dpg.texture_registry(show=False):
+        width, height, channels, data = dpg.load_image("NeoDBS.png")
+        dpg.add_static_texture(width, height, data, tag="logo_tex")
 
-# GLOBAL FONT REGISTRY
-with dpg.font_registry(tag="FONT_REGISTRY"):
-    pass
-
-
-# Create window that matches image size exactly
-with dpg.window(label="", tag="Logo", no_title_bar=True, no_resize=True, no_close=True,
-                no_collapse=True, no_move=True, width=width, height=height):
-    dpg.add_image("logo_tex", width=width, height=height, pos=[0, 0])
+    # GLOBAL FONT REGISTRY
+    with dpg.font_registry(tag="FONT_REGISTRY"):
+        pass
 
 
-def load_main_ui():
-    dpg.delete_item("Logo")
+    # Create window that matches image size exactly
+    with dpg.window(label="", tag="Logo", no_title_bar=True, no_resize=True, no_close=True,
+                    no_collapse=True, no_move=True, width=width, height=height):
+        dpg.add_image("logo_tex", width=width, height=height, pos=[0, 0])
 
-    light_theme = themes.create_theme_imgui_light()
-    dark_theme = themes.create_theme_imgui_dark()
-    default_classic_theme = dpg.add_theme()  # DPG default
 
-    # Main window
-    with dpg.window(label="NeoDBS", width=1000, height=600, tag="Main"):
-        dpg.bind_theme(design())
-        set_font()
-        with dpg.menu_bar():
-            with dpg.menu(label="Themes"):
-                dpg.add_menu_item(label="Classic", callback=switch_theme, user_data=default_classic_theme)
-                dpg.add_menu_item(label="Light", callback=switch_theme, user_data=light_theme)
-                dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
-            with dpg.menu(label="Edit"):
-                dpg.add_menu_item(label='Resize Font',callback=resize_font)
-                dpg.add_menu_item(label="Rename Electrodes", callback=change_electrodes_names)
-                dpg.add_menu_item(label='Rename Event/Group',callback = change_event_name)
-            with dpg.menu(label="Save"):
-                dpg.add_menu_item(label="Save All Plots")
-                dpg.add_menu_item(label="Save All Tables")
-                dpg.add_menu_item(label="Save Workspace")
+    def load_main_ui():
+        dpg.delete_item("Logo")
 
-        with dpg.group(horizontal=True, pos=[150, 250]):
-            dpg.add_button(label="Individual/Recording Analysis", callback=create_individual_window,height=40,width=350)
-            dpg.add_spacer(indent=5)
-            dpg.add_button(label="Combined/Event Analysis", callback=create_multiple_window,height=40,width=350)
-            dpg.bind_item_handler_registry
-        dpg.set_viewport_width(1000)
-        dpg.set_viewport_height(600)
+        light_theme = themes.create_theme_imgui_light()
+        dark_theme = themes.create_theme_imgui_dark()
+        default_classic_theme = dpg.add_theme()  # DPG default
 
-    
-    dpg.set_primary_window("Main", True)
+        # Main window
+        with dpg.window(label="NeoDBS", width=1000, height=600, tag="Main"):
+            dpg.bind_theme(design())
+            set_font()
+            with dpg.menu_bar():
+                with dpg.menu(label="Themes"):
+                    dpg.add_menu_item(label="Classic", callback=switch_theme, user_data=default_classic_theme)
+                    dpg.add_menu_item(label="Light", callback=switch_theme, user_data=light_theme)
+                    dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
+                with dpg.menu(label="Edit"):
+                    dpg.add_menu_item(label='Resize Font',callback=resize_font)
+                    dpg.add_menu_item(label="Rename Electrodes", callback=change_electrodes_names)
+                    dpg.add_menu_item(label='Rename Event/Group',callback = change_event_name)
+                with dpg.menu(label="Save"):
+                    dpg.add_menu_item(label="Save All Plots")
+                    dpg.add_menu_item(label="Save All Tables")
+                    dpg.add_menu_item(label="Save Workspace")
 
-dpg.show_viewport()
-dpg.set_frame_callback(70, load_main_ui)  
+            with dpg.group(horizontal=True, pos=[150, 250]):
+                dpg.add_button(label="Individual/Recording Analysis", callback=create_individual_window,height=40,width=350)
+                dpg.add_spacer(indent=5)
+                dpg.add_button(label="Combined/Event Analysis", callback=create_multiple_window,height=40,width=350)
+                dpg.bind_item_handler_registry
+            dpg.set_viewport_width(1000)
+            dpg.set_viewport_height(600)
 
-dpg.start_dearpygui()
-dpg.destroy_context()
+        
+        dpg.set_primary_window("Main", True)
+
+    dpg.show_viewport()
+    dpg.set_frame_callback(70, load_main_ui)  
+
+    dpg.start_dearpygui()
+    dpg.destroy_context()
 

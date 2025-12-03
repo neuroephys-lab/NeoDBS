@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import spectrogram
 from datetime import datetime
-
+import re
 '''
 BASE
 
@@ -23,31 +23,10 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 # # file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2025-01-23\\Report_Json_Session_Report_20250212T122746.json"
 
 '''
+file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
+p = DH.getSignals(DH.getData(file),'Events')[0]['Left']
 
-file = "C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
-
-Data = DH.getData(file)
-
-
-# Ensure numeric signals
-signals = [28.0,29.0]
-
-# Example labels and colors
-labels = ['Compulsao', 'Obsessao']
-colors = ['red', 'blue']
-
-fig = plt.figure(figsize=(6,6))
-plt.pie(
-    signals,
-    labels=labels,
-    colors=colors,
-    autopct='%1.1f%%',  # optional, shows %
-    startangle=90        # optional, rotates chart
-)
-plt.title("Example Pie Chart")
-fig.savefig(f'example.png', bbox_inches='tight',dpi=300)
-
-    
+print(ft.get_sum_mean_power(p))    
 
 # dpg.create_context()
 

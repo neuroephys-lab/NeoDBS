@@ -6,7 +6,7 @@ from datetime import datetime
 #from spectrum import pyule
 
 bands = {
-            'Delta': [0.1,4],
+            'Delta': [0.01,4],
             'Theta': [4,8],
             'Alpha': [8,12],
             'Beta': [12,30],
@@ -127,6 +127,113 @@ def mean_power_band(log,band):
 
     return np.mean(power) if power else np.nan 
 
+def get_sum_mean_power(p,band=None):
+    if band == None: band = bands
+    x,y=p['X'],p['Y']
+    all = []
+    if isinstance(x,list):
+        x = np.array(x)
+        y = np.array(y)
+
+    for b,v in band.items():
+        mask = (x >= v[0]) & (x <= v[1])
+        temp = y[mask]
+        all.append(np.nanmean(temp))
+    return np.sum(all)
+
+def extract_psd_features(p, band, bands=None):
+    '''
+    Extracts features from spectral density, or coherence, methods. Returned into a dictionary. 
+    
+    :param p: dict, computed PSD ('X' = freqs, 'Y' = psd values)
+    :param band: list, band[0] = str, band name; band[1] = list, [f0,f1]
+    '''
+    b,v = band
+    band = {b: v}
+    full_power = np.sum(p['Y'])
+    freqs, psd = p['X'], p['Y']
+    
+    #mean power per band
+    pc = mean_power_all_bands(p, band)
+    std = std_dev_streams(p, band)
+    mean = {'Mean Power (mean, std. dev)': [np.round(pc[b],2), np.round(std[b],2)]}
+
+    #normalized mean power
+    sum_mean_power = get_sum_mean_power(p,band=bands)
+    # norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc[b]*100/full_power,2), np.round(std[b],2)]}
+    norm_mean = {'% Mean Power (mean, std. dev)': [np.round(pc[b]*100/sum_mean_power,2), np.round(std[b],2)]}
+
+    if isinstance(freqs, list): 
+        freqs = np.array(freqs)
+        psd = np.array(psd)
+
+    mask = (freqs >= v[0]) & (freqs <= v[1])
+    auc = {'Sum Power (AUC)': np.round(np.sum(psd[mask]),2)}
+
+    #normalized auc
+    norm_auc = {'% Sum Power (AUC)': f"{np.round(np.sum(psd[mask])/full_power*100,2)}"}
+
+    #peak power
+    peak = peak_per_band(p, band)
+    picos = {'Peak Power (power, frequency)': p for p in peak.values()}
+
+
+    info = mean | norm_mean| auc | norm_auc| picos
+
+    return info
+
+def extract_timeline_features(p):
+    '''
+    Extracts features from timeline recordings, returned into a dictionary. 
+    
+    :param p: dict, computed PSD ('X' = time array, 'Y' = lfp timeline values)
+    '''
+    
+
+    freqs, psd = p['X'], p['Y']
+
+    if isinstance(psd, np.ndarray):
+        psd = psd.tolist()
+    elif psd is None:
+        return
+    #mean power per band
+    pc = np.nanmean(psd)
+    std = np.nanstd(psd)
+    mean = {'Mean Power (mean, std. dev)': [np.round(pc,2), np.round(std,2)]}
+ 
+    #peak power
+    peak = np.nanmax(psd)
+    picos = {'Peak Power': peak}
+
+    #peak time
+    time = psd.index(peak)
+    
+    try:
+        time = freqs[time]
+    except Exception: time = freqs[0]
+
+    key = 'Peak Time'
+    if isinstance(time,str):
+        peak = str(utl.parse_datetime(time).time())
+    elif isinstance(time, (int, float)):
+        if np.isnan(time):
+            return
+    elif isinstance(time, np.ndarray):
+        if np.any(np.isnan(time)):
+            return
+    elif isinstance(time,float):
+        peak = str(datetime.fromtimestamp(time).time())
+    else: #datetime.datetime object
+        peak=str(time.time())
+
+    time = {key: peak}
+    info = mean | picos | time
+    if 'Sense' in p.keys():
+        sense = {'Sensing Freq. (Hz)': p['Sense']}
+        info = info| sense
+
+    return info
+
 def mean_power_all_bands(stream, bands):
     """Computes mean power for frequency bands over a stream of events."""
     
@@ -178,92 +285,6 @@ def export_2D(info):
         plt.plot(x,y,label=label,color=colors[i])
     plt.legend()
     plt.savefig('Example.png')
-
-def plot_spectrogram(data, channel_params, *args):
-    """
-    Compute and plot the spectrogram for each channel.
-
-    Parameters:
-    data : ndarray
-        2D array where each column corresponds to a channel's data.
-    channel_params : dict
-        Dictionary containing channel parameters with keys:
-        - 'Fs': Sampling frequency (Hz).
-        - 'nChannels': Number of channels.
-        - 'channel_names': List of channel names.
-        - 'channel_map': 2D array specifying subplot arrangement.
-        - 'time': Array of time values.
-    args : tuple
-        Optional arguments. Pass 'normalize' to normalize power values.
-
-    Returns:
-    spectro_fig : matplotlib.figure.Figure
-        The figure object containing the spectrogram plots.
-    """
-    normalize_power = 'normalize' in args
-
-    # Default spectrogram parameters
-    window = int(round(0.5 * 250))  # 0.5 second
-    noverlap = int(round(window / 2))
-    fmin = 1  # Hz
-    fmax = 125  # Hz
-
-    # Initialize figure
-    spectro_fig, axes = plt.subplots(
-        *channel_params['channel_map'].shape, figsize=(12, 8), squeeze=False
-    )
-    axes_flat = axes.flatten()
-
-    for ch_id in range(len(data)):
-        channel_pos = np.argwhere(channel_params['channel_map'] == ch_id + 1).flatten()
-        ax = axes[channel_pos[0], channel_pos[1]]
-
-        # Compute spectrogram
-        f, t, Sxx = signal.spectrogram(
-            data[:, ch_id],
-            fs=channel_params['Fs'],
-            window='hann',
-            nperseg=window,
-            noverlap=noverlap,
-            scaling='density',
-            mode='psd'
-        )
-
-        # Filter frequencies
-        freq_mask = (f >= fmin) & (f <= fmax)
-        f = f[freq_mask]
-        Sxx = Sxx[freq_mask, :]
-
-        # Normalize power if requested
-        if normalize_power:
-            power_to_plot = 10 * np.log10(Sxx / np.mean(Sxx, axis=1, keepdims=True))
-        else:
-            power_to_plot = 10 * np.log10(Sxx)
-
-        # Plot spectrogram
-        img = ax.imshow(
-            power_to_plot,
-            aspect='auto',
-            extent=[t[0], t[-1], f[0], f[-1]],
-            origin='lower',
-            cmap='viridis'
-        )
-
-        ax.set_title(channel_params['channel_names'][ch_id])
-        ax.set_xlabel('Time (s)')
-        ax.set_ylabel('Frequency (Hz)')
-        ax.grid(False)
-
-        # Add colorbar
-        cbar = plt.colorbar(img, ax=ax)
-        cbar.set_label('Power/Frequency (dB/Hz)')
-
-    # Link axes
-    for ax in axes_flat:
-        ax.label_outer()
-    plt.tight_layout()
-
-    return spectro_fig
 
 def export_plot_old(info, plot_type):
     signals, labels, colors, title, axis = info
@@ -494,7 +515,6 @@ def wave(frequency = 10, sampling_rate = 1000, duration = 1, amplitude = 1):
     signal = amplitude * np.sin(2 * np.pi * frequency * t)
 
     return np.array(t), np.array(signal)
-
 
 def convert_to_db(value):
     """Convert a value to dB scale using 10 * log10.

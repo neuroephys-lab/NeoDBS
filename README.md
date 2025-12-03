@@ -1,5 +1,20 @@
 # NeoDBS
 
+## 03.12.2025
+
+- Documentation can be done semi-automatically.
+- NeoDBS more organized so it has access to documentation
+
+### TBF:
+- Finish documenting all functions of NeoDBS (start at extract_cc_features)
+
+### Debug:
+ - extract_psd_features:
+    - moved to features
+    - also calculates for coherence
+    - %Mean Power in extract_psd_features corrected
+ - extract_timeline_features moved to features
+
 ## 02.12.2025
 
 ### TBF:
