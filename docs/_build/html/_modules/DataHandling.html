@@ -41,8 +41,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"></div>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Preprocessing">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-utils">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-GUI">Interface</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
@@ -167,7 +173,7 @@
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="s1">&#39;Date&#39;</span> <span class="ow">in</span> <span class="n">key</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">full_date2str</span><span class="p">(</span><span class="n">utl</span><span class="o">.</span><span class="n">parse_datetime</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">+</span> <span class="n">offset</span><span class="p">)</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">full_extract_date</span><span class="p">(</span><span class="n">utl</span><span class="o">.</span><span class="n">parse_datetime</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">+</span> <span class="n">offset</span><span class="p">)</span>
 
                 <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                     <span class="k">pass</span>
@@ -843,14 +849,14 @@
         <span class="n">added_lfp</span><span class="p">[</span><span class="n">side</span><span class="p">]</span> <span class="o">=</span> <span class="n">added</span><span class="p">[</span><span class="n">other_axis</span><span class="p">]</span>
 
 
-        <span class="n">days_added</span> <span class="o">=</span> <span class="p">[</span><span class="n">utl</span><span class="o">.</span><span class="n">date2str</span><span class="p">(</span><span class="n">ad</span><span class="p">)</span> <span class="k">for</span> <span class="n">ad</span> <span class="ow">in</span> <span class="n">added</span><span class="p">[</span><span class="n">axis</span><span class="p">]]</span>
+        <span class="n">days_added</span> <span class="o">=</span> <span class="p">[</span><span class="n">utl</span><span class="o">.</span><span class="n">extract_date</span><span class="p">(</span><span class="n">ad</span><span class="p">)</span> <span class="k">for</span> <span class="n">ad</span> <span class="ow">in</span> <span class="n">added</span><span class="p">[</span><span class="n">axis</span><span class="p">]]</span>
         <span class="n">days_added</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">days_added</span><span class="p">)</span>
 
         <span class="n">new_timeline</span> <span class="o">=</span> <span class="p">{</span><span class="n">d</span><span class="p">:[]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">days_added</span><span class="p">}</span>
         <span class="n">new_lfp</span> <span class="o">=</span> <span class="p">{</span><span class="n">d</span><span class="p">:[]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">days_added</span><span class="p">}</span>
 
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">at</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">added_timeline</span><span class="p">[</span><span class="n">side</span><span class="p">]):</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">date2str</span><span class="p">(</span><span class="n">at</span><span class="p">)</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">extract_date</span><span class="p">(</span><span class="n">at</span><span class="p">)</span>
             <span class="n">new_timeline</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">at</span><span class="p">)</span>
             <span class="n">new_lfp</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">added_lfp</span><span class="p">[</span><span class="n">side</span><span class="p">][</span><span class="n">idx</span><span class="p">])</span>
 
@@ -861,7 +867,7 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">date</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">date</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">parse_datetime</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
-                    <span class="n">date</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">date2str</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+                    <span class="n">date</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">extract_date</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
                 <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                     <span class="k">pass</span>
             <span class="k">if</span> <span class="n">axis</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Timeline</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">side</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span> 

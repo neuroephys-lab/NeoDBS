@@ -1,11 +1,12 @@
-import DataHandling as DH
-import dearpygui.dearpygui as dpg
-import Features as ft
-import matplotlib.pyplot as plt
-import numpy as np
-from scipy.signal import spectrogram
-from datetime import datetime
-import re
+# import DataHandling as DH
+# import dearpygui.dearpygui as dpg
+# import Features as ft
+# import matplotlib.pyplot as plt
+# import numpy as np
+# from scipy.signal import spectrogram
+# from datetime import datetime
+# import Preprocessing as pre
+import utils as utl
 '''
 BASE
 
@@ -23,11 +24,10 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 # # file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2025-01-23\\Report_Json_Session_Report_20250212T122746.json"
 
 '''
-file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
-p = DH.getSignals(DH.getData(file),'Events')[0]['Left']
 
-print(ft.get_sum_mean_power(p))    
-
+date = "2002-11-03 11:45:15"
+date = utl.parse_datetime(date)
+print(str(date))
 # dpg.create_context()
 
 # tab_label = "this"

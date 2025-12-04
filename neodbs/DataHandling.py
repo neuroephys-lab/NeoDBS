@@ -12,6 +12,13 @@ def info_electrodes(data,version='Initial',side=0):
     Return information of the active electrodes from TIMELINE mode
     side 0 - Left
     side 1 - Right
+
+    :param data: dict, reorganized using DataHandling.getData()
+    :param version: str, default to 'Initial'. Access to version configuration
+    :param side: int, default to 0 ('Left')
+
+    :return: dict
+
     '''
     GroupHistory=data['Device']['Groups']
 
@@ -83,17 +90,19 @@ def info_electrodes(data,version='Initial',side=0):
     return a
 
 def add_utc_conversion_to_dates(data, offset):
-    """
+    '''
     Recursively convert all 'Date'-related fields to UTC with offset (time-shifted).
     Assumes naive datetimes are in the specified local timezone.
-    """
+
+    :param data: dict, from DataHandling.getData()
+    :param offset: 
+    '''
    
     if isinstance(data, dict):
         for key, value in data.items():
             if 'Date' in key and isinstance(value, str):
                 try:
                     data[key] = utl.full_date2str(utl.parse_datetime(data[key]) + offset)
-
                 except Exception:
                     pass
             elif isinstance(value, (dict, list)):
@@ -699,14 +708,14 @@ def correctMissingTimeline(Data, Timeline, axis='X'):
         added_lfp[side] = added[other_axis]
 
 
-        days_added = [utl.date2str(ad) for ad in added[axis]]
+        days_added = [utl.extract_date(ad) for ad in added[axis]]
         days_added = np.unique(days_added)
 
         new_timeline = {d:[] for d in days_added}
         new_lfp = {d:[] for d in days_added}
 
         for idx, at in enumerate(added_timeline[side]):
-            key = utl.date2str(at)
+            key = utl.extract_date(at)
             new_timeline[key].append(at)
             new_lfp[key].append(added_lfp[side][idx])
 
@@ -717,7 +726,7 @@ def correctMissingTimeline(Data, Timeline, axis='X'):
             if isinstance(date,str):
                 try:
                     date = utl.parse_datetime(date)
-                    date = utl.date2str(date)
+                    date = utl.extract_date(date)
                 except Exception:
                     pass
             if axis not in Timeline[i][side].keys(): 

@@ -193,13 +193,14 @@ def save_plot(sender,app_data,user_data):
     if not isinstance(colormap_int,str):
         colors = np.array(colors)[mask].tolist()
     
-    title = dpg.get_item_label(plot_tag)
-    axis_tags = dpg.get_item_children(plot_tag)[1]
-    axis = [dpg.get_item_label(ax) for ax in axis_tags]
-    limits = [dpg.get_axis_limits(ax) for ax in axis_tags]
-    size = dpg.get_item_width(plot_tag), dpg.get_item_height(plot_tag)
-    line_type = [dpg.get_item_info(tag)['type'] for tag in tags]
-    labels = [dpg.get_item_label(tag) for tag in tags]
+    if plot_type not in ['3D','3DC']:   
+        title = dpg.get_item_label(plot_tag)
+        axis_tags = dpg.get_item_children(plot_tag)[1]
+        axis = [dpg.get_item_label(ax) for ax in axis_tags]
+        limits = [dpg.get_axis_limits(ax) for ax in axis_tags]
+        size = dpg.get_item_width(plot_tag), dpg.get_item_height(plot_tag)
+        line_type = [dpg.get_item_info(tag)['type'] for tag in tags]
+        labels = [dpg.get_item_label(tag) for tag in tags]
 
     if plot_type in ['3D','3DC']:
          # for '3D', '3DC' == coherogram
@@ -207,6 +208,7 @@ def save_plot(sender,app_data,user_data):
         #if its in subplots
         colormap, subplots = children[0], children[1]
         title = dpg.get_item_label(subplots)
+        line_type = None
 
         if plot_type == '3D':
             subplots = dpg.get_item_children(subplots)[1]
@@ -257,7 +259,7 @@ def save_plot(sender,app_data,user_data):
                 x,y = values[:2]
                 sign = {'X':x,'Y':y}
             if 'Timeline' in title or 'Circadian' in title or 'Stimulation' in title:
-                sign['X'] = [datetime.fromtimestamp(x) for x in sign['X']]
+                sign['X'] = [pre.get_date_from_ts(x) for x in sign['X']]
 
             signals.append(sign)
     
@@ -267,7 +269,7 @@ def save_plot(sender,app_data,user_data):
             signals = []
             for tag in tags:
                 x,y = dpg.get_value(tag)[:2]
-                x = [datetime.fromtimestamp(t) for t in x]
+                x = [pre.get_date_from_ts(t) for t in x]
                 signals.append({'X':x,'Y':y})
         else:
             labels = []
@@ -316,7 +318,7 @@ def save_signals(sender,app_data,user_data):
             info = {label: [] for label in labels}
             for idx,signal in enumerate(signals):
                 x,y = signal
-                x = sorted([datetime.fromtimestamp(s) for s in x])
+                x = sorted([pre.get_date_from_ts(s) for s in x])
                 info[labels[idx]] = x
         
         case 'Timeline':
@@ -326,7 +328,7 @@ def save_signals(sender,app_data,user_data):
             timeline = [t for s in signals for t in s[0]]
             timeline = sorted(np.unique(timeline).tolist())
             temp = ['']*len(timeline)
-            timeline_str = [datetime.fromtimestamp(t) for t in timeline]
+            timeline_str = [pre.get_date_from_ts(t) for t in timeline]
             info = {'X': timeline_str, 'Left': temp.copy(), 'Right': temp.copy(), 'Events': temp.copy()}
             for idx,signal in enumerate(signals):
                 x,y = signal
@@ -355,9 +357,9 @@ def save_signals(sender,app_data,user_data):
             mini,maxi,maxX = get_limits(children,plot)
             cut = maxX[mini:maxi]
             if 'Timeline' in file_name:
-                cut = [datetime.fromtimestamp(c) for c in cut]
+                cut = [pre.get_date_from_ts(c) for c in cut]
             elif 'Circadian' in file_name:
-                cut = [str(utl.extract_time(datetime.fromtimestamp(c))) for c in cut]
+                cut = [str(utl.extract_time(pre.get_date_from_ts(c))) for c in cut]
             info = {'X': cut}
             more = {labels[i]: signals[i][mini:maxi] for i in range(len(signals))}
             info = info | more
@@ -404,9 +406,9 @@ def save_signals(sender,app_data,user_data):
             for i in range(1,len(x)):
                 if i==len(x): continue
                 if stim[i-1] ==stim[i]:continue
-                new_x.append(str(datetime.fromtimestamp(x[i-1])))
+                new_x.append(str(pre.get_date_from_ts(x[i-1])))
                 new_s.append(stim[i-1])
-            new_x.append(str(datetime.fromtimestamp(x[-1])))
+            new_x.append(str(pre.get_date_from_ts(x[-1])))
             new_s.append(stim[-1])
             info = {'X':new_x,'Stimulation (mA)': new_s}
             
@@ -602,7 +604,7 @@ def deviation(sender, app_data, user_data):
     minus = media - dev
     plus = media + dev  
     dpg.configure_item(f"{tab_label}_std", y1=minus.tolist(), y2=plus.tolist())
-    dpg.configure_item(f"{tab_label}_radio",user_data=(app_data,tab_label))
+    dpg.configure_item(sender,user_data=(app_data,tab_label))
 
 def toggleVisibility(signal_tags, parent, group, user_data):
     '''
@@ -863,7 +865,7 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None,plot_ta
         dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",0))
         dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(f"y_axis_{tab_tag}",f"plot_{tab_tag}",'2D'))
         if extract_mode(tab_tag) == 'Events': 
-            dpg.add_button(label='Recalculate Mean Metrics', callback=recalculateMeanMetrics, user_data=tab_tag, parent=f"{tab_tag}_buttons")
+            dpg.add_button(label='Recalculate Mean Metrics', callback=recalculateMeanMetrics, width=-1, user_data=tab_tag, parent=f"{tab_tag}_buttons")
             with dpg.group(horizontal=True):
                 dpg.add_checkbox(label='Mean Visibility', default_value=True, callback=show_mean, parent=f"{tab_tag}_buttons")
                 dpg.add_checkbox(label='Hide Events', default_value=False,callback=hide,parent=f"{tab_tag}_buttons",user_data=(signal_tags,[None]), tag=f"{tab_tag}_hide")
@@ -1544,7 +1546,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
 
             mean_temp = np.mean([p['Y'] for p in power_temp], axis=0)
             std = np.std([p['Y'] for p in power_temp], axis=0)
-            times = dpg.get_value(f"{tab_label}_radio")
+            times = dpg.get_value(f"{tab_label}_deviation")
             if times == '95% Confidence Interval':
                 times = 2
             else: times = 1
@@ -1575,7 +1577,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             dpg.configure_item(f"{tab_label}_mean",y=mean)
 
             std = np.std(array, axis=0)
-            times = dpg.get_value(f"{tab_label}_radio")
+            times = dpg.get_value(f"{tab_label}_deviation")
             if times == '95% Confidence Interval':
                 times = 2
             else: times = 1
@@ -1644,7 +1646,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                         dpg.add_text("Index: Date")
                         dpg.add_separator()
                         for i, date in enumerate(dates):
-                            dpg.add_text(f"{i}: {dates[i]}")
+                            dpg.add_text(f"{i}: {pre.get_date_from_ts(date)}")
 
         def insert_line_series(sender, app_data, user_data):
 
@@ -1660,9 +1662,8 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 if y_title == '':
                     y_title=label
                 else:
-                    y_title=y_title+' & '+label
+                    y_title=y_title+ ' & '+label
                 dpg.configure_item(y2,show=True,label=y_title)
-                # dpg.set_axis_ticks(x2,ticks)
                 dpg.configure_item(x2,show=True)
                 line = dpg.add_line_series(last_x,values,label=label,parent=y2)
                 dpg.bind_item_theme(line,change_line_thickness(4))
@@ -1737,7 +1738,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             dpg.add_checkbox(label='Hide signals', callback=hide, tag = f"{tab_label}_hide", user_data=(ploted_tags, checkboxes))
             dpg.add_separator()
             dpg.add_text('Shaded Area')
-            dpg.add_radio_button(['Standard Deviation', '95% Confidence Interval'], horizontal=False, callback=deviation, tag = f"{tab_label}_radio",user_data=(deviation_type,tab_label))
+            dpg.add_radio_button(['Standard Deviation', '95% Confidence Interval'], horizontal=False, callback=deviation, tag = f"{tab_label}_deviation",user_data=(deviation_type,tab_label))
             dpg.add_separator()
             if len(days)>1:
                 dpg.add_button(label='Show Mean Power Across Time',width=-1,callback=show_power_over_time,user_data=all_info)
@@ -1787,7 +1788,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                 signal['dX'] = [signal['Date'] + timedelta(seconds=val) for val in X]
         else:
             # 'X' is in Unix timestamp
-            signal['dX'] = [datetime.fromtimestamp(val) for val in X]
+            signal['dX'] = [pre.get_date_from_ts(val) for val in X]
        
         ch = signal['Channel']
         for key in signal.keys():
@@ -1808,7 +1809,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                 signal['dX'] = [signal['Date'] + timedelta(seconds=val) for val in X]
         else:
             # 'X' is in Unix timestamp
-            signal['dX'] = [datetime.fromtimestamp(val) for val in X]
+            signal['dX'] = [pre.get_date_from_ts(val) for val in X]
         ch = getUpdatedElectrodeName(signal['Channel'])
         prev = len(new_signal[ch]['dX'])
 
@@ -1860,7 +1861,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
     group_tag = f"{tab_label}_plot_group"
     with dpg.group(horizontal=True, parent=f"{tab_label}", tag=group_tag):
 
-        dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
+        dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
                                             min_scale = global_min, max_scale=global_max, height=400*num_rows)
 
         with dpg.subplots(rows=num_rows, columns=num_cols, label="Spectrograms", width=800, height=400*num_rows, tag = f"{tab_label}_subplots"):
@@ -1878,7 +1879,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                     y = new_signal[channel]['Y']
                     if current_start == {}:
                         x = new_signal[channel]['dX']
-                        if isinstance(x[0], (int, float)): x = [datetime.fromtimestamp(val) for val in x]
+                        if isinstance(x[0], (int, float)): x = [pre.get_date_from_ts(val) for val in x]
                         x = [(xx + timedelta(hours=1)).timestamp() for xx in x]
                     else:
                         x = np.arange(0,len(y)/250,1)
@@ -2330,7 +2331,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
         header_tag = f"{tab_label}_cot"
         group_tag = f"{tab_label}_spec_group"
         with dpg.group(parent=tab_label, tag=group_tag, horizontal=True):
-            dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Viridis,
+            dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Viridis,
                                             min_scale = np.min(matrix), max_scale=np.max(matrix), height=400)
             subplot_tag = f"{tab_label}_spec"
             with dpg.plot(label='Coherogram', width=-1, height=400, tag=f"{tab_label}_spec"):
@@ -2608,7 +2609,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
     group_tag = f"{tab_label}_plot_group"
     with dpg.group(horizontal=True, parent=f"{tab_label}", tag=group_tag):
 
-        dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
+        dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
                                             min_scale = global_min, max_scale=global_max, height=400*num_rows)
         
         subplot_tag = f"{tab_label}_subplots"
@@ -2750,7 +2751,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
             with dpg.collapsing_header(label='Mean Spectrogram', parent=tab_label):
 
                 with dpg.group(horizontal=True,tag=mother):
-                    dpg.add_colormap_scale(tag=f"{mother}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
+                    dpg.add_colormap_scale(tag=f"{mother}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
                                                 min_scale = global_min, max_scale=global_max, height=400)
                     
                     with dpg.plot(label=title, width=500, height=400, tag=subplot_tag):
@@ -2890,7 +2891,7 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
                 signal['dX'] = [signal['Date'] + timedelta(seconds=val) for val in X]
         else:
             # 'X' is in Unix timestamp
-            signal['dX'] = [datetime.fromtimestamp(val) for val in X]
+            signal['dX'] = [pre.get_date_from_ts(val) for val in X]
         ch = signal['Channel']
         if ch in electrodes_names.keys():
             ch = electrodes_names[ch]
@@ -2940,7 +2941,7 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
     group_tag = f"{tab_label}_plot_group"
     with dpg.group(horizontal=True, parent=tab_label, tag=group_tag):
 
-        dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
+        dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
                                             min_scale = global_min, max_scale=global_max, height=400*num_rows)
         
 
@@ -2957,7 +2958,7 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
 
                     if current_start == {}:
                         x = new_signal[channel]['dX']
-                        if isinstance(x[0], (int, float)): x = [datetime.fromtimestamp(val) for val in x]
+                        if isinstance(x[0], (int, float)): x = [pre.get_date_from_ts(val) for val in x]
                         x = [(xx + timedelta(hours=1)).timestamp() for xx in x]
                     else:
                         x = np.arange(0,len(y)/250,1)
@@ -3119,7 +3120,7 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
     group_tag = f"{tab_label}_plot_group"
     with dpg.group(horizontal=True,tag = group_tag, parent=tab_label):
         
-        dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density", colormap=dpg.mvPlotColormap_Jet,
+        dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
                             min_scale=global_min, max_scale=global_max, height=400*num_rows)
 
         subplot_tag = f"{tab_label}_subplots"
@@ -3388,7 +3389,7 @@ def plot_pac(tags,tab_tag,parameter_values,mode=None):
         dpg.add_button(label='Plot Phase-Amplitude Coupling', callback=plot,width=-1, parent=tab_label)
     else: plot()
 
-def update_table(table_tag, type):
+def update_table(table_tag, unit):
     '''Update the table by replacing values with their dB equivalents.
 
     :param table_tag: 
@@ -3396,13 +3397,12 @@ def update_table(table_tag, type):
     '''
     
     
-
     if not dpg.does_item_exist(table_tag):
         print(f"Table {table_tag} does not exist!")
         return
  
     children = dpg.get_item_children(table_tag, slot=1)  # Get table rows
- 
+    columns = [dpg.get_item_label(c) for c in dpg.get_item_children(table_tag)[0]]
     if not children:
         print(f"No rows found in {table_tag}.")
  
@@ -3413,11 +3413,12 @@ def update_table(table_tag, type):
  
         for i in range(1, len(row_children)):  # Skip first column (Trial)
 
-            nan = float('nan')
+            if '%' in columns[i]: continue
+
             value = eval(dpg.get_value(row_children[i]))
-            if type == 'dB':
-                db_value = ft.convert_to_db(value)
-            else: db_value = ft.convert_from_db(value)
+            if unit == 'dB':
+                db_value = pre.convert_to_db(value)
+            else: db_value = pre.convert_from_db(value)
           
             if isinstance(db_value, list):  # List case
                 dpg.set_value(row_children[i], str(db_value))
@@ -3897,8 +3898,8 @@ def getSignalbyIdx(window_id,tab_tag,series_tag,mode=None):
     '''
     idx = extract_idx_from_series_tag(series_tag)
     file = extract_file_from_series_tag(series_tag)
-    # edx = int(extract_edx_from_series_tag(series_tag))
-    edx = extract_idx_from_series_tag(series_tag)
+    edx = int(extract_edx_from_series_tag(series_tag))
+    # edx = extract_idx_from_series_tag(series_tag)
     wt = extract_type_window(window_id)
     
     if wt == 'Combined': #Combined window
@@ -4065,8 +4066,8 @@ def updateSignalbyIdx(value,tab_tag,series_tag, func = None, mode = None, new_ta
     window_id = extract_window_id(tab_tag)
     idx = extract_idx_from_series_tag(series_tag)
     file = extract_file_from_series_tag(series_tag)
-    # edx = int(extract_edx_from_series_tag(series_tag))
-    edx = extract_idx_from_series_tag(series_tag)
+    edx = int(extract_edx_from_series_tag(series_tag))
+    # edx = extract_idx_from_series_tag(series_tag)
     wt = extract_type_window(window_id)
     if new_tab_tag: tab_tag=new_tab_tag
 
@@ -4157,12 +4158,12 @@ def extract_cc_features(p, y_axis, tab_label ,mode = None) -> dict:
         'Peak Frequency (mean, std)': [freq_mean,freq_std]
     }
     
-    :param p: computed signal dictionary
-    :param y_axis: parent for plot
-    :param tab_label: parent of plot, adding table of features
-    :param mode: general cc or band-specific cc
-    :return: Description
-    :rtype: dict
+    :param p: dict, computed signal dictionary
+    :param y_axis: str/id, parent for plot
+    :param tab_label: str/id, parent of plot, adding table of features
+    :param mode: srt, default to None --> performs general cc; band name str --> performs band-specific cc
+    :return: [info, tags], info --> features dictionary; tags --> list of id's of added feature plots
+    :rtype: dict, list
     '''
 
     tags = []
@@ -4245,6 +4246,11 @@ def extract_cc_features(p, y_axis, tab_label ,mode = None) -> dict:
     return info, tags
 
 def extract_artifact_type(s: str):
+    '''
+    Extracts type of artifact from string.
+    
+    :param s: str, ex.: CT_ARTIFACT_PRESENT
+    '''
     if s == "ARTIFACT_NOT_PRESENT":
         return 'Not'
     if s.endswith("_ARTIFACT_PRESENT"):
@@ -4253,109 +4259,25 @@ def extract_artifact_type(s: str):
 
 #--- Process with signal
 
-def Volt2dB2(sender,app_data,user_data):
-    type = app_data
-    if type == True:
-        type = 'dB'
-        label = type
-    else: 
-        type = 'Y'
-        label = 'µV^2/Hz'
-
-    signal_tags, tab_tag, func, tab_label, tables = user_data
-
-    if tab_label == "":
-        identifier = tab_tag
-    else:
-        identifier = tab_label
-
-    series = getActiveSeries(signal_tags)
-    window_id = extract_window_id(tab_tag)
-    mode = extract_mode(tab_tag)
-
-    if mode != 'Events': 
-        events = [getEventsbyTag(tab_tag,serie) for serie in series]
-        if all(e is None for e in events):events = None
-    else: events = None
-
-    plot_mode = None
-    events_flag = False
-
-    if dpg.does_item_exist(f"{tab_label}_bva"): status = dpg.get_value(f"{tab_label}_bva")
-    else: status = 'None'
-
-    for serie in series:
-        if mode == 'Events':
-            signal = getSignalbyIdxSide(window_id,tab_tag,serie)
-            if app_data: 
-                norm = pre.log_normalization_db(signal)
-                signal[type] = norm
-                dpg.set_value(serie, [signal['X'], norm])
-            else:
-                dpg.set_value(serie, [signal['X'], signal['Y']])
-        else:
-            if events: 
-                plot_mode = 'segment'
-                events_flag = True
-            signal = getSignalbyIdx(window_id,tab_tag,serie, mode=plot_mode)[func]
-            series_label = dpg.get_item_label(serie)
-            if app_data: 
-                norm = pre.log_normalization_db(signal)
-                signal[type] = norm
-            
-                dpg.set_value(f"{tab_label}_{series_label}_{func}", [signal['X'], norm])
-            # else:
-            #     dpg.set_value(f"{tab_label}_{series_label}_{func}", [signal['X'], signal['Y']])
-
-
-    if extract_type_window(window_id) == 'Combined' and status == True: #For before and after events
-        children = dpg.get_item_children(f"{tab_label}_y_axis")
-        for _,child in children.items():
-            for kid in child:
-                current = dpg.get_value(kid)
-                if app_data: 
-                    new_y = [ft.convert_to_db(v) for v in current[1]]
-                else:
-                    new_y = [ft.convert_from_db(v) for v in current[1]]
-                dpg.set_value(kid, [current[0], new_y])
-    # else:
-    mean_tag = std_tag = ''
-    if dpg.does_item_exist(f"{tab_tag}_mean"):
-        mean_tag = f"{tab_tag}_mean"
-        std_tag = f"{tab_tag}_std"
-    elif dpg.does_item_exist(f"{tab_label}_mean"):
-        mean_tag = f"{tab_label}_mean"
-        std_tag = f"{tab_label}_std"
-
-    if mean_tag != '':
-        if type == 'Y': key = None
-        else: key = type
-        mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
-
-        if type=='dB':
-            mean_power = pre.V2dB(mean_power)
-            
-        minus, plus = mean_power-std_power, mean_power+ std_power
-        dpg.configure_item(std_tag, y1=minus,y2=plus)
-        current = dpg.get_value(mean_tag)
-        dpg.set_value(mean_tag, [current[0], mean_power])
-
-    else:
-        if dpg.does_item_exist(f"{identifier}_y_axis"):
-            dpg.configure_item(f"{identifier}_y_axis", label = f"LFP Power ({label})")
-            update_plot_feature(tab_tag,tab_label,signal_tags,func, identifier, type, events = events_flag, mode = plot_mode)
-
-    time.sleep(0.1)
-    for table in tables:
-        update_table(table,type)
-
 def Volt2dB(sender,app_data,user_data):
-    type = app_data
-    if type == True:
-        type = 'dB'
-        label = type
+    '''
+    Callback of checkbox - changes PSD plot between original units to dB. 
+
+    y_axis: str/id, parent of plots (axis y)
+    plot_tag: str/id, parent of axis 
+    signal_tags: list, list of tags to be converted, if they're shown
+    tables: list, list of tags of tables to be converted
+    
+    :param sender: Description
+    :param app_data: boolean, type of units (original/dB)
+    :param user_data:  y_axis, plot_tag, signal_tags, tables
+    '''
+    unit = app_data
+    if unit == True:
+        unit = 'dB'
+        label = unit
     else: 
-        type = 'Y'
+        unit = 'Y'
         label = 'µV^2/Hz'
     
     y_axis, plot_tag, signal_tags, tables = user_data
@@ -4366,11 +4288,13 @@ def Volt2dB(sender,app_data,user_data):
     for tag in signal_tags:
         if dpg.get_item_configuration(tag)['show']==True:
             _,y = dpg.get_value(tag)[:2]
-            if type == 'dB':
-                y = pre.V2dB(y)
+            if unit == 'dB':
+                # y = pre.convert_to_db(y,True)
+                y = pre.convert_to_db(y)
                 dpg.configure_item(tag,y=y)
             else:
-                y = pre.dB2V(y)
+                # y = pre.convert_from_db(y,True)
+                y = pre.convert_from_db(y)
                 dpg.configure_item(tag,y=y)
             all_values.append(y)
 
@@ -4384,9 +4308,19 @@ def Volt2dB(sender,app_data,user_data):
 
     time.sleep(0.1)
     for table in tables:
-        update_table(table,type)
+        update_table(table,unit)
 
-def getMeanActiveSeries(window_id,tab_tag,signal_tags, key = None):
+def getMeanActiveSeries(window_id,tab_tag,signal_tags, dev = None): #try to use it in more places
+    '''
+    Calculates mean and standard deviation from the active signals in plot.
+    
+    :param window_id: str/id
+    :param tab_tag: Description
+    :param signal_tags: Description
+    :param dev: default to None, standar deviation*1, else gets value of radio button to get type of standard deviation
+    '''
+
+    
     active_tags = getActiveSeries(signal_tags)
     active_signals = []
     mode = extract_mode(tab_tag)
@@ -4398,12 +4332,19 @@ def getMeanActiveSeries(window_id,tab_tag,signal_tags, key = None):
 
         active_signals.append(active)
 
-    mean_power = pre.MeanSignal(active_signals, key)
-    std_power = pre.StdDevSignal(active_signals,key)
+    mean_power = pre.MeanSignal(active_signals)
+    std_power = pre.StdDevSignal(active_signals)
     #mean_power = [m*100/np.sum(mean_power) for m in mean_power]
     return mean_power, std_power
 
 def segment_signal(tab_tag, signal_tags,plot_tag):
+    '''
+    Adds buttons to perform segmentation of time-domain signals
+    
+    :param tab_tag: Description
+    :param signal_tags: Description
+    :param plot_tag: Description
+    '''
     with dpg.theme() as theme:
         with dpg.theme_component(dpg.mvAll):
             dpg.add_theme_style(dpg.mvStyleVar_SeparatorTextAlign,1)
@@ -4421,6 +4362,16 @@ def segment_signal(tab_tag, signal_tags,plot_tag):
             dpg.add_button(label='Segment Signal', show=True, callback=cut_signals,user_data=(tab_tag, signal_tags))
 
 def cut_signals(sender,app_data,user_data):   
+    '''
+    Cuts and saves time-domain signals.
+
+    tab_tag: Description
+    signal_tags: Description
+    
+    :param sender: Description
+    :param app_data: Description
+    :param user_data:  tab_tag, signal_tags
+    '''
     tab_tag, signal_tags = user_data
     window_id = extract_window_id(tab_tag)
     active_series = getActiveSeries(signal_tags)
@@ -4450,7 +4401,16 @@ def cut_signals(sender,app_data,user_data):
     time.sleep(0.1)
     update_plot_td(tab_tag,signal_tags,' Segment')
 
-def interval_events(tab_tag, label1, label2,mini=15,maxi=15,flag=False):
+def interval_events(tab_tag, label1, label2,mini=15,maxi=15):
+    '''
+    Adds buttons to get event-locked segmentation interval.
+    
+    :param tab_tag: Description
+    :param label1: str, label of input 1
+    :param label2: str, label of input 2
+    :param mini: default to 15s, value of before interval (s)
+    :param maxi: default to 15s, value of after interval (s)
+    '''
     min_dif = 2
     with dpg.group(horizontal=True):
         dpg.add_input_int(label=label1, tag=f"{tab_tag}_emin", width=90, default_value=mini, callback=enforce_min_max, user_data=(f"{tab_tag}_emin", f"{tab_tag}_emax", min_dif))
@@ -4460,6 +4420,11 @@ def DefaultFilter(sender,app_data,user_data):
     '''
     Standard filtration = 5th order Butterworth bandpass filter 1-100 Hz + Removal of cardiac component 
     Remove cardiac component - Fixed peak finder method - BRAVO adapted
+
+    tab_tag, signal_tags = user_data
+
+    tab_tag: Description
+    signal_tags: Description
     '''
     tab_tag, signal_tags = user_data
 
@@ -4493,15 +4458,21 @@ def DefaultFilter(sender,app_data,user_data):
         clean, _ = pre.removeCardiacComponent(signal, band)
         clean = np.ascontiguousarray(clean)
         updateSignalbyIdx(clean,tab_tag,series,mode=signal_mode)
-        noise = np.sum((signal['Y']-clean)**2)
-        if noise != 0:
-            snr = (10*np.log10(np.sum(np.array(signal['Y'])**2)/noise))
-        else: snr = 30
 
     title = 'Default Filter'
     update_plot_td(tab_tag,signal_tags, title,signal_mode = plot_mode)
 
 def CustomFilter(sender,app_data,user_data):
+    '''
+    Function that handles all the process from button/input creation to filter application on the signals.
+
+    tab_tag: Description
+    signal_tags: Description
+    
+    :param sender: Description
+    :param app_data: Description
+    :param user_data: tab_tag, signal_tags
+    '''
     tab_tag, signal_tags = user_data
 
     window_id = extract_window_id(tab_tag)
@@ -4640,11 +4611,11 @@ def DefaultFeatures(sender, app_data, user_data):
         match func:
             case 'spectrogram': 
                 if plot_modes[0] != None:
-                    if not dpg.does_item_exist(f"{tab_label}_radio"): dpg.add_radio_button(items=plot_modes,label='Plot Mode', parent=tab_label, callback=choose, user_data=(tags, tab_label, func, tab_tag, parameter_values, mode), tag = f"{tab_label}_radio")
+                    if not dpg.does_item_exist(f"{tab_label}_deviation"): dpg.add_radio_button(items=plot_modes,label='Plot Mode', parent=tab_label, callback=choose, user_data=(tags, tab_label, func, tab_tag, parameter_values, mode), tag = f"{tab_label}_deviation")
                 else: plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode)
             case 'wavelet': 
                 if plot_modes[0] != None:
-                    if not dpg.does_item_exist(f"{tab_label}_radio"): dpg.add_radio_button(items=plot_modes,label='Plot Mode', parent=tab_label, callback=choose, user_data=(tags, tab_label, func, tab_tag, parameter_values, mode), tag = f"{tab_label}_radio")
+                    if not dpg.does_item_exist(f"{tab_label}_deviation"): dpg.add_radio_button(items=plot_modes,label='Plot Mode', parent=tab_label, callback=choose, user_data=(tags, tab_label, func, tab_tag, parameter_values, mode), tag = f"{tab_label}_deviation")
                 else: 
                     plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode=mode)
             case 'multitaper coherence': plot_multitaper_coherence(parameter_values,tab_tag,tags)
@@ -4825,11 +4796,11 @@ def CustomFeatures(sender,app_data,user_data):
         match func:
             case 'spectrogram': 
                 if plot_modes[0] != None:
-                    if not dpg.does_item_exist(f"{tab_label}_radio"): dpg.add_radio_button(items=plot_modes,label='Plot Mode', parent=tab_label, callback=choose, user_data=(tags, tab_label, func, tab_tag, parameter_values, mode), tag = f"{tab_label}_radio")
+                    if not dpg.does_item_exist(f"{tab_label}_deviation"): dpg.add_radio_button(items=plot_modes,label='Plot Mode', parent=tab_label, callback=choose, user_data=(tags, tab_label, func, tab_tag, parameter_values, mode), tag = f"{tab_label}_deviation")
                 else: plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode)
             case 'wavelet': 
                 if plot_modes[0] != None:
-                    if not dpg.does_item_exist(f"{tab_label}_radio"): dpg.add_radio_button(items=plot_modes,label='Plot Mode', parent=tab_label, callback=choose, user_data=(tags, tab_label, func, tab_tag, parameter_values, mode), tag = f"{tab_label}_radio")
+                    if not dpg.does_item_exist(f"{tab_label}_deviation"): dpg.add_radio_button(items=plot_modes,label='Plot Mode', parent=tab_label, callback=choose, user_data=(tags, tab_label, func, tab_tag, parameter_values, mode), tag = f"{tab_label}_deviation")
                 else: 
                     plot_wavelet(tags, tab_label, func, tab_tag, parameter_values)
             case 'multitaper coherence': plot_multitaper_coherence(parameter_values,tab_tag,tags,flag='flag')
@@ -4889,7 +4860,7 @@ def insert_events(sender, app_data, user_data):
                 dpg.configure_item(series[i], x=new_x)
             else: 
                 new_x = signal['X']
-                new_time = [datetime.fromtimestamp(val) for val in new_x]
+                new_time = [pre.get_date_from_ts(val) for val in new_x]
                     
             for _, event in enumerate(events):
                 hour, minute, second, type = event
@@ -5066,7 +5037,6 @@ def circadian_rhythm(sender, app_data, user_data):
 
     days = {}
     mean, dates, circadian_tags = [], [], []
-    complete = True
     #preparing streams
     for tag in tags:
         # signal = getSignalbyIdx(window_id,tab_tag,tag)
@@ -5085,11 +5055,11 @@ def circadian_rhythm(sender, app_data, user_data):
             old_y = list(reversed(old_y))
 
         if isinstance(old_x[0],(int,float)):
-            old_x = [utl.extract_time_from_datetime_string(str(datetime.fromtimestamp(xx).time())) for xx in x]
+            old_x = [utl.get_timestamp_from_dt(str(pre.get_date_from_ts(xx).time())) for xx in x]
         elif isinstance(old_x[0], str):
-            old_x = [utl.extract_time_from_datetime_string(xx) for xx in x]
+            old_x = [utl.get_timestamp_from_dt(xx) for xx in x]
         else: #datetime
-            old_x = [utl.extract_time_from_datetime_string(utl.full_date2str(xx)) for xx in x]
+            old_x = [utl.get_timestamp_from_dt(utl.full_date2str(xx)) for xx in x]
 
         x,y = [], []
 
@@ -5106,7 +5076,7 @@ def circadian_rhythm(sender, app_data, user_data):
         x.append(old_x[-1])
         y.append(old_y[-1])
         
-        last = utl.extract_time_from_datetime_string("23:59:00")
+        last = utl.get_timestamp_from_dt("23:59:00")
 
         if x[0]>600:
             complete = False
@@ -5176,7 +5146,7 @@ def circadian_rhythm(sender, app_data, user_data):
                 circadian_tags.append(f"{tag}_{tab_label}")
                 dpg.add_line_series(val[0],val[1],label=label,parent=y_axis, tag = f"{tag}_{tab_label}",skip_nan=False)
 
-                new_x = [datetime.fromtimestamp(xx) for xx in val[0]]
+                new_x = [pre.get_date_from_ts(xx) for xx in val[0]]
 
                 sign = {'X':new_x,'Y':val[1],'Sense':val[2]}
 
@@ -5331,7 +5301,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
             segment = cut_segment(x,y,event)
             segments.append([segment,label])
             event_names.append(label)
-            date = utl.date2str(datetime.fromtimestamp(event))
+            date = utl.extract_date(pre.get_date_from_ts(event))
             days.append(date)
 
     values = [segment[0][1] for segment in segments]
@@ -5749,7 +5719,7 @@ def show_event_summary(mode,tab_tag,plot_tag,files=None):
                 x = [(utl.parse_datetime(key)+daylight_savings).timestamp() for key in events.keys()]
                 weight = 200
             else:
-                x = [utl.extract_time_from_datetime_string(key)+(daylight_savings.seconds) for key in events.keys()]
+                x = [utl.get_timestamp_from_dt(key)+(daylight_savings.seconds) for key in events.keys()]
                 weight = 75
             dpg.configure_item(f"{name}_{tab_tag}",x=x, weight=weight)
         dpg.configure_item(f"{tab_tag}_xaxis",label=app_data)
@@ -5763,7 +5733,7 @@ def show_event_summary(mode,tab_tag,plot_tag,files=None):
                 y_axis = dpg.add_plot_axis(dpg.mvYAxis,label='Number of Events',tag = f"{tab_tag}_yaxis")
                 for name, events in event_summary.items():
                     name = getUpdatedEventName(name)
-                    # x = [utl.extract_time_from_datetime_string(key) for key in events.keys()]
+                    # x = [utl.get_timestamp_from_dt(key) for key in events.keys()]
                     x = [(utl.parse_datetime(key)+daylight_savings).timestamp() for key in events.keys()]
                     y = [events[key] for key in events.keys()]
                     dpg.add_bar_series(x,y,label=name,parent=y_axis,weight=200,tag=f"{name}_{tab_tag}")
@@ -5982,15 +5952,16 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
             for idx, signal in enumerate(signals):
                 app_state['windows'][window_id]['Data'][tab_tag]['Signals'].append(signal)
+                stim_info = DH.info_electrodes(app_state['windows'][window_id]['Data'])['Sense_frequency']
 
                 date = utl.parse_datetime(signal['Date'])
                 extra = DH.correctMissingTimeline(data, signal,'X_missing')[0]
                 if extra['Right']['X_missing'] != [] and flag == False: 
                     flag = True
                 for side in ['Left','Right']:   
-                    sign = signal[side]
+                    sign = signal[side] | {'Sense': stim_info}
                     date = utl.parse_datetime(signal['Date'])
-                    days.append(utl.date2str(date))
+                    days.append(utl.extract_date(date))
                     datestr = f"{date.year}-{date.month:02d}-{date.day:02d}"
                     label_left = f"{side} - day {datestr}"
                 
@@ -6058,8 +6029,8 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             values = [m[key] for m in mean]
             if isinstance(values[0], str):
                 #its datetime in string
-                values=[utl.extract_time_from_datetime_string(t) for t in values]
-                mean_value = utl.extract_time(datetime.fromtimestamp(np.mean(values)))
+                values=[utl.get_timestamp_from_dt(t) for t in values]
+                mean_value = utl.extract_time(pre.get_date_from_ts(np.mean(values)))
                 mean_value = {key: mean_value}
             else:
                 mean_value = {key: np.mean(values,axis=0)}
@@ -7269,7 +7240,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
             if f != '': 
                 f1, f2 = np.round(f-2.5,2),np.round(f+2.5,2)
                 dpg.add_text(f"Sensing Band: [{f1}, {f2}] Hz", parent=header)
-                sense.append(f"{f1}, {f2}")
+                sense.append(f)
     
         else: 
             electrodes_names[initial] = initial
@@ -7318,7 +7289,8 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
            
             for idx, file in enumerate(files):
                 app_state['windows'][window_id]['Files'][idx]['Data'][tab_tag] = {}
-                sensing_band = sense[idx]
+                stim_info = sense[idx]
+                sensing_band = f"[{np.round(stim_info-2.5,2)},{np.round(stim_info+2.5,2)}]"
                 if mode in file['Modes']: 
                     signals = DH.getSignals(file['Data'],mode)
 
@@ -7326,7 +7298,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
 
                     file['Data'][tab_tag]= {'Signals': []}
                     rdate = signals[0]['Date']
-                    rdate = utl.date2str(utl.parse_datetime(rdate))
+                    rdate = utl.extract_date(utl.parse_datetime(rdate))
 
                     for sdx, signal in enumerate(signals):
                         extra = DH.correctMissingTimeline(file['Data'], signal,'X_missing')[0]
@@ -7339,14 +7311,14 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         else: datas.append(None)
 
                         signal_tag = f"{tab_tag}_file_{idx}_series_{sdx}"
-                        date = utl.date2str(utl.parse_datetime(signal['Date']))
+                        date = utl.extract_date(utl.parse_datetime(signal['Date']))
                         app_state['windows'][window_id]['Files'][idx]['Data'][tab_tag]['Signals'].append({'Date':date,'Left': [], 'Right': []})
                         
                         days.append(date)
                             
                         for side in ['Left', 'Right']:
                             channel = f"{channels[idx][side]}_{side.upper()}"
-                            sign = signal[side]
+                            sign = signal[side] | {'Sense': stim_info}
                             label_left = f"{side} - day {date}"
                             
                             try:

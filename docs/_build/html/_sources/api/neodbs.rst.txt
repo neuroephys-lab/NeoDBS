@@ -7,7 +7,7 @@ Data Handling
    :undoc-members:
 
 Features 
-=========
+========
 
 .. automodule:: Features
    :members:
@@ -15,7 +15,7 @@ Features
    :undoc-members:
 
 Preprocessing 
-==============
+=============
 
 .. automodule:: Preprocessing
    :members:
@@ -31,7 +31,7 @@ Utils
    :undoc-members:
 
 Interface 
-=====
+=========
 
 .. automodule:: GUI
    :members:

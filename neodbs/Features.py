@@ -3,7 +3,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from datetime import datetime
-#from spectrum import pyule
+import utils as utl
 
 bands = {
             'Delta': [0.01,4],
@@ -15,7 +15,9 @@ bands = {
 
 def peak_power(stream):
     '''
-    Receives a stream with PSD values
+    From stream dictionary, return tuple with peak value and peak position.
+    
+    :param stream: dict, signal information 'X'/'Frequency' --> x axis; 'Y'/'Power' --> y axis
     '''
     if 'X' in stream.keys():
         f = 'X'
@@ -25,7 +27,6 @@ def peak_power(stream):
         p = 'Power'
 
     if len(stream[p]) > 0:
-
         peak_idx = np.argmax(stream[p])
         peak_f = stream[f][peak_idx]
         peak_power = stream[p][peak_idx]
@@ -34,6 +35,12 @@ def peak_power(stream):
     else: return (0, 0)
 
 def peak_per_band(stream, bands):
+    '''
+    Retrives all peak values and positions, in stream, for each band.
+    
+    :param stream: dict, signal information 'X'/'Frequency' --> x axis; 'Y'/'Power' --> y axis
+    :param bands: dict, 'band name': [f0,f1]
+    '''
     temp = {}
     peaks = {}
     if 'X' in stream.keys():
@@ -54,24 +61,15 @@ def peak_per_band(stream, bands):
         peaks[_] = peak_power(temp)
 
     return peaks
-
-def std_dev_band(stream, band):
-
-    if 'X' in stream.keys():
-        f = 'X'
-        p = 'Y'
-    elif 'Frequency'in stream.keys():
-        f = 'Frequency'
-        p = 'Power'
-
-    a,b = band
-    freq_array = np.array(stream[f])
-    mask = (freq_array >= a) & (freq_array <= b)
-    power = np.array(stream[p])[mask]
-
-    return np.std(power)
    
 def std_dev_streams(streams, bands):
+    '''
+    Calculates and returns a dictionary of band-respective standard deviation
+    
+    :param stream: dict, signal information 'X'/'Frequency' --> x axis; 'Y'/'Power' --> y axis
+    :param bands: dict, 'band name': [f0,f1]
+    :return: dict, 'band name': float standard deviation
+    '''
 
     if not isinstance(streams, (list, tuple, np.ndarray)):  
         streams = [streams]
@@ -100,13 +98,20 @@ def std_dev_streams(streams, bands):
     for name, power_list in band_powers.items():
         if power_list:  
             stacked_powers = np.vstack(power_list)
-            std_devs[name] = np.std(stacked_powers)  
+            std_devs[name] = np.nanstd(stacked_powers)  
         else:
             std_devs[name] = None  # No data for this band
 
     return std_devs   
 
 def mean_power_band(log,band):
+    '''
+    Calculates and returns a dictionary of band-respective mean
+    
+    :param stream: dict, signal information 'X'/'Frequency' --> x axis; 'Y'/'Power' --> y axis
+    :param bands: dict, 'band name': [f0,f1]
+    :return: np.array, mean power
+    '''
     #events
     power = []
     
@@ -125,9 +130,16 @@ def mean_power_band(log,band):
     if temp:
         power.append(np.mean(temp))
 
-    return np.mean(power) if power else np.nan 
+    return np.nanmean(power) if power else np.nan 
 
 def get_sum_mean_power(p,band=None):
+    '''
+    Calculates and returns the sum of all band's mean power
+    
+    :param p: dict, computed PSD ('X' = freqs, 'Y' = psd values)
+    :param bands: dict, 'band name': [f0,f1]
+    :return: float
+    '''
     if band == None: band = bands
     x,y=p['X'],p['Y']
     all = []
@@ -135,7 +147,7 @@ def get_sum_mean_power(p,band=None):
         x = np.array(x)
         y = np.array(y)
 
-    for b,v in band.items():
+    for _,v in band.items():
         mask = (x >= v[0]) & (x <= v[1])
         temp = y[mask]
         all.append(np.nanmean(temp))
@@ -143,10 +155,18 @@ def get_sum_mean_power(p,band=None):
 
 def extract_psd_features(p, band, bands=None):
     '''
-    Extracts features from spectral density, or coherence, methods. Returned into a dictionary. 
+    Extracts features from spectral density, or coherence, methods. Returns dictionary. 
+
+    Features: 
+    - Mean Power (mean, std. dev)
+    - % Mean Power (mean, std. dev)
+    - Sum Power (AUC)
+    - % Sum Power (AUC)
+    - Peak Power (power, frequency)']
     
     :param p: dict, computed PSD ('X' = freqs, 'Y' = psd values)
     :param band: list, band[0] = str, band name; band[1] = list, [f0,f1]
+    :return: dict, {feature: value}
     '''
     b,v = band
     band = {b: v}
@@ -185,8 +205,15 @@ def extract_psd_features(p, band, bands=None):
 def extract_timeline_features(p):
     '''
     Extracts features from timeline recordings, returned into a dictionary. 
-    
+
+    Features:
+    - Mean Power (mean, std. dev)
+    - Peak Power
+    - Peak Time
+    - Sensing Freq. (Hz)
+
     :param p: dict, computed PSD ('X' = time array, 'Y' = lfp timeline values)
+    :return: dict, {feature: value}
     '''
     
 
@@ -215,13 +242,12 @@ def extract_timeline_features(p):
     key = 'Peak Time'
     if isinstance(time,str):
         peak = str(utl.parse_datetime(time).time())
-    elif isinstance(time, (int, float)):
-        if np.isnan(time):
-            return
     elif isinstance(time, np.ndarray):
         if np.any(np.isnan(time)):
             return
     elif isinstance(time,float):
+        if np.isnan(time):
+            return
         peak = str(datetime.fromtimestamp(time).time())
     else: #datetime.datetime object
         peak=str(time.time())
@@ -229,13 +255,20 @@ def extract_timeline_features(p):
     time = {key: peak}
     info = mean | picos | time
     if 'Sense' in p.keys():
-        sense = {'Sensing Freq. (Hz)': p['Sense']}
+        sense = {'Sensing Freq. (Hz)': [np.round(p['Sense']-2.5,2),np.round(p['Sense']+2.5,2)]}
         info = info| sense
 
     return info
 
 def mean_power_all_bands(stream, bands):
-    """Computes mean power for frequency bands over a stream of events."""
+    '''
+    Computes mean power for frequency bands over a stream of events.
+
+    
+    :param stream: Description
+    :param bands: Description
+    :return: dict, {band: mean}
+    '''
     
     # Ensure stream is iterable
     if not isinstance(stream, (list, tuple, np.ndarray)):  
@@ -249,93 +282,35 @@ def mean_power_all_bands(stream, bands):
             power_values[band].append(mean_power_band(event, freq_range))
 
     # Compute mean power for each band
-    power = {band: np.mean(values) if values else 0 for band, values in power_values.items()}
+    power = {band: np.nanmean(values) if values else 0 for band, values in power_values.items()}
 
     return power
 
-def psd_fft(filtered_eeg, fs=250):
-    N = len(filtered_eeg)
-    hanning_window = np.hanning(N)  # Apply window before FFT
-    windowed_signal = filtered_eeg * hanning_window
-
-    fft_values = np.fft.fft(windowed_signal)[:N // 2]  # Compute FFT
-    freqs = np.fft.fftfreq(N, 1/fs)[:N // 2]
-
-    # Compute power correction factor for the window
-    window_power_correction = np.sum(hanning_window**2) / N
-
-    # Correct PSD normalization
-    psd = (np.abs(fft_values) ** 2) / (fs * N * window_power_correction)  # Convert to µV²/Hz
-    
-    mask = freqs <= 100
-    freqs = freqs[mask]
-    psd = psd[mask]
-
-    return freqs, psd
-
-def export_2D(info):
-    signals,labels,colors,title,axis = info
-    plt.figure()
-    plt.title(title)
-    plt.xlabel(axis[0])
-    plt.ylabel(axis[1])
-    for i,signal in enumerate(signals):
-        label = labels[i]
-        x,y = signal['X'],signal['Y']
-        plt.plot(x,y,label=label,color=colors[i])
-    plt.legend()
-    plt.savefig('Example.png')
-
-def export_plot_old(info, plot_type):
-    signals, labels, colors, title, axis = info
-    
-    plt.figure()
-    plt.suptitle(title)
-
-    match plot_type:
-        case '2D':
-            plt.xlabel(axis[0])
-            plt.ylabel(axis[1])
-            for i, signal in enumerate(signals):
-                label = labels[i]
-                x, y = signal['X'], signal['Y']
-                plt.plot(x, y, label=label, color=colors[i])
-            plt.legend()
-
-        case '3D':
-            n_signals = len(signals)
-            fig, axs = plt.subplots(
-                n_signals, 1,
-                figsize=(8, 3 * n_signals),
-                constrained_layout=True,
-                sharex=True
-            )
-            
-            # If there's only one signal, axs is not iterable
-            if n_signals == 1:
-                axs = [axs]
-
-            for i, signal in enumerate(signals):
-                f, t, sxx = signal
-                ax = axs[i]
-                pcm = ax.pcolormesh(
-                    t, f, sxx,
-                    shading='gouraud',
-                    cmap='viridis'
-                )
-                ax.set_ylabel(axis[1])
-                ax.set_title(labels[i])
-                fig.colorbar(pcm, ax=ax, label=axis[2])
-
-            axs[-1].set_xlabel(axis[0])
-
-            plt.close()
-            plt.figure(fig.number)
-
-    plt.savefig('Example.png', bbox_inches='tight', dpi=300)
-    plt.show()
-
 def export_plot(info, plot_type, size=None, line_types = None):
+    '''
+    Creates matplolib plot and exports it into png image, according to the prepared info in dearpygui.
+    
+    If plot_type is '2D' or 'CC' (Timeline/normal PSD or cross-correlation): 
+        - signals: list of dicts
+        - colors: list, rgba codes
+
+    If plot_type is '3D' or '3DC' (spectrogram or coherogram): 
+        - signals: list of tuples.
+        - colors: str, name of colormap
+
+    If plot_type is 'Bar' or 'Events' (phase-amplitude coupling or event summary): 
+        - signals: list of dicts.
+        - colors: list, rgba codes
+
+    If plot_type is 'Pie' (phase-amplitude coupling or event summary): 
+        - signals: single list of values.
+        - colors: list, rgba codes
+    
+    :param info: signals (list), labels (list of signal's labels), colors (list), title (str, name of plot), axis (list, names of axis), limits (list, range of axis)
+    :param plot_type: str, type of plot: '2D' (Timeline/PSD), 'CC' (cross-correlation), '3D' (spectrogram), '3DC' (coherogram), 'Bar' (phase-amplitude coupling), 'Events' (event summary), 'Pie' (event summary count)
+    :param size: tuple, width and height of original plot. Optional, default to None, width and height are set to default fig sizes of matplotlib
+    :param line_types: list, type of line plotted in dpg. Optional, default to None.
+    '''
 
     signals, labels, colors, title, axis, limits  = info
 
@@ -465,6 +440,13 @@ def export_plot(info, plot_type, size=None, line_types = None):
     plt.close(fig)
 
 def export_signals(info,filename, tfd = False):
+    '''
+    Writes into "Signals_{filename}.csv" file, signals contained in info dictionary.
+    
+    :param info: dict, keys are columns
+    :param filename: str, name of file
+    :param tfd: Optional. Default to False, if True exports 3D signals (spectrogram/coherogram)
+    '''
     filename = filename.replace(' - ','_')
     filename = filename.replace(' ','_')
     filename = 'Signals_'+filename + ".csv"
@@ -505,106 +487,3 @@ def export_signals(info,filename, tfd = False):
                 except:
                     row.append(' ')
             f.write(",".join(row) + "\n")
-
-def wave(frequency = 10, sampling_rate = 1000, duration = 1, amplitude = 1):
-    
-    # Generate time vector
-    t = np.linspace(0, duration, int(sampling_rate * duration), endpoint=False)
-
-    # Generate the sine wave signal
-    signal = amplitude * np.sin(2 * np.pi * frequency * t)
-
-    return np.array(t), np.array(signal)
-
-def convert_to_db(value):
-    """Convert a value to dB scale using 10 * log10.
-    :param value: int/float"""
-     # if isinstance(value, (list, np.ndarray)):
-     #     return [round(10 * np.log10(v +1e-6), 2) for v in value]
-    if isinstance(value, (list, np.ndarray,tuple)):  # Handle peak values (power, frequency)
-        return (round(10 * np.log10(value[0]+1e-6), 2), value[1])
-    elif isinstance(value, (int, float)):
-        return round(10 * np.log10(value+1e-6), 2)
-    return value  # Return unchanged if it's a string or invalid type
- 
-def convert_from_db(value):
- 
-    """Convert a dB value back to linear scale using 10^(dB/10).
-    :param value: int/float"""
-     # if isinstance(value, (list, np.ndarray,tuple)):  
-     #     return [round(10**(v / 10), 2) if v != float('-inf') else 0 for v in value]
- 
-    if isinstance(value, (list, np.ndarray,tuple)):  # Handle peak values (power, frequency)
-        return (round(10**(value[0] / 10), 2) if value[0] != float('-inf') else 0, value[1])
-    elif isinstance(value, (int, float)):
-        return round(10**(value / 10), 2) if value != float('-inf') else 0
-    return value  # Return unchanged if it's a string or invalid type
- 
-
-#----------- BRAVO ------------------------------------------------------------
-def MedtronicPSD(data, fs=250): 
-
-    window = 256 
-    packets = [24,38,25,38] 
-    maxIndex = 250 
-    count = 8 
-    nfft = 0 
-
-    while maxIndex < len(data): 
-        if maxIndex >= 250: 
-            nfft += 1 
-        maxIndex += packets[count % 4] 
-        count += 1 
-
-    freq = np.arange(window)/window*fs 
-    power = np.zeros((len(freq), nfft)) 
-
-
-    maxIndex = 250 
-    hanning_window = np.hanning(250)
-    window_power_correction = np.sum(hanning_window**2) / 250  # Energy normalization factor
-
-    for i in range(nfft):  
-        windowed_data = np.zeros(window)  
-        windowed_data[:250] = data[maxIndex - 250:maxIndex] * hanning_window  
-        fft_result = np.fft.fft(windowed_data)  
-
-        power[:, i] = (np.abs(fft_result) ** 2) / (fs * window * window_power_correction)  # Convert to µV²/Hz
-
-        maxIndex += packets[i % 4]  
-
-    return {"Frequency": freq[:100], "Power": np.mean(power[:100],axis=1)} #, "StdErr": stats.sem(power,axis=1)[:100]} 
-
-def getIndices(length, window, overlap):
-    return np.array(range(0, length+1-window, window-overlap))
-
-def spectrogram(signal, fs = 250): #incomplete/ should receive the 
-    if len(signal) < 5000:
-        nperseg = int(min(256, len(signal) / 2))
-        noverlap = int(nperseg / 2)
-    else:
-        nperseg = 1024
-        noverlap = nperseg / 2
-
-
-    frequencies, times, Sxx = spectrogram(signal, fs=fs,nperseg=nperseg, noverlap=noverlap, window='hamming', scaling='density')
-    Sxx_log = 10 * np.log10(Sxx + 1e-10)  # Convert to dB scale
-
-    Sxx_log = np.flipud(Sxx_log)
-
-    return frequencies, times, Sxx_log
-
-def autoregressiveSpectrogram(data, window=2.0, overlap=1.0, frequency_resolution=0.5, fs=100, order=50):
-    configuration = {"Window": window, "Overlap": overlap}
-    window = int(window * fs)
-    overlap = int(overlap * fs)
-    NFFT = int(fs / frequency_resolution)
-    epochs = getIndices(len(data),window,overlap)
-    frequency = np.array(pyule(np.array(1),order,NFFT=NFFT, sampling=fs).frequencies())
-    spectrum = np.ndarray((len(frequency), len(epochs)))
-    for index in range(len(epochs)):
-        p = pyule(data[epochs[index]:epochs[index]+window], order, NFFT=NFFT, sampling=fs)
-        spectrum[:,index] = p.psd
-    time = (epochs + window) / fs
-    
-    return dict({"Time": time, "Frequency": frequency, "Power": spectrum, "logPower": 10*np.log10(spectrum), "Config": configuration})
