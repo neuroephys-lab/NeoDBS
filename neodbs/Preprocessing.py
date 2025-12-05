@@ -322,19 +322,17 @@ def get_date_from_ts(ts):
 #----------------------------- NeoDBS signal processing functions------------------
 
 
-def MeanSignal(signals, key = None):
+def MeanSignal(signals, key = 'Y'):
     '''
     Calculates and return mean from specific key in signal dictionary, item of signals list
     
     :param signals: list
         list of dictionaries of signal data.
-    :param key: str/int
+    :param key: str/int, default to 'Y'
         key of dictionary
     :return: np.array
         computed mean
     '''
-    if key == None: key = 'Y'
-    
     yy=[signal[key] for signal in signals]
     
     mean_signal = np.nanmean(yy, axis=0)

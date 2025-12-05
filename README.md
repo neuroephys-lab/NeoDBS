@@ -1,5 +1,14 @@
 # NeoDBS
 
+## 05.12.2025
+- Finished documentation
+- Uniform design:
+    - tables under collapsing header
+    - add std.dev buttons
+    - remove segmentation from fd plots
+    - add mean and std. dev in setup artifacts
+    - Update table to power units: corrected so it wont calculate db of frequency (hz)
+
 ## 04.12.2025
 - Documentation: finish DataHandling! and GUI (?)
 - solve some random debugs

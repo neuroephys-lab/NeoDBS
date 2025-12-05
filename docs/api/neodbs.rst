@@ -29,11 +29,3 @@ Utils
    :members:
    :show-inheritance:
    :undoc-members:
-
-Interface 
-=========
-
-.. automodule:: GUI
-   :members:
-   :show-inheritance:
-   :undoc-members:

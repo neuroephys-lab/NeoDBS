@@ -1,4 +1,4 @@
-# import DataHandling as DH
+import DataHandling as DH
 # import dearpygui.dearpygui as dpg
 # import Features as ft
 # import matplotlib.pyplot as plt
@@ -25,9 +25,11 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 
 '''
 
-date = "2002-11-03 11:45:15"
-date = utl.parse_datetime(date)
-print(str(date))
+file = "C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
+Data = DH.getData(file)
+print(len(DH.getSignals(Data,'Indefinite')))
+
+
 # dpg.create_context()
 
 # tab_label = "this"

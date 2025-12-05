@@ -13,7 +13,7 @@ def info_electrodes(data,version='Initial',side=0):
     side 0 - Left
     side 1 - Right
 
-    :param data: dict, reorganized using DataHandling.getData()
+    :param Data: dict, from DataHandling.getData(), reorganized using DataHandling.getData()
     :param version: str, default to 'Initial'. Access to version configuration
     :param side: int, default to 0 ('Left')
 
@@ -94,7 +94,7 @@ def add_utc_conversion_to_dates(data, offset):
     Recursively convert all 'Date'-related fields to UTC with offset (time-shifted).
     Assumes naive datetimes are in the specified local timezone.
 
-    :param data: dict, from DataHandling.getData()
+    :param Data: dict, from DataHandling.getData(), from DataHandling.getData()
     :param offset: 
     '''
    
@@ -114,7 +114,16 @@ def add_utc_conversion_to_dates(data, offset):
 
     return data
 
-def extract_time_offset(Data):
+def extract_time_offset(Data,string=False):
+    '''
+    Get time offset, from organized Data dictionary.
+
+    :param Data: dict, from DataHandling.getData()
+    :param string: boolean, default to False. If true returns string of the time offset, else returns timedelta object of time offset.
+
+    :return: timedelta/string
+
+    '''
     try:
         offset = Data['ProgrammerUtcOffset']
     except Exception:
@@ -122,14 +131,29 @@ def extract_time_offset(Data):
     sign = offset[0]
     hours = int(offset[1:].split(':')[0])
     if sign=='-':
-        offset =  int(-hours)
-    else: offset= hours
-    return timedelta(hours=offset)
-
-def extract_dict_offset(Data):
-    return Data['Device']['ProgrammerUtcOffset']
+        hours =  int(-hours)
+    else: hours= hours
+    if string: return offset
+    return timedelta(hours=hours)
 
 def getData(file_path):
+    '''
+    Creates organized dictionary with information in JSON file. Dictionary has 7 main keys, organized by the recording modes and device information.
+    Data = {
+        'Device': all information relative to device, stimulation, programming, session metadata, battery and electrode status,
+        'Survey': recording data from BrainSense Survey (TD and PSD),
+        'Setup': recording data from BrainSense Setup (Stimulation ON/OFF and PSD artifact checking),
+        'Streaming': recording data from BrainSense Streaming (Stimulation ON/OFF),
+        'Indefinite': recording data from BrainSense Indefinite Streaming, 
+        'Events': at-home marked events, recorded 30s PSD,
+        'Timeline': at-home LFP recordings,
+    }
+
+    :param file_path: str, path to JSON file.
+
+    :return: dict
+
+    '''
 
     file = open(file_path,'r',encoding='utf-8')
     try:
@@ -197,6 +221,21 @@ def getData(file_path):
     return Data
 
 def getModes(Data):
+    '''
+    Gets recording modes present in Data dictionary. Verifies if Data is empty or damaged (with recordings available).
+
+    Modes:
+        - Survey
+        - Setup
+        - Indefinite (Streaming)
+        - Streaming
+        - Timeline
+        - Events
+
+    :param Data: dict, from DataHandling.getData()
+
+    :return: list
+    '''
 
     past = getLastSessionDate(Data)
     def add_mode(Data):
@@ -237,16 +276,36 @@ def getModes(Data):
     return modes
 
 def getStimStatus(Data):
+    '''
+    Gets status (ON/OFF) of stimulation, from beginning and end of recording session. 
+
+    :param Data: dict, from DataHandling.getData()
+
+    :return: tuple, (initial,final)
+
+    '''
     initial = utl.after_point(Data['Device']['Stimulation']['InitialStimStatus'])
     final = utl.after_point(Data['Device']['Stimulation']['FinalStimStatus'])
     return (initial,final)
 
 def getSessionDate(Data): 
+    '''
+    Returns string of session date.
+
+    :param Data: dict, from DataHandling.getData()
+    '''
     if Data['Device']['SessionDate']:
         return utl.parse_datetime(Data['Device']['SessionDate'])
     else: return "No date stored!"
 
 def getSessionDuration(Data):
+    '''
+    Gets session duration.
+
+    :param Data: dict, from DataHandling.getData()
+    :return: int
+
+    '''
     
     if Data['Device']['SessionEndDate'] and Data['Device']['SessionDate']:
         end = utl.parse_datetime(Data['Device']['SessionEndDate'])
@@ -257,21 +316,49 @@ def getSessionDuration(Data):
     else: return "No dates stored!"
 
 def getPatientInfo(Data):
+    '''
+    Returns patient information.
+
+    :param Data: dict, from DataHandling.getData().
+    '''
     return Data['Device']['PatientInformation']['Initial']
 
 def getDeviceInfo(Data):
+    '''
+    Returns device information.
+
+    :param Data: dict, from DataHandling.getData()
+    '''
     return Data['Device']['DeviceInformation']['Final']
 
 def getLastSessionDate(Data):
+    '''
+    Returns date of previous session.
+
+    :param Data: dict, from DataHandling.getData()
+    '''
     if 'GroupHistory' not in Data['Device'].keys(): 
         return 'This is First Session.'
     return Data['Device']['GroupHistory'][1]['SessionDate']
 
 def getBatteryInfo(Data):
+    '''
+    Returns battery information.
+
+    :param Data: dict, from DataHandling.getData()
+    '''
     return Data['Device']['BatteryInformation']
 
 def getRecordingDuration(mode, recording):
+    '''
+    Returns recording duration.
 
+    :param mode: str
+    :param recording: dict
+
+    :return: float
+
+    '''
     match mode:
         case 'Streaming': 
             Ticks = utl.string2numbers(recording['TicksInMses'])
@@ -309,24 +396,14 @@ def getRecordingDuration(mode, recording):
 
     return np.abs(np.round(temp_time,1))
 
-def getElectrodes(list):
-    '''
-    list: stim['SensingChannel'][0]['ElectrodeState']
-    '''
-    Electrodes = []
-
-    for row in list:
-        Electrode = utl.after_point(row['Electrode'])
-        ElectrodeState = utl.after_point(row['ElectrodeStateResult'])
-        if Electrode == 'Case' and ElectrodeState == 'Positive':
-            Electrodes.append([Electrode, ElectrodeState])
-        else:
-            ElectrodeAmplitude = row['ElectrodeAmplitudeInMilliAmps']
-            ElectrodeFraction = row['ElectrodeFractionOf64']
-            Electrodes.append([Electrode, ElectrodeState,ElectrodeAmplitude,ElectrodeFraction])
-    return Electrodes
-
 def getEventsElectrodes(data):
+    '''
+    Returns active electrodes at beginning and end, for at-home recordings.
+
+    :param Data: dict, from DataHandling.getData()
+
+    :return: list, [initial, final]
+    '''
     if ('Events' or 'Timeline') not in getModes(data):
         return None
 
@@ -348,23 +425,37 @@ def getEventsElectrodes(data):
 
     return initial, final
 
-def getEventLog(dictionary):
-    data = dictionary['Events']['LfpFrequencySnapshotEvents']
+def getEventLog(Data):
+    '''
+    Returns log of marked events.
+
+    :param Data: dict, from DataHandling.getData()
+    '''
+    data = Data['Events']['LfpFrequencySnapshotEvents']
     return [event for event in data if 'LfpFrequencySnapshotEvents' not in event.keys()]
     
-def getModeSignals(dictionary, mode):
-    previous_session = utl.parse_datetime(getLastSessionDate(dictionary))
+def getModeSignals(Data, mode):
+    '''
+    Returns signals of respective mode, from Data dictionary.
+
+    :param Data: dict, from DataHandling.getData()
+    :param mode: str
+
+    :return: list
+    '''
+    
+    previous_session = utl.parse_datetime(getLastSessionDate(Data))
     match mode:
         case 'Streaming': #✅
-            recs  = dictionary[mode]['BrainSenseTimeDomain']
+            recs  = Data[mode]['BrainSenseTimeDomain']
 
         case 'Timeline': #✅dont need to check date, only hemisphere
-            recs = dictionary[mode]['LFPTrendLogs']
+            recs = Data[mode]['LFPTrendLogs']
             
         case 'Events': #✅
             recs = []
             
-            temp = dictionary[mode]['LfpFrequencySnapshotEvents']
+            temp = Data[mode]['LfpFrequencySnapshotEvents']
             paths = utl.find_key_path(temp,'LfpFrequencySnapshotEvents') #events snapshots have this key 2x, rest is only event timestamp
             for path in paths:
                 path = utl.parse_path(path)
@@ -378,19 +469,35 @@ def getModeSignals(dictionary, mode):
             '''
 
         case 'Indefinite': #✅
-            recs  = dictionary[mode]['IndefiniteStreaming']
+            recs  = Data[mode]['IndefiniteStreaming']
             
         case 'Setup':
-            recs = [dictionary[mode]['SenseChannelTests'], 
-            dictionary[mode]['CalibrationTests'],
-            dictionary[mode]['MostRecentInSessionSignalCheck']]
+            recs = [Data[mode]['SenseChannelTests'], 
+            Data[mode]['CalibrationTests'],
+            Data[mode]['MostRecentInSessionSignalCheck']]
 
         case 'Survey': #✅ #só falta o LFPMontage
-            recs = dictionary[mode]['LfpMontageTimeDomain']
+            recs = Data[mode]['LfpMontageTimeDomain']
 
     return recs
 
 def getSignals(Data, mode):
+    '''
+    Returns signals in respective mode, properly handled into a clean dictionary.
+
+    dict = {
+            'Date': utl.parse_datetime(rec['FirstPacketDateTime']),
+            'Channel': rec['Channel'],
+            'Y' : raw,
+            'X': time_array
+        }
+        
+    
+    :param Data: dict, from DataHandling.getData()
+    :param mode: str
+
+    :return: list, list of signal's dictionaries.
+    '''
     recs = getModeSignals(Data, mode)
     previous = utl.parse_datetime(getLastSessionDate(Data)).date()
     signals = []
@@ -503,6 +610,15 @@ def getSignals(Data, mode):
     return signals
 
 def getStreamingStimulation(Data,date):
+    '''
+    Returns active stimulation group.
+    
+    :param Data: dict, from DataHandling.getData()
+    :param date: str
+
+    :return: str
+
+    '''
     dictionary = Data['Streaming']['BrainSenseLfp']
     group = None
     for rec in dictionary:
@@ -515,6 +631,14 @@ def getStreamingStimulation(Data,date):
     if group == None: return 'Stimulation OFF'
 
 def getStimulation(Data):
+    '''
+    Returns at-home stimulation amplitude.
+
+    :param Data: dict, from DataHandling.getData()
+
+    :return: dict
+
+    '''
     timeline = getModeSignals(Data,'Timeline')['HemisphereLocationDef.Right']
     electrodes = info_electrodes(Data,version='Final')['Stim_electrodes']
     stimulation = {'X': [], 'Y': [], 'Info': []}
@@ -530,11 +654,26 @@ def getStimulation(Data):
     return stimulation
 
 def getEventSummary(Data):
+    '''
+    Returns event summary (number of occurences of each event).
+    
+    :param Data: dict, from DataHandling.getData()
+
+    :return: dict
+
+    '''
     if 'EventSummary' in Data['Events'].keys():
         return Data['Events']['EventSummary'] 
     else: return {}
 
 def getImpedance(Data): 
+    '''
+    Returns monopolar and bipolar impedance test results, per hemisphere.
+    
+    :param Data: dict, from DataHandling.getData()
+
+    :return: list, [status (str), Left (dict), Right (dict)]
+    '''
 
     Left, Right = {}, {}
     if len(Data['Device']['Impedance']) == 0:
@@ -552,11 +691,17 @@ def MissingTimeline(data,side):
     '''
     Inês Pereira (up202107421)
 
-    This function is for the right hemisphere of the brain
-    This function recieves the information in dictionary data and also the days that will appear in the graphic
-    This function returns a dictionary, the dictionary have x - time, Y - LFP, 
-    X_missing - points in x-axis that will be added due to missing information, 
-    Y_missing - points in y-axis that will be added due to missing information
+    Checks missing points in timeline (missing point: when difference between points is >= than 11 minutes) and returns a new corrected timeline dict, correcting missing LFP values through mean interpolation.
+    
+    new_dic = {
+        'X': corrected timeline, 
+        'Y': corrected LFP,
+        'X_missing': missing timeline points,
+        'Y_missing': missing LFP values}
+
+    :param Data: dict, from DataHandling.getData()
+    :paam side: str
+    :return: dict
     '''
     if side == 'Right': side = 'HemisphereLocationDef.Right'
     else: side = 'HemisphereLocationDef.Left'
@@ -627,71 +772,20 @@ def MissingTimeline(data,side):
             time_format_somado.extend(time_format)
             LFP_somado.extend(LFP)
 
-    '''elif isinstance(days_of_search, str):
-        for s in days_hemisphere_right: #in case of a single day
-            if days_of_search in s:
-                key_chosen_day = s
-                break 
-        
-        info_chosen_day= data['Timeline']['LFPTrendLogs'][side][key_chosen_day]
-        
-            
-
-        size_chosen_day = len(info_chosen_day)
-        time_format=[0]*size_chosen_day
-        LFP=[0]*size_chosen_day
-        i=size_chosen_day
-
-        for t in info_chosen_day:
-            LFP[i-1]=int(t['LFP'])
-            # time_format[i-1]=datetime.fromisoformat(t['DateTime'].rstrip('Z'))
-            time_format[i-1] = t['DateTime']
-            i=i-1
-
-        #adding the missing points
-        index_n_pontos_extra=[]
-        for s in range(len(time_format)-1):
-            dif=time_format[s+1]-time_format[s]
-            dif=dif.seconds
-            if dif > 660: #why 660?
-                n_pontos_extra=(dif//600) - 1
-                index_n_pontos_extra.append(s)
-                index_n_pontos_extra.append(n_pontos_extra)
-
-        n_saltos=[]
-        n_saltos=len(index_n_pontos_extra)//2
-        LFP_acrescentar=[]
-
-        for i in range(n_saltos):
-            index_ponto_acrescentar=index_n_pontos_extra[i*2]
-            numero_pontos_acrescentar=index_n_pontos_extra[i*2+1]
-            #adding points in y-axis
-            min_ponto_acrescentar=LFP[index_ponto_acrescentar]
-            max_ponto_acrescentar=LFP[index_ponto_acrescentar+1]
-            media_ponto_acrescentar=(min_ponto_acrescentar+max_ponto_acrescentar)/2
-            LFP_acrescentar=[media_ponto_acrescentar]*numero_pontos_acrescentar
-            LFP[index_ponto_acrescentar+1:index_ponto_acrescentar+1]=LFP_acrescentar
-            red_LFP.extend(LFP_acrescentar)
-            #adding points in x-axis
-            tempo=time_format[index_ponto_acrescentar]
-            for j in range(0,numero_pontos_acrescentar+1):
-                tempo=tempo + timedelta(minutes=10)
-                next_t = time_format[index_ponto_acrescentar+j+1]
-                diff = next_t-tempo
-                if diff>timedelta(minutes=10): 
-                    time_format.insert(index_ponto_acrescentar+j+1,tempo)
-                    red_time.append(tempo)
-
-        time_format_somado.extend(time_format)
-        LFP_somado.extend(LFP)
-        
-        time_format_somado = [utl.parse_datetime(t) for t in time_format_somado]'''
-
     new_dic = {'X': time_format_somado, 'Y':LFP_somado,'X_missing':red_time,'Y_missing':red_LFP}
             
     return new_dic
 
 def correctMissingTimeline(Data, Timeline, axis='X'):
+    '''
+    Corrects timeline recordings for both hemispheres.
+    
+    :param Data: dict, from DataHandling.getData()
+    :param Timeline: dict
+    :param axis: str
+
+    :return: dict, corrected Timeline dict
+    '''
 
     other_axis = 'Y'
     added_timeline = {'Right':[],'Left':[]}
