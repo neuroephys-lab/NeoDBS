@@ -1,8 +1,8 @@
 import DataHandling as DH
 # import dearpygui.dearpygui as dpg
 # import Features as ft
-# import matplotlib.pyplot as plt
-# import numpy as np
+import matplotlib.pyplot as plt
+import numpy as np
 # from scipy.signal import spectrogram
 # from datetime import datetime
 # import Preprocessing as pre
@@ -25,10 +25,11 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 
 '''
 
-file = "C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json"
-Data = DH.getData(file)
-print(len(DH.getSignals(Data,'Indefinite')))
+colors = [0.2980392277240753, 0.44705885648727417, 0.6901960968971252, 1.0]
 
+# Example signals dictionary
+
+print(sum(colors))
 
 # dpg.create_context()
 

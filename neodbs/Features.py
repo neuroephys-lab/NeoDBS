@@ -372,6 +372,39 @@ def export_plot(info, plot_type, size=None, line_types = None):
         
         fig.tight_layout()
 
+    elif plot_type == 'SMP':
+        fig, ax = plt.subplots(figsize=(size[0],size[1]))
+
+        if axis[-1] != '':
+            secay = ax.twinx()
+            secay.set_ylabel(axis[3])
+            secay.set_ylim(*limits[3])
+            secax = ax.twiny()
+            secax.set_xlabel(axis[2])
+            secax.set_xlim(*limits[2])
+        
+        for i, signal in enumerate(signals['Y1']):
+            key = 'Y1'
+            if 'Scatter' in line_types[key][i]:
+                ax.scatter(signal['X'],signal['Y'],label=labels[key][i], color=colors[i])
+            else:
+                ax.plot(signal['X'],signal['Y'],label=labels[key][i],color=colors[i])
+
+        for i, signal in enumerate(signals['Y2']):
+            key = 'Y2'
+            if 'Scatter' in line_types[key][i]:
+                secay.scatter(signal['X'],signal['Y'],label=labels[key][i],color=colors[i+len(signals['Y1'])])
+            else:
+                secay.plot(signal['X'],signal['Y'],label=labels[key][i],color=colors[i+len(signals['Y1'])])
+        
+        ax.set_title(title)
+        ax.set_xlabel(axis[0])
+        ax.set_ylabel(axis[1])
+        ax.set_xlim(*limits[0])
+        ax.set_ylim(*limits[1])
+
+        fig.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=3, frameon=False)
+
     elif plot_type in ['3D','3DC']:
         n_signals = len(signals)
         if n_signals>1:

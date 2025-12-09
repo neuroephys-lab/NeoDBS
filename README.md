@@ -1,5 +1,10 @@
 # NeoDBS
 
+## 08.12.2025
+
+Debug:
+- export plot: show mean power over time
+
 ## 05.12.2025
 - Finished documentation
 - Uniform design:

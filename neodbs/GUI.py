@@ -187,13 +187,13 @@ def save_plot(sender,app_data,user_data):
         colors = [dpg.get_colormap_color(colormap_int,i) for i in range(len(tags))]
     elif isinstance(colormap_int,str):
         colors = colormap_int
-    else: #specified colors
+    elif sum(colormap_int[0])>4: #specified colors
         colors = [tuple(np.round(np.array(c)/255,3)) for c in colormap_int]
-
+    else: colors = colormap_int
     if not isinstance(colormap_int,str):
         colors = np.array(colors)[mask].tolist()
     
-    if plot_type not in ['3D','3DC']:   
+    if plot_type not in ['3D','3DC','SMP']:   
         title = dpg.get_item_label(plot_tag)
         axis_tags = dpg.get_item_children(plot_tag)[1]
         axis = [dpg.get_item_label(ax) for ax in axis_tags]
@@ -242,7 +242,36 @@ def save_plot(sender,app_data,user_data):
             time = np.linspace(*xlim,cols)
             
             signals.append([freqs,time,sxx])
-            
+    
+    elif plot_type == 'SMP':
+        extra_tags = []
+        title = dpg.get_item_label(plot_tag)
+        axis_tags = dpg.get_item_children(plot_tag)[1]
+        tags = np.array(tags)[mask].tolist()
+        axis = [dpg.get_item_label(tag) for tag in axis_tags]
+        limits = [dpg.get_axis_limits(tag) for tag in axis_tags]
+        size = dpg.get_item_width(plot_tag), dpg.get_item_height(plot_tag)
+        signals = {'Y1': [], 'Y2':[]}
+        labels = {'Y1': [], 'Y2':[]}
+        line_type = {'Y1': [], 'Y2':[]}
+        if axis[-1] != '':
+            extra_tags = dpg.get_item_children(axis_tags[-1])[1]
+        
+        for idx, tag in enumerate(tags):
+            x,y = dpg.get_value(tag)[:2]
+            labels['Y1'].append(dpg.get_item_label(tag))
+            line = dpg.get_item_info(tag)['type']
+            line_type['Y1'].append(line)
+            signals['Y1'].append({'X': x, 'Y': y})
+
+        for idx, tag in enumerate(extra_tags):
+            x,y = dpg.get_value(tag)[:2]
+            labels['Y2'].append(dpg.get_item_label(tag))
+            line_type['Y2'].append(dpg.get_item_info(tag)['type'])
+            signals['Y2'].append({'X': x, 'Y': y[:len(x)]})
+
+        #when line series are added (ex.: y-bocs) axis tags are in following order: x1,y1,x2,y2
+
     elif plot_type in ['2D','CC']:
         # for '2D'
         tags = np.array(tags)[mask].tolist()
@@ -763,10 +792,11 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None,tables=
             no_groups = len(list(all_toggles.keys()))
             if no_groups<4:
                 for text, values in all_toggles.items():
-                    with dpg.child_window(tag=f"{tab_tag}_{text}_buttons", width=120, height=120):
+                    with dpg.child_window(tag=f"{tab_tag}_{text}_buttons", height=120, auto_resize_x =True):
                         dpg.add_text(text)
                         for v in values:
                             toggleType(signal_tags,parent=f"{tab_tag}_{text}_buttons", user_data=(v, window_id, tab_tag))
+                        # dpg.configure_item(f"{tab_tag}_{text}_buttons",auto_resize_x=True)
             
             else:
                 g1 = dpg.add_group(parent=f"{tab_tag}_buttons")
@@ -955,6 +985,7 @@ def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False,
             y = np.ascontiguousarray(signal['Y'])
             date = signal['Date']
             channel = signal['Channel']
+
 
             if channel in electrodes_names.keys():
                 channel = electrodes_names[channel]
@@ -1245,7 +1276,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
     '''
     window_id = extract_window_id(tab_tag)
     tags = getActiveSeries(signal_tags)
-    tables, events_tags, events_names, channels, ploted_tags, days, features = [], [], [], [], [], [], {}
+    tables, events_tags, events_names, channels, ploted_tags, days = [], [], [], [], [], []
     comparing = False
     if dpg.does_item_exist(f"{tab_label}_bva"): 
         comparing = dpg.get_value(f"{tab_label}_bva")
@@ -1600,20 +1631,26 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             dpg.configure_item(f"{tab_label}_std",y1=minus, y2=plus)
 
         def toggle_over_time(sender,app_data,user_data):
-            temp_tags = user_data
+            y_axis = user_data
+            temp_tags = dpg.get_item_children(y_axis,slot=1)
             labels = [dpg.get_item_label(tag) for tag in temp_tags]
             name = dpg.get_item_label(sender)
 
-            for label in labels:
+            for idx,label in enumerate(labels):
+                tag = temp_tags[idx]
                 if name in label:
-                    tag = temp_tags[labels.index(label)]
                     dpg.configure_item(tag,show=app_data)
+                elif (label == '') or (label == ' '): #for scatter series, so it doesnt show legend repeated, but still can toggle visibility
+                    tag = dpg.get_item_alias(tag)
+                    if name in tag: 
+                        dpg.configure_item(tag,show=app_data)
 
         def show_power_over_time(sender,app_data,user_data):
             all_info=user_data
+            color_int =0
             filename = f"MeanPower_Time_{tab_tag}"
             # save_band_powers_to_txt(all_info,filename)
-            mean_tags, ch, bds = [],[],[]
+            ch,colors = [], []
             if dpg.does_item_exist(f"{tab_label}_smp"): dpg.delete_item(f"{tab_label}_smp")
 
             with dpg.group(parent=tab_tag, horizontal=True,tag=f"{tab_label}_smp"):
@@ -1626,20 +1663,21 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     y2 = dpg.add_plot_axis(dpg.mvYAxis2,label='',show=False,opposite=True)
                     for channel, info in all_info.items():
                         ch.append(channel)
-
                         for band, power in info.items():
-                            bds.append(band)
                             dates, values = [utl.parse_datetime(p[0]).timestamp() for p in power], [p[1][0] for p in power]
                             dates_array = np.arange(0,len(dates),1)
-                            # for i,p in enumerate(power):
-                            #     ticks += ((p[0], i),)
-                            if band=='Beta': label=f"{band}  | {channel}"
+                            if band=='Beta': label=f"{band}  | {channel}" # so they all have the same spacing
                             else: label=f"{band} | {channel}"
-                            t = dpg.add_line_series(dates_array.tolist(),values,parent=yy,label=label)
-                            mean_tags.append(t)
+                            dpg.add_line_series(dates_array.tolist(),values,parent=yy,label=label)
+                            s = dpg.add_scatter_series(dates_array.tolist(),values,parent=yy,label='',tag=f"{tab_tag}_smp_{channel}_{band}_{color_int}")
+                            color = dpg.get_colormap_color(0,color_int)
+                            dpg.bind_item_theme(s,change_plot_color(color))
+                            color_int=color_int+ 1
+                            colors.append(color)
+                            colors.append(color) #one for line series, other for scatter series
 
                 ch = np.unique(ch).tolist()
-                bds = np.unique(bds).tolist()
+                bds = list(all_info[channel].keys())
 
                 with dpg.group():
                     with dpg.group(horizontal=True):
@@ -1649,11 +1687,12 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                                 else: title='By Band:'
                                 with dpg.child_window(height=150,auto_resize_x=True):
                                     dpg.add_text(title)
-                                    for c in array: dpg.add_checkbox(label=c,callback=toggle_over_time,user_data=mean_tags,default_value=True)
+                                    for c in array: dpg.add_checkbox(label=c,callback=toggle_over_time,user_data=yy,default_value=True)
                     dpg.add_separator()
-                    dpg.add_button(label='Insert Line Series',width=-1,callback=insert_line_series,user_data=(x2,y2,yy))
-                    dpg.add_button(label='Save Plot Values',width=-1,callback=save_band_powers_to_txt, user_data=(all_info,filename))
-                    dpg.add_separator()
+                    dpg.add_button(label='Insert Line Series',width=-1,callback=insert_line_series,user_data=(x2,y2,yy,colors))
+                    dpg.add_separator(label='Export')
+                    dpg.add_button(label = 'Export Plot Figure',width=-1,tag=f"{tab_label}_save_plot",callback = save_plot,user_data =('SMP', f"{tab_label}_smp_plot",yy,colors))
+                    dpg.add_button(label='Export Values',width=-1,callback=save_band_powers_to_txt, user_data=(all_info,filename))
                     with dpg.child_window(label="X Axis Dates",width=-1, height=200):
                         dpg.add_text("Index: Date")
                         dpg.add_separator()
@@ -1663,7 +1702,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
         def insert_line_series(sender, app_data, user_data):
 
             def read_txt(sender, app_data, user_data):
-                x2,y2,yy = user_data
+                x2,y2,yy,colors = user_data
                 streaming_file = app_data['file_path_name']
                 info =utl.read_lines(streaming_file)
 
@@ -1678,7 +1717,18 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 dpg.configure_item(y2,show=True,label=y_title)
                 dpg.configure_item(x2,show=True)
                 line = dpg.add_line_series(last_x,values,label=label,parent=y2)
+                # s = dpg.add_scatter_series(last_x,values,parent=yy)
+                # dpg.bind_item_theme(s,change_plot_color(dpg.get_colormap_color(0,color_int)))
                 dpg.bind_item_theme(line,change_line_thickness(4))
+                idx = len(np.unique(colors).tolist())
+                color = dpg.get_colormap_color(0,idx)
+                colors.append(color)
+                colors.append(color)
+                print(old[-1])
+                old = dpg.get_item_user_data(f"{tab_label}_save_plot")
+                old[-1] =colors
+                print(old[-1])
+                dpg.set_item_user_data(f"{tab_label}_save_plot",old)
 
             def create_file_dialog(user_data):
                 with dpg.file_dialog(
@@ -6275,18 +6325,6 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     add_filters_buttons(tab_tag,signal_tags)
     add_features_buttons(tab_tag, signal_tags)
      
-
-
-    def toggle(sender,app_data,user_data):
-        what = user_data
-        for t in line_tags:
-            label = dpg.get_item_label(t)
-            if what == 'Peak':
-                if what.upper() in t.upper():
-                    dpg.configure_item(t,show =app_data)
-            elif what in label:
-                dpg.configure_item(t,show =app_data)
-
     # 'Recordings PSDs'
     new_tab_tag = f"{tab_tag}_psd"
     new_signals = getDatabyTag(tab_tag)[mode]['LFPMontage']
@@ -7057,9 +7095,7 @@ def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
     dpg.add_tab(label=f"{mode} PSD", tag=new_tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     dpg.add_text(f"Total recordings: {len(signals)}", parent=new_tab_tag)
     line_tags, channels = [], []
-    if len(files)>4: mh = 150
-    else: mh = -1
-    child = dpg.add_child_window(height=mh, width=-1, parent=new_tab_tag,)
+    child = dpg.add_child_window(height=100, width=-1, parent=new_tab_tag,)
     with dpg.group(parent=new_tab_tag, label = f"{new_tab_tag}_group", horizontal=True):
         signal_tags, dates = {}, []
         
@@ -7509,7 +7545,7 @@ def create_multiple_window():
     def create_file_dialog(window_id):
         '''Creates a file dialog for a given window.'''
         with dpg.file_dialog(
-            label='Multiple files can only be selected simultaneously if from the same folder!',
+            label='Multiple files can be selected simultaneously only if from the same folder!',
             directory_selector=False, 
             show=False, 
             callback=file_dialog_callback, 
