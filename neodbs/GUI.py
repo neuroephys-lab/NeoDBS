@@ -62,6 +62,8 @@ import csv
 #----------------------------------------GLOBAL-----------------------------
 global_bands = ft.bands
 electrodes_names, all_event_names = {}, {}
+exporting_tags = {'Plots': [], 'Signals': [], 'Tables': []}
+cwh = 90
 app_state = {"windows": {}}
 colors = [
         (0, 0, 255, 255),      # blue
@@ -103,8 +105,9 @@ def sanitize_filename(filename):
 
 def save_table_to_file(sender, app_data, user_data):
     '''Internal: Saves DPG table data to a .csv or .txt file'''
-    table_id, file_type = user_data  # Unpack table ID and file type
+    table_id, tag = user_data  # Unpack table ID and file type
 
+    file_type = 'csv'
     # Get table columns (headers)
     column_children = dpg.get_item_children(table_id, slot=0)
     headers = [dpg.get_item_label(col) for col in column_children] if column_children else []
@@ -119,24 +122,20 @@ def save_table_to_file(sender, app_data, user_data):
                 row_data = [dpg.get_value(cell) for cell in cell_children]
                 rows.append(row_data)
 
-    # **Sanitize filename**
-    filename = sanitize_filename(f"{table_id}.{file_type}")
+    new_title = dpg.get_value(f"{tag}_file_name")
+    if new_title is not None: filename=new_title
 
-    # Save to CSV or TXT
-    if file_type == "csv":
-        with open(filename, mode="w", newline="") as file:
-            writer = csv.writer(file)
-            if headers:
-                writer.writerow(headers)
-            writer.writerows(rows)
-    else:
-        with open(filename, mode="w") as file:
-            if headers:
-                file.write("\t".join(headers) + "\n")
-            for row in rows:
-                file.write("\t".join(map(str, row)) + "\n")
+    filename = sanitize_filename(f"{filename}.{file_type}")
 
-    print(f"Table saved as {filename}")
+    with open(filename, mode="w", newline="") as file:
+        writer = csv.writer(file)
+        if headers:
+            writer.writerow(headers)
+        writer.writerows(rows)
+
+    if not dpg.does_item_exist(f"{sender}_toast"):
+        with dpg.tooltip(parent=sender,tag=f"{sender}_toast"):
+            dpg.add_text(f"Saved file: {filename}.csv!")
 
 def save_band_powers_to_txt(sender, app_data, user_data):
     '''
@@ -169,6 +168,64 @@ def save_band_powers_to_txt(sender, app_data, user_data):
             f.write("\n")  # space between channels
     print(f"Saved file: {filename}")
 
+def add_exporting_tag(window_id,plot=None,signal=None,table=None):
+    if window_id not in exporting_tags.keys():
+        exporting_tags[window_id] = {'Plots': [], 'Signals': [], 'Tables': []}
+
+    keys = []
+    if plot: keys.append(['Plots',plot])
+    if signal: keys.append(['Signals',signal])
+    if table: keys.append(['Tables',table])
+
+    for value in keys:
+        key, tag = value
+        exporting_tags[key].append(tag)
+        exporting_tags[window_id][key].append(tag)
+
+def filename_window(sender,app_data,user_data):
+
+    label = dpg.get_item_label(sender)
+    if 'Table' in  label:
+        #get collapsing header label
+        plot_tag = dpg.get_item_parent(sender)
+    else:
+        plot_tag= user_data[1]
+
+    title = dpg.get_item_label(plot_tag)
+
+    x, y = dpg.get_item_rect_min(sender)
+    window_pos = (x - 10, y - 10)
+    final_userdata = user_data
+    parent_sender = sender
+
+    if dpg.does_item_exist(f"{plot_tag}_file"):
+        dpg.delete_item(f"{plot_tag}_file")
+
+    def handle_submit(sender,app_data,user_data):
+        label = dpg.get_item_label(parent_sender)
+        file = ''
+        if dpg.does_item_exist(f"{plot_tag}_file"): 
+            dpg.configure_item(f"{plot_tag}_file",show=False)
+        if 'Plot' in label:
+            save_plot(parent_sender,app_data,final_userdata)
+            
+        elif 'Save Table' ==  label:
+            other, _ = final_userdata
+            save_table_to_file(parent_sender,app_data,(other,plot_tag))
+        else:
+            save_signals(parent_sender,app_data,final_userdata)
+
+    if app_data=='All':
+        handle_submit(None,None,None)
+        return
+    
+    with dpg.window(label='File Name',tag=f"{plot_tag}_file", autosize=True,pos=window_pos,no_collapse=True):
+        dpg.add_text("Save file as: ")
+        with dpg.group(horizontal=True):
+            dpg.add_input_text(default_value=title, width=150,tag=f"{plot_tag}_file_name")
+        with dpg.group(horizontal=True):
+                dpg.add_button(label="Submit", callback=handle_submit)
+
 def save_plot(sender,app_data,user_data):
     '''
     Prepares data from selected plot to be exported into png file.
@@ -180,6 +237,7 @@ def save_plot(sender,app_data,user_data):
     '''
     plot_type, plot_tag, y_axis, colormap_int = user_data
 
+
     tags = dpg.get_item_children(y_axis)[1]
     mask = [dpg.get_item_configuration(tag)['show'] for tag in tags]
 
@@ -190,7 +248,7 @@ def save_plot(sender,app_data,user_data):
     elif sum(colormap_int[0])>4: #specified colors
         colors = [tuple(np.round(np.array(c)/255,3)) for c in colormap_int]
     else: colors = colormap_int
-    if not isinstance(colormap_int,str):
+    if not isinstance(colormap_int,str) and plot_type!='SMP':
         colors = np.array(colors)[mask].tolist()
     
     if plot_type not in ['3D','3DC','SMP']:   
@@ -254,17 +312,24 @@ def save_plot(sender,app_data,user_data):
         signals = {'Y1': [], 'Y2':[]}
         labels = {'Y1': [], 'Y2':[]}
         line_type = {'Y1': [], 'Y2':[]}
+
         if axis[-1] != '':
             extra_tags = dpg.get_item_children(axis_tags[-1])[1]
-        
-        for idx, tag in enumerate(tags):
+            mask2 = [dpg.get_item_configuration(tag)['show'] for tag in extra_tags]
+            tags = np.array(tags)[mask].tolist()
+            mask = mask + mask2
+
+        colors = np.array(colors)[mask].tolist()
+
+        for _, tag in enumerate(tags):
             x,y = dpg.get_value(tag)[:2]
             labels['Y1'].append(dpg.get_item_label(tag))
             line = dpg.get_item_info(tag)['type']
             line_type['Y1'].append(line)
             signals['Y1'].append({'X': x, 'Y': y})
 
-        for idx, tag in enumerate(extra_tags):
+        for _, tag in enumerate(extra_tags):
+            
             x,y = dpg.get_value(tag)[:2]
             labels['Y2'].append(dpg.get_item_label(tag))
             line_type['Y2'].append(dpg.get_item_info(tag)['type'])
@@ -315,6 +380,9 @@ def save_plot(sender,app_data,user_data):
         labels = dpg.get_item_configuration(tag)['labels']
         signals = dpg.get_value(tag)[0]
         colors = [dpg.get_colormap_color(colormap_int,i) for i in range(len(signals))]
+
+    new_title = dpg.get_value(f"{plot_tag}_file_name")
+    if new_title is not None: title=new_title
 
     info = signals,labels,colors,title,axis,limits
 
@@ -474,6 +542,19 @@ def save_signals(sender,app_data,user_data):
         with dpg.tooltip(parent=sender,tag=f"{sender}_toast"):
             dpg.add_text(f"Saved file: {file_name}.txt!")
 
+def save_all(sender,app_data,user_data):
+    key, window_id = user_data
+    if window_id:
+        buttons = exporting_tags[window_id][key]
+    else:
+        buttons = exporting_tags[key]
+    for button in buttons:
+        if not dpg.does_item_exist(button): continue
+        callback = dpg.get_item_callback(button)
+        new_user_data = dpg.get_item_user_data(button)
+        if callback:
+            callback(button,'All',new_user_data)
+
 #--- Add common buttons
 def add_filters_buttons(tab_tag,signal_tags):
     '''
@@ -621,11 +702,12 @@ def deviation(sender, app_data, user_data):
     '''
     before, tab_label = user_data
     if app_data==before: return
+    if not dpg.does_item_exist(f"{tab_label}_mean"): return
 
     media = np.array(dpg.get_value(f"{tab_label}_mean")[1])
     std_dev = np.array(dpg.get_value(f"{tab_label}_std")[1])
 
-    if app_data == '95% Confidence Interval':
+    if app_data == '95% C.I.':
         dev = (std_dev - media) * -2
     else:
         dev = (std_dev - media) * -0.5
@@ -666,7 +748,7 @@ def toggleVisibility(signal_tags, parent, group, user_data):
 
         dpg.add_checkbox(label="Select All", default_value=True, callback=toggle_all, tag = f"{tab_tag}_all")
 
-        with dpg.child_window(autosize_x=True, height=85, border=True):
+        with dpg.child_window(width=-1, height=cwh, border=True):
             
             # Create checkboxes for each plot
             for series_tag, visible in signal_tags.items():
@@ -792,7 +874,7 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None,tables=
             no_groups = len(list(all_toggles.keys()))
             if no_groups<4:
                 for text, values in all_toggles.items():
-                    with dpg.child_window(tag=f"{tab_tag}_{text}_buttons", height=120, auto_resize_x =True):
+                    with dpg.child_window(tag=f"{tab_tag}_{text}_buttons", height=cwh, auto_resize_x =True):
                         dpg.add_text(text)
                         for v in values:
                             toggleType(signal_tags,parent=f"{tab_tag}_{text}_buttons", user_data=(v, window_id, tab_tag))
@@ -805,7 +887,7 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None,tables=
                     if i<2: parent=g1
                     else: parent=g2
                     text, values = label_types[i], types[i]
-                    with dpg.child_window(tag=f"{tab_tag}_{text}_buttons", width=120, height=120,parent=parent):
+                    with dpg.child_window(tag=f"{tab_tag}_{text}_buttons", auto_resize_x=True, height=cwh,parent=parent):
                         dpg.add_text(text)
                         for v in values:
                             toggleType(signal_tags,parent=f"{tab_tag}_{text}_buttons", user_data=(v, window_id, tab_tag))
@@ -816,13 +898,13 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None,tables=
             if len(artifacts)>0:
                 dpg.add_separator()
                 dpg.add_text('Shaded Area')
-                dpg.add_radio_button(['Standard Deviation', '95% Confidence Interval'], horizontal=False, callback=deviation, tag = f"{tab_tag}_deviation",user_data=('Standard Deviation',tab_tag))
+                dpg.add_radio_button(['Std. Deviation', '95% C.I.'], horizontal=True, callback=deviation, tag = f"{tab_tag}_deviation",user_data=('Standard Deviation',tab_tag))
                 dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(f"y_axis_{tab_tag}", tab_tag, signal_tags, tables),default_value=False)
             dpg.add_separator(label='Export')
             dpg.add_spacer()
-            dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",0))
-            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(f"y_axis_{tab_tag}",f"plot_{tab_tag}",'2D'))
-        
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data = ('2D', plot_tag, f"y_axis_{tab_tag}",0))
+            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(f"y_axis_{tab_tag}",f"plot_{tab_tag}",'2D'))
+            add_exporting_tag(window_id,plot=b1,signal=b2)
         '''
         with dpg.group(horizontal=True, parent=f"{tab_tag}_buttons", tag=f"{tab_tag}_types"):
             with dpg.group():
@@ -870,7 +952,14 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None,plot_ta
 
     events = np.unique(events).tolist()
     sides = ['Left', 'Right']
-    def show_mean(sender,app_data):
+    def show_mean(sender,app_data,user_data):
+        c = f"{tab_tag}_hide"
+        if dpg.get_value(c):
+            dpg.set_value(c,False)
+            callback = dpg.get_item_callback(c)
+            if callback:
+                callback(c, False, dpg.get_item_user_data(c))
+        dpg.set_value(sender,app_data)
         dpg.configure_item(f"{tab_tag}_mean",show=app_data)
         dpg.configure_item(f"{tab_tag}_std",show=app_data)
 
@@ -880,38 +969,39 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None,plot_ta
         with dpg.group(horizontal=True, parent=f"{tab_tag}_buttons"):
             #check days
             if len(dates)>1:
-                with dpg.child_window(height=150,auto_resize_x=True):
+                with dpg.child_window(height=cwh,auto_resize_x=True):
                     dpg.add_text('By days \n (Month/Day):')
                     for day in dates:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons_day", user_data=(day, window_id, tab_tag)) 
 
             #check channels
             if len(events)>1:
-                with dpg.child_window(label = f"{tab_tag}_buttons_events",height=150,auto_resize_x=True):
+                with dpg.child_window(label = f"{tab_tag}_buttons_events",height=cwh,auto_resize_x=True):
                     dpg.add_text('By events:')
                     for day in events:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons_events", user_data=(day, window_id, tab_tag)) 
 
             #check sides
             if len(sides)>1:
-                with dpg.child_window(label = f"{tab_tag}_buttons_side",height=150,auto_resize_x=True):
+                with dpg.child_window(label = f"{tab_tag}_buttons_side",height=cwh,auto_resize_x=True):
                     dpg.add_text('By hemisphere:')
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons_side", user_data=(day, window_id, tab_tag))
 
         # dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag, "", "", ""),parent=f"{tab_tag}_buttons",default_value=False)
-        dpg.add_separator()
         dpg.add_text('Shaded Area')
-        dpg.add_radio_button(['Standard Deviation', '95% Confidence Interval'], horizontal=False, callback=deviation, tag = f"{tab_tag}_deviation",user_data=('Standard Deviation',tab_tag))
-        dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(f"y_axis_{tab_tag}", tab_tag, signal_tags, tables),parent=f"{tab_tag}_buttons",default_value=False)
+        dpg.add_radio_button(['Std. Deviation', '95% C.I.'], horizontal=True, callback=deviation, tag = f"{tab_tag}_deviation",user_data=('Standard Deviation',tab_tag))
+        dpg.add_separator()
+        with dpg.group(horizontal=True):
+            dpg.add_checkbox(label='Mean Visible', default_value=True, callback=show_mean, parent=f"{tab_tag}_buttons", tag=f"{tab_tag}_mean_visibility")
+            dpg.add_checkbox(label='Mean Only', default_value=False,callback=hide,parent=f"{tab_tag}_buttons",user_data=(signal_tags,[None]), tag=f"{tab_tag}_hide")
+            dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(f"y_axis_{tab_tag}", tab_tag, signal_tags, tables),parent=f"{tab_tag}_buttons",default_value=False)
         dpg.add_separator(label='Export')
-        dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",0))
-        dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(f"y_axis_{tab_tag}",f"plot_{tab_tag}",'2D'))
-        if extract_mode(tab_tag) == 'Events': 
-            dpg.add_button(label='Recalculate Mean Metrics', callback=recalculateMeanMetrics, width=-1, user_data=tab_tag, parent=f"{tab_tag}_buttons")
-            with dpg.group(horizontal=True):
-                dpg.add_checkbox(label='Mean Visibility', default_value=True, callback=show_mean, parent=f"{tab_tag}_buttons")
-                dpg.add_checkbox(label='Hide Events', default_value=False,callback=hide,parent=f"{tab_tag}_buttons",user_data=(signal_tags,[None]), tag=f"{tab_tag}_hide")
+        b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",0))
+        b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(f"y_axis_{tab_tag}",f"plot_{tab_tag}",'2D'))
+        add_exporting_tag(window_id,plot=b1,signal=b2)
+        dpg.add_separator()
+        dpg.add_button(label='Recalculate Mean Metrics', callback=recalculateMeanMetrics, width=-1, user_data=tab_tag, parent=f"{tab_tag}_buttons")
 
 def recalculateMeanMetrics(sender, app_data, user_data):
     '''
@@ -940,6 +1030,15 @@ def hide(sender,app_data,user_data):
     :param user_data: streams, checkboxes
     '''
     streams, checkboxes = user_data
+    tab_tag = dpg.get_item_alias(sender)[:-5]
+    if dpg.does_item_exist(f"{tab_tag}_mean_visibility") and not dpg.get_value(f"{tab_tag}_mean_visibility"):
+        c = f"{tab_tag}_mean_visibility"
+        dpg.set_value(c,True)
+        callback = dpg.get_item_callback(c)
+        if callback:
+            callback(c, True, dpg.get_item_user_data(c))
+        
+
     if checkboxes != [None]:
         if app_data == False:
             for c in checkboxes:
@@ -1094,13 +1193,14 @@ def create_table(tab_label,table_tag,features, trial_label = "New Trial"):
     with dpg.group(parent=tab_label):
                         
         if not dpg.does_item_exist(table_tag):
-            with dpg.table(header_row=True, borders_innerH=True, borders_innerV=True, borders_outerH=True, borders_outerV=True, tag=table_tag,label='Relative Band Power'):
+            with dpg.table(header_row=True, borders_innerH=True, borders_innerV=True, borders_outerH=True, borders_outerV=True, tag=table_tag):
                 dpg.add_table_column(label="Trial", width=100)                          
                 for band in features.keys():
                     dpg.add_table_column(label=band, width=100)
         add_row()
         if not dpg.does_item_exist(f"{table_tag}_save"):
-            dpg.add_button(label='Save table', tag = f"{table_tag}_save", callback=save_table_to_file, user_data=(table_tag, 'csv'), parent=tab_label)
+            b1 = dpg.add_button(label='Save Table', tag = f"{table_tag}_save", callback=filename_window, user_data=(table_tag, 'csv'), parent=tab_label)
+            add_exporting_tag(extract_window_id(tab_label),table=b1)
            
 def fill_params_features(app_data):
     '''    
@@ -1685,15 +1785,18 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                             if len(array)>1:
                                 if i==0: title='By Channel:'
                                 else: title='By Band:'
-                                with dpg.child_window(height=150,auto_resize_x=True):
+                                with dpg.child_window(height=cwh,auto_resize_x=True):
                                     dpg.add_text(title)
                                     for c in array: dpg.add_checkbox(label=c,callback=toggle_over_time,user_data=yy,default_value=True)
                     dpg.add_separator()
                     dpg.add_button(label='Insert Line Series',width=-1,callback=insert_line_series,user_data=(x2,y2,yy,colors))
                     dpg.add_separator(label='Export')
-                    dpg.add_button(label = 'Export Plot Figure',width=-1,tag=f"{tab_label}_save_plot",callback = save_plot,user_data =('SMP', f"{tab_label}_smp_plot",yy,colors))
-                    dpg.add_button(label='Export Values',width=-1,callback=save_band_powers_to_txt, user_data=(all_info,filename))
-                    with dpg.child_window(label="X Axis Dates",width=-1, height=200):
+                    b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,tag=f"{tab_label}_save_plot",callback = filename_window,user_data =('SMP', f"{tab_label}_smp_plot",yy,colors))
+                    b2 = dpg.add_button(label='Export Signals',width=-1,callback=save_band_powers_to_txt, user_data=(all_info,filename))
+                    add_exporting_tag(window_id,plot=b1,signal=b2)
+                    exporting_tags['Signals'].append(b2)
+                    
+                    with dpg.child_window(label="X Axis Dates",width=-1, height=140):
                         dpg.add_text("Index: Date")
                         dpg.add_separator()
                         for i, date in enumerate(dates):
@@ -1705,6 +1808,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 x2,y2,yy,colors = user_data
                 streaming_file = app_data['file_path_name']
                 info =utl.read_lines(streaming_file)
+                old = list(dpg.get_item_user_data(f"{tab_label}_save_plot"))
 
                 last_x = dpg.get_value(dpg.get_item_children(yy,1)[0])[0]
                 label = list(info.keys())[0]
@@ -1721,14 +1825,11 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 # dpg.bind_item_theme(s,change_plot_color(dpg.get_colormap_color(0,color_int)))
                 dpg.bind_item_theme(line,change_line_thickness(4))
                 idx = len(np.unique(colors).tolist())
+
                 color = dpg.get_colormap_color(0,idx)
                 colors.append(color)
-                colors.append(color)
-                print(old[-1])
-                old = dpg.get_item_user_data(f"{tab_label}_save_plot")
-                old[-1] =colors
-                print(old[-1])
-                dpg.set_item_user_data(f"{tab_label}_save_plot",old)
+                old[-1] = colors
+                dpg.set_item_user_data(f"{tab_label}_save_plot",tuple(old))
 
             def create_file_dialog(user_data):
                 with dpg.file_dialog(
@@ -1747,8 +1848,6 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
 
         checkboxes = []
         with dpg.group(parent=f"{tab_tag}_buttons"):
-            # dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(signal_tags,tab_tag,func, tab_label, tables), tag = f"{tab_label}_2db")
-            dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(y_axis, tab_label, ploted_tags, tables), tag = f"{tab_label}_2db")
             if mode == 'segment': 
                 dpg.add_checkbox(label='Before vs. After',callback=before_vs_after, user_data=(signal_tags,tab_label,func,tab_tag,parameter_values), tag = f"{tab_label}_bva", default_value=comparing)
             
@@ -1757,14 +1856,14 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 dpg.add_separator()
                 dpg.add_text('Toggle Streams')
                 with dpg.group(parent=f"{tab_tag}_buttons", horizontal=True):   
-                    with dpg.child_window(height=150,auto_resize_x=True): #Before and After
+                    with dpg.child_window(height=cwh,auto_resize_x=True): #Before and After
                         dpg.add_text('When:')
                         cc = dpg.add_checkbox(label='Before', default_value=True, callback=toggle, user_data=-1)
                         c = dpg.add_checkbox(label='After', default_value=True, callback=toggle, user_data=-1)
                         checkboxes.append(cc)
                         checkboxes.append(c)
                     
-                    with dpg.child_window(height=150,auto_resize_x=True): #Per Type of Event
+                    with dpg.child_window(height=cwh,auto_resize_x=True): #Per Type of Event
                         events_type = [name.split(' ')[0] for name in events_names]
                         events_type = np.unique(events_type)
                         dpg.add_text('What:')
@@ -1778,18 +1877,18 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             days = np.unique(days)
             with dpg.group(parent=f"{tab_tag}_buttons", horizontal=True):  
                 if len(channels)>1: 
-                    with dpg.child_window(height=150,auto_resize_x=True): #channels
+                    with dpg.child_window(height=cwh,auto_resize_x=True): #channels
                         dpg.add_text('Channels: ')
                         for ch in channels: 
                             c = dpg.add_checkbox(label=ch, callback=choose_toggle, default_value=True)
                             checkboxes.append(c)
                 if len(days)>1:
-                    with dpg.child_window(height=150,auto_resize_x=True): #days
+                    with dpg.child_window(height=cwh,auto_resize_x=True): #days
                         dpg.add_text('Recordings: ')
                         for d in days:
                             c = dpg.add_checkbox(label=d, callback=choose_toggle, default_value=True)
                             checkboxes.append(c)
-                with dpg.child_window(height=150,auto_resize_x=True): #side
+                with dpg.child_window(height=cwh,auto_resize_x=True): #side
                     dpg.add_text('Hemisphere: ')
                     sides = ['LEFT', 'RIGHT']
                     for d in sides:
@@ -1797,15 +1896,18 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                         checkboxes.append(c)
             
             dpg.add_separator()
-            dpg.add_checkbox(label='Hide signals', callback=hide, tag = f"{tab_label}_hide", user_data=(ploted_tags, checkboxes))
+            with dpg.group(horizontal=True):
+                dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(y_axis, tab_label, ploted_tags, tables), tag = f"{tab_label}_2db")
+                dpg.add_checkbox(label='Show Mean Only', callback=hide, tag = f"{tab_label}_hide", user_data=(ploted_tags, checkboxes))
             dpg.add_separator()
             dpg.add_text('Shaded Area')
-            dpg.add_radio_button(['Standard Deviation', '95% Confidence Interval'], horizontal=False, callback=deviation, tag = f"{tab_label}_deviation",user_data=(deviation_type,tab_label))
+            dpg.add_radio_button(['Std. Deviation', '95% C.I.'], horizontal=True, callback=deviation, tag = f"{tab_label}_deviation",user_data=(deviation_type,tab_label))
             dpg.add_separator()
             if len(days)>1:
                 dpg.add_button(label='Show Mean Power Across Time',width=-1,callback=show_power_over_time,user_data=all_info)
-            dpg.add_button(label = 'Export Plot Figure',callback = save_plot,user_data =('2D', plot_tag, y_axis,0),width=-1)
-            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(y_axis,plot_tag,'2D'))
+            b1 = dpg.add_button(label = 'Export Plot Figure',callback = filename_window,user_data =('2D', plot_tag, y_axis,0),width=-1)
+            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(y_axis,plot_tag,'2D'))
+            add_exporting_tag(window_id,plot=b1,signal=b2)
     
     time.sleep(0.2)
     dpg.set_axis_limits_auto(x_axis)
@@ -2067,9 +2169,10 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
             
             dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,spectrogram_tags,f"{tab_label}_colormap_scale")) 
             dpg.add_separator(label='Export')
-            dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('3D', group_tag, y_axis,'jet'))
-            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(f"{tab_label}_subplots",group_tag,'3D'))
-         
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('3D', group_tag, y_axis,'jet'))
+            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(f"{tab_label}_subplots",group_tag,'3D'))
+            add_exporting_tag(window_id,plot=b1,signal=b2)
+
 def plot_df_coherence(parameter_values,tab_tag,tags):
     '''
     Plots default coherence (welch method), computed in plot_coherence
@@ -2188,8 +2291,9 @@ def plot_coherence(parameter_values, tab_label):
         create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
 
     dpg.add_separator(label='Export',parent=tab_label)
-    dpg.add_button(label = 'Export Plot Figure',parent=tab_label,callback = save_plot,user_data =('2D', plot_tag, y_axis,0),width=-1)
-    dpg.add_button(label='Export Signals',width=-1,callback=save_signals,parent=tab_label,user_data=(y_axis,plot_tag,'2D'))
+    b1 = dpg.add_button(label = 'Export Plot Figure',parent=tab_label,callback = filename_window,user_data =('2D', plot_tag, y_axis,0),width=-1)
+    b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,parent=tab_label,user_data=(y_axis,plot_tag,'2D'))
+    add_exporting_tag(extract_window_id(tab_label),plot=b1,signal=b2)
 
     time.sleep(0.2)
     dpg.set_axis_limits_auto(f"{tab_label}_y_axis")
@@ -2337,8 +2441,9 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
                     create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
 
         dpg.add_separator(label='Export',parent=tab_label)
-        dpg.add_button(label = 'Export Plot Figure',parent=tab_label,callback = save_plot,user_data =('2D', plot_tag, y_axis,0),width=-1)
-        dpg.add_button(label='Export Signals',width=-1,callback=save_signals,parent=tab_label,user_data=(y_axis,plot_tag,'2D'))
+        b1 = dpg.add_button(label = 'Export Plot Figure',parent=tab_label,callback = filename_window,user_data =('2D', plot_tag, y_axis,0),width=-1)
+        b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,parent=tab_label,user_data=(y_axis,plot_tag,'2D'))
+        add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
         dpg.add_group(tag=f"{tab_label}_space",parent=tab_label)
 
         time.sleep(0.2)
@@ -2409,9 +2514,9 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
             if dpg.does_item_exist(header_tag): dpg.delete_item(header_tag, children_only=True)
 
             dpg.add_separator(label='Export',parent=tab_label)
-            dpg.add_button(label = 'Export Plot Figure',width=-1,parent=tab_label,callback = save_plot,user_data =('3DC', group_tag, y_axis,'viridis'))
-            dpg.add_button(label='Export Signals',width=-1,parent=tab_label,callback=save_signals,user_data=(f"{tab_label}_spec",group_tag,'3DC'))
-
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,parent=tab_label,callback = filename_window,user_data =('3DC', group_tag, y_axis,'viridis'))
+            b2 = dpg.add_button(label='Export Signals',width=-1,parent=tab_label,callback=filename_window,user_data=(f"{tab_label}_spec",group_tag,'3DC'))
+            add_exporting_tag(window_id,plot=b1,signal=b2)
          
             with dpg.collapsing_header(tag=header_tag, parent=tab_label, label='Coherence over time'):
 
@@ -2587,8 +2692,9 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
             create_table(f"{tab_label}_header",f"{tab_label}_table",info,f"{b} | {label}")
         
         dpg.add_separator(label='Export',parent=tab_label)
-        dpg.add_button(label = 'Export Plot Figure',parent=tab_label,width=-1,callback = save_plot,user_data =('CC', plot_tag, cross_y,0))
-        dpg.add_button(label='Export Signals',width=-1,callback=save_signals,parent=tab_label,user_data=(cross_y,plot_tag,'CC'))
+        b1 = dpg.add_button(label = 'Export Plot Figure',parent=tab_label,width=-1,callback = filename_window,user_data =('CC', plot_tag, cross_y,0))
+        b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,parent=tab_label,user_data=(cross_y,plot_tag,'CC'))
+        add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
 
     if not dpg.does_item_exist(f"{tab_label}_band"): 
         dpg.add_checkbox(label='Band Cross-Correlation', parent=tab_label, tag = f"{tab_label}_band", callback=plot)
@@ -2853,8 +2959,9 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
             
             dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,spectrogram_tags,f"{tab_label}_colormap_scale"),width=-1)
             dpg.add_separator(label='Export')
-            dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('3D', group_tag, y_axis,'jet'))
-            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(subplot_tag,group_tag,'3D'))
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('3D', group_tag, y_axis,'jet'))
+            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(subplot_tag,group_tag,'3D'))
+            add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
            
 def choose(sender,app_data,user_data):
     '''
@@ -3155,8 +3262,9 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
             
             dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,wavelet_tags,f"{tab_label}_colormap_scale"))
             dpg.add_separator(label='Export')
-            dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('3D', group_tag, y_axis,'jet'))
-            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(f"{tab_label}_subplots",group_tag,'3D'))
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('3D', group_tag, y_axis,'jet'))
+            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(f"{tab_label}_subplots",group_tag,'3D'))
+            add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
          
 def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
     '''
@@ -3309,8 +3417,9 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
             
             dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,wavelet_tags,f"{tab_label}_colormap_scale"))
             dpg.add_separator(label='Export')
-            dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('3D', group_tag, y_axis,'jet'))
-            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(subplot_tag,group_tag,'3D'))        
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('3D', group_tag, y_axis,'jet'))
+            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(subplot_tag,group_tag,'3D'))
+            add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)        
                
 def plot_pac(tags,tab_tag,parameter_values,mode=None):
     '''
@@ -3405,8 +3514,9 @@ def plot_pac(tags,tab_tag,parameter_values,mode=None):
                 dpg.add_bar_series(phase,amp,parent=y_axis)
 
             dpg.add_separator(label='Export')
-            dpg.add_button(label = 'Export Plot Figure', callback = save_plot,user_data =('Bar', plot_tag, y_axis,0),width=-1)
-            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(y_axis,plot_tag,'PAC'))
+            b1 = dpg.add_button(label = 'Export Plot Figure', callback = filename_window,user_data =('Bar', plot_tag, y_axis,0),width=-1)
+            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(y_axis,plot_tag,'PAC'))
+            add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
 
          
         peak_a = max(amp)
@@ -4347,23 +4457,43 @@ def Volt2dB(sender,app_data,user_data):
     
     dpg.set_item_label(y_axis,label=label)
 
-    all_values = []
+    all_values, visible = [], 0
     for tag in signal_tags:
+        label = dpg.get_item_label(tag)
         if dpg.get_item_configuration(tag)['show']==True:
+            visible = +1
             _,y = dpg.get_value(tag)[:2]
-            if unit == 'dB':
-                # y = pre.convert_to_db(y,True)
+            if app_data:
                 y = pre.convert_to_db(y)
-                dpg.configure_item(tag,y=y)
             else:
-                # y = pre.convert_from_db(y,True)
                 y = pre.convert_from_db(y)
-                dpg.configure_item(tag,y=y)
+            dpg.configure_item(tag,y=y)
+
             all_values.append(y)
 
-    mean = np.nanmean(all_values,axis=0)
-    std = np.nanstd(all_values,axis=0)
-    minus, plus = mean-std, mean+std
+    if visible == 0:
+        std_tag,mean_tag = dpg.get_item_children(y_axis)[1][-2:]
+        mean = dpg.get_value(mean_tag)[1]
+        std = dpg.get_value(std_tag)[1]
+        std = np.array(std) + np.array(mean)
+        if app_data:
+            mean = pre.convert_to_db(mean)
+            std = pre.convert_to_db(std.tolist())
+        else:
+            mean = pre.convert_from_db(mean)
+            std = pre.convert_from_db(std.tolist())
+
+        mean = np.array(mean)
+        std = np.array(std)
+    else:
+        mean = np.nanmean(all_values,axis=0)
+        std = np.nanstd(all_values,axis=0)
+
+    if '95%' in dpg.get_value(f"{plot_tag}_deviation"):
+        dev = 2
+    else:
+        dev = 1
+    minus, plus = mean-dev*std, mean+dev*std
     dpg.configure_item(f"{plot_tag}_std", y1=minus,y2=plus)
     dpg.bind_item_theme(f"{plot_tag}_std",create_alpha_theme())
     dpg.configure_item(f"{plot_tag}_mean", y=mean)
@@ -5239,20 +5369,21 @@ def circadian_rhythm(sender, app_data, user_data):
 
         dates = sorted(np.unique(dates).tolist())
         checkboxes = []
-        with dpg.group():
-            with dpg.child_window(width=120, height=200):
+        with dpg.group(horizontal=True):
+            with dpg.child_window(auto_resize_x=True, height=cwh):
                 dpg.add_text('By Day:')
                 for d in dates:
                     c = dpg.add_checkbox(label=d, default_value=True, callback=toggle)
                     checkboxes.append(c)
-            with dpg.group():
+            with dpg.child_window(auto_resize_x=True, height=cwh):
                 for side in ['Left', 'Right']:
                     dpg.add_checkbox(label=side, default_value=True, callback=toggle)
             dpg.add_checkbox(label='Hide Days', tag = f"{tab_label}_hide", callback=hide,parent = f"{tab_label}_vbuttons", user_data=(circadian_tags,checkboxes))
     
     dpg.add_separator(label='Export',parent=tab_label)
-    dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('2D', plot_tag, y_axis,0),parent=tab_label)
-    dpg.add_button(label='Export Signals',width=-1,callback=save_signals,parent=tab_label,user_data=(y_axis,plot_tag,'2D'))
+    b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('2D', plot_tag, y_axis,0),parent=tab_label)
+    b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,parent=tab_label,user_data=(y_axis,plot_tag,'2D'))
+    add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
 
 def stimulation_timeline(sender,app_data,user_data):
     tab_tag, signal_tags, data = user_data
@@ -5315,8 +5446,9 @@ def stimulation_timeline(sender,app_data,user_data):
                     dpg.add_separator()
     
     dpg.add_separator(label='Export',parent=tab_label)
-    dpg.add_button(label = 'Export Plot Figure',parent=tab_label,width=-1,callback = save_plot,user_data =('2D', plot_tag, y_axis,0))
-    dpg.add_button(label='Export Signals',width=-1,callback=save_signals,parent=tab_label,user_data=(y_axis,plot_tag,'Stimulation'))
+    b1 = dpg.add_button(label = 'Export Plot Figure',parent=tab_label,width=-1,callback = filename_window,user_data =('2D', plot_tag, y_axis,0))
+    b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,parent=tab_label,user_data=(y_axis,plot_tag,'Stimulation'))
+    add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
 
 def AnalyzeTimelineEvents(sender,app_data,user_data):
     tab_tag, events_tags, signal_tags = user_data
@@ -5495,24 +5627,24 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
 
     with dpg.group(parent=f"{plot_tag}_group"):
         with dpg.group(horizontal=True):
-            with dpg.child_window(width=120,height=150):
+            with dpg.child_window(auto_resize_x=True,height=cwh):
                 dpg.add_text('Hemisphere: ')
                 for side in ['Left', 'Right']:
                     c = dpg.add_checkbox(label=side,callback = toggle,default_value=True)
                     checkboxes.append(c)
-            with dpg.child_window(width=120,height=150):
+            with dpg.child_window(auto_resize_x=True,height=cwh):
                 dpg.add_text('Events: ')
                 for side in e_names:
                     c = dpg.add_checkbox(label=side,callback = toggle,default_value=True)
                     checkboxes.append(c)
-            with dpg.child_window(width=120,height=150):
+            with dpg.child_window(auto_resize_x=True,height=cwh):
                 dpg.add_text('Days: ')
                 days = sorted(np.unique(days).tolist())
                 for side in days:
                     c = dpg.add_checkbox(label=side,callback = toggle,default_value=True)
                     checkboxes.append(c)
         dpg.add_separator()
-        dpg.add_checkbox(label='Hide Signals', tag = f"{tab_label}_hide", callback=hide, user_data=(temp_tags,checkboxes))
+        dpg.add_checkbox(label='Show Mean Only', tag = f"{tab_label}_hide", callback=hide, user_data=(temp_tags,checkboxes))
 
 def RemoveTimelineOutliers(sender,app_data,user_data):
     tab_tag,signal_tags = user_data
@@ -5721,8 +5853,10 @@ def window_menu(window_id):
     with dpg.menu_bar(label='Settings'):
         with dpg.menu(label='Change',tag=f"{window_id}_change"):
             dpg.add_menu_item(label='Change Window Name',callback=change_window_name,user_data=f"window_{window_id}")
-            dpg.add_menu_item(label='Change Window Theme')
-                    
+        with dpg.menu(label='Save...'):
+            dpg.add_menu_item(label="All Window - Plots", callback=save_all, user_data = ('Plots', window_id))
+            dpg.add_menu_item(label="All Window - Tables", callback=save_all, user_data = ('Tables', window_id))
+            dpg.add_menu_item(label="All Window - Signals", callback=save_all, user_data = ('Signals', window_id))                  
 #--------------------------------------INDIVIDUAL TABS-----------------------------------------
 def show_event_summary(mode,tab_tag,plot_tag,files=None):
     window_id = extract_window_id(tab_tag)
@@ -5807,8 +5941,9 @@ def show_event_summary(mode,tab_tag,plot_tag,files=None):
                     x = [(utl.parse_datetime(key)+daylight_savings).timestamp() for key in events.keys()]
                     y = [events[key] for key in events.keys()]
                     dpg.add_bar_series(x,y,label=name,parent=y_axis,weight=200,tag=f"{name}_{tab_tag}")
-            dpg.add_button(label = 'Export Plot Figure',width=600,callback = save_plot,user_data =('Events', plot_tag, y_axis,0))
-            dpg.add_button(label='Export Signals',width=600,callback=save_signals,user_data=(y_axis,plot_tag,'Events'))
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=600,callback = filename_window,user_data =('Events', plot_tag, y_axis,0))
+            b2 = dpg.add_button(label='Export Signals',width=600,callback=filename_window,user_data=(y_axis,plot_tag,'Events'))
+            add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
 
         with dpg.group(width=300):
             dpg.add_text('Type of Plot:')
@@ -5830,8 +5965,9 @@ def show_event_summary(mode,tab_tag,plot_tag,files=None):
                     label='Events',
                     tag=f"{tab_tag}_pie"
                 )
-            dpg.add_button(label = 'Export Plot Figure',width=300,callback = save_plot,user_data =('Pie', plot_tag, y_axis,0))
-            dpg.add_button(label='Export Signals',width=300,callback=save_signals,user_data=(y_axis,plot_tag,'Pie'))
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=300,callback = filename_window,user_data =('Pie', plot_tag, y_axis,0))
+            b2 = dpg.add_button(label='Export Signals',width=300,callback=filename_window,user_data=(y_axis,plot_tag,'Pie'))
+            add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
 
 def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     app_state['windows'][window_id]['Data'][tab_tag]['Signals'] = {'left': [], 'right': []}
@@ -6127,24 +6263,25 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         with dpg.group(label = f"{tab_tag}_buttons", parent=f"{tab_tag}_group",):
             toggleVisibility(signal_tags,parent=tab_tag, group=f"{tab_tag}_buttons", user_data = window_id)
             with dpg.group(horizontal=True):
-                with dpg.child_window(height=150, width=120):
+                with dpg.child_window(height=cwh, auto_resize_x=True):
                     dpg.add_text('By Day: ')
                     for day in days:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag)) #check day
-                with dpg.child_window(height=150, width=120):
+                with dpg.child_window(height=cwh, auto_resize_x=True):
                     dpg.add_text('By Hemisphere: ')
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag)) #check hemisphere
                 if len(ocd_events)>1:
-                    with dpg.child_window(height=150, width=120):
+                    with dpg.child_window(height=cwh, auto_resize_x=True):
                         dpg.add_text('By Event: ')
                         for ocd in ocd_events:
                             toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(ocd, window_id, tab_tag)) #check hemisphere
             dpg.add_separator()
-            dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('2D', plot_tag, y_left,ploted_colors))
-            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(y_left,plot_tag,'Timeline'))
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('2D', plot_tag, y_left,ploted_colors))
+            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(y_left,plot_tag,'Timeline'))
+            add_exporting_tag(window_id,plot=b1,signal=b2)
+
             dpg.add_separator()
-            #dpg.add_button(label='Normalize',callback=Volt2dB, user_data=(signal_tags,tab_tag),parent=f"{tab_tag}_buttons")
             dpg.add_slider_float(label = 'Remove Outlier', callback=RemoveTimelineOutliers,default_value=3.0,user_data=(tab_tag,signal_tags), width=100, min_value=0,max_value=100)
             if flag == True:
                 dpg.add_text( 'Warning: There are missing points in Timeline', tag=f"{tab_tag}_wmp", parent=f"{tab_tag}_buttons")
@@ -6420,8 +6557,9 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         #             for c in ['Left', 'Right', 'Peak']:
         #                 dpg.add_checkbox(label=c, callback=toggle, user_data=c, default_value=True)
             dpg.add_separator(label='Export')
-            dpg.add_button(label = 'Export Plot Figure',callback = save_plot,user_data = ('2D',new_plot_tag,parent,0),width=-1)
-            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(parent,new_plot_tag,'2D'))
+            b1 = dpg.add_button(label = 'Export Plot Figure',callback = filename_window,user_data = ('2D',new_plot_tag,parent,0),width=-1)
+            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(parent,new_plot_tag,'2D'))
+            add_exporting_tag(window_id,plot=b1,signal=b2)
     
 def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
@@ -6536,7 +6674,8 @@ def impedance_tab(Data, tab_tag):
                         dpg.add_text(str(val))
 
         if not dpg.does_item_exist(f"{parent}_save"):
-            dpg.add_button(label='Save table', tag = f"{parent}_save", callback=save_table_to_file, user_data=(table_tag, 'csv'), parent=parent)
+            b1 = dpg.add_button(label='Save Table', tag = f"{parent}_save", callback=filename_window, user_data=(table_tag, 'csv'), parent=parent)
+            add_exporting_tag(window_id,table=b1)
 
     def build_result_bar_graph(title, session_data, parent):
         unique_results = {}
@@ -6559,23 +6698,25 @@ def impedance_tab(Data, tab_tag):
 
         # Create the plot
         plot_tag = f"{parent}_plot"
-        with dpg.plot(label=title, height=400, width=700, tag = plot_tag, parent=parent):
-            if title=='Monopolar':
-                x_label = "Case - Electrode Pair"
-            else: x_label = "Electrode Pair"
-            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label=x_label)
-            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Impedance (Ohm)")
+        with dpg.group(horizontal=True, parent=parent):
+            with dpg.plot(label=title, height=400, width=700, tag = plot_tag):
+                if title=='Monopolar':
+                    x_label = "Case - Electrode Pair"
+                else: x_label = "Electrode Pair"
+                x_axis = dpg.add_plot_axis(dpg.mvXAxis, label=x_label)
+                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Impedance (Ohm)")
 
-            ticks = tuple((label, float(i)) for i, label in enumerate(labels))
-            dpg.set_axis_ticks(x_axis, ticks)
-            dpg.set_item_user_data(x_axis,ticks) #had to manually set ticks to user_data cause dpg doesnt properly save info to memory, only GUI
+                ticks = tuple((label, float(i)) for i, label in enumerate(labels))
+                dpg.set_axis_ticks(x_axis, ticks)
+                dpg.set_item_user_data(x_axis,ticks) #had to manually set ticks to user_data cause dpg doesnt properly save info to memory, only GUI
 
-            for i, val in enumerate(values):
-                dpg.add_bar_series([float(i)], [val], parent=y_axis)
-        
-            dpg.bind_colormap(plot_tag, dpg.mvPlotColormap_Viridis)
-        dpg.add_button(label = 'Export Plot Figure', parent=parent, callback = save_plot,user_data =('Bar', plot_tag, y_axis,dpg.mvPlotColormap_Viridis),width=-1)
-                    
+                for i, val in enumerate(values):
+                    dpg.add_bar_series([float(i)], [val], parent=y_axis)
+            
+                dpg.bind_colormap(plot_tag, dpg.mvPlotColormap_Viridis)
+            b1 = dpg.add_button(label = 'Export Plot Figure', callback = filename_window,user_data =('Bar', plot_tag, y_axis,dpg.mvPlotColormap_Viridis),width=-1)
+            add_exporting_tag(extract_window_id(tab_tag),plot=b1)
+
     with dpg.tab(tag = tab_tag, label = mode, parent=f"tab_bar_window_{window_id}", closable=True):
         dpg.add_text(f"Impedance Status: {impedance_status}", parent=tab_tag, show=True)
         with dpg.collapsing_header(label='Monopolar Left',tag = f"{tab_tag}_ml"): 
@@ -6878,10 +7019,6 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
             tables.append(f"{tab_label}_mean_metric_table")
 
         toggleDisplay2(all_signals,signal_tags,window_id,tab_tag,tables,plot_tag)
-        def show_mean(sender,app_data):
-            dpg.configure_item(f"{tab_tag}_mean",show=app_data)
-
-        dpg.add_checkbox(label='Mean Visibility', default_value=True, callback=show_mean, parent=f"{tab_tag}_buttons")
 
 def comb_streaming_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
@@ -7176,15 +7313,15 @@ def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         channels = np.unique(channels)
         dates = sorted(np.unique(dates).tolist())
         if len(dates)>1:
-            with dpg.child_window(height=150,width=120, tag =f"{new_tab_tag}day" ):
+            with dpg.child_window(height=cwh,auto_resize_x=True, tag =f"{new_tab_tag}day" ):
                 dpg.add_text('By Day:', parent=f"{new_tab_tag}day" )
                 for d in dates:
                     dpg.add_checkbox(label=d, parent=f"{new_tab_tag}_group", callback=toggle, user_data=d, default_value=True)
-        with dpg.child_window(height=150,width=120):
+        with dpg.child_window(height=cwh,auto_resize_x=True):
             dpg.add_text('By Channel:')
             for c in channels:
                 dpg.add_checkbox(label=c, parent=f"{new_tab_tag}_group", callback=toggle, user_data=c, default_value=True)
-        with dpg.child_window(height=150,width=120):
+        with dpg.child_window(height=cwh,auto_resize_x=True):
             dpg.add_text('By Hemisphere:')
             for c in ['Left', 'Right', 'PEAK']:
                 dpg.add_checkbox(label=c, parent=f"{new_tab_tag}_group", callback=toggle, user_data=c, default_value=True)
@@ -7419,17 +7556,18 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         with dpg.group(label = f"{tab_tag}_buttons", parent=f"{tab_tag}_group"):
             toggleVisibility(signal_tags,parent=tab_tag, group=f"{tab_tag}_buttons", user_data = window_id)
             with dpg.group(horizontal=True):
-                with dpg.child_window(height=150, width=150):
+                with dpg.child_window(height=cwh, auto_resize_x=True):
                     dpg.add_text('By day: ')
                     for day in days:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag)) #check day
-                with dpg.child_window(height=150, width=150):
+                with dpg.child_window(height=cwh, auto_resize_x=True):
                     dpg.add_text('By hemisphere: ')
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag))
             dpg.add_separator()
-            dpg.add_button(label = 'Export Plot Figure',width=-1,callback = save_plot,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",ploted_colors))
-            dpg.add_button(label='Export Signals',width=-1,callback=save_signals,user_data=(y_axis,plot_tag,'2D'))
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",ploted_colors))
+            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(y_axis,plot_tag,'2D'))
+            add_exporting_tag(window_id,plot=b1,signal=b2)
             dpg.add_separator()
             dpg.add_slider_float(label = 'Remove Outlier RMS', callback=RemoveTimelineOutliers,default_value=3.0,user_data=(tab_tag,signal_tags), width=100, min_value=0,max_value=100)
             if flag == True:
@@ -7946,9 +8084,9 @@ if __name__ == "__main__":
                     dpg.add_menu_item(label="Rename Electrodes", callback=change_electrodes_names)
                     dpg.add_menu_item(label='Rename Event/Group',callback = change_event_name)
                 with dpg.menu(label="Save"):
-                    dpg.add_menu_item(label="Save All Plots")
-                    dpg.add_menu_item(label="Save All Tables")
-                    dpg.add_menu_item(label="Save Workspace")
+                    dpg.add_menu_item(label="Save All Plots", callback=save_all, user_data = ('Plots',None))
+                    dpg.add_menu_item(label="Save All Tables", callback=save_all, user_data = ('Tables', None))
+                    dpg.add_menu_item(label="Save All Signals", callback=save_all, user_data = ('Signals', None))
 
             with dpg.group(horizontal=True, pos=[150, 250]):
                 dpg.add_button(label="Individual/Recording Analysis", callback=create_individual_window,height=40,width=350)

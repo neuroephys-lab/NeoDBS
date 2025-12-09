@@ -1,8 +1,22 @@
 # NeoDBS
 
-## 08.12.2025
+## 09.12.2025
 
-Debug:
+### New functionalities:
+- user chooses name of file for plot/signals/table
+- TFD signals saved into respective files, separately
+- Save all: (workspace/per window)
+    - plots
+    - tables
+    - signals
+
+### Debug:
+- export plot: show mean power over time --> correct colors, thickness and documentation
+- Volt2dB: calculates standard deviation according to user choice in deviation
+- Mean Only and Mean Visibility: properly synchronized
+
+## 08.12.2025
+### Debug:
 - export plot: show mean power over time
 
 ## 05.12.2025

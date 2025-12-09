@@ -302,6 +302,10 @@ def export_plot(info, plot_type, size=None, line_types = None):
         - signals: list of dicts.
         - colors: list, rgba codes
 
+    If plot_type is 'SMP' (Show Mean Power over time): 
+        - signals: dict, 'Y1': signals plotted on left y axis, 'Y2': signals plotted on right y axis.
+        - colors: list, rgba codes
+
     If plot_type is 'Pie' (phase-amplitude coupling or event summary): 
         - signals: single list of values.
         - colors: list, rgba codes
@@ -395,7 +399,7 @@ def export_plot(info, plot_type, size=None, line_types = None):
             if 'Scatter' in line_types[key][i]:
                 secay.scatter(signal['X'],signal['Y'],label=labels[key][i],color=colors[i+len(signals['Y1'])])
             else:
-                secay.plot(signal['X'],signal['Y'],label=labels[key][i],color=colors[i+len(signals['Y1'])])
+                secay.plot(signal['X'],signal['Y'],label=labels[key][i],color=colors[i+len(signals['Y1'])],thickness=3)
         
         ax.set_title(title)
         ax.set_xlabel(axis[0])
@@ -483,11 +487,14 @@ def export_signals(info,filename, tfd = False):
     filename = filename.replace(' - ','_')
     filename = filename.replace(' ','_')
     filename = 'Signals_'+filename + ".csv"
+    old_filename = filename
     if tfd:
-        with open(filename, "w") as f:
-            # f.write(",".join(list(info.keys())) + "\n")
-            for spec in info:
-                (plot_title, value), = spec.items()
+        for spec in info:
+            (plot_title, value), = spec.items()
+            filename = old_filename[:-3] + plot_title + ".csv"
+            filename = filename.replace(' | ','_')
+            filename = filename.replace(':','_')
+            with open(filename, "w") as f:
                 frequencies,time,sxx = value
                 t = ['Freq (Hz)/Time (s)']
                 for tp in time: 
