@@ -450,7 +450,8 @@ def export_plot(info, plot_type, size=None, line_types = None):
         else:
             ax.set_xlim(limits[0])
             width =1
-            labels = []*len(signals)
+            labels = [None]*len(signals)
+
         for i,signal in enumerate(signals):
             x,y = signal['X'], signal['Y']
             ax.bar(x,y,color=colors[i],width=width,label=labels[i])

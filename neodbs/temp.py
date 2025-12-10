@@ -27,10 +27,7 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 
 colors = ["0.2980392277240753", 0.44705885648727417, 0.6901960968971252, 1.0]
 
-# Example signals dictionary
-
-row_data = [cell.replace('"','') for cell in colors]
-print(row_data)
+print([]*len(colors))
 
 # dpg.create_context()
 

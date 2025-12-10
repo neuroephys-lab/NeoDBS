@@ -1,5 +1,16 @@
 # NeoDBS
 
+## 10.12.2025
+
+### Debug:
+- Events identified by HH:MM
+- Toggle Visibility acounts user-defined deviation
+- Survey PSD with mean features and correct psd buttons
+- Survey PSD is correclty inserted in app_state dictionary
+- Default Filter min value --> cannot be below 0.5 Hz or else!!!!!!!!!
+- Export plot:
+    - impedance/empty label: handled
+
 ## 09.12.2025
 
 ### New functionalities:
