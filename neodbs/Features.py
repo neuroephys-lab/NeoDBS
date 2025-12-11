@@ -351,7 +351,7 @@ def export_plot(info, plot_type, size=None, line_types = None):
                 else: ax.vlines(signal['X'],*limits[1],label=label,color=colors[i])
             elif (label in ['',' ']) or ('Scatter' in line_types[i]):
                 x, y = signal['X'], signal['Y']
-                ax.scatter(x,y,label=label,color=colors[i-1],zorder=len(signals))
+                ax.scatter(x,y,label=label,color=colors[i],zorder=len(signals))
             else: 
                 x, y = signal['X'], signal['Y']
                 thick = 1

@@ -4,7 +4,7 @@ import DataHandling as DH
 import matplotlib.pyplot as plt
 import numpy as np
 # from scipy.signal import spectrogram
-# from datetime import datetime
+from datetime import datetime
 # import Preprocessing as pre
 import utils as utl
 '''
@@ -25,9 +25,11 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 
 '''
 
-colors = ["0.2980392277240753", 0.44705885648727417, 0.6901960968971252, 1.0]
+colors = (0.44705885648727417, 0.6901960968971252, 1.0)
 
-print([]*len(colors))
+a = datetime.fromtimestamp(1734600878.0)
+b = datetime.fromtimestamp(1734900878.0)
+print((b-a))
 
 # dpg.create_context()
 

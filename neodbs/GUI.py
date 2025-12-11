@@ -68,7 +68,6 @@ app_state = {"windows": {}}
 colors = [
         (0, 0, 255, 255),      # blue
         (255, 0, 0, 255),      # red
-        (0,0,0,0),              # black
         (0, 255, 0, 255),      # green
         (255, 165, 0, 255),    # orange
         (255, 255, 0, 255),    # yellow
@@ -249,10 +248,12 @@ def save_plot(sender,app_data,user_data):
     elif sum(colormap_int[0])>4: #specified colors
         colors = [tuple(np.round(np.array(c)/255,3)) for c in colormap_int]
     else: colors = colormap_int
+
     if not isinstance(colormap_int,str) and plot_type!='SMP':
         colors = np.array(colors)[mask].tolist()
     
     if plot_type not in ['3D','3DC','SMP']:   
+        tags = np.array(tags)[mask].tolist()
         title = dpg.get_item_label(plot_tag)
         axis_tags = dpg.get_item_children(plot_tag)[1]
         axis = [dpg.get_item_label(ax) for ax in axis_tags]
@@ -340,7 +341,6 @@ def save_plot(sender,app_data,user_data):
 
     elif plot_type in ['2D','CC']:
         # for '2D'
-        tags = np.array(tags)[mask].tolist()
         signals = []
         for i,tag in enumerate(tags):
             values = dpg.get_value(tag)
@@ -353,6 +353,8 @@ def save_plot(sender,app_data,user_data):
             else:
                 x,y = values[:2]
                 sign = {'X':x,'Y':y}
+                # if 'Scatter' in line_type[i]:
+                #     colors[i] = colors[i-1]
             if 'Timeline' in title or 'Circadian' in title or 'Stimulation' in title:
                 sign['X'] = [pre.get_date_from_ts(x) for x in sign['X']]
 
@@ -369,8 +371,10 @@ def save_plot(sender,app_data,user_data):
         else:
             values = [dpg.get_value(tag)[:2] for tag in tags]
             signals = [{'X': v[0], 'Y': v[1]} for v in values]
-        ticks = np.array(dpg.get_item_user_data(axis_tags[0]))
-        if ticks[0] is not None:
+
+        ticks = dpg.get_item_user_data(axis_tags[0])
+        if ticks is not None:
+            ticks = np.array(dpg.get_item_user_data(axis_tags[0]))
             ticks_pos = [float(t) for t in ticks[:,1]]
             ticks = ticks[:,0]
             axis.append([ticks_pos, ticks.tolist()])
@@ -449,7 +453,7 @@ def save_signals(sender,app_data,user_data):
                 for i,l in enumerate(labels): #Specifically for Survey Peaks
                     if l in ['', ' ']: labels[i] = f"{labels[i-1]} Peak"
             signals = [dpg.get_value(tag)[1] for tag in children]
-            if labels[-2] in ['Std. Dev','Std. Dev.']: #get the actual standard deviation, not the min/max
+            if labels[-2] in ['Std. Dev','Std. Dev']: #get the actual standard deviation, not the min/max
                 signals[-2] = list(np.array(signals[-1]) - np.array(signals[-2]))
             mini,maxi,maxX = get_limits(children,plot)
             cut = maxX[mini:maxi]
@@ -735,13 +739,19 @@ def toggleVisibility(signal_tags, parent, group, user_data):
         for tag, checkbox in checkboxes.items():
             dpg.set_value(checkbox, app_data)
             dpg.configure_item(tag, show=app_data)
+            if dpg.does_item_exist(f"{tag}_peak"):
+                dpg.configure_item(f"{tag}_peak",show=app_data)
 
-            if dpg.does_item_exist(f"{tab_tag}_mean"): #only in events for now
-                mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
-                minus, plus = mean_power-std_power, mean_power+std_power
-                dpg.configure_item(f"{tab_tag}_std", y1=minus,y2=plus)
-                current = dpg.get_value(f"{tab_tag}_mean")
-                dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
+            if dpg.does_item_exist(f"{tab_tag}_std"):
+                dpg.configure_item(f"{tab_tag}_std", show=app_data)
+                dpg.configure_item(f"{tab_tag}_mean", show=app_data)
+
+        if dpg.does_item_exist(f"{tab_tag}_mean") and app_data: #only in events for now
+            mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+            minus, plus = mean_power-std_power, mean_power+std_power
+            dpg.configure_item(f"{tab_tag}_std", y1=minus,y2=plus)
+            current = dpg.get_value(f"{tab_tag}_mean")
+            dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
 
     def toggle_visibility(sender, app_data, user_data):
         if dpg.does_item_exist(f"{tab_tag}_hide"):
@@ -818,7 +828,7 @@ def toggleType(signal_tags, parent, user_data):
                 
     dpg.add_checkbox(label=f"{type_filter}", default_value=True, callback=toggle_filtered_series,tag = f"{tab_tag}_{type_filter}_checkbox", parent=parent)
 
-def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None,tables=[],dates=None):
+def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None,tables=[],dates=None,colors=None):
 
     '''
     Documentation
@@ -840,6 +850,10 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None,tables=
         normal = False
         
         #(['Hemisphere', 'SensingElectrodes', 'ArtifactStatus', 'LFPFrequency', 'LFPMagnitude'])
+    
+    colormap = 0
+    if colors:
+        colormap = colors
 
     channels = []
     sides = ['Left','Right']
@@ -923,7 +937,7 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None,tables=
         
         with dpg.group():
             dpg.add_separator(label='Export')
-            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data = ('2D', plot_tag, f"y_axis_{tab_tag}",0))
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data = ('2D', plot_tag, f"y_axis_{tab_tag}",colormap))
             b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(f"y_axis_{tab_tag}",f"plot_{tab_tag}",'2D'))
             add_exporting_tag(window_id,plot=b1,signal=b2)
         '''
@@ -1967,6 +1981,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
         else: new_signal[ch] = new_signal[ch] | temp
  
     current_start, prev_end_time = {}, {}
+    # breakpoint()
     for tag in tags:
         signal = getSignalbyIdx(window_id,tab_tag,tag,mode)
         '''X = signal['X']
@@ -1996,10 +2011,12 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
             valid = arr[~np.isnan(arr)]
             if len(valid) > 0:# and np.round(valid[0]) == 0:
                 # 'X' is in seconds
-                signal['dX'] = [signal['Date'] + timedelta(seconds=val) for val in X]
+                # signal['dX'] = [signal['Date'] + timedelta(seconds=val) for val in X]
+                signal['dX'] = [datetime.fromtimestamp(val) for val in X]
         else:
             # 'X' is in Unix timestamp
             signal['dX'] = [pre.get_date_from_ts(val) for val in X]
+
         ch = getUpdatedElectrodeName(signal['Channel'])
         prev = len(new_signal[ch]['dX'])
 
@@ -2034,7 +2051,8 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                 identifiers[ch] = len(signal[key])
             elif key == 'Events':
                 for e in signal[key]:
-                    e['Idx'] = e['Idx'] + prev
+                    # e['Idx'] = e['Idx'] + prev
+                    e['Idx'] = (e['Date'].timestamp() - signal['dX'][0].timestamp())*250
                 new_signal[ch][key] = np.append(new_signal[ch][key], signal[key])
             else:
                 new_signal[ch][key] = np.append(new_signal[ch][key], signal[key])
@@ -2076,7 +2094,8 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                         dpg.configure_item(x_axis, scale = dpg.mvPlotScale_Linear)
 
                     
-                    try: events = new_signal[channel]['Events']
+                    try: 
+                        events = new_signal[channel]['Events']
                     except Exception as e: 
                         events = 'None'
                         print(e)
@@ -2104,6 +2123,9 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                     if not isinstance(events,str):
                         for event in events:
                             # stamp = (event['Date'] + timedelta(hours=1) + timedelta(seconds=(event['Idx']/250))).timestamp() #spectrogram axis is in reality from 0 to 1, and the columns are time based, not sample
+                            stamp = (event['Date'] + timedelta(hours=1) + timedelta(seconds=(event['Idx']/250))).timestamp()
+                            print(new_signal[channel]['dX'][0])
+                            print(event['Date'] + timedelta(hours=1) + timedelta(seconds=(event['Idx']/250)))
                             stamp = event['Idx']/250 #axis is seconds, not datetime
                             type = event['Type']
                             dpg.add_plot_legend()
@@ -2137,7 +2159,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                         dpg.add_plot_legend()
                         dpg.add_inf_line_series(x=[stamp],label=f'{type}',parent=y_axis)
     
-        def merge_spectrograms(sender,app_data,user_data):
+        def spectrograms_power_over_time(sender,app_data,user_data):
             bands = getBandsByTab(tab_tag)
             if dpg.does_item_exist(f"{tab_label}_merged"): dpg.delete_item(f"{tab_label}_merged")
 
@@ -2155,7 +2177,6 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                     with dpg.collapsing_header(tag=header_tag, parent=f"{tab_label}_merged", label=plot_label):
 
                         with dpg.plot(label=plot_label, width=-1):
-                            print(plot_label)
                             dpg.add_plot_legend()
                             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Power (dB)")
@@ -2184,7 +2205,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
             
         with dpg.group(horizontal=False):
             dpg.add_checkbox(label='Synchronize Axis', callback=link) 
-            dpg.add_button(label='Band Power over Time', callback=merge_spectrograms)
+            dpg.add_button(label='Band Power over Time', callback=spectrograms_power_over_time)
             dpg.add_separator()
             dpg.add_text('Adjust Colormap Scale')
             dpg.add_input_int(label='Min: ', tag=f"{tab_label}_emin", width=90, default_value=global_min,callback=enforce_range, 
@@ -2875,7 +2896,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
         def link(sender, app_data):
             dpg.configure_item(f"{tab_label}_subplots", link_all_x=app_data, link_all_y=app_data)
        
-        def merge_spectrograms(sender,app_data,user_data):
+        def spectrograms_power_over_time(sender,app_data,user_data):
             bands = getBandsByTab(tab_tag)
             if dpg.does_item_exist(f"{tab_label}_merged"): dpg.delete_item(f"{tab_label}_merged")
 
@@ -2974,7 +2995,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
        
         with dpg.group(horizontal=False):
             dpg.add_checkbox(label='Synchronize Axis', callback=link)      
-            dpg.add_button(label='Band Power over Time', callback=merge_spectrograms,width=-1)
+            dpg.add_button(label='Band Power over Time', callback=spectrograms_power_over_time,width=-1)
             dpg.add_button(label='Mean Spectrogram', callback=mean_spectrogram,width=-1, user_data=Merge)
             dpg.add_separator(label ='Adjust Colormap Scale')
             dpg.add_input_int(label='| Min', tag=f"{tab_label}_emin", width=90, default_value=global_min,callback=enforce_range, 
@@ -4545,7 +4566,7 @@ def getMeanActiveSeries(window_id,tab_tag,signal_tags,key='Y'): #try to use it i
     :param signal_tags: Description
     :param dev: default to None, standar deviation*1, else gets value of radio button to get type of standard deviation
     '''
-    
+    if 'psd' in tab_tag: key = 'LFPMagnitude'
     active_tags = getActiveSeries(signal_tags)
     active_signals = []
     mode = extract_mode(tab_tag)
@@ -5105,7 +5126,6 @@ def insert_events(sender, app_data, user_data):
                 flag = True
                 if tidx != None: 
                     flag = False
-                    # events_times[f"{hour}:{minute}"] = (type, tidx)
                     tidx = int(tidx)
                     scatter.append([new_x[tidx], type, new_time[tidx]])
                     date_event = new_time[tidx]
@@ -5133,10 +5153,6 @@ def insert_events(sender, app_data, user_data):
                     if window_type == 'Combined': app_state['windows'][window_id]['Files'][file]['Data'][tab_tag]['Events'].append(segment)
                     else: app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Events'].append(segment)
 
-            # if flag:
-            #     if window_type == 'Combined': app_state['windows'][window_id]['Files'][file]['Data'][tab_tag].pop('Events')
-            #     else: app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx].pop('Events')
-
         if scatter: 
             event_types = [s[1] for s in scatter]
             event_types = np.unique(event_types).tolist()
@@ -5145,7 +5161,6 @@ def insert_events(sender, app_data, user_data):
                 tag = f"{tab_tag}_{etype}_{time}"
                 if not dpg.does_item_exist(tag): 
                     m = dpg.add_inf_line_series(parent=f"y_axis_{tab_tag}", x=[idx], label=f"{etype} - {time}", tag=tag)
-                    # dpg.bind_item_theme(m, change_line_thickness(5, component=dpg.mvInfLineSeries))
                     dpg.bind_item_theme(m, change_inf_line_color(event_types.index(etype)))
 
                 signal_tags[tag] = True
@@ -5154,8 +5169,6 @@ def insert_events(sender, app_data, user_data):
             types= np.unique(scatter[:,1]).tolist()
             if len(types)>1:
                 if dpg.does_item_exist(f"{tab_tag}_buttons_hours"): dpg.delete_item(f"{tab_tag}_buttons_hours")
-
-                # old_parent = f"{tab_tag}_add_events"
                 new_parent = f"{tab_tag}_types"
                 if dpg.does_item_exist(f"{new_parent}_events"): 
                     children = dpg.get_item_children(f"{new_parent}_events")
@@ -5237,11 +5250,17 @@ def changeTimelinePlot(sender,app_data,user_data):
 
     # signals = getActiveSignals(tab_tag,signal_tags)
 
+    old = list(dpg.get_item_user_data(f"{plot_tag}_export_plot"))
+    ploted_colors = old[-1]
+
     for idx, signal in enumerate(signals):
-        for j, tag in enumerate(signal_tags.keys()):
+        for tag in signal_tags.keys():
             i = extract_idx_from_series_tag(tag)
             if i == idx and signal_tags[tag]==True:
-                if app_data:
+                if dpg.does_item_exist(f"{tag}_Left_added"): 
+                    dpg.configure_item(f"{tag}_Left_added",show=app_data)
+                    dpg.configure_item(f"{tag}_Right_added",show=app_data)
+                else: 
                     if isinstance(data,list):
                         dictionary = data[idx]
                     else: dictionary = data
@@ -5252,11 +5271,15 @@ def changeTimelinePlot(sender,app_data,user_data):
                             extra_x, extra_y = extra[side]['X_missing'], extra[side]['Y_missing']
                             extra_x = [x.timestamp() for x in extra_x]
                             if extra_x != []:
-                                dpg.add_scatter_series(extra_x,extra_y,tag = tagg, parent=plot_tag)
-                else:
-                    if dpg.does_item_exist(f"{tag}_Left_added"): 
-                        dpg.delete_item(f"{tag}_Left_added")
-                        dpg.delete_item(f"{tag}_Right_added")
+                                if side=='Left':
+                                    color_id=-2
+                                else: color_id=-6
+                                ploted_colors.append(colors[color_id])
+                                s = dpg.add_scatter_series(extra_x,extra_y,tag = tagg, parent=plot_tag)
+                                dpg.bind_item_theme(s,change_plot_color(color_id))
+
+    old[-1] = ploted_colors
+    dpg.set_item_user_data(f"{plot_tag}_export_plot",old)
 
 def circadian_rhythm(sender, app_data, user_data):
     tab_tag, signal_tags, data = user_data
@@ -5338,7 +5361,6 @@ def circadian_rhythm(sender, app_data, user_data):
         
         mean.append(y)
 
-    # breakpoint()
     std = np.nanstd(mean,axis=0)
     mean = np.nanmean(mean,axis=0)
     minus = mean - std
@@ -5394,7 +5416,7 @@ def circadian_rhythm(sender, app_data, user_data):
                 create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=label)
 
 
-            s = dpg.add_shade_series(val[0],y1=minus,y2=plus,parent=y_axis,label='Std. Dev.',tag=f"{tab_label}_std")
+            s = dpg.add_shade_series(val[0],y1=minus,y2=plus,parent=y_axis,label='Std. Dev',tag=f"{tab_label}_std")
             dpg.bind_item_theme(s,create_alpha_theme())
             m = dpg.add_line_series(val[0],mean,parent=y_axis,label='Mean',tag=f"{tab_label}_mean",skip_nan=False)
             dpg.bind_item_theme(m,change_line_thickness(4))
@@ -5891,7 +5913,9 @@ def window_menu(window_id):
         with dpg.menu(label='Change',tag=f"{window_id}_change"):
             dpg.add_menu_item(label='Change Window Name',callback=change_window_name,user_data=f"window_{window_id}")
         with dpg.menu(label='Save...'):
-            dpg.add_menu_item(label="All Window - Plots", callback=save_all, user_data = ('Plots', window_id))
+            p = dpg.add_menu_item(label="All Window - Plots", callback=save_all, user_data = ('Plots', window_id))
+            with dpg.tooltip(parent=p):
+                dpg.add_text(f"Plots must be previously opened for correct exportation.")
             dpg.add_menu_item(label="All Window - Tables", callback=save_all, user_data = ('Tables', window_id))
             dpg.add_menu_item(label="All Window - Signals", callback=save_all, user_data = ('Signals', window_id))                  
 
@@ -5995,7 +6019,7 @@ def show_event_summary(mode,tab_tag,plot_tag,files=None):
                 dpg.add_pie_series(
                     x=0.0,
                     y=0.0,  # (x, y) center coordinates
-                    radius=1.0,         # relative radius of the pie
+                    radius=3.0,         # relative radius of the pie
                     values=[len(event_summary[key]) for key in event_summary.keys()],       # numerical values
                     labels=labels,       # corresponding labels
                     normalize=True,      # ensures the values sum to 1
@@ -6139,7 +6163,6 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                  
 def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
-    dpg.add_text(f"Total days: {len(signals)}", parent=tab_tag)
     data = app_state['windows'][window_id]['Data']
     app_state['windows'][window_id]['Data'][tab_tag] = {'Signals': []}
     flag, mean = False, []
@@ -6147,12 +6170,13 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     events = DH.getSignals(data,'Events')
     ocd_events = np.unique([event['EventName'] for event in events])
     ocd_events = [getUpdatedEventName(o) for o in ocd_events.tolist()]
-    # bands = DH.getTimelineBand(data)
 
     if 'Eventos' in evt.keys():
+        with dpg.group(parent=tab_tag, horizontal=True, tag = f"{tab_tag}_ec"): pass
+        dpg.add_text(f"Total days: {len(signals)}", parent=f"{tab_tag}_ec")
         for e in evt['Eventos']:
-            event = f"{e['EventName']}:  {e['EventCount']}"
-            dpg.add_text(event, parent=tab_tag)
+            event = f"| {e['EventName']}:  {e['EventCount']}"
+            dpg.add_text(event, parent= f"{tab_tag}_ec")
 
     days = []
     with dpg.group(parent=tab_tag, horizontal=True):
@@ -6221,9 +6245,6 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     l=dpg.add_line_series(x, y, parent=y_left, tag=series_tag ,label=label_left)
                     if side=='Left':
                         color_id=-1
-                        if idx == 0: 
-                            print(datestr,': ', len(x))
-                            compare = x
                     else: color_id=-3
                     ploted_colors.append(colors[color_id])
                     th = change_line_color(color_id)
@@ -6315,7 +6336,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                         for ocd in ocd_events:
                             toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(ocd, window_id, tab_tag)) #check hemisphere
             dpg.add_separator()
-            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('2D', plot_tag, y_left,ploted_colors))
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('2D', plot_tag, y_left,ploted_colors),tag=f"{y_left}_export_plot")
             b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(y_left,plot_tag,'Timeline'))
             add_exporting_tag(window_id,plot=b1,signal=b2)
 
@@ -6463,7 +6484,7 @@ def setup_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                 mean_power = pre.MeanSignal(artifacts)
                 std = pre.StdDevSignal(artifacts)
                 minus,plus = mean_power-std,mean_power+std
-                s = dpg.add_shade_series(x,y1=minus,y2=plus,label='Std. Dev.', parent=y_axis, tag=f"{tab_tag_art}_std")
+                s = dpg.add_shade_series(x,y1=minus,y2=plus,label='Std. Dev', parent=y_axis, tag=f"{tab_tag_art}_std")
                 dpg.bind_item_theme(s,create_alpha_theme())
                 m = dpg.add_line_series(x, mean_power, label="Mean Power", parent=y_axis, tag=f"{tab_tag_art}_mean")
                 dpg.bind_item_theme(m, change_line_thickness(5))
@@ -6519,7 +6540,7 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     line_tags, channels = [], []
     child = dpg.add_child_window(height=100, width=-1, parent=new_tab_tag)
     with dpg.group(parent=new_tab_tag, horizontal=True):
-        signal_tags = {}
+        signal_tags, colors = {}, []
         
         with dpg.plot(label=f"{mode} PSD Signals", height=400, width=600, tag=new_plot_tag):
             dpg.bind_colormap(new_plot_tag, 0)
@@ -6543,6 +6564,7 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
                 artifact = utl.after_point(signal['ArtifactStatus'])
                 dpg.add_line_series(f,m,label=line_label,parent=parent, tag = line_tag)
+                colors.append(dpg.get_colormap_color(0,_))
                 tt = dpg.add_text(f"{channel}_{side}: {artifact}", parent=child)
                 if artifact != 'ARTIFACT_NOT_PRESENT':
                     dpg.bind_item_theme(tt, change_text_color(1))
@@ -6554,6 +6576,7 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     dpg.add_scatter_series([peak],[peak_m], parent=parent, tag =f"{line_tag}_peak")
                     
                     dpg.bind_item_theme(f"{line_tag}_peak",change_plot_color(dpg.get_colormap_color(0,_)))
+                    colors.append(dpg.get_colormap_color(0,_))
                     line_tags.append(f"{line_tag}_peak")
 
                 if not dpg.does_item_exist(f"side_{new_tab_tag}"):
@@ -6582,12 +6605,15 @@ def survey_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             mean, std = pre.MeanSignal(new_signals,'LFPMagnitude'), pre.StdDevSignal(new_signals,'LFPMagnitude')
             dev = getDeviation(new_tab_tag)
             minus,plus = mean-(dev*std),mean+(dev*std)
+            dpg.add_shade_series(f,y1=minus,y2=plus,label='Std. Dev',tag=f"{new_tab_tag}_std",parent=parent)
+            dpg.bind_item_theme(f"{new_tab_tag}_std",create_alpha_theme())
+            colors.append(dpg.get_colormap_color(0,_+1))
             dpg.add_line_series(f,mean,label='Mean Power',parent=parent, tag = f"{new_tab_tag}_mean")
             dpg.bind_item_theme(f"{new_tab_tag}_mean",change_line_thickness(5))
-            dpg.add_shade_series(f,y1=minus,y2=plus,label='Std. Dev.',tag=f"{new_tab_tag}_std",parent=parent)
-            dpg.bind_item_theme(f"{new_tab_tag}_std",create_alpha_theme())
+            colors.append(dpg.get_colormap_color(0,_+2))
+            
 
-        toggleDisplay(new_signals,signal_tags,window_id,new_tab_tag,new_plot_tag)
+        toggleDisplay(new_signals,signal_tags,window_id,new_tab_tag,new_plot_tag,colors=colors)
     
 def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
@@ -7044,7 +7070,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
 
             mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
             minus, plus = mean_power-std_power, mean_power+std_power
-            s = dpg.add_shade_series(x,y1=minus,y2=plus, parent=f"y_axis_{tab_tag}",tag=f"{tab_tag}_std", label='Std. Dev.')
+            s = dpg.add_shade_series(x,y1=minus,y2=plus, parent=f"y_axis_{tab_tag}",tag=f"{tab_tag}_std", label='Std. Dev')
             dpg.bind_item_theme(s,create_alpha_theme())
 
             m = dpg.add_line_series(x, mean_power, label="Mean Power", parent=f"y_axis_{tab_tag}", tag=f"{tab_tag}_mean")
@@ -7267,7 +7293,7 @@ def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
     app_state['windows'][window_id]['Files'][idx]['Data'][new_tab_tag] = {'Signals': []}
     dpg.add_tab(label=f"{mode} PSD", tag=new_tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     dpg.add_text(f"Total recordings: {len(signals)}", parent=new_tab_tag)
-    line_tags, channels = [], []
+    line_tags, channels, colors = [], [], []
     child = dpg.add_child_window(height=100, width=-1, parent=new_tab_tag,)
 
     with dpg.group(parent=new_tab_tag, label = f"{new_tab_tag}_group", horizontal=True):
@@ -7292,13 +7318,17 @@ def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     f = signal['LFPFrequency']
                     m = signal['LFPMagnitude']
                     channel = utl.after_point(signal['SensingElectrodes'])
-                    line_label = f"{date} | {channel} | {side}"
+                    if len(files)>1:
+                        line_label = f"{date} | {channel} | {side}"
+                    else: 
+                        line_label = f"{channel} | {side}"
                     # line_tag = f"{file['name']}_{new_tab_tag}_{channel}_{side}"
                     line_tag = f"{new_tab_tag}_file_{idx}_series_{_}"
                     line_tags.append(line_tag)
                     channels.append(channel)
                     artifact = utl.after_point(signal['ArtifactStatus'])
                     dpg.add_line_series(f,m,label=line_label,parent=parent, tag = line_tag)
+                    colors.append(dpg.get_colormap_color(0,_*(idx+1)))
 
                     artifact_info = f"{date}_{tab_tag}"
                     if dpg.does_item_exist(artifact_info):
@@ -7313,7 +7343,9 @@ def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     if 'PeakFrequencyInHertz' in signal:
                         peak = signal['PeakFrequencyInHertz']
                         peak_m = m[f.index(peak)]
-                        dpg.add_scatter_series([peak],[peak_m],label=f"{channel}_{side} | Peak ({date})", parent=parent, tag =f"{line_tag}_peak")
+                        dpg.add_scatter_series([peak],[peak_m], parent=parent, tag =f"{line_tag}_peak")
+                        dpg.bind_item_theme(f"{line_tag}_peak",change_plot_color(dpg.get_colormap_color(0,_)))
+                        colors.append(dpg.get_colormap_color(0,_*(idx+1)))
                         line_tags.append(f"{line_tag}_peak")
                     
                     if not dpg.does_item_exist(f"side_{new_tab_tag}"):
@@ -7348,14 +7380,15 @@ def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
             mean, std = pre.MeanSignal(new_signals,'LFPMagnitude'), pre.StdDevSignal(new_signals,'LFPMagnitude')
             dev = getDeviation(new_tab_tag)
             minus,plus = mean-(dev*std),mean+(dev*std)
+            dpg.add_shade_series(f,y1=minus,y2=plus,label='Std. Dev',tag=f"{new_tab_tag}_std",parent=parent)
+            dpg.bind_item_theme(f"{new_tab_tag}_std",create_alpha_theme())
             dpg.add_line_series(f,mean,label='Mean Power',parent=parent, tag = f"{new_tab_tag}_mean")
             dpg.bind_item_theme(f"{new_tab_tag}_mean",change_line_thickness(5))
-            dpg.add_shade_series(f,y1=minus,y2=plus,label='Std. Dev.',tag=f"{new_tab_tag}_std",parent=parent)
-            dpg.bind_item_theme(f"{new_tab_tag}_std",create_alpha_theme())
+            colors.append(dpg.get_colormap_color(0,_*(idx+1)+1)) #std dev color
+            colors.append(dpg.get_colormap_color(0,_*(idx+1)+2)) #mean color
 
-        toggleDisplay(new_signals,signal_tags,window_id,new_tab_tag,new_plot_tag,dates=dates)
+        toggleDisplay(new_signals,signal_tags,window_id,new_tab_tag,new_plot_tag,dates=dates,colors=colors)
         
-
 def comb_indefinite_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags): 
     dpg.add_tab(label=mode, tag=tab_tag, parent=f"tab_bar_window_{window_id}", closable=True)
     with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):

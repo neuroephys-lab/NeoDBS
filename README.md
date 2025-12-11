@@ -1,5 +1,22 @@
 # NeoDBS
 
+## 12.12.2025
+### TO DO:
+- multitaper parameters
+- SPECTROGRAM/WAVELET: Event marking!!!!
+
+## 11.12.2025
+
+### Debug:
+- Export Plot:
+    - '2D' corrected
+    - Event summary
+    - Timeline with missing points
+- Survey toggle display corrected to send correct colors for export plot
+- Debug select all - toggle visibility
+- Event marking on spectrogram:
+    - with no cuts: correct event marking
+
 ## 10.12.2025
 
 ### Debug:
