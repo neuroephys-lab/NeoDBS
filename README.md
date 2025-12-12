@@ -1,9 +1,20 @@
 # NeoDBS
 
 ## 12.12.2025
-### TO DO:
-- multitaper parameters
-- SPECTROGRAM/WAVELET: Event marking!!!!
+
+### Functionalities:
+- Multitaper from mne removed, only dpss (from scipy signals)
+- Timeline recalculate metrics for removal outliers!s
+
+### Debug:
+- spectrogram: 
+    - event marking correct for joined and individual
+    - colors correct!
+- wavelet: 
+    - event marking correct for joined and individual
+    - colors correct!
+    - parameters updated for less computational cost
+
 
 ## 11.12.2025
 

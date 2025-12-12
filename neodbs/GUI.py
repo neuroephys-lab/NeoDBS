@@ -686,7 +686,7 @@ def add_combo_df_features(tab_tag,signal_tags):
     :param signal_tags: list of signals ploted in main plot of tab
     '''
 
-    features = ['periodogram','welch','spectrogram', 'multitaper', 'dpss', 'wavelet', 'coherence', 'multitaper coherence', 'cross-correlation', 'PAC']
+    features = ['periodogram','welch','spectrogram', 'dpss', 'wavelet', 'coherence', 'multitaper coherence', 'cross-correlation', 'PAC'] #,'multitaper'
 
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_df_features"):
@@ -985,10 +985,11 @@ def show_mean(sender,app_data,user_data):
 def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None,plot_tag=None):
     events = [signal['EventName'] for signal in signals]
     for i,e in enumerate(events):
-        if e in all_event_names.keys():
-            events[i] = all_event_names[e]
-        else:
-            all_event_names[e] = e
+        events[i] = getUpdatedEventName(e)
+        # if e in all_event_names.keys():
+        #     events[i] = all_event_names[e]
+        # else:
+        #     all_event_names[e] = e
     dates = []
     for signal in signals: 
         date = utl.parse_datetime(signal['DateInitial'])
@@ -1275,7 +1276,7 @@ def fill_params_features(app_data):
         case 'wavelet':
             app_data = 'tfr_array_morlet'
             params = pre.get_required_params(app_data, module='mtf')
-            rep = {'freqs':100,'n_cycles': 3,'sfreq':250, 'output':'power'}
+            rep = {'freqs':100,'n_cycles': 2,'sfreq':250, 'output':'power'}
             params.update(rep)
             functions = pre.get_functions('mtf')
             doc = functions['tfr_array_morlet'].__doc__ if functions['tfr_array_morlet'].__doc__ else "No documentation available"
@@ -1283,6 +1284,7 @@ def fill_params_features(app_data):
         case 'multitaper':
             app_data = 'psd_array_multitaper'
             params = pre.get_required_params(app_data, module='mtf')
+            # rep = {'fmax':100, adaptive = True}
             functions = pre.get_functions('mtf')
             doc = functions['psd_array_multitaper'].__doc__ if functions['psd_array_multitaper'].__doc__ else "No documentation available"
         case _: 
@@ -1967,7 +1969,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
     window_id = extract_window_id(tab_tag)
     wt = extract_type_window(window_id)
     
-    new_signal, identifiers = {}, {}
+    new_signal, identifiers, event_names = {}, {}, []
     for tag in tags:
         signal = getSignalbyIdx(window_id,tab_tag,tag,mode)
         ch = signal['Channel']
@@ -2018,7 +2020,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
             signal['dX'] = [pre.get_date_from_ts(val) for val in X]
 
         ch = getUpdatedElectrodeName(signal['Channel'])
-        prev = len(new_signal[ch]['dX'])
+        prev = len(new_signal[ch]['X'])
 
         current_start[ch] = signal['dX'][0]
     
@@ -2051,14 +2053,15 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                 identifiers[ch] = len(signal[key])
             elif key == 'Events':
                 for e in signal[key]:
-                    # e['Idx'] = e['Idx'] + prev
-                    e['Idx'] = (e['Date'].timestamp() - signal['dX'][0].timestamp())*250
+                    event_names.append(e['Type'])
+                    e['sIdx'] = e['Idx'] + prev
                 new_signal[ch][key] = np.append(new_signal[ch][key], signal[key])
             else:
                 new_signal[ch][key] = np.append(new_signal[ch][key], signal[key])
             
         prev_end_time[ch] = signal['dX'][-1]
 
+    event_names = np.unique(event_names).tolist()
     num_plots = len(new_signal.keys())
     num_cols = 1
     num_rows = num_plots
@@ -2078,7 +2081,6 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
 
                 title =f"Joined Spectrogram - {channel}"
                 subplot_tag = f"{tab_label}_joined_{channel}"
-                # titles.append(channel)
 
                 with dpg.plot(label=title, width=800, height=400, tag=subplot_tag, parent=f"{tab_label}_subplots"):
                     x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", scale= dpg.mvPlotScale_Time)
@@ -2092,7 +2094,6 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                     else:
                         x = np.arange(0,len(y)/250,1)
                         dpg.configure_item(x_axis, scale = dpg.mvPlotScale_Linear)
-
                     
                     try: 
                         events = new_signal[channel]['Events']
@@ -2121,15 +2122,14 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                     dpg.bind_colormap(subplot_tag, dpg.mvPlotColormap_Jet)  
 
                     if not isinstance(events,str):
+                        dpg.add_plot_legend()
                         for event in events:
-                            # stamp = (event['Date'] + timedelta(hours=1) + timedelta(seconds=(event['Idx']/250))).timestamp() #spectrogram axis is in reality from 0 to 1, and the columns are time based, not sample
-                            stamp = (event['Date'] + timedelta(hours=1) + timedelta(seconds=(event['Idx']/250))).timestamp()
-                            print(new_signal[channel]['dX'][0])
-                            print(event['Date'] + timedelta(hours=1) + timedelta(seconds=(event['Idx']/250)))
-                            stamp = event['Idx']/250 #axis is seconds, not datetime
+                            stamp = event['sIdx']/250 #axis is seconds, not datetime
                             type = event['Type']
-                            dpg.add_plot_legend()
-                            dpg.add_inf_line_series(x=[stamp],label=f'{type}',parent=y_axis)
+                            type = getUpdatedEventName(type)
+                            if stamp<=x[-1]:
+                                ev = dpg.add_inf_line_series(x=[stamp],label=f'{type}',parent=y_axis)
+                                dpg.bind_item_theme(ev,change_inf_line_color(event_names.index(type)))
 
             dpg.configure_item(f"{tab_label}_colormap_scale", min_scale=global_min,max_scale=global_max)
         def link(sender, app_data):
@@ -3073,7 +3073,7 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
     window_id = extract_window_id(tab_tag)
     wt = extract_type_window(window_id)
 
-    new_signal, identifiers = {}, {}
+    new_signal, identifiers, event_names = {}, {}, []
 
     '''Initializing new signal dictionary'''
     for tag in tags:
@@ -3093,36 +3093,32 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
     '''Filling new signal dictionary'''
     prev_end_time = {}
     current_start = {}
-    for i,tag in enumerate(tags):
+
+    for tag in tags:
         signal = getSignalbyIdx(window_id,tab_tag,tag,mode)
-
-        '''Good version - For individual and combined?'''
+        
         X = signal['X']
-
         arr = np.array(X)
+        
+
         if np.issubdtype(arr.dtype, np.number):
             valid = arr[~np.isnan(arr)]
             if len(valid) > 0:# and np.round(valid[0]) == 0:
-                # 'X' is in seconds
-                signal['dX'] = [signal['Date'] + timedelta(seconds=val) for val in X]
+                signal['dX'] = [datetime.fromtimestamp(val) for val in X]
         else:
-            # 'X' is in Unix timestamp
             signal['dX'] = [pre.get_date_from_ts(val) for val in X]
-        ch = signal['Channel']
-        if ch in electrodes_names.keys():
-            ch = electrodes_names[ch]
-        else:
-            electrodes_names[ch] = ch
+
+        ch = getUpdatedElectrodeName(signal['Channel'])
+        prev = len(new_signal[ch]['X'])
 
         current_start[ch] = signal['dX'][0]
     
-        # Insert zero gap if there's a time difference
         if ch in prev_end_time:
             gap = current_start[ch] - prev_end_time[ch]
             
             if gap.total_seconds() > 0:
                 # Limit the gap to 10 min
-                gap = min(gap, timedelta(seconds = 15))
+                gap = min(gap, timedelta(seconds=15))
                 
                 # Determine how many points to fill (based on sampling rate)
                 sample_rate = 250
@@ -3136,15 +3132,21 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
                     # Append the filler
                     new_signal[ch]['dX'] = np.append(new_signal[ch]['dX'], filler_dX)
                     new_signal[ch]['Y'] = np.append(new_signal[ch]['Y'], filler_Y)
+
         else: prev_end_time[ch] = None
 
         for key in signal.keys():
             if key == 'dX' or key == 'Y':
                 new_signal[ch][key] = np.append(new_signal[ch][key], np.array(signal[key]))
                 identifiers[ch] = len(signal[key])
+            elif key == 'Events':
+                for e in signal[key]:
+                    event_names.append(e['Type'])
+                    e['sIdx'] = e['Idx'] + prev
+                new_signal[ch][key] = np.append(new_signal[ch][key], signal[key])
             else:
-               new_signal[ch][key] = np.append(new_signal[ch][key], signal[key])
-
+                new_signal[ch][key] = np.append(new_signal[ch][key], signal[key])
+            
         prev_end_time[ch] = signal['dX'][-1]
 
     num_plots = len(new_signal.keys())
@@ -3153,6 +3155,7 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
     global_min, global_max = 0,0   
     per_tag, wavelet_tags = {}, []
     bands = getBandsByTab(tab_tag)
+    event_names = np.unique(event_names).tolist()
 
     group_tag = f"{tab_label}_plot_group"
     with dpg.group(horizontal=True, parent=tab_label, tag=group_tag):
@@ -3206,14 +3209,13 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
                     dpg.bind_colormap(subplot_tag, dpg.mvPlotColormap_Jet)  
 
                     if not isinstance(events,str):
+                        dpg.add_plot_legend()
                         for event in events:
-                            if current_start == {}:
-                                stamp = (event['Date'] + timedelta(hours=1) + timedelta(seconds=(event['Idx']/250))).timestamp() #spectrogram axis is in reality from 0 to 1, and the columns are time based, not sample
-                            else: stamp = event['Idx']/250
-                            if stamp <= x[-1]:
-                                type = event['Type']
-                                dpg.add_plot_legend()
-                                dpg.add_inf_line_series(x=[stamp],label=f'{type}',parent=y_axis)
+                            stamp = event['sIdx']/250 #spectrogram axis is in reality from 0 to 1, and the columns are time based, not sample
+                            name = event['Type']
+                            if stamp <= x[-1]: 
+                                ev = dpg.add_inf_line_series(x=[stamp],parent=y_axis,label = getUpdatedEventName(name))
+                                dpg.bind_item_theme(ev,change_inf_line_color(event_names.index(name)))
 
             dpg.configure_item(f"{tab_label}_colormap_scale", min_scale = global_min, max_scale=global_max)
         def link(sender, app_data):
@@ -3291,10 +3293,13 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
                                     dpg.add_line_series(time,power,label = f"{b} Mean", tag=f"{plot_tag}_{b}_mean", parent=y_axis)
 
                                     if not isinstance(events,str):
+                                        dpg.add_plot_legend()
                                         for event in events:
-                                            stamp = event['Idx']/250 #spectrogram axis is in reality from 0 to 1, and the columns are time based, not sample
-                                            # type = event['Type'] #--> for label
-                                            if stamp <= time[-1]: dpg.add_inf_line_series(x=[stamp],parent=y_axis)
+                                            stamp = event['sIdx']/250 #spectrogram axis is in reality from 0 to 1, and the columns are time based, not sample
+                                            name = event['Type']
+                                            if stamp <= time[-1]: 
+                                                ev = dpg.add_inf_line_series(x=[stamp],parent=y_axis,label = getUpdatedEventName(name))
+                                                dpg.bind_item_theme(ev,change_inf_line_color(event_names.index(name)))
 
         with dpg.group(horizontal=False):
             dpg.add_checkbox(label='Synchronize Axis', callback=link) 
@@ -3330,7 +3335,7 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
     num_cols = 2
     num_rows = (num_plots + 1) // num_cols
     events = None
-    per_tag, wavelet_tags = {}, []
+    per_tag, wavelet_tags, event_names = {}, [], []
     bands = getBandsByTab(tab_tag)
     global_min,global_max = 0,1
 
@@ -3352,6 +3357,14 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
                     except Exception as e: events = 'None'
                 
                 y = stream['Y']
+
+                ## maybe future: adaptive n cycles with length of signal - for graphical resolution of GUI
+                # length = len(y)
+                # n_cycles = parameter_values['n_cycles']
+                # wav_length = 10*250*(n_cycles/(2*np.pi*1))-1
+                # if length <wav_length: result =True
+                # else: result=False
+                # print(length, ' < ', wav_length, ' = ', result)
                 channel = stream['Channel']
                 
                 date = stream['Date']
@@ -3369,7 +3382,7 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
                     plot_tag = f"{tab_label}_{channel}_{date}_{idx}"
                 
                 with dpg.plot(label = plot_label, width=-1, height=-1, tag =plot_tag):
-                
+                    dpg.add_plot_legend()
                     x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                     y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
 
@@ -3396,14 +3409,19 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
                     wavelet_tags.append(tag)
                     dpg.bind_colormap(plot_tag, dpg.mvPlotColormap_Jet)
 
-                    if isinstance(events,list):
+
+                    try: events = stream['Events']
+                    except Exception as e: events = 'None'
+
+                    if not isinstance(events,str):
                         for event in events:
-                            # stamp = (event['Date'] + timedelta(hours=1) + timedelta(seconds=(event['Idx']/250))).timestamp() #spectrogram axis is in reality from 0 to 1, and the columns are time based, not sample
-                            stamp = [event['Idx']/250]
-                            type = event['Type']
-                            if stamp[0] <= downsampled_tfr.shape[1] and event['Channel'] == channel:
-                                dpg.add_plot_legend()
-                                dpg.add_inf_line_series(x=stamp,label=f'{type}',parent=y_axis)
+                            stamp = event['Idx']/250 #spectrogram axis is in reality from 0 to 1, and the columns are time based, not sample
+                            name = event['Type']
+                            if name not in event_names: event_names.append(name)
+                            if stamp <= stream['X'][-1]: 
+                                ev = dpg.add_inf_line_series(x=[stamp],parent=y_axis,label = getUpdatedEventName(name))
+                                dpg.bind_item_theme(ev,change_inf_line_color(event_names.index(name)))
+
 
             dpg.configure_item(f"{tab_label}_colormap_scale",min_scale=global_min,max_scale=global_max)
         def link(sender, app_data):
@@ -5766,6 +5784,87 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         dpg.set_value(f"{tab_tag}_plot_progress", progress)
         if progress == 1: dpg.configure_item(f"{tab_tag}_plot_progress", overlay = 'Removed')
 
+def recalculate_timeline(sender,app_data,user_data):
+    tab_tag, tags = user_data
+    
+    if dpg.does_item_exist(f"{tab_tag}_rebar"): dpg.delete_item(f"{tab_tag}_rebar")
+
+    tables = [f"{tab_tag}_hemisphere", f"{tab_tag}_day", f"{tab_tag}_individual"]
+
+    for table in tables:
+        dpg.delete_item(table,children_only=True)
+
+    dpg.add_progress_bar(parent=tab_tag,overlay='Recalculating', default_value=0.0, width = 400, height = 50, tag = f"{tab_tag}_rebar")
+    
+    mean = []
+    for i,tag in enumerate(tags):
+        if not dpg.get_item_configuration(tag)['show']: continue
+        info = calculate_timeline_features(tab_tag,tag)
+        mean.append(info)
+        progress = np.round((i+1)/len(tags),2)
+        dpg.set_value(f"{tab_tag}_plot_progress", progress)
+        if progress == 1: dpg.delete_item(f"{tab_tag}_rebar")
+
+    mean_dict = {}
+
+    for key in mean[0].keys():
+        values = [m[key] for m in mean]
+        if isinstance(values[0], str):
+            values=[utl.get_timestamp_from_dt(t) for t in values]
+            mean_value = utl.extract_time(pre.get_date_from_ts(np.mean(values)))
+            mean_value = {key: mean_value}
+        else:
+            mean_value = {key: np.mean(values,axis=0)}
+        mean_dict = mean_dict | mean_value 
+
+    create_table(f"{tab_tag}_header",f"{tab_tag}_table", mean_dict, trial_label='Mean')
+    
+
+def calculate_timeline_features(tab_tag,series_tag,recalculate=False):
+
+    label = dpg.get_item_label(series_tag)
+    datestr = label[-10:]
+    side = label[:label.find(' ')].lower()
+    x,y = dpg.get_value(series_tag)[:2]
+    sign = {'X':x,'Y':y}
+
+    if not dpg.does_item_exist(f"{tab_tag}_hemisphere"):
+                dpg.add_tree_node(tag=f"{tab_tag}_hemisphere",
+                    label="By Hemisphere",
+                    parent=tab_tag,
+                    default_open=False
+                )
+
+    if not dpg.does_item_exist(f"{tab_tag}_day"):
+                dpg.add_tree_node(tag=f"{tab_tag}_day",
+                    label="By Day",
+                    parent=tab_tag,
+                    default_open=False
+                )
+
+    if not dpg.does_item_exist(f"{tab_tag}_individual"):
+                dpg.add_tree_node(tag=f"{tab_tag}_individual",
+                    label="All Individual Streams",
+                    parent=tab_tag,
+                    default_open=False
+                )
+
+    if not dpg.does_item_exist(f"{tab_tag}_{side}"):
+        dpg.add_collapsing_header(label = f'{side} HEMISPHERE', tag =f"{tab_tag}_{side}", parent = f"{tab_tag}_hemisphere")
+
+    if not dpg.does_item_exist(f"{tab_tag}_{datestr}"):
+        dpg.add_collapsing_header(label = f"{datestr}", tag =f"{tab_tag}_{datestr}", parent = f"{tab_tag}_day")
+
+    if not dpg.does_item_exist(f"{tab_tag}_header"):
+        dpg.add_collapsing_header(tag=f"{tab_tag}_header", parent=f"{tab_tag}_individual", label = 'Streams Metrics')
+
+    info = ft.extract_timeline_features(sign)
+    create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=label)
+    create_table(f"{tab_tag}_{side}",f"{tab_tag}_{side}_table", info, trial_label=datestr)
+    create_table(f"{tab_tag}_{datestr}",f"{tab_tag}_{datestr}_table", info, trial_label=side)
+
+    return info
+
 #-------------------------------------GENERAL TABS-------------------------------------------
 def device_window(Data, window_id, file_id = None):
     wt = extract_type_window(window_id)
@@ -6226,6 +6325,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                 extra = DH.correctMissingTimeline(data, signal,'X_missing')[0]
                 if extra['Right']['X_missing'] != [] and flag == False: 
                     flag = True
+                
                 for side in ['Left','Right']:   
                     sign = signal[side] | {'Sense': stim_info}
                     date = utl.parse_datetime(signal['Date'])
@@ -6251,41 +6351,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     dpg.bind_item_theme(l, th)
                     signal_tags[series_tag] = True  # Track visibility
 
-                    if not dpg.does_item_exist(f"{tab_tag}_hemisphere"):
-                                dpg.add_tree_node(tag=f"{tab_tag}_hemisphere",
-                                    label="By Hemisphere",
-                                    parent=tab_tag,
-                                    default_open=False
-                                )
-
-                    if not dpg.does_item_exist(f"{tab_tag}_day"):
-                                dpg.add_tree_node(tag=f"{tab_tag}_day",
-                                    label="By Day",
-                                    parent=tab_tag,
-                                    default_open=False
-                                )
-
-                    if not dpg.does_item_exist(f"{tab_tag}_individual"):
-                                dpg.add_tree_node(tag=f"{tab_tag}_individual",
-                                    label="All Individual Streams",
-                                    parent=tab_tag,
-                                    default_open=False
-                                )
-
-                    if not dpg.does_item_exist(f"{tab_tag}_{side}"):
-                        dpg.add_collapsing_header(label = f'{side} HEMISPHERE', tag =f"{tab_tag}_{side}", parent = f"{tab_tag}_hemisphere")
-
-                    if not dpg.does_item_exist(f"{tab_tag}_{datestr}"):
-                        dpg.add_collapsing_header(label = f"{datestr}", tag =f"{tab_tag}_{datestr}", parent = f"{tab_tag}_day")
-
-                    if not dpg.does_item_exist(f"{tab_tag}_header"):
-                        dpg.add_collapsing_header(tag=f"{tab_tag}_header", parent=f"{tab_tag}_individual", label = 'Streams Metrics')
-
-                    info = ft.extract_timeline_features(sign)
-                    create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=label_left)
-                    create_table(f"{tab_tag}_{side}",f"{tab_tag}_{side}_table", info, trial_label=datestr)
-                    create_table(f"{tab_tag}_{datestr}",f"{tab_tag}_{datestr}_table", info, trial_label=side)
-
+                    info = calculate_timeline_features(tab_tag,series_tag)
                     mean.append(info)
         
         mean_dict = {}
@@ -6302,7 +6368,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
             mean_dict = mean_dict | mean_value 
 
-        create_table(f"{tab_tag}_header",f"{tab_tag}_table", mean_dict, trial_label=label_left)
+        create_table(f"{tab_tag}_header",f"{tab_tag}_table", mean_dict, trial_label='Mean')
         
         days = sorted(np.unique(days).tolist())
         sides = ['Left','Right']
@@ -6341,7 +6407,9 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             add_exporting_tag(window_id,plot=b1,signal=b2)
 
             dpg.add_separator()
-            dpg.add_slider_float(label = 'Remove Outlier', callback=RemoveTimelineOutliers,default_value=3.0,user_data=(tab_tag,signal_tags), width=100, min_value=0,max_value=100)
+            with dpg.group(horizontal=True):
+                dpg.add_slider_float(label = 'Remove Outlier', callback=RemoveTimelineOutliers,default_value=3.0,user_data=(tab_tag,signal_tags), width=100, min_value=0,max_value=100)
+                dpg.add_button(label='Recalculate Metrics', callback = recalculate_timeline,user_data=(tab_tag,list(signal_tags.keys())))
             if flag == True:
                 dpg.add_text( 'Warning: There are missing points in Timeline', tag=f"{tab_tag}_wmp", parent=f"{tab_tag}_buttons")
                 dpg.add_checkbox(label='Show missing points',parent=f"{tab_tag}_buttons", default_value=False, callback=changeTimelinePlot, user_data=(signal_tags, signals, data, y_left))
