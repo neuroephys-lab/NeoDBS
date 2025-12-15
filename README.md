@@ -1,5 +1,30 @@
 # NeoDBS
 
+### To do tomorrow:
+- RMS outlier removal: threshold calculated per day!
+- Check: Save all... window level
+- Timeline analyze events: 
+    - mean peak power wrong
+    - mean appears 2x
+    - add export plot/signals
+- Create executable/batch
+- Stimulation combined
+- update documentation html pages!
+
+## 15.12.2025
+
+### New:
+- Combined Timeline: add recalculate features
+
+### Debug: 
+- Timeline combined with selected files WITH and WITHOUT Timeline mode
+- Timeline combined shows events!
+
+### Checked:
+- Events: recalculate mean metrics 
+- Timezone correction
+- CR: Mean peak time --> it calculates the peak of the mean, not the mean of the peaks!
+
 ## 12.12.2025
 
 ### Functionalities:

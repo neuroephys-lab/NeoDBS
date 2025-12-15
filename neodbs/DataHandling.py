@@ -39,7 +39,6 @@ def info_electrodes(data,version='Initial',side=0):
         # ChannelPSD = SensingChannel[side]['SensingSetup']['ChannelSignalResult']
     
     except Exception as e: #when electrodes dont allow sensing
-        print(e)
         SensingChannel = ProgramSettings['LeftHemisphere']['Programs']
         Suspend_amplitude_in_miliamps=SensingChannel[0]["AmplitudeInMilliAmps"]
         Sensing_electrodes = 'Sensing Disabled'
@@ -68,8 +67,6 @@ def info_electrodes(data,version='Initial',side=0):
         'Stim_electrodes': Left, 
         'Type': type_stimulation,
     }
-
-    
 
     if not isinstance(Sensing_freq,str):
         
@@ -311,7 +308,6 @@ def getSessionDuration(Data):
         end = utl.parse_datetime(Data['Device']['SessionEndDate'])
         beginning = utl.parse_datetime(Data['Device']['SessionDate'])
 
-        print(beginning , '-->', end)
         return abs(end - beginning)
     else: return "No dates stored!"
 
@@ -640,8 +636,10 @@ def getStimulation(Data):
 
     '''
     timeline = getModeSignals(Data,'Timeline')['HemisphereLocationDef.Right']
-    electrodes = info_electrodes(Data,version='Final')['Stim_electrodes']
+    info = info_electrodes(Data,version='Final')
+    electrodes = info['Stim_electrodes']
     stimulation = {'X': [], 'Y': [], 'Info': []}
+    final_date = getSessionDate(Data)
 
     for _, stream in timeline.items():
         x = list(reversed([s['DateTime'] for s in stream]))
@@ -650,6 +648,14 @@ def getStimulation(Data):
         for yy in y: stimulation['Y'].append(yy)
         text = f"{_[:10]} | Initial: {y[0]} mA | Final: {y[-1]} mA \n Electrodes: {electrodes}"
         stimulation['Info'].append(text)
+    
+    
+    if final_date.date() > utl.parse_datetime(x[-1]).date():
+        if getStimStatus(Data)[1] == 'ON':
+            stimulation['X'].append(utl.full_date2str(final_date))
+            stimulation['Y'].append(info['Amplitude'])
+            text = f"{_[:10]} | Initial: {y[-1]} mA | Final: {info['Amplitude']} mA \n Electrodes: {electrodes}"
+            stimulation['Info'].append(text)
 
     return stimulation
 

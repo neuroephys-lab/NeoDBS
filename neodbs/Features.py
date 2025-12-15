@@ -239,6 +239,7 @@ def extract_timeline_features(p):
         time = freqs[time]
     except Exception: time = freqs[0]
 
+
     key = 'Peak Time'
     if isinstance(time,str):
         peak = str(utl.parse_datetime(time).time())

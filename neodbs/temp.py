@@ -4,7 +4,7 @@ import DataHandling as DH
 import matplotlib.pyplot as plt
 import numpy as np
 # from scipy.signal import spectrogram
-from datetime import datetime
+from datetime import datetime, timedelta
 # import Preprocessing as pre
 import utils as utl
 '''
@@ -24,17 +24,12 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 # # file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2025-01-23\\Report_Json_Session_Report_20250212T122746.json"
 
 '''
+file = "C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2025-01-23\\Report_Json_Session_Report_20250212T122746.json"
 
-colors = (0.44705885648727417, 0.6901960968971252, 1.0)
+dictionary = {'a':1,'b':2}
+dodo = {'3': 11, '4':14}
+print(list(dictionary.keys()).__add__(list(dodo.keys())))
 
-a = ['a','b','c']
-
-keys = ['b','b','b']
-for key in keys:
-    if key not in a:
-        a.append(key)
-
-print(a)
 
 # dpg.create_context()
 

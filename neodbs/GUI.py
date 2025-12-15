@@ -4506,7 +4506,6 @@ def extract_artifact_type(s: str):
     return None  # fallback for unexpected format
 
 #--- Process with signal
-
 def Volt2dB(sender,app_data,user_data):
     '''
     Callback of checkbox - changes PSD plot between original units to dB. 
@@ -5477,6 +5476,7 @@ def stimulation_timeline(sender,app_data,user_data):
 
     if extract_type_window(window_id) == 'Combined': 
         tag_date_pairs = []
+        
         for tag in signal_tags:
             data = getDatabyTag(tag)
             date = data['Device']['SessionDate']
@@ -5486,8 +5486,10 @@ def stimulation_timeline(sender,app_data,user_data):
 
         signal_tags = [tag for tag, _ in tag_date_pairs]
 
-        files = [extract_file_from_series_tag(tag) for tag in signal_tags]
-        files = np.unique(files)
+        # files = [extract_file_from_series_tag(tag) for tag in signal_tags]
+        
+        files = [i for i in range(len(app_state['windows'][window_id]))]
+        # files = np.unique(files)
     else: files = [None]
     # datas = [getDatabyFile(window_id,file) for file in files]
 
@@ -5628,7 +5630,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
 
         minus = mean_value - std_dev
         plus = mean_value + std_dev
-        if plot:
+        if plot and len(segments)>0:
             std = dpg.add_shade_series(segment[0],minus, y2 = plus,label='Std. Dev', parent=y_axis, tag = f"{tab_label}_std")
             dpg.bind_item_theme(std,create_alpha_theme())
             mean = dpg.add_line_series(segment[0],mean_value,label='Mean',parent=y_axis, tag = f"{tab_label}_mean")
@@ -5714,7 +5716,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
                 for side in e_names:
                     c = dpg.add_checkbox(label=side,callback = toggle,default_value=True)
                     checkboxes.append(c)
-            with dpg.child_window(auto_resize_x=True,height=cwh):
+            with dpg.child_window(auto_resize_x=150,height=cwh):
                 dpg.add_text('Days: ')
                 days = sorted(np.unique(days).tolist())
                 for side in days:
@@ -5733,7 +5735,7 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
     if dpg.does_item_exist(f"{tab_tag}_plot_progress"): dpg.delete_item(f"{tab_tag}_plot_progress")
 
     # create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=label_left)
-    dpg.delete_item(f"{tab_tag}_header", children_only=True)
+    # dpg.delete_item(f"{tab_tag}_header", children_only=True)
 
     dpg.add_progress_bar(parent=f"{tab_tag}_plot_group",overlay='Removing', default_value=0.0, width = 400, height = 50, tag = f"{tab_tag}_plot_progress")
     
@@ -5762,7 +5764,7 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
 
         for _ in range(3):  # Iterate a few times
             y = y[np.abs(y) <= factor * rms]
-            rms = np.sqrt(np.mean(y**2))
+            rms = np.sqrt(np.nanmean(y**2))
         # threshold =rms
 
         '''USING MEDIAN'''
@@ -5775,9 +5777,9 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         dpg.set_value(tag,[new_x,copy.tolist()])
         updateSignalbyIdx(copy.tolist(),tab_tag,tag,f'Filtered_{side}')
 
-        sign = {'X': new_x, 'Y':copy.tolist()}
-        info = ft.extract_timeline_features(sign)
-        create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=dpg.get_item_label(tag))
+        # sign = {'X': new_x, 'Y':copy.tolist()}
+        # info = ft.extract_timeline_features(sign)
+        # create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=dpg.get_item_label(tag))
         
 
         progress = np.round((i+1)/len(tags),2)
@@ -5785,25 +5787,22 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         if progress == 1: dpg.configure_item(f"{tab_tag}_plot_progress", overlay = 'Removed')
 
 def recalculate_timeline(sender,app_data,user_data):
-    tab_tag, tags = user_data
+    tab_tag, tags, tables = user_data
     
     if dpg.does_item_exist(f"{tab_tag}_rebar"): dpg.delete_item(f"{tab_tag}_rebar")
 
-    tables = [f"{tab_tag}_hemisphere", f"{tab_tag}_day", f"{tab_tag}_individual"]
+    # tables = [f"{tab_tag}_hemisphere", f"{tab_tag}_day", f"{tab_tag}_individual"]
 
     for table in tables:
+        print(table)
         dpg.delete_item(table,children_only=True)
 
-    dpg.add_progress_bar(parent=tab_tag,overlay='Recalculating', default_value=0.0, width = 400, height = 50, tag = f"{tab_tag}_rebar")
     
     mean = []
-    for i,tag in enumerate(tags):
+    for tag in tags:
         if not dpg.get_item_configuration(tag)['show']: continue
-        info = calculate_timeline_features(tab_tag,tag)
+        info, _ = calculate_timeline_features(tab_tag,tag)
         mean.append(info)
-        progress = np.round((i+1)/len(tags),2)
-        dpg.set_value(f"{tab_tag}_plot_progress", progress)
-        if progress == 1: dpg.delete_item(f"{tab_tag}_rebar")
 
     mean_dict = {}
 
@@ -5819,51 +5818,64 @@ def recalculate_timeline(sender,app_data,user_data):
 
     create_table(f"{tab_tag}_header",f"{tab_tag}_table", mean_dict, trial_label='Mean')
     
-
-def calculate_timeline_features(tab_tag,series_tag,recalculate=False):
+def calculate_timeline_features(tab_tag,series_tag):
 
     label = dpg.get_item_label(series_tag)
     datestr = label[-10:]
-    side = label[:label.find(' ')].lower()
+    side = label[:label.find(' ')].capitalize()
     x,y = dpg.get_value(series_tag)[:2]
     sign = {'X':x,'Y':y}
+    wt = extract_type_window(extract_window_id(tab_tag))
 
-    if not dpg.does_item_exist(f"{tab_tag}_hemisphere"):
+    nodes = {f"{tab_tag}_hemisphere": "By Hemisphere"}
+    headers = {f"{tab_tag}_{side}": [f'{side} Hemisphere',f"{tab_tag}_hemisphere"],
+               f"{tab_tag}_header": ['All Individual Streams', tab_tag]}  
+                   
+    if wt=='Combined':
+        channel, sensing_band = dpg.get_item_user_data(series_tag)
+        if channel is not None:
+            nodes[f"{tab_tag}_channel"] = 'By Channel'
+            headers[f"{tab_tag}_{channel}"] = [channel,f"{tab_tag}_channel"]
+            
+        if sensing_band is not None:
+            nodes[f"{tab_tag}_sensing"] = 'By Sensing Band'
+            headers[f"{tab_tag}_{sensing_band}"] = [sensing_band,f"{tab_tag}_sensing"]
+
+    for tag, name in nodes.items(): 
+        if not dpg.does_item_exist(tag):
+            dpg.add_tree_node(label=name,parent=tab_tag,tag=tag,default_open=False)
+
+    for tag, data in headers.items():
+        name,parent = data
+        if not dpg.does_item_exist(tag):
+            dpg.add_collapsing_header(tag=tag,label=name,parent=parent,default_open=False)
+
+    '''if not dpg.does_item_exist(f"{tab_tag}_hemisphere"):
                 dpg.add_tree_node(tag=f"{tab_tag}_hemisphere",
                     label="By Hemisphere",
                     parent=tab_tag,
                     default_open=False
                 )
 
-    if not dpg.does_item_exist(f"{tab_tag}_day"):
-                dpg.add_tree_node(tag=f"{tab_tag}_day",
-                    label="By Day",
-                    parent=tab_tag,
-                    default_open=False
-                )
-
-    if not dpg.does_item_exist(f"{tab_tag}_individual"):
-                dpg.add_tree_node(tag=f"{tab_tag}_individual",
-                    label="All Individual Streams",
-                    parent=tab_tag,
-                    default_open=False
-                )
-
     if not dpg.does_item_exist(f"{tab_tag}_{side}"):
-        dpg.add_collapsing_header(label = f'{side} HEMISPHERE', tag =f"{tab_tag}_{side}", parent = f"{tab_tag}_hemisphere")
-
-    if not dpg.does_item_exist(f"{tab_tag}_{datestr}"):
-        dpg.add_collapsing_header(label = f"{datestr}", tag =f"{tab_tag}_{datestr}", parent = f"{tab_tag}_day")
+        dpg.add_collapsing_header(label = f'{side} Hemisphere', tag =f"{tab_tag}_{side}", parent = f"{tab_tag}_hemisphere")
 
     if not dpg.does_item_exist(f"{tab_tag}_header"):
-        dpg.add_collapsing_header(tag=f"{tab_tag}_header", parent=f"{tab_tag}_individual", label = 'Streams Metrics')
+        dpg.add_collapsing_header(tag=f"{tab_tag}_header", parent=tab_tag, label = 'All Streams Metrics')'''
 
     info = ft.extract_timeline_features(sign)
     create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=label)
     create_table(f"{tab_tag}_{side}",f"{tab_tag}_{side}_table", info, trial_label=datestr)
-    create_table(f"{tab_tag}_{datestr}",f"{tab_tag}_{datestr}_table", info, trial_label=side)
+    if wt=='Combined': 
+        if channel is not None:
+            create_table(f"{tab_tag}_{channel}",f"{tab_tag}_{channel}_table",info, trial_label=datestr)
+        if sensing_band is not None:
+            create_table(f"{tab_tag}_{sensing_band}",f"{tab_tag}_{sensing_band}_table",info, trial_label=label)
 
-    return info
+
+    tables = list(headers.keys()).__add__(list(nodes.keys()))
+
+    return info, tables
 
 #-------------------------------------GENERAL TABS-------------------------------------------
 def device_window(Data, window_id, file_id = None):
@@ -6303,7 +6315,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         dpg.add_text(f"Sensing Electrodes | Left: {e1} | Right: {e2}", parent=tab_tag)
     else: 
         dpg.add_text(f'{getUpdatedElectrodeName(initial)}', parent=tab_tag)
-    ploted_colors, compare = [], None
+    ploted_colors = []
     
     with dpg.group(label = f"{tab_tag}_group" , parent=tab_tag, horizontal=True):
         
@@ -6351,7 +6363,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                     dpg.bind_item_theme(l, th)
                     signal_tags[series_tag] = True  # Track visibility
 
-                    info = calculate_timeline_features(tab_tag,series_tag)
+                    info, tables = calculate_timeline_features(tab_tag,series_tag)
                     mean.append(info)
         
         mean_dict = {}
@@ -6409,7 +6421,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             dpg.add_separator()
             with dpg.group(horizontal=True):
                 dpg.add_slider_float(label = 'Remove Outlier', callback=RemoveTimelineOutliers,default_value=3.0,user_data=(tab_tag,signal_tags), width=100, min_value=0,max_value=100)
-                dpg.add_button(label='Recalculate Metrics', callback = recalculate_timeline,user_data=(tab_tag,list(signal_tags.keys())))
+                dpg.add_button(label='Recalculate Metrics', callback = recalculate_timeline,user_data=(tab_tag,list(signal_tags.keys()),tables))
             if flag == True:
                 dpg.add_text( 'Warning: There are missing points in Timeline', tag=f"{tab_tag}_wmp", parent=f"{tab_tag}_buttons")
                 dpg.add_checkbox(label='Show missing points',parent=f"{tab_tag}_buttons", default_value=False, callback=changeTimelinePlot, user_data=(signal_tags, signals, data, y_left))
@@ -7497,6 +7509,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         initial, _ = DH.getEventsElectrodes(data)
         date = file['Data']['Device']['SessionDate'][:10]
         header = f"{date}_{tab_tag}"
+        if isinstance(initial,str): continue
         channels.append({'Left': electrodes_names[initial[0]], 'Right': electrodes_names[initial[1]]})
         dpg.add_collapsing_header(tag=header,label=date,parent=tab_tag)
         if not isinstance(initial, str): 
@@ -7525,7 +7538,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         for edx, event in enumerate(events):
             ocd_events.append(getUpdatedEventName(event['EventName']))
 
-    days, ploted_colors = [], []
+    days, ploted_colors, all_tables = [], [], []
     
     #Signals legend
     with dpg.group(parent=tab_tag, horizontal=True):
@@ -7539,6 +7552,10 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         dpg.bind_item_theme(right, ri)
 
     ocd_events = np.unique(ocd_events).tolist()
+    unique_channels = [channels[idx][side] for idx in range(len(channels)) for side in channels[idx].keys()]
+    unique_channels = np.unique(unique_channels).tolist()
+    unique_sense = np.unique(sense).tolist()
+    
     with dpg.group(parent=tab_tag, horizontal=True):
         dpg.add_text('Events Legend: ')
         for oc in ocd_events:
@@ -7553,22 +7570,23 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         dpg.add_group(width=600, tag=f"{tab_tag}_plot_group", horizontal=False)
         with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag, parent=f"{tab_tag}_plot_group"):
             dpg.bind_colormap(plot_tag, 0)
-            legend = dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
+            # legend = dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}", scale=dpg.mvPlotScale_Time)
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Mean LFP Power (µVp)", tag=f"y_axis_{tab_tag}")
            
             for idx, file in enumerate(files):
                 app_state['windows'][window_id]['Files'][idx]['Data'][tab_tag] = {}
-                stim_info = sense[idx]
-                sensing_band = f"[{np.round(stim_info-2.5,2)},{np.round(stim_info+2.5,2)}]"
+                
                 if mode in file['Modes']: 
+                    stim_info = sense[idx]
+                    sensing_band = f"[{np.round(stim_info-2.5,2)},{np.round(stim_info+2.5,2)}]"
                     signals = DH.getSignals(file['Data'],mode)
 
                     events = DH.getSignals(file['Data'],'Events')
 
                     file['Data'][tab_tag]= {'Signals': []}
                     rdate = signals[0]['Date']
-                    rdate = utl.extract_date(utl.parse_datetime(rdate))
+                    
 
                     for sdx, signal in enumerate(signals):
                         extra = DH.correctMissingTimeline(file['Data'], signal,'X_missing')[0]
@@ -7587,7 +7605,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         days.append(date)
                             
                         for side in ['Left', 'Right']:
-                            channel = f"{channels[idx][side]}_{side.upper()}"
+                            channel = getUpdatedElectrodeName(channels[idx][side])
                             sign = signal[side] | {'Sense': stim_info}
                             label_left = f"{side} - day {date}"
                             
@@ -7607,28 +7625,37 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                             labels = [dpg.get_item_label(k) for k in list(signal_tags.keys())]
                             if label_left not in labels:
                                 # Add the line series for each side
-                                l = dpg.add_line_series(x, y, label=label_left, parent=y_axis, tag=series_tag)#, fill=[1.0, 0, 0, 0.5]) --> define transparency?
+                                series_ud = [None,None]
+                                if len(unique_channels)>1:
+                                    series_ud[0] = f"{channel}_{side.upper()}"
+                                if len(unique_sense)>1:
+                                    series_ud[1] = sensing_band
+                                l = dpg.add_line_series(x, y, label=label_left, parent=y_axis, tag=series_tag,user_data=series_ud)#, fill=[1.0, 0, 0, 0.5]) --> define transparency?
                                 if side=='Left':color_id=-1
                                 else: color_id=-3
                                 ploted_colors.append(colors[color_id])
                                 th = change_line_color(color_id)
                                 dpg.bind_item_theme(l, th)
                                 signal_tags[series_tag] = True  # Track visibility
+                                
+                                _, tables = calculate_timeline_features(tab_tag,series_tag)
+                                all_tables.extend(tables)
 
-                            if not dpg.does_item_exist(f"{tab_tag}_hemisphere"):
+                            '''if not dpg.does_item_exist(f"{tab_tag}_hemisphere"):
                                 dpg.add_tree_node(tag=f"{tab_tag}_hemisphere",
                                     label="By Hemisphere",
                                     parent=tab_tag,
                                     default_open=False
                                 )
 
-                            if not dpg.does_item_exist(f"{tab_tag}_channel"):
+                            if not dpg.does_item_exist(f"{tab_tag}_channel") and len(unique_channels)>1:
                                         dpg.add_tree_node(tag=f"{tab_tag}_channel",
                                             label="By Channel",
                                             parent=tab_tag,
                                             default_open=False
                                         )
-                            if not dpg.does_item_exist(f"{tab_tag}_sensing"):
+                            
+                            if not dpg.does_item_exist(f"{tab_tag}_sensing") and len(unique_sense)>1:
                                         dpg.add_tree_node(tag=f"{tab_tag}_sensing",
                                             label="By Sensing Band",
                                             parent=tab_tag,
@@ -7643,12 +7670,12 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                                         )
 
                             if not dpg.does_item_exist(f"{tab_tag}_{side}"):
-                                dpg.add_collapsing_header(label = f'{side} HEMISPHERE', tag =f"{tab_tag}_{side}", parent = f"{tab_tag}_hemisphere")
+                                dpg.add_collapsing_header(label = f'{side} Hemisphere', tag =f"{tab_tag}_{side}", parent = f"{tab_tag}_hemisphere")
 
-                            if not dpg.does_item_exist(f"{tab_tag}_{channel}"):
+                            if not dpg.does_item_exist(f"{tab_tag}_{channel}") and len(unique_channels)>1:
                                 dpg.add_collapsing_header(label = f"{channel}", tag =f"{tab_tag}_{channel}", parent = f"{tab_tag}_channel")
 
-                            if not dpg.does_item_exist(f"{tab_tag}_{sensing_band}"):
+                            if not dpg.does_item_exist(f"{tab_tag}_{sensing_band}") and len(unique_sense)>1:
                                 dpg.add_collapsing_header(label = f"{sensing_band} Hz", tag =f"{tab_tag}_{sensing_band}", parent = f"{tab_tag}_sensing")
 
                             if not dpg.does_item_exist(f"{tab_tag}_header"):
@@ -7656,12 +7683,16 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
 
                             info = ft.extract_timeline_features(sign)
                             create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=label_left)
+                            if len(unique_channels)>1:
+                                create_table(f"{tab_tag}_{channel}",f"{tab_tag}_{channel}_table", info, trial_label=f"{date} | {sensing_band}")
                             create_table(f"{tab_tag}_{side}",f"{tab_tag}_{side}_table", info, trial_label=f"{date} | {channel}")
-                            create_table(f"{tab_tag}_{channel}",f"{tab_tag}_{channel}_table", info, trial_label=f"{date} | {sensing_band}")
-                            create_table(f"{tab_tag}_{sensing_band}",f"{tab_tag}_{sensing_band}_table", info, trial_label=f"{date} | {channel}")
-
+                            if len(unique_sense)>1:
+                                create_table(f"{tab_tag}_{sensing_band}",f"{tab_tag}_{sensing_band}_table", info, trial_label=f"{date} | {channel}")
+                            '''
+                                
                     for edx, event in enumerate(events):
                         x_event = utl.convert_to_timestamp(event['DateInitial'])
+                        
                         if event['DateInitial'][:10]<rdate[:10]:
                             continue
                         label = getUpdatedEventName(event['EventName'])
@@ -7677,12 +7708,14 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         ploted_colors.append(colors[color])
                         dpg.bind_item_theme(t, theme)
 
-                dpg.add_text(f"Total days: {len(days)}", parent=header)
-                dpg.add_text(f"Timezone/offset: {DH.extract_time_offset(data,True)}", parent=header)
-                dpg.add_separator(parent=header)
+                    
+                    dpg.add_text(f"Total days: {len(days)}", parent=f"{date}_{tab_tag}")
+                    dpg.add_text(f"Timezone/offset: {DH.extract_time_offset(data,True)}", parent=f"{date}_{tab_tag}")
+                    dpg.add_separator(parent=f"{date}_{tab_tag}")
+        
         days = sorted(np.unique(days).tolist())
+        all_tables = np.unique(all_tables).flatten().tolist()
         sides = ['Left','Right']
-        dpg.configure_item(legend,show=False)
 
         with dpg.group(label = f"{tab_tag}_buttons", parent=f"{tab_tag}_group"):
             toggleVisibility(signal_tags,parent=tab_tag, group=f"{tab_tag}_buttons", user_data = window_id)
@@ -7700,7 +7733,9 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
             b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(y_axis,plot_tag,'2D'))
             add_exporting_tag(window_id,plot=b1,signal=b2)
             dpg.add_separator()
-            dpg.add_slider_float(label = 'Remove Outlier RMS', callback=RemoveTimelineOutliers,default_value=3.0,user_data=(tab_tag,signal_tags), width=100, min_value=0,max_value=100)
+            with dpg.group(horizontal=True):
+                dpg.add_slider_float(label = 'Remove Outlier RMS', callback=RemoveTimelineOutliers,default_value=3.0,user_data=(tab_tag,signal_tags), width=100, min_value=0,max_value=100)
+                dpg.add_button(label='Recalculate Metrics', callback = recalculate_timeline, user_data=(tab_tag, list(signal_tags.keys()), all_tables))
             if flag == True:
                 dpg.add_text( 'Warning: There are missing points in Timeline', tag=f"{tab_tag}_wmp", parent=f"{tab_tag}_buttons")
                 dpg.add_checkbox(label='Show missing points',parent=f"{tab_tag}_buttons", default_value=False, callback=changeTimelinePlot, user_data=(signal_tags, temp_signals, datas, y_axis))
@@ -7870,7 +7905,7 @@ def create_multiple_window():
                 if mode == 'Damaged': 
                     continue
                 dpg.add_button(label = mode, parent=f"mode_list_group_{window_id}",callback=open_tab_mode ,user_data=(mode,window_id),show=True)
-
+            
         dpg.configure_item(f"mode_list_group_{window_id}", show = True)
         dpg.configure_item(f"session_parameteres_{window_id}", show = True)
    
@@ -8136,6 +8171,7 @@ def create_individual_window():
                         continue
                     dpg.add_button(label = mode, parent=f"mode_list_group_{window_id}",callback=open_tab_mode ,user_data=(mode,window_id),show=True)
                     
+                
                 dpg.configure_item(f"mode_list_group_{window_id}", show = True)
                 app_state['windows'][window_id]['PreviousFilePath'] = file_path
 
@@ -8205,10 +8241,9 @@ if __name__ == "__main__":
             dpg.bind_theme(design())
             set_font()
             with dpg.menu_bar():
-                with dpg.menu(label="Themes"):
-                    dpg.add_menu_item(label="Classic", callback=switch_theme, user_data=default_classic_theme)
-                    dpg.add_menu_item(label="Light", callback=switch_theme, user_data=light_theme)
-                    dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
+                with dpg.menu(label="New"):
+                    dpg.add_menu_item(label="Individual Window", callback=create_individual_window, user_data=default_classic_theme)
+                    dpg.add_menu_item(label="Combined Window", callback=create_multiple_window, user_data=light_theme)
                 with dpg.menu(label="Edit"):
                     dpg.add_menu_item(label='Resize Font',callback=resize_font)
                     dpg.add_menu_item(label="Rename Electrodes", callback=change_electrodes_names)
@@ -8217,6 +8252,10 @@ if __name__ == "__main__":
                     dpg.add_menu_item(label="Save All Plots", callback=save_all, user_data = ('Plots',None))
                     dpg.add_menu_item(label="Save All Tables", callback=save_all, user_data = ('Tables', None))
                     dpg.add_menu_item(label="Save All Signals", callback=save_all, user_data = ('Signals', None))
+                with dpg.menu(label="Themes"):
+                    dpg.add_menu_item(label="Classic", callback=switch_theme, user_data=default_classic_theme)
+                    dpg.add_menu_item(label="Light", callback=switch_theme, user_data=light_theme)
+                    dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
 
             with dpg.group(horizontal=True, pos=[150, 250]):
                 dpg.add_button(label="Individual/Recording Analysis", callback=create_individual_window,height=40,width=350)
