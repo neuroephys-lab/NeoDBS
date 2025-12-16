@@ -46,7 +46,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Preprocessing">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-utils">Utils</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-GUI">Interface</a></li>
 </ul>
 
         </div>
@@ -390,6 +389,19 @@
 
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%H:%M:%S&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="full_date2str">
+<a class="viewcode-back" href="../api/neodbs.html#utils.full_date2str">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">full_date2str</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Converts datetime object to full date string</span>
+<span class="sd">    </span>
+<span class="sd">    :param d: datetime.datetime</span>
+
+<span class="sd">    :return: str</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">d</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%SZ&quot;</span><span class="p">)</span></div>
 
 </pre></div>
 

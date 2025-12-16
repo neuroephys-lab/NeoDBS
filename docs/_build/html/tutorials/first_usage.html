@@ -1,0 +1,158 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="eng" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta content="The starting point for the tutorial set." lang="en" name="description" xml:lang="en" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2. First Usage &mdash; NeoDBS Beta documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/documentation_options.js?v=640d522d"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="1. Data Handling" href="../api/neodbs.html" />
+    <link rel="prev" title="1. First Steps" href="first_steps.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NeoDBS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="first_steps.html">1. First Steps</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2. First Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#general-workflow">2.1. General Workflow</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">1. Data Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">2. Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Preprocessing">3. Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-utils">4. Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NeoDBS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">2. </span>First Usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/first_usage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="first-usage">
+<h1><span class="section-number">2. </span>First Usage<a class="headerlink" href="#first-usage" title="Link to this heading">¶</a></h1>
+<p>First time using NeoDBS instructions and general workflow.</p>
+<section id="general-workflow">
+<h2><span class="section-number">2.1. </span>General Workflow<a class="headerlink" href="#general-workflow" title="Link to this heading">¶</a></h2>
+<p>Here follows a simple workflow for analysis using NeoDBS. You can open several independent workspaces (windows) that have
+a browser-like design, offering maximal user-experience, for all levels of data analysis experience.</p>
+<ol class="arabic simple">
+<li><p><strong>Select type of analysis to be performed:</strong> <strong>Individual Window</strong> (only analyzes one file - focused on the recording) or Combined Window (analyzes as many files as selected - allows event-locked analysis).</p></li>
+</ol>
+<img alt="../_images/main.png" src="../_images/main.png" />
+<ol class="arabic simple" start="2">
+<li><p><strong>Select the recording session's file(s)</strong>, in JSON format, to be analyzed.</p></li>
+</ol>
+<img alt="../_images/select_file.png" src="../_images/select_file.png" />
+<ol class="arabic simple" start="3">
+<li><p>Window will present <strong>session, device and stimulation information</strong> for each recording session.</p></li>
+</ol>
+<img alt="../_images/window.png" src="../_images/window.png" />
+<ol class="arabic simple" start="4">
+<li><p>Recordings can be accessed by clicking on the <strong>respective recording mode button</strong>.</p></li>
+<li><p><strong>Each recording mode will have its respective tab</strong>, with the associated recordings and functionalities. Preprocessing and spectral analysis methods will only be applied to the selected signals (visible on the main plot of tab).</p></li>
+</ol>
+<img alt="../_images/tab.png" src="../_images/tab.png" />
+<ol class="arabic simple" start="6">
+<li><p><strong>Default methods</strong> have the parameters predefined for an easier analysis, properly adapted for the recordings configuration.</p></li>
+</ol>
+<img alt="../_images/default.png" src="../_images/default.png" />
+<ol class="arabic simple" start="7">
+<li><p><strong>Custom methods</strong> allow the parameters to be adjusted according to the user needs. Documentation of the selected method and required parameters will appear to aid the user in selecting the best parameters.</p></li>
+</ol>
+<img alt="../_images/custom.png" src="../_images/custom.png" />
+<ol class="arabic simple" start="8">
+<li><p><strong>Signals, plots and tables can be easily exported</strong> either individually, per window (workspace) or all windows at once.</p></li>
+</ol>
+<img alt="../_images/save.png" src="../_images/save.png" />
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="first_steps.html" class="btn btn-neutral float-left" title="1. First Steps" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../api/neodbs.html" class="btn btn-neutral float-right" title="1. Data Handling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Larissa Rodrigues.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

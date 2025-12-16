@@ -203,7 +203,6 @@ def filename_window(sender,app_data,user_data):
 
     def handle_submit(sender,app_data,user_data):
         label = dpg.get_item_label(parent_sender)
-        file = ''
         if dpg.does_item_exist(f"{plot_tag}_file"): 
             dpg.configure_item(f"{plot_tag}_file",show=False)
         if 'Plot' in label:
@@ -219,12 +218,11 @@ def filename_window(sender,app_data,user_data):
         handle_submit(None,None,None)
         return
     
-    with dpg.window(label='File Name',tag=f"{plot_tag}_file", autosize=True,pos=window_pos,no_collapse=True):
+    with dpg.window(label='File Name',tag=f"{plot_tag}_file", width = 160,pos=window_pos,no_collapse=True):
         dpg.add_text("Save file as: ")
-        with dpg.group(horizontal=True):
-            dpg.add_input_text(default_value=title, width=150,tag=f"{plot_tag}_file_name")
-        with dpg.group(horizontal=True):
-                dpg.add_button(label="Submit", callback=handle_submit)
+        dpg.add_input_text(default_value=title, width=150,tag=f"{plot_tag}_file_name")
+        dpg.add_input_int(default_value=300,min_value=300,max_value=600,min_clamped=True,max_clamped=True,step=50,width=150,tag=f"{plot_tag}_dpi")
+        dpg.add_button(label="Submit", callback=handle_submit)
 
 def save_plot(sender,app_data,user_data):
     '''
@@ -355,7 +353,7 @@ def save_plot(sender,app_data,user_data):
                 sign = {'X':x,'Y':y}
                 # if 'Scatter' in line_type[i]:
                 #     colors[i] = colors[i-1]
-            if 'Timeline' in title or 'Circadian' in title or 'Stimulation' in title:
+            if any(keyword in title for keyword in ("Timeline", "Circadian", "Stimulation", "Event-locked")):
                 sign['X'] = [pre.get_date_from_ts(x) for x in sign['X']]
 
             signals.append(sign)
@@ -391,7 +389,10 @@ def save_plot(sender,app_data,user_data):
     info = signals,labels,colors,title,axis,limits
 
     #signals, labels, colors, title, axis = info
-    ft.export_plot(info,plot_type,size=size,line_types=line_type)
+    dpi = dpg.get_value(f"{plot_tag}_dpi")
+    if dpi is None:
+        dpi = 600
+    ft.export_plot(info,plot_type,size=size,line_types=line_type,dpi=dpi)
     if not dpg.does_item_exist(f"{sender}_toast"): 
         with dpg.tooltip(parent=sender,tag=f"{sender}_toast"):
             dpg.add_text(f"Saved plot: {title}.png!")
@@ -2910,11 +2911,12 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                 for _, value in per_tag.items():
                     sxx, plot_tag, plot_label, stream_events, time = value
                     header_tag = f"{plot_tag}_header"
+                    new_plot_tag = f"{plot_tag}_overtime"
                     if dpg.does_item_exist(header_tag): dpg.delete_item(header_tag, children_only=True)
 
                     with dpg.collapsing_header(tag=header_tag, parent=f"{tab_label}_merged", label=plot_label):
 
-                        with dpg.plot(label=plot_label, width=-1):
+                        with dpg.plot(label=plot_label, width=600,tag=new_plot_tag):
                             dpg.add_plot_legend()
                             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Power (dB)")
@@ -2943,7 +2945,11 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                                     if stamp[0] <= Sxx_log.shape[1]:
                                         dpg.add_plot_legend()
                                         dpg.add_inf_line_series(x=stamp,label=f'{type}',parent=y_axis)
-                  
+                        
+                        b1 = dpg.add_button(label = 'Export Plot Figure',callback = filename_window,user_data =('2D', new_plot_tag, y_axis,0),width=-1)
+                        b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(y_axis,new_plot_tag,'2D'))
+                        add_exporting_tag(window_id,plot=b1,signal=b2)
+
         def mean_spectrogram(sender,app_data,user_data):
             all_Sxx = user_data
             all_Sxx = [s[2] for s in all_Sxx] 
@@ -2992,6 +2998,10 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                         dpg.add_input_int(label='Max: ', tag=f"{mother}_emax", width=90, default_value=global_max,callback=enforce_range, 
                                           user_data=(mother,global_min,global_max), min_value=global_min,max_value=(global_max-5))
                         dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(mother,mean_s,f"{mother}_colormap_scale"))
+                        dpg.add_separator(label='Export')
+                        b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('3D', mother, y_axis,'jet'))
+                        b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(subplot_tag,mother,'3D'))
+                        add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
        
         with dpg.group(horizontal=False):
             dpg.add_checkbox(label='Synchronize Axis', callback=link)      
@@ -3652,8 +3662,10 @@ def update_table(table_tag, unit):
             flag = False
             if '%' in columns[i]: continue
             elif 'freq' in columns[i]: flag=True
+            tabled = dpg.get_value(row_children[i])
 
-            value = eval(dpg.get_value(row_children[i]))
+            value = eval(tabled)
+
             if unit == 'dB':
                 db_value = pre.convert_to_db(value)
             else: db_value = pre.convert_from_db(value)
@@ -3721,7 +3733,13 @@ def switch_theme(sender, app_data, user_data):
 
     :param user_data: theme
     '''
-    dpg.bind_theme(user_data)
+    if user_data==203:
+        dpg.bind_theme(design())
+    else:
+        
+        # dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 8, parent=user_data)
+        print(dpg.get_item_info(dpg.get_item_children(user_data)[1]))
+        dpg.bind_theme(user_data)
 
 def change_electrodes_names(sender, app_data, user_data):
     '''
@@ -4571,7 +4589,7 @@ def Volt2dB(sender,app_data,user_data):
     dpg.bind_item_theme(f"{plot_tag}_mean", change_line_thickness(5))
 
     time.sleep(0.1)
-    for table in tables:
+    for table in np.unique(tables).tolist():
         update_table(table,unit)
 
 def getMeanActiveSeries(window_id,tab_tag,signal_tags,key='Y'): #try to use it in more places
@@ -5531,8 +5549,6 @@ def stimulation_timeline(sender,app_data,user_data):
 
 def AnalyzeTimelineEvents(sender,app_data,user_data):
     tab_tag, events_tags, signal_tags = user_data
-    # window_id = extract_window_id(tab_tag)
-    # files = np.unique([e[1] for e in events_tags])
 
     event_ids = [dpg.get_value(e[0])[0] for e in events_tags]
     event_labels = [dpg.get_item_label(e[0]) for e in events_tags]
@@ -5636,9 +5652,9 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
             mean = dpg.add_line_series(segment[0],mean_value,label='Mean',parent=y_axis, tag = f"{tab_label}_mean")
             dpg.bind_item_theme(mean, change_line_thickness(5))
 
-        mean_info = {'X': segment[0], 'Y':list(mean_value)}
-        mean_info = ft.extract_timeline_features(mean_info)
-        create_table(f"{tab_label}_header",f"{tab_label}_table", mean_info, trial_label='Mean')
+            mean_info = {'X': segment[0], 'Y':list(mean_value)}
+            mean_info = ft.extract_timeline_features(mean_info)
+            create_table(f"{tab_label}_header",f"{tab_label}_table", mean_info, trial_label='Mean')
 
     def bva(segments):
         bva_segments = []
@@ -5703,7 +5719,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
 
             normal(segments)
             bva(segments)
-
+   
     with dpg.group(parent=f"{plot_tag}_group"):
         with dpg.group(horizontal=True):
             with dpg.child_window(auto_resize_x=True,height=cwh):
@@ -5716,7 +5732,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
                 for side in e_names:
                     c = dpg.add_checkbox(label=side,callback = toggle,default_value=True)
                     checkboxes.append(c)
-            with dpg.child_window(auto_resize_x=150,height=cwh):
+            with dpg.child_window(width=150,height=cwh):
                 dpg.add_text('Days: ')
                 days = sorted(np.unique(days).tolist())
                 for side in days:
@@ -5724,6 +5740,9 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
                     checkboxes.append(c)
         dpg.add_separator()
         dpg.add_checkbox(label='Show Mean Only', tag = f"{tab_label}_hide", callback=hide, user_data=(temp_tags,checkboxes))
+        b1 = dpg.add_button(label = 'Export Plot Figure',callback = filename_window,user_data =('2D', plot_tag, y_axis,0),width=-1)
+        b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(y_axis,plot_tag,'2D'))
+        add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
 
 def RemoveTimelineOutliers(sender,app_data,user_data):
     tab_tag,signal_tags = user_data
@@ -5755,7 +5774,7 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         y = np.array(y)
         copy = np.copy(y)
 
-
+        
         '''USING RMS'''
         # threshold = np.sqrt(np.mean(np.array(y)**2))
 
@@ -5770,17 +5789,12 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
         '''USING MEDIAN'''
         mad = np.median(np.abs(y - np.median(y)))
         threshold = mad   # Or some scaled version
-       
         
         mask = copy > factor*threshold
         copy[mask] = rms
         dpg.set_value(tag,[new_x,copy.tolist()])
         updateSignalbyIdx(copy.tolist(),tab_tag,tag,f'Filtered_{side}')
 
-        # sign = {'X': new_x, 'Y':copy.tolist()}
-        # info = ft.extract_timeline_features(sign)
-        # create_table(f"{tab_tag}_header",f"{tab_tag}_table", info, trial_label=dpg.get_item_label(tag))
-        
 
         progress = np.round((i+1)/len(tags),2)
         dpg.set_value(f"{tab_tag}_plot_progress", progress)
@@ -5791,13 +5805,10 @@ def recalculate_timeline(sender,app_data,user_data):
     
     if dpg.does_item_exist(f"{tab_tag}_rebar"): dpg.delete_item(f"{tab_tag}_rebar")
 
-    # tables = [f"{tab_tag}_hemisphere", f"{tab_tag}_day", f"{tab_tag}_individual"]
 
     for table in tables:
-        print(table)
         dpg.delete_item(table,children_only=True)
 
-    
     mean = []
     for tag in tags:
         if not dpg.get_item_configuration(tag)['show']: continue
@@ -7729,7 +7740,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag))
             dpg.add_separator()
-            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",ploted_colors))
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",ploted_colors),tag=f"{plot_tag}_export_plot")
             b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(y_axis,plot_tag,'2D'))
             add_exporting_tag(window_id,plot=b1,signal=b2)
             dpg.add_separator()

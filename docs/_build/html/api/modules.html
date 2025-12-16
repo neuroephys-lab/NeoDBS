@@ -42,12 +42,24 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
+              <p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_steps.html">First Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html">First Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/td.html">1. Time Domain Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/chronic.html">2. Timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/filtering.html">3. Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/features.html">4. Features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="neodbs.html">Data Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="neodbs.html#module-Features">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="neodbs.html#module-Preprocessing">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="neodbs.html#module-utils">Utils</a></li>
-<li class="toctree-l1"><a class="reference internal" href="neodbs.html#module-GUI">Interface</a></li>
 </ul>
 
         </div>
@@ -82,12 +94,10 @@
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#DataHandling.MissingTimeline"><code class="docutils literal notranslate"><span class="pre">MissingTimeline()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#DataHandling.add_utc_conversion_to_dates"><code class="docutils literal notranslate"><span class="pre">add_utc_conversion_to_dates()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#DataHandling.correctMissingTimeline"><code class="docutils literal notranslate"><span class="pre">correctMissingTimeline()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#DataHandling.extract_dict_offset"><code class="docutils literal notranslate"><span class="pre">extract_dict_offset()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#DataHandling.extract_time_offset"><code class="docutils literal notranslate"><span class="pre">extract_time_offset()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#DataHandling.getBatteryInfo"><code class="docutils literal notranslate"><span class="pre">getBatteryInfo()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#DataHandling.getData"><code class="docutils literal notranslate"><span class="pre">getData()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#DataHandling.getDeviceInfo"><code class="docutils literal notranslate"><span class="pre">getDeviceInfo()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#DataHandling.getElectrodes"><code class="docutils literal notranslate"><span class="pre">getElectrodes()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#DataHandling.getEventLog"><code class="docutils literal notranslate"><span class="pre">getEventLog()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#DataHandling.getEventSummary"><code class="docutils literal notranslate"><span class="pre">getEventSummary()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#DataHandling.getEventsElectrodes"><code class="docutils literal notranslate"><span class="pre">getEventsElectrodes()</span></code></a></li>
@@ -143,6 +153,7 @@
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#utils.extract_time"><code class="docutils literal notranslate"><span class="pre">extract_time()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#utils.find_closest_index"><code class="docutils literal notranslate"><span class="pre">find_closest_index()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#utils.find_key_path"><code class="docutils literal notranslate"><span class="pre">find_key_path()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="neodbs.html#utils.full_date2str"><code class="docutils literal notranslate"><span class="pre">full_date2str()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#utils.get_timestamp_from_dt"><code class="docutils literal notranslate"><span class="pre">get_timestamp_from_dt()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#utils.parse_datetime"><code class="docutils literal notranslate"><span class="pre">parse_datetime()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#utils.parse_path"><code class="docutils literal notranslate"><span class="pre">parse_path()</span></code></a></li>
@@ -150,134 +161,6 @@
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#utils.read_event_file"><code class="docutils literal notranslate"><span class="pre">read_event_file()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#utils.read_lines"><code class="docutils literal notranslate"><span class="pre">read_lines()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="neodbs.html#utils.string2numbers"><code class="docutils literal notranslate"><span class="pre">string2numbers()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="neodbs.html#module-GUI">Interface</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.AnalyzeTimelineEvents"><code class="docutils literal notranslate"><span class="pre">AnalyzeTimelineEvents()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.CustomFeatures"><code class="docutils literal notranslate"><span class="pre">CustomFeatures()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.CustomFilter"><code class="docutils literal notranslate"><span class="pre">CustomFilter()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.DefaultFeatures"><code class="docutils literal notranslate"><span class="pre">DefaultFeatures()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.DefaultFilter"><code class="docutils literal notranslate"><span class="pre">DefaultFilter()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.RemoveTimelineOutliers"><code class="docutils literal notranslate"><span class="pre">RemoveTimelineOutliers()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.Volt2dB"><code class="docutils literal notranslate"><span class="pre">Volt2dB()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.add_band"><code class="docutils literal notranslate"><span class="pre">add_band()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.add_combo_df_features"><code class="docutils literal notranslate"><span class="pre">add_combo_df_features()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.add_combo_features"><code class="docutils literal notranslate"><span class="pre">add_combo_features()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.add_combo_filters"><code class="docutils literal notranslate"><span class="pre">add_combo_filters()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.add_features_buttons"><code class="docutils literal notranslate"><span class="pre">add_features_buttons()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.add_filters_buttons"><code class="docutils literal notranslate"><span class="pre">add_filters_buttons()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.add_menu_bar"><code class="docutils literal notranslate"><span class="pre">add_menu_bar()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.add_timeline_features_buttons"><code class="docutils literal notranslate"><span class="pre">add_timeline_features_buttons()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.align_events"><code class="docutils literal notranslate"><span class="pre">align_events()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.apply_feat"><code class="docutils literal notranslate"><span class="pre">apply_feat()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.before_vs_after"><code class="docutils literal notranslate"><span class="pre">before_vs_after()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.changeTimelinePlot"><code class="docutils literal notranslate"><span class="pre">changeTimelinePlot()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.change_button_color"><code class="docutils literal notranslate"><span class="pre">change_button_color()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.change_electrodes_names"><code class="docutils literal notranslate"><span class="pre">change_electrodes_names()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.change_event_name"><code class="docutils literal notranslate"><span class="pre">change_event_name()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.change_inf_line_color"><code class="docutils literal notranslate"><span class="pre">change_inf_line_color()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.change_line_color"><code class="docutils literal notranslate"><span class="pre">change_line_color()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.change_line_thickness"><code class="docutils literal notranslate"><span class="pre">change_line_thickness()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.change_plot_color"><code class="docutils literal notranslate"><span class="pre">change_plot_color()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.change_text_color"><code class="docutils literal notranslate"><span class="pre">change_text_color()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.change_window_name"><code class="docutils literal notranslate"><span class="pre">change_window_name()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.choose"><code class="docutils literal notranslate"><span class="pre">choose()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.circadian_rhythm"><code class="docutils literal notranslate"><span class="pre">circadian_rhythm()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.comb_event_tab"><code class="docutils literal notranslate"><span class="pre">comb_event_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.comb_impedance_tab"><code class="docutils literal notranslate"><span class="pre">comb_impedance_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.comb_indefinite_tab"><code class="docutils literal notranslate"><span class="pre">comb_indefinite_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.comb_setup_tab"><code class="docutils literal notranslate"><span class="pre">comb_setup_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.comb_streaming_tab"><code class="docutils literal notranslate"><span class="pre">comb_streaming_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.comb_survey_tab"><code class="docutils literal notranslate"><span class="pre">comb_survey_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.comb_timeline_tab"><code class="docutils literal notranslate"><span class="pre">comb_timeline_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.create_alpha_theme"><code class="docutils literal notranslate"><span class="pre">create_alpha_theme()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.create_individual_window"><code class="docutils literal notranslate"><span class="pre">create_individual_window()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.create_multiple_window"><code class="docutils literal notranslate"><span class="pre">create_multiple_window()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.create_table"><code class="docutils literal notranslate"><span class="pre">create_table()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.cut_signals"><code class="docutils literal notranslate"><span class="pre">cut_signals()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.design"><code class="docutils literal notranslate"><span class="pre">design()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.deviation"><code class="docutils literal notranslate"><span class="pre">deviation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.device_window"><code class="docutils literal notranslate"><span class="pre">device_window()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.different_combo"><code class="docutils literal notranslate"><span class="pre">different_combo()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.display_error"><code class="docutils literal notranslate"><span class="pre">display_error()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.electrode_tab"><code class="docutils literal notranslate"><span class="pre">electrode_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.enforce_min_max"><code class="docutils literal notranslate"><span class="pre">enforce_min_max()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.enforce_range"><code class="docutils literal notranslate"><span class="pre">enforce_range()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.event_tab"><code class="docutils literal notranslate"><span class="pre">event_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.extract_artifact_type"><code class="docutils literal notranslate"><span class="pre">extract_artifact_type()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.extract_cc_features"><code class="docutils literal notranslate"><span class="pre">extract_cc_features()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.extract_channel_from_series_tag"><code class="docutils literal notranslate"><span class="pre">extract_channel_from_series_tag()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.extract_channel_hemisphere"><code class="docutils literal notranslate"><span class="pre">extract_channel_hemisphere()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.extract_edx_from_series_tag"><code class="docutils literal notranslate"><span class="pre">extract_edx_from_series_tag()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.extract_event_from_series_tag"><code class="docutils literal notranslate"><span class="pre">extract_event_from_series_tag()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.extract_file_from_series_tag"><code class="docutils literal notranslate"><span class="pre">extract_file_from_series_tag()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.extract_idx_from_series_tag"><code class="docutils literal notranslate"><span class="pre">extract_idx_from_series_tag()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.extract_mode"><code class="docutils literal notranslate"><span class="pre">extract_mode()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.extract_side_from_series_tag"><code class="docutils literal notranslate"><span class="pre">extract_side_from_series_tag()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.extract_type_window"><code class="docutils literal notranslate"><span class="pre">extract_type_window()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.extract_window_id"><code class="docutils literal notranslate"><span class="pre">extract_window_id()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.fill_params_features"><code class="docutils literal notranslate"><span class="pre">fill_params_features()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.getActiveSeries"><code class="docutils literal notranslate"><span class="pre">getActiveSeries()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.getActiveSignals"><code class="docutils literal notranslate"><span class="pre">getActiveSignals()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.getBandsByTab"><code class="docutils literal notranslate"><span class="pre">getBandsByTab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.getDatabyFile"><code class="docutils literal notranslate"><span class="pre">getDatabyFile()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.getDatabyTag"><code class="docutils literal notranslate"><span class="pre">getDatabyTag()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.getEventsbyIdx"><code class="docutils literal notranslate"><span class="pre">getEventsbyIdx()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.getEventsbyTag"><code class="docutils literal notranslate"><span class="pre">getEventsbyTag()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.getMeanActiveSeries"><code class="docutils literal notranslate"><span class="pre">getMeanActiveSeries()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.getSignalbyIdx"><code class="docutils literal notranslate"><span class="pre">getSignalbyIdx()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.getSignalbyIdxSide"><code class="docutils literal notranslate"><span class="pre">getSignalbyIdxSide()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.getUpdatedElectrodeName"><code class="docutils literal notranslate"><span class="pre">getUpdatedElectrodeName()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.getUpdatedEventName"><code class="docutils literal notranslate"><span class="pre">getUpdatedEventName()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.get_limits"><code class="docutils literal notranslate"><span class="pre">get_limits()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.hide"><code class="docutils literal notranslate"><span class="pre">hide()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.impedance_tab"><code class="docutils literal notranslate"><span class="pre">impedance_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.indefinite_tab"><code class="docutils literal notranslate"><span class="pre">indefinite_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.insert_events"><code class="docutils literal notranslate"><span class="pre">insert_events()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.install_requirements_if_needed"><code class="docutils literal notranslate"><span class="pre">install_requirements_if_needed()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.interval_events"><code class="docutils literal notranslate"><span class="pre">interval_events()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.is_package_installed"><code class="docutils literal notranslate"><span class="pre">is_package_installed()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.plot_coherence"><code class="docutils literal notranslate"><span class="pre">plot_coherence()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.plot_cross_correlation"><code class="docutils literal notranslate"><span class="pre">plot_cross_correlation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.plot_df_coherence"><code class="docutils literal notranslate"><span class="pre">plot_df_coherence()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.plot_featured_signal"><code class="docutils literal notranslate"><span class="pre">plot_featured_signal()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.plot_multitaper_coherence"><code class="docutils literal notranslate"><span class="pre">plot_multitaper_coherence()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.plot_pac"><code class="docutils literal notranslate"><span class="pre">plot_pac()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.plot_spectrogram_joined"><code class="docutils literal notranslate"><span class="pre">plot_spectrogram_joined()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.plot_spectrogram_og"><code class="docutils literal notranslate"><span class="pre">plot_spectrogram_og()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.plot_td"><code class="docutils literal notranslate"><span class="pre">plot_td()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.plot_wavelet"><code class="docutils literal notranslate"><span class="pre">plot_wavelet()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.plot_wavelet_joined"><code class="docutils literal notranslate"><span class="pre">plot_wavelet_joined()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.recalculateMeanMetrics"><code class="docutils literal notranslate"><span class="pre">recalculateMeanMetrics()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.reset_bands"><code class="docutils literal notranslate"><span class="pre">reset_bands()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.resize_font"><code class="docutils literal notranslate"><span class="pre">resize_font()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.sanitize_filename"><code class="docutils literal notranslate"><span class="pre">sanitize_filename()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.save_band_powers_to_txt"><code class="docutils literal notranslate"><span class="pre">save_band_powers_to_txt()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.save_plot"><code class="docutils literal notranslate"><span class="pre">save_plot()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.save_signals"><code class="docutils literal notranslate"><span class="pre">save_signals()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.save_table_to_file"><code class="docutils literal notranslate"><span class="pre">save_table_to_file()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.segment_signal"><code class="docutils literal notranslate"><span class="pre">segment_signal()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.session_window"><code class="docutils literal notranslate"><span class="pre">session_window()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.set_colormap_range"><code class="docutils literal notranslate"><span class="pre">set_colormap_range()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.set_font"><code class="docutils literal notranslate"><span class="pre">set_font()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.setup_tab"><code class="docutils literal notranslate"><span class="pre">setup_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.show_event_summary"><code class="docutils literal notranslate"><span class="pre">show_event_summary()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.stimulation_timeline"><code class="docutils literal notranslate"><span class="pre">stimulation_timeline()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.stimulation_window"><code class="docutils literal notranslate"><span class="pre">stimulation_window()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.streaming_tab"><code class="docutils literal notranslate"><span class="pre">streaming_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.survey_tab"><code class="docutils literal notranslate"><span class="pre">survey_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.switch_theme"><code class="docutils literal notranslate"><span class="pre">switch_theme()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.timeline_tab"><code class="docutils literal notranslate"><span class="pre">timeline_tab()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.toggle"><code class="docutils literal notranslate"><span class="pre">toggle()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.toggleDisplay"><code class="docutils literal notranslate"><span class="pre">toggleDisplay()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.toggleDisplay2"><code class="docutils literal notranslate"><span class="pre">toggleDisplay2()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.toggleType"><code class="docutils literal notranslate"><span class="pre">toggleType()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.toggleVisibility"><code class="docutils literal notranslate"><span class="pre">toggleVisibility()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.updateKeySignalbyIdx"><code class="docutils literal notranslate"><span class="pre">updateKeySignalbyIdx()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.updateSignalbyIdx"><code class="docutils literal notranslate"><span class="pre">updateSignalbyIdx()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.update_plot_td"><code class="docutils literal notranslate"><span class="pre">update_plot_td()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.update_table"><code class="docutils literal notranslate"><span class="pre">update_table()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="neodbs.html#GUI.window_menu"><code class="docutils literal notranslate"><span class="pre">window_menu()</span></code></a></li>
 </ul>
 </li>
 </ul>

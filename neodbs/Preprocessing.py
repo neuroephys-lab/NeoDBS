@@ -365,9 +365,16 @@ def convert_to_db(value):
     if isinstance(value, (np.ndarray,tuple)):  # Handle peak values (power, frequency)
         return (round(10 * np.log10(value[0]+1e-6), 2), value[1])
     elif isinstance(value,list): 
-        return [round(float(10*np.log10(s + 1e-6)),2) for s in value]
+        try:
+            result = [round(float(10*np.log10(s + 1e-6)),2) for s in value]
+            return result
+        except Warning:
+            print(value)
     elif isinstance(value, (int, float)):
-        return round(10 * np.log10(value+1e-6), 2)
+        try:
+            result = round(10 * np.log10(value+1e-6), 2)
+            return result
+        except Warning: print(value)
     return value  # Return unchanged if it's a string or invalid type
  
 def convert_from_db(value):

@@ -42,11 +42,14 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/first_steps.html">First Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/first_usage.html">First usage</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Preprocessing">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-utils">Utils</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-GUI">Interface</a></li>
 </ul>
 
         </div>
@@ -421,19 +424,17 @@
 
 <div class="viewcode-block" id="MeanSignal">
 <a class="viewcode-back" href="../api/neodbs.html#Preprocessing.MeanSignal">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">MeanSignal</span><span class="p">(</span><span class="n">signals</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">MeanSignal</span><span class="p">(</span><span class="n">signals</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;Y&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Calculates and return mean from specific key in signal dictionary, item of signals list</span>
 <span class="sd">    </span>
 <span class="sd">    :param signals: list</span>
 <span class="sd">        list of dictionaries of signal data.</span>
-<span class="sd">    :param key: str/int</span>
+<span class="sd">    :param key: str/int, default to &#39;Y&#39;</span>
 <span class="sd">        key of dictionary</span>
 <span class="sd">    :return: np.array</span>
 <span class="sd">        computed mean</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span> <span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;Y&#39;</span>
-    
     <span class="n">yy</span><span class="o">=</span><span class="p">[</span><span class="n">signal</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">signal</span> <span class="ow">in</span> <span class="n">signals</span><span class="p">]</span>
     
     <span class="n">mean_signal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">yy</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -472,9 +473,16 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span><span class="nb">tuple</span><span class="p">)):</span>  <span class="c1"># Handle peak values (power, frequency)</span>
         <span class="k">return</span> <span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mf">1e-6</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span> 
-        <span class="k">return</span> <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">)),</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">)),</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">except</span> <span class="ne">Warning</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
-        <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">value</span><span class="o">+</span><span class="mf">1e-6</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">value</span><span class="o">+</span><span class="mf">1e-6</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">except</span> <span class="ne">Warning</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">value</span>  <span class="c1"># Return unchanged if it&#39;s a string or invalid type</span></div>
 
  
@@ -520,7 +528,7 @@
     <span class="n">filtered</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>
     <span class="n">fs</span> <span class="o">=</span> <span class="mi">250</span>
 
-    <span class="p">[</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">]</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">band</span><span class="o">*</span><span class="mi">2</span><span class="o">/</span><span class="n">fs</span><span class="p">,</span> <span class="s1">&#39;bp&#39;</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s1">&#39;ba&#39;</span><span class="p">)</span>
+    <span class="p">[</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">]</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">band</span><span class="p">,</span> <span class="s1">&#39;bp&#39;</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s1">&#39;ba&#39;</span><span class="p">,</span><span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span>
     
 
     <span class="n">PredictedSignal</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">wiener</span><span class="p">(</span><span class="n">filtered</span><span class="p">,</span> <span class="n">mysize</span><span class="o">=</span><span class="mi">125</span><span class="p">)</span>
@@ -568,10 +576,9 @@
                     <span class="n">ecg</span> <span class="o">=</span> <span class="n">EKGTemplateFunc</span><span class="p">(</span><span class="n">sliceSelection</span><span class="p">,</span> <span class="o">*</span><span class="n">params</span><span class="p">)</span>
 
         
-        <span class="n">filtered</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">filtfilt</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">filtered</span><span class="p">)</span>
-        <span class="n">buttered</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">filtfilt</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">raw</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">])</span>
-
-        <span class="k">return</span> <span class="n">filtered</span><span class="p">,</span> <span class="n">buttered</span></div>
+    <span class="n">filtered</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">filtfilt</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">filtered</span><span class="p">)</span>
+    <span class="n">buttered</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">filtfilt</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">raw</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">filtered</span><span class="p">,</span> <span class="n">buttered</span></div>
 
     
 

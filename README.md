@@ -1,20 +1,38 @@
 # NeoDBS
 
-### To do tomorrow:
-- RMS outlier removal: threshold calculated per day!
-- Check: Save all... window level
+## 16.12.2025:
+
+### New: 
+- Documentation:
+    - general workflow --> with images
+    - Quick Start
+    - Organized sections, numbered (sometimes doctree in build need to be deleted and created again)
+
+### Updated:
+- Documentation html pages!
+
+### Debug:
 - Timeline analyze events: 
     - mean peak power wrong
     - mean appears 2x
     - add export plot/signals
-- Create executable/batch
+- Mean spectrogram + power over time --> added buttons for export
+- update table nan corrected (it was converting the same table multiple times)
+
+### Checked:
+- RMS outlier removal: threshold IS calculated per day! --> future versions see better outlier removal
+- Check: Save all... window level
 - Stimulation combined
-- update documentation html pages!
+
+### TO DO:
+- Create executable/batch
+
 
 ## 15.12.2025
 
 ### New:
 - Combined Timeline: add recalculate features
+- User can define image quality on exportation
 
 ### Debug: 
 - Timeline combined with selected files WITH and WITHOUT Timeline mode
@@ -42,7 +60,6 @@
 
 
 ## 11.12.2025
-
 ### Debug:
 - Export Plot:
     - '2D' corrected

@@ -287,7 +287,7 @@ def mean_power_all_bands(stream, bands):
 
     return power
 
-def export_plot(info, plot_type, size=None, line_types = None):
+def export_plot(info, plot_type, size=None, line_types = None,dpi=600):
     '''
     Creates matplolib plot and exports it into png image, according to the prepared info in dearpygui.
     
@@ -318,7 +318,6 @@ def export_plot(info, plot_type, size=None, line_types = None):
     '''
 
     signals, labels, colors, title, axis, limits  = info
-
     default_fig = plt.figure()
     width_default, height_default = default_fig.get_size_inches()
     plt.close(default_fig)
@@ -474,7 +473,7 @@ def export_plot(info, plot_type, size=None, line_types = None):
                 startangle=90)
         plt.title(title)
 
-    fig.savefig(f'{title}.png', bbox_inches='tight',dpi=300) #
+    fig.savefig(f'{title}.png', bbox_inches='tight',dpi=dpi) #
 
     plt.close(fig)
 
