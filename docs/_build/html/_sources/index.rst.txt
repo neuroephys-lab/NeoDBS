@@ -53,9 +53,8 @@ Several tutorials have been prepared to facilitate the use of NeoDBS. Tutorials 
 
    tutorials/td
    tutorials/chronic
-   tutorials/filtering
    tutorials/features
-
+   
 
 API Documentation
 -----------------

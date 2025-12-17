@@ -1,5 +1,13 @@
 # NeoDBS
 
+## 17.12.2025:
+
+### New:
+
+### To do:
+- Tutorials
+- Create executable/batch
+
 ## 16.12.2025:
 
 ### New: 
@@ -23,9 +31,6 @@
 - RMS outlier removal: threshold IS calculated per day! --> future versions see better outlier removal
 - Check: Save all... window level
 - Stimulation combined
-
-### TO DO:
-- Create executable/batch
 
 
 ## 15.12.2025
