@@ -221,7 +221,8 @@ def filename_window(sender,app_data,user_data):
     with dpg.window(label='File Name',tag=f"{plot_tag}_file", width = 160,pos=window_pos,no_collapse=True):
         dpg.add_text("Save file as: ")
         dpg.add_input_text(default_value=title, width=150,tag=f"{plot_tag}_file_name")
-        dpg.add_input_int(default_value=300,min_value=300,max_value=600,min_clamped=True,max_clamped=True,step=50,width=150,tag=f"{plot_tag}_dpi")
+        if 'plot' in label.lower():
+            dpg.add_input_int(default_value=300,min_value=300,max_value=600,min_clamped=True,max_clamped=True,step=50,width=150,tag=f"{plot_tag}_dpi")
         dpg.add_button(label="Submit", callback=handle_submit)
 
 def save_plot(sender,app_data,user_data):
@@ -437,7 +438,8 @@ def save_signals(sender,app_data,user_data):
                 if 'LineSeries' not in dpg.get_item_info(children[idx])['type']:
                     info['Events'][timeline.index(x[0])] = labels[idx]
                     continue
-                x, y = x[::-1], y[::-1]
+                if x[-1]<x[0]:
+                    x, y = x[::-1], y[::-1]
                 beg, end = timeline.index(x[0]), timeline.index(x[-1])
                 if 'left' in labels[idx].lower(): 
                     info['Left'][beg:end] = y
@@ -2916,7 +2918,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
 
                     with dpg.collapsing_header(tag=header_tag, parent=f"{tab_label}_merged", label=plot_label):
 
-                        with dpg.plot(label=plot_label, width=600,tag=new_plot_tag):
+                        with dpg.plot(label=plot_label, width=-1,tag=new_plot_tag):
                             dpg.add_plot_legend()
                             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Power (dB)")
@@ -3749,38 +3751,40 @@ def change_electrodes_names(sender, app_data, user_data):
     '''
     input_counter = [0]  # Use a list to allow mutable reference
 
+    this = "Change Channel Names Window"
 
     def handle_submit(sender, app_data, user_data):
         for i in range(user_data[0]):
-            old_name = dpg.get_value(f"old_name_{i}")
-            new_name = dpg.get_value(f"new_name_{i}")
+            old_name = dpg.get_value(f"old_name_{this}_{i}")
+            new_name = dpg.get_value(f"new_name_{this}_{i}")
             if new_name == '': new_name = old_name
+            electrodes_names[old_name] = new_name
 
             for side in ['LEFT','RIGHT']:
                 electrodes_names[f'{old_name}_{side}'] = f'{new_name}_{side}'
-        dpg.delete_item("Change Channel Names Window")
+        dpg.delete_item(this)
         
     def reset(sender, app_data, user_data):
         electrodes_names.clear()
 
-    if dpg.does_item_exist("Change Channel Names Window"):
-        dpg.delete_item("Change Channel Names Window")
+    if dpg.does_item_exist(this):
+        dpg.delete_item(this)
 
-    with dpg.window(tag="Change Channel Names Window", width=400, height=300):
+    with dpg.window(tag=this, width=400, height=300,on_close=dpg.delete_item(this)):
         dpg.add_text("Change Channel Names")
         dpg.add_separator()
         channels = ['ONE_THREE','ZERO_THREE','ZERO_TWO']
         for row_id, ch in enumerate(channels):
             input_counter[0]+=1
             with dpg.group(tag=f"input_group_{row_id}", parent="input_container", horizontal=True):
-                dpg.add_input_text(tag=f"old_name_{row_id}",default_value=ch, width=120)
-                dpg.add_input_text(tag=f"new_name_{row_id}", label="New Name", width=120)
+                dpg.add_input_text(tag=f"old_name_{this}_{row_id}",default_value=ch, width=120)
+                dpg.add_input_text(tag=f"new_name_{this}_{row_id}", label="New Name", width=120)
 
         with dpg.group(horizontal=True):
             dpg.add_button(label="Submit", callback=handle_submit, user_data=input_counter)
             dpg.add_button(label="Reset", callback=reset)
 
-        # dpg.configure_item("Change Channel Names Window",on_close=dpg.configure_item("Change Channel Names Window",show=False))
+        # dpg.configure_item(this,on_close=dpg.configure_item(this,show=False))
 
 def change_window_name(sender,app_data,user_data):
     '''Renames window.
@@ -3816,23 +3820,24 @@ def change_event_name(sender,app_data,user_data):
         row_id=dpg.get_item_user_data('submit event name') +1
         dpg.set_item_user_data('submit event name',row_id) 
         with dpg.group(horizontal=True, tag=f"{this}_{row_id}",parent=f"{this}_group"):
-            dpg.add_input_text(tag=f"old_name_{row_id}",default_value='Old Name Event', width=120)
-            dpg.add_input_text(tag=f"new_name_{row_id}",default_value='New Name Event', width=120)
+            dpg.add_input_text(tag=f"old_name_{this}_{row_id}",default_value='Old Name Event', width=120)
+            dpg.add_input_text(tag=f"new_name_{this}_{row_id}",default_value='New Name Event', width=120)
+    
     def handle_submit(sender,app_data,user_data):
         row_id=dpg.get_item_user_data(sender)
         for i in range(row_id+1):
-            old_name = dpg.get_value(f"old_name_{i}")
-            new_name = dpg.get_value(f"new_name_{i}")
+            old_name = dpg.get_value(f"old_name_{this}_{i}")
+            new_name = dpg.get_value(f"new_name_{this}_{i}")
             if new_name == '': new_name = old_name
             all_event_names[old_name] = new_name
         dpg.delete_item(this)
 
-    with dpg.window(tag=this, autosize=True,no_collapse=True):
+    with dpg.window(tag=this, autosize=True,no_collapse=True,on_close=dpg.delete_item(this)):
         dpg.add_text("Change Marked Events Name")
         with dpg.group(tag=f"{this}_group"):
             with dpg.group(horizontal=True, tag=f"{this}_{row_id}"):
-                dpg.add_input_text(tag=f"old_name_{row_id}",default_value='Old Name Event', width=120)
-                dpg.add_input_text(tag=f"new_name_{row_id}",default_value='New Name Event', width=120)
+                dpg.add_input_text(tag=f"old_name_{this}_{row_id}",default_value='Old Name Event', width=120)
+                dpg.add_input_text(tag=f"new_name_{this}_{row_id}",default_value='New Name Event', width=120)
         dpg.add_button(label = '+',small=True,callback=add,tag='add')
         dpg.add_button(label='Submit',callback=handle_submit,user_data=row_id,tag='submit event name')
 
@@ -4245,9 +4250,12 @@ def getUpdatedElectrodeName(electrode):
     
     :param electrode: str, original name 
     '''
+    electrode = electrode.upper().replace('_AND_','_')
     if electrode not in electrodes_names.keys():
         electrodes_names[electrode] = electrode
+
     return electrodes_names[electrode]
+
 
 def getDatabyTag(series_tag):
     '''
@@ -4637,7 +4645,6 @@ def segment_signal(tab_tag, signal_tags,plot_tag):
         time.sleep(0.1)
         s = dpg.add_separator(label='SEGMENTATION: minimum of 10s')
         dpg.bind_item_theme(s,theme)
-        dpg.add_checkbox(label='Use only visible signals:', default_value=True,show=True, tag=f"{tab_tag}_flag_signals")
         mmax = max([dpg.get_value(tag)[0][-1] for tag in signal_tags])
         with dpg.group(horizontal=True):
             dpg.add_input_int(label='Start', tag=f"{tab_tag}_min", width=90, min_value=0,default_value=0, callback=enforce_min_max, user_data=(f"{tab_tag}_min", f"{tab_tag}_max", 10))
@@ -4658,18 +4665,11 @@ def cut_signals(sender,app_data,user_data):
     tab_tag, signal_tags = user_data
     window_id = extract_window_id(tab_tag)
     active_series = getActiveSeries(signal_tags)
-    flag = dpg.get_value(item=f"{tab_tag}_flag_signals")
     min_value = dpg.get_value(f"{tab_tag}_min")
     max_value = dpg.get_value(f"{tab_tag}_max")
 
     min_idx = min_value*250
     max_idx = max_value*250
-
-    if flag == False: #Activate all signals if unchecked
-        dpg.set_value(f"{tab_tag}_all", True)  # Set the checkbox state
-        callback = dpg.get_item_callback(f"{tab_tag}_all")
-        if callback:
-            callback(f"{tab_tag}_all", True)  
 
     dpg.set_axis_limits(axis=f"x_axis_{tab_tag}", ymin=min_value, ymax=max_value)
 
@@ -5339,11 +5339,6 @@ def circadian_rhythm(sender, app_data, user_data):
         label = dpg.get_item_label(tag)
         stim_info = DH.info_electrodes(getDatabyTag(tag))['Sense_frequency']
         dates.append(label[-10:])
-        # side = extract_side_from_series_tag(tag)
-        # side = side[0].upper() + side[1:] #First letter in upper case
-        
-        # # old_x, old_y = dpg.get_value(tag)[:2]
-        # old_x, old_y = signal[side]['X'], signal[side]['Y']
         x = sorted(old_x)
 
         if x[0] != old_x[0]:
@@ -5426,6 +5421,15 @@ def circadian_rhythm(sender, app_data, user_data):
         new_plus = new_mean + new_std
         dpg.configure_item(f"{tab_label}_mean",y=new_mean)
         dpg.configure_item(f"{tab_label}_std",y1=new_minus,y2=new_plus)
+        new_x = dpg.get_value(f"{tab_label}_mean")[0]
+        sign = {'X':new_x,'Y':new_mean}
+
+        info = ft.extract_timeline_features(sign)
+        trial = 'Mean'
+        if not app_data:
+            trial = trial + ' wo/ ' + label
+        create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=trial)
+
 
     with dpg.group(parent=tab_label, horizontal=True, tag=f"{tab_label}_CR"):
         plot_tag = f"{tab_label}_plot"
@@ -5447,8 +5451,8 @@ def circadian_rhythm(sender, app_data, user_data):
                 if not dpg.does_item_exist(f"{tab_label}_header"):
                     dpg.add_collapsing_header(tag=f"{tab_label}_header", parent=tab_label, label = 'Circadian Metrics')
 
-                info = ft.extract_timeline_features(sign)
-                create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=label)
+                # info = ft.extract_timeline_features(sign)
+                # create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=label)
 
 
             s = dpg.add_shade_series(val[0],y1=minus,y2=plus,parent=y_axis,label='Std. Dev',tag=f"{tab_label}_std")
@@ -5463,17 +5467,20 @@ def circadian_rhythm(sender, app_data, user_data):
 
         dates = sorted(np.unique(dates).tolist())
         checkboxes = []
-        with dpg.group(horizontal=True):
-            with dpg.child_window(auto_resize_x=True, height=cwh):
-                dpg.add_text('By Day:')
+        with dpg.group():
+            dpg.add_checkbox(label='Hide Days', tag = f"{tab_label}_hide", callback=hide,parent = f"{tab_label}_vbuttons", user_data=(circadian_tags,checkboxes))
+            with dpg.child_window(height=cwh, auto_resize_x = True):
+                a = dpg.add_text('By Day:')
                 for d in dates:
                     c = dpg.add_checkbox(label=d, default_value=True, callback=toggle)
                     checkboxes.append(c)
-            with dpg.child_window(auto_resize_x=True, height=cwh):
+            dpg.configure_item(dpg.get_item_parent(a),auto_resize_x=False,resizable_x=True)
+
+            with dpg.child_window(height=cwh,auto_resize_x=True):
+                a = dpg.add_text('By Hemisphere:')
                 for side in ['Left', 'Right']:
                     dpg.add_checkbox(label=side, default_value=True, callback=toggle)
-            dpg.add_checkbox(label='Hide Days', tag = f"{tab_label}_hide", callback=hide,parent = f"{tab_label}_vbuttons", user_data=(circadian_tags,checkboxes))
-    
+            dpg.configure_item(dpg.get_item_parent(a),auto_resize_x=False,resizable_x=True)
     dpg.add_separator(label='Export',parent=tab_label)
     b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('2D', plot_tag, y_axis,0),parent=tab_label)
     b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,parent=tab_label,user_data=(y_axis,plot_tag,'2D'))
@@ -5610,38 +5617,61 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
     plot_tag = f'{tab_label}_plot'
 
     def normal(segments, plot=True, bva=False):
+        
         for s, seg in enumerate(segments):
+            
             segment, label = seg
+            name = label[:label.find(' ')]
+            name = getUpdatedEventName(name)
             x,y=segment[0],segment[1]
+
             if plot:
                 dpg.add_line_series(x,y,label=label,parent=y_axis,tag=f"{tab_label}_{label}_{s}")
                 temp_tags.append(f"{tab_label}_{label}_{s}")
+            else:
+                name = label[label.find(' | ')+3:]
+                name = getUpdatedEventName(name[:name.find(' ')])
 
             sign = {'X':x,'Y':y}                
 
-            if not bva:
-                header = f"{tab_label}_header"
-                table = f"{tab_label}_table"
-            elif 'Before' in label:
-                header = f"{tab_label}_header_before"
+            if 'Before' in label:
+                header = f"{tab_label}_{name}_before"
                 table = f"{tab_label}_table_before"
-            else: 
-                header = f"{tab_label}_header_after"
+            elif 'After' in label: 
+                header = f"{tab_label}_{name}_after"
                 table = f"{tab_label}_table_after"
+            else:
+                header = f"{tab_label}_{name}_full"
+                table = f"{tab_label}_table_full"
 
-            if not dpg.does_item_exist(f"{tab_label}_header"):
-                dpg.add_collapsing_header(tag=f"{tab_label}_header", parent=tab_label,label='Stream Metrics')
+            parent = f"{tab_label}_{name}"
 
-            if not dpg.does_item_exist(f"{tab_label}_header_before"):
-                dpg.add_collapsing_header(tag=f"{tab_label}_header_before", parent=tab_label,label='Before | Stream Metrics')
+            if not dpg.does_item_exist(parent):
+                dpg.add_tree_node(tag=parent, parent=tab_label,label=f"{name} Metrics")
 
-            if not dpg.does_item_exist(f"{tab_label}_header_after"):
-                dpg.add_collapsing_header(tag=f"{tab_label}_header_after", parent=tab_label,label='After | Stream Metrics')
+            for moment in ['Full','Before','After']:
+                this = f"{tab_label}_{name}_{moment.lower()}"
+                if not dpg.does_item_exist(this):
+                    dpg.add_tree_node(tag=this, parent=parent,label=f'{moment}')
+                for side in ['Left','Right']:
+                    if not dpg.does_item_exist(f"{this}_{side}"):
+                        dpg.add_collapsing_header(label=f"{name} | {moment} | {side}",tag=f"{this}_{side}",parent=this)
 
             if not isinstance(y,(list,np.ndarray)) or (np.all(y) == np.nan):
                 continue
+
             info = ft.extract_timeline_features(sign)
             if info != None: 
+                equal = f"{tab_label}_{name}"
+                if 'Before' in label:
+                    moment = '_before'
+                elif 'After' in label: moment = '_after'
+                else: moment = '_full'
+                if 'Right' in label: side = '_Right'
+                else: side = '_Left'
+                header = equal + moment + side
+                table = header + '_table'
+                label = label[-14:]
                 create_table(header,table, info, trial_label=label)
 
         minus = mean_value - std_dev
@@ -5652,9 +5682,9 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
             mean = dpg.add_line_series(segment[0],mean_value,label='Mean',parent=y_axis, tag = f"{tab_label}_mean")
             dpg.bind_item_theme(mean, change_line_thickness(5))
 
-            mean_info = {'X': segment[0], 'Y':list(mean_value)}
-            mean_info = ft.extract_timeline_features(mean_info)
-            create_table(f"{tab_label}_header",f"{tab_label}_table", mean_info, trial_label='Mean')
+            # mean_info = {'X': segment[0], 'Y':list(mean_value)}
+            # mean_info = ft.extract_timeline_features(mean_info)
+            # create_table(f"{tab_label}_header",f"{tab_label}_table", mean_info, trial_label='Mean')
 
     def bva(segments):
         bva_segments = []
@@ -5783,18 +5813,22 @@ def RemoveTimelineOutliers(sender,app_data,user_data):
 
         for _ in range(3):  # Iterate a few times
             y = y[np.abs(y) <= factor * rms]
-            rms = np.sqrt(np.nanmean(y**2))
+            if len(y)>=(len(copy)/10)+1:
+                rms = np.sqrt(np.nanmean(y**2))
+            
         # threshold =rms
 
         '''USING MEDIAN'''
         mad = np.median(np.abs(y - np.median(y)))
-        threshold = mad   # Or some scaled version
+        # threshold = mad   # Or some scaled version
         
+        threshold = rms
         mask = copy > factor*threshold
+        
+        
         copy[mask] = rms
         dpg.set_value(tag,[new_x,copy.tolist()])
         updateSignalbyIdx(copy.tolist(),tab_tag,tag,f'Filtered_{side}')
-
 
         progress = np.round((i+1)/len(tags),2)
         dpg.set_value(f"{tab_tag}_plot_progress", progress)
@@ -5976,7 +6010,7 @@ def stimulation_window(Data, window_id, file_id = None):
         dpg.add_separator(parent=info_parent)
         d = dpg.add_text('At-home BrainSense: ON', parent=info_parent)
         dpg.bind_item_theme(d,change_text_color(-1))
-        dpg.add_text(f"Sensing Channel: {ch}", parent=info_parent)
+        dpg.add_text(f"Sensing Channel: {getUpdatedElectrodeName(ch)}", parent=info_parent)
         f = stimulation['Sense_frequency']
         f1, f2 = np.round(f-2.5,2),np.round(f+2.5,2)
         dpg.add_text(f"Sensing Band: [{f1}, {f2}] Hz", parent=info_parent)
@@ -6297,7 +6331,8 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         with dpg.group(parent=tab_tag, horizontal=True, tag = f"{tab_tag}_ec"): pass
         dpg.add_text(f"Total days: {len(signals)}", parent=f"{tab_tag}_ec")
         for e in evt['Eventos']:
-            event = f"| {e['EventName']}:  {e['EventCount']}"
+            name = getUpdatedEventName(e['EventName'])
+            event = f"| {name} Count:  {e['EventCount']}"
             dpg.add_text(event, parent= f"{tab_tag}_ec")
 
     days = []
@@ -6325,7 +6360,8 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         e1,e2 = getUpdatedElectrodeName(initial[0]), getUpdatedElectrodeName(initial[1])
         dpg.add_text(f"Sensing Electrodes | Left: {e1} | Right: {e2}", parent=tab_tag)
     else: 
-        dpg.add_text(f'{getUpdatedElectrodeName(initial)}', parent=tab_tag)
+        e = getUpdatedElectrodeName(initial)
+        dpg.add_text(f'{e}', parent=tab_tag)
     ploted_colors = []
     
     with dpg.group(label = f"{tab_tag}_group" , parent=tab_tag, horizontal=True):
@@ -6431,10 +6467,12 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
             dpg.add_separator()
             with dpg.group(horizontal=True):
-                dpg.add_slider_float(label = 'Remove Outlier', callback=RemoveTimelineOutliers,default_value=3.0,user_data=(tab_tag,signal_tags), width=100, min_value=0,max_value=100)
+                dpg.add_slider_float(label = 'Remove Outlier', callback=RemoveTimelineOutliers,default_value=3.0,user_data=(tab_tag,signal_tags), width=100, min_value=0,max_value=10)
                 dpg.add_button(label='Recalculate Metrics', callback = recalculate_timeline,user_data=(tab_tag,list(signal_tags.keys()),tables))
             if flag == True:
-                dpg.add_text( 'Warning: There are missing points in Timeline', tag=f"{tab_tag}_wmp", parent=f"{tab_tag}_buttons")
+                dpg.add_separator()
+                a = dpg.add_text('Warning: There are missing points in Timeline', tag=f"{tab_tag}_wmp", parent=f"{tab_tag}_buttons")
+                dpg.bind_item_theme(a,change_text_color(1))
                 dpg.add_checkbox(label='Show missing points',parent=f"{tab_tag}_buttons", default_value=False, callback=changeTimelinePlot, user_data=(signal_tags, signals, data, y_left))
 
     add_timeline_features_buttons(tab_tag, signal_tags)
@@ -6716,10 +6754,7 @@ def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
     Channel = signals[0]['Channel']
     stimulation = DH.getStreamingStimulation(getDatabyTag(tab_tag),signals[0]['Date'])
     
-    if Channel in electrodes_names.keys():
-        Channel = electrodes_names[Channel]
-    else:
-        electrodes_names[Channel] = Channel
+    Channel = getUpdatedElectrodeName(Channel)
 
 
     dpg.add_text(f"Channel: {extract_channel_from_series_tag(Channel).upper()}", parent=tab_tag)
@@ -7515,21 +7550,23 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
     files = app_state['windows'][window_id]['Files']
     flag = False
     datas, temp_signals, events_tags, ocd_events, channels, sense = [], [], [], [], [], []
+
+    dates = [file['Data']['Device']['SessionDate'][:10] for file in files]
+    if len(dates) != len(np.unique(dates).tolist()):
+        final_index = -1
+    else: final_index = 10
+
     for file in files: 
         data = file['Data']
         initial, _ = DH.getEventsElectrodes(data)
-        date = file['Data']['Device']['SessionDate'][:10]
+        date = data['Device']['SessionDate'][:final_index]
         header = f"{date}_{tab_tag}"
         if isinstance(initial,str): continue
         channels.append({'Left': electrodes_names[initial[0]], 'Right': electrodes_names[initial[1]]})
         dpg.add_collapsing_header(tag=header,label=date,parent=tab_tag)
         if not isinstance(initial, str): 
-            for ch in initial:
-                if ch in electrodes_names.keys():
-                    ch = electrodes_names[ch]
-                else:
-                    electrodes_names[ch] = ch
-            dpg.add_text(f"Electrodes {DH.getSessionDate(data)} | Left: {electrodes_names[initial[0]]} | Right: {electrodes_names[initial[1]]}", parent=header)
+            left,right = getUpdatedElectrodeName(initial[0]),getUpdatedElectrodeName(initial[1])
+            dpg.add_text(f"Sensing Electrodes until {DH.getSessionDate(data)} | Left: {left} | Right: {right}", parent=header)
             f = DH.info_electrodes(data)['Sense_frequency']
             if f != '': 
                 f1, f2 = np.round(f-2.5,2),np.round(f+2.5,2)
@@ -7537,13 +7574,13 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                 sense.append(f)
     
         else: 
-            electrodes_names[initial] = initial
-            dpg.add_text(f'{DH.getSessionDate(data)}: {electrodes_names[initial]}', parent=header)
+            ch = getUpdatedElectrodeName(initial)
+            dpg.add_text(f'{DH.getSessionDate(data)}: {electrodes_names[ch]}', parent=header)
 
         evt = DH.getEventSummary(data)
         if 'Eventos' in evt.keys():
             for e in evt['Eventos']:
-                event = f"{e['EventName']}:  {e['EventCount']}"
+                event = f"{getUpdatedEventName(e['EventName'])} Count:  {e['EventCount']}"
 
         events = DH.getSignals(file['Data'],'Events')       
         for edx, event in enumerate(events):
@@ -7610,7 +7647,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         else: datas.append(None)
 
                         signal_tag = f"{tab_tag}_file_{idx}_series_{sdx}"
-                        date = utl.extract_date(utl.parse_datetime(signal['Date']))
+                        date = signal['Date'][:final_index]
                         app_state['windows'][window_id]['Files'][idx]['Data'][tab_tag]['Signals'].append({'Date':date,'Left': [], 'Right': []})
                         
                         days.append(date)
@@ -7719,7 +7756,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         ploted_colors.append(colors[color])
                         dpg.bind_item_theme(t, theme)
 
-                    
+                    date = file['Data']['Device']['SessionDate'][:final_index]
                     dpg.add_text(f"Total days: {len(days)}", parent=f"{date}_{tab_tag}")
                     dpg.add_text(f"Timezone/offset: {DH.extract_time_offset(data,True)}", parent=f"{date}_{tab_tag}")
                     dpg.add_separator(parent=f"{date}_{tab_tag}")
@@ -7745,13 +7782,13 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
             add_exporting_tag(window_id,plot=b1,signal=b2)
             dpg.add_separator()
             with dpg.group(horizontal=True):
-                dpg.add_slider_float(label = 'Remove Outlier RMS', callback=RemoveTimelineOutliers,default_value=3.0,user_data=(tab_tag,signal_tags), width=100, min_value=0,max_value=100)
+                dpg.add_slider_float(label = 'Remove Outlier RMS', callback=RemoveTimelineOutliers,default_value=3.0,user_data=(tab_tag,signal_tags), width=100, min_value=0,max_value=10)
                 dpg.add_button(label='Recalculate Metrics', callback = recalculate_timeline, user_data=(tab_tag, list(signal_tags.keys()), all_tables))
             if flag == True:
                 dpg.add_text( 'Warning: There are missing points in Timeline', tag=f"{tab_tag}_wmp", parent=f"{tab_tag}_buttons")
                 dpg.add_checkbox(label='Show missing points',parent=f"{tab_tag}_buttons", default_value=False, callback=changeTimelinePlot, user_data=(signal_tags, temp_signals, datas, y_axis))
 
-            dpg.add_button(label = 'Analyze Events', callback=AnalyzeTimelineEvents, user_data=(tab_tag, events_tags, signal_tags),parent=f"{tab_tag}_buttons")
+            dpg.add_button(label = 'Analyze Events', callback=AnalyzeTimelineEvents, user_data=(tab_tag, events_tags, signal_tags),parent=f"{tab_tag}_buttons",width=-1)
             
         add_timeline_features_buttons(tab_tag, signal_tags)
 

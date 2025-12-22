@@ -1,14 +1,30 @@
 # NeoDBS
 
-## 17.12.2025:
+## 22.12.2025
+
+### Debugs:
+- **Export signals timeline after outlier removal:** signals were empty due to incorrect indexing. (After outlier removal signals are in correct order, and beg and end were switched cause they were forced to reverse signal - because of first time plotting)
+- Open both change electrode names and event names at the same time, they had the same tag
+- Timeline combined: 
+    - if multiple files from the same day headers label includes hour
+    - remove outlier debugged: when from the same day, it was receiving x as float and it was expecting datetime. utils updated to handle float and int.
+    - Analyze Timeline Events: metrics organized by moment, side and event
 
 ### New:
+- Segmentation: removed "only visible signals" checkbox as it is unnecessary
+- Outlier removal: threshold and replacement are RMS based, not MAD based. Check what is the best option with prof.
+- Circadian Rhythm: 
+    - remove metrics as they are the same as the timeline. Maintain only the mean.
+    - when toggle: mean metrics extracted and label adapted to "mean wo/ {checkbox}"
+- Filename window: only put dpi when export plot
 
-### To do:
-- Tutorials
-- Create executable/batch
+## 17.12.2025
 
-## 16.12.2025:
+### New:
+- Tutorials: 
+    - In-Clinic Data (Preprocessing + Segmentation + Event-locked Analysis)
+
+## 16.12.2025
 
 ### New: 
 - Documentation:

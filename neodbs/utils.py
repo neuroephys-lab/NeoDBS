@@ -80,6 +80,8 @@ def convert_to_timestamp(date_input):
         except ValueError:
             print(f"Invalid date format: {date_input}")
             return None
+    elif isinstance(date_input, (int,float)):
+        return date_input
     else:
         print(f"Unsupported type for date input: {type(date_input)}")
         return None

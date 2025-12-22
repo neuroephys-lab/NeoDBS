@@ -4,7 +4,7 @@ In-Clinic Data
 In this tutorial, a simple workflow is given to perform the analysis of recordings saved in the time-domain 
 **(Streaming, Indefinite Streaming, Survey and Setup)**.
 After selecting the type of window and file(s) to be analyzed, you must choose the type of recording you want 
-to analyze, which will open a tab with the respective plotted signals and functionalities.
+to analyze, which will open a tab with the respective plotted signals and functionalities, as described in :doc:`First Usage <../quickstart/first_usage>`.
 
 .. note::
     NeoDBS works with a visibility approach, meaning selected methods will only be applied to the 

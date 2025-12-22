@@ -13,17 +13,18 @@ brain activity data offline from recordings acquired with Medtronic's Percept Br
 
 This new platform was developed in order to facilitate the analysis of multiple independent recordings,
 by experienced or non-experienced users like health physicians. It offers a:
-- Browser-like design, allowing multiple workspaces open simultaneously
-- Workspaces focused on a single recording session or on multiple recording sessions
-- Analysis pipelines with default or customizable parameters
-- Event-locked analysis and event marking
-- Exportation of tables, signals and images
-- Several filtering and spectral analysis methods
-- Interface and data customization
+
+* Browser-like design, allowing multiple workspaces open simultaneously
+* Workspaces focused on a single recording session or on multiple recording sessions
+* Analysis pipelines with default or customizable parameters
+* Event-locked analysis and event marking
+* Exportation of tables, signals and images
+* Several filtering and spectral analysis methods
+* Interface and data customization
 
 NeoDBS includes several open-source organized modules focused in data preparation (Data Handling), data processing - including filtering, 
 segmentation, and method application - (Preprocessing) and feature extraction (Features). A collection of
-utility tools was also developed (Utils).
+utility tools was also developed (Utils). All modules and functions are described in (:doc:`Modules <api/neodbs>`).
 
 Quick Start
 -----------

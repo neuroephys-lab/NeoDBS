@@ -24,11 +24,17 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 # # file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2025-01-23\\Report_Json_Session_Report_20250212T122746.json"
 
 '''
-file = "C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2025-01-23\\Report_Json_Session_Report_20250212T122746.json"
 
-dictionary = {'a':1,'b':2}
-dodo = {'3': 11, '4':14}
-print(list(dictionary.keys()).__add__(list(dodo.keys())))
+import dearpygui.dearpygui as dpg
+
+dpg.create_context()
+
+dpg.show_imgui_demo()
+dpg.create_viewport(title='Custom Title', width=800, height=600)
+dpg.setup_dearpygui()
+dpg.show_viewport()
+dpg.start_dearpygui()
+dpg.destroy_context()
 
 
 # dpg.create_context()
