@@ -1,12 +1,11 @@
-NeoDBS documentation
-====================
+About NeoDBS
+============
 
 .. meta::
    :description lang=en: Automate building, versioning, and hosting of your
     technical documentation continuously on Read the Docs.
 
-About NeoDBS
-------------
+.. image:: img/NeoDBS.png
 
 NeoDBS is an open-source user-oriented platform developed in Python, designed to examine electrophysiological 
 brain activity data offline from recordings acquired with Medtronic's Percept BrainSense™ Technology.
@@ -14,23 +13,23 @@ brain activity data offline from recordings acquired with Medtronic's Percept Br
 This new platform was developed in order to facilitate the analysis of multiple independent recordings,
 by experienced or non-experienced users like health physicians. It offers a:
 
-* Browser-like design, allowing multiple workspaces open simultaneously
-* Workspaces focused on a single recording session or on multiple recording sessions
-* Analysis pipelines with default or customizable parameters
-* Event-locked analysis and event marking
-* Exportation of tables, signals and images
-* Several filtering and spectral analysis methods
-* Interface and data customization
+* **Browser-like design**, allowing multiple workspaces open simultaneously;
+* Workspaces focused on a **single recording session** or on **multiple recording sessions**;
+* Analysis pipelines with **default or customizable parameters**;
+* **Event-locked analysis** and event marking;
+* **Exportation** of tables, signals and images;
+* Several **filtering and spectral analysis methods**;
+* Interface and data **customization**;
 
 NeoDBS includes several open-source organized modules focused in data preparation (Data Handling), data processing - including filtering, 
 segmentation, and method application - (Preprocessing) and feature extraction (Features). A collection of
-utility tools was also developed (Utils). All modules and functions are described in (:doc:`Modules <api/neodbs>`).
+utility tools was also developed (Utils). All modules and functions are described in :doc:`Modules <api/neodbs>`.
 
 Quick Start
 -----------
 
-If you're ready to start using NeoDBS, follow the general workflow described in :doc:`First Steps <quickstart/first_steps>`.
-If you haven't installed NeoDBS, follow the instructions.
+If you're ready to start using NeoDBS, follow the general workflow described in :doc:`First Usage <quickstart/first_usage>`.
+If you haven't installed NeoDBS, follow the instructions in :doc:`First Steps <quickstart/first_steps>`.
 
 .. toctree::
    :maxdepth: 2
@@ -44,7 +43,12 @@ If you haven't installed NeoDBS, follow the instructions.
 Tutorials
 ---------
 
-Several tutorials have been prepared to facilitate the use of NeoDBS. Tutorials don't fully explain all functinalities available.
+Several tutorials have been prepared to facilitate the use of NeoDBS. 
+Tutorials are recomended to grasp the workflow and functionalities available in NeoDBS, however they do not 
+explain in complete detail all possible pipelines.
+
+.. tip::
+   Start with :doc:`First Usage <quickstart/first_usage>` to understand how NeoDBS works.
 
 .. toctree::
    :maxdepth: 2

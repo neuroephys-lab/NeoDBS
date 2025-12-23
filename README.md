@@ -1,6 +1,19 @@
 # NeoDBS
 
+## 23.12.2025
+
+### Documentation:
+- At-home data
+
+### GUI
+- Add horizontal scrollbar: it keeps growing, so it can be activated or deactivated
+- Remove random segment button lost in indefinite
+- Stimulation information changed into table + export table (so it goes with electrode information per dat)
+
 ## 22.12.2025
+
+### Documentation:
+- At-home: timeline
 
 ### Debugs:
 - **Export signals timeline after outlier removal:** signals were empty due to incorrect indexing. (After outlier removal signals are in correct order, and beg and end were switched cause they were forced to reverse signal - because of first time plotting)

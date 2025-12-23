@@ -487,7 +487,7 @@ def export_signals(info,filename, tfd = False):
     '''
     filename = filename.replace(' - ','_')
     filename = filename.replace(' ','_')
-    filename = 'Signals_'+filename + ".csv"
+    filename = filename + ".csv"
     old_filename = filename
     if tfd:
         for spec in info:

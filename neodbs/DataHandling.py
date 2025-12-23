@@ -646,7 +646,12 @@ def getStimulation(Data):
         y = list(reversed([s['AmplitudeInMilliAmps'] for s in stream]))
         for xx in x: stimulation['X'].append(xx)
         for yy in y: stimulation['Y'].append(yy)
-        text = f"{_[:10]} | Initial: {y[0]} mA | Final: {y[-1]} mA \n Electrodes: {electrodes}"
+        # text = f"{_[:10]} | Initial: {y[0]} mA | Final: {y[-1]} mA \n Electrodes: {electrodes}"
+        new = ""
+        for e in electrodes: new = new + str(e) + ", "
+        new = new.replace('-Positive','(+)')
+        new = new.replace('-Negative','(-)')
+        text = {'Date': _[:10], 'Initial (mA)': y[0], 'Final (mA)':y[-1], 'Electrodes': new}
         stimulation['Info'].append(text)
     
     
@@ -654,7 +659,8 @@ def getStimulation(Data):
         if getStimStatus(Data)[1] == 'ON':
             stimulation['X'].append(utl.full_date2str(final_date))
             stimulation['Y'].append(info['Amplitude'])
-            text = f"{_[:10]} | Initial: {y[-1]} mA | Final: {info['Amplitude']} mA \n Electrodes: {electrodes}"
+            # text = f"{_[:10]} | Initial: {y[-1]} mA | Final: {info['Amplitude']} mA \n Electrodes: {electrodes}"
+            text = {'Date': _[:10], 'Initial (mA)': y[0], 'Final (mA)':y[-1], 'Electrodes': electrodes}
             stimulation['Info'].append(text)
 
     return stimulation

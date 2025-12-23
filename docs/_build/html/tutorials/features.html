@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3. Features &mdash; NeoDBS Beta documentation</title>
+  <title>3. Signal Analysis &mdash; NeoDBS Beta documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -53,19 +53,21 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="td.html">1. In-Clinic Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chronic.html">2. At-Home Data</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">3. Features</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#power-spectral-density-estimation">3.1. Power Spectral Density Estimation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#band-power-over-time">3.1.1. Band Power Over Time</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">3. Signal Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#default-signal-analysis">3.1. Default Signal Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#customizable-signal-analysis">3.2. Customizable Signal Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#power-spectral-density-estimation">3.3. Power Spectral Density Estimation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#band-power-over-time">3.3.1. Band Power Over Time</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#spectrogram">3.2. Spectrogram</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">3.2.1. Band Power Over Time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#spectrogram">3.4. Spectrogram</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">3.4.1. Band Power Over Time</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#coherence">3.3. Coherence</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#coherogram">3.4. Coherogram</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#phase-amplitude-coupling">3.5. Phase-Amplitude Coupling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#cross-correlation">3.6. Cross-Correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coherence">3.5. Coherence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coherogram">3.6. Coherogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#phase-amplitude-coupling">3.7. Phase-Amplitude Coupling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cross-correlation">3.8. Cross-Correlation</a></li>
 </ul>
 </li>
 </ul>
@@ -91,7 +93,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active"><span class="section-number">3. </span>Features</li>
+      <li class="breadcrumb-item active"><span class="section-number">3. </span>Signal Analysis</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/tutorials/features.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -101,31 +103,37 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="features">
-<h1><span class="section-number">3. </span>Features<a class="headerlink" href="#features" title="Link to this heading">¶</a></h1>
+  <section id="signal-analysis">
+<h1><span class="section-number">3. </span>Signal Analysis<a class="headerlink" href="#signal-analysis" title="Link to this heading">¶</a></h1>
+<section id="default-signal-analysis">
+<h2><span class="section-number">3.1. </span>Default Signal Analysis<a class="headerlink" href="#default-signal-analysis" title="Link to this heading">¶</a></h2>
+</section>
+<section id="customizable-signal-analysis">
+<h2><span class="section-number">3.2. </span>Customizable Signal Analysis<a class="headerlink" href="#customizable-signal-analysis" title="Link to this heading">¶</a></h2>
+</section>
 <section id="power-spectral-density-estimation">
-<h2><span class="section-number">3.1. </span>Power Spectral Density Estimation<a class="headerlink" href="#power-spectral-density-estimation" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">3.3. </span>Power Spectral Density Estimation<a class="headerlink" href="#power-spectral-density-estimation" title="Link to this heading">¶</a></h2>
 <section id="band-power-over-time">
-<h3><span class="section-number">3.1.1. </span>Band Power Over Time<a class="headerlink" href="#band-power-over-time" title="Link to this heading">¶</a></h3>
+<h3><span class="section-number">3.3.1. </span>Band Power Over Time<a class="headerlink" href="#band-power-over-time" title="Link to this heading">¶</a></h3>
 </section>
 </section>
 <section id="spectrogram">
-<h2><span class="section-number">3.2. </span>Spectrogram<a class="headerlink" href="#spectrogram" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">3.4. </span>Spectrogram<a class="headerlink" href="#spectrogram" title="Link to this heading">¶</a></h2>
 <section id="id1">
-<h3><span class="section-number">3.2.1. </span>Band Power Over Time<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<h3><span class="section-number">3.4.1. </span>Band Power Over Time<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 </section>
 </section>
 <section id="coherence">
-<h2><span class="section-number">3.3. </span>Coherence<a class="headerlink" href="#coherence" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">3.5. </span>Coherence<a class="headerlink" href="#coherence" title="Link to this heading">¶</a></h2>
 </section>
 <section id="coherogram">
-<h2><span class="section-number">3.4. </span>Coherogram<a class="headerlink" href="#coherogram" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">3.6. </span>Coherogram<a class="headerlink" href="#coherogram" title="Link to this heading">¶</a></h2>
 </section>
 <section id="phase-amplitude-coupling">
-<h2><span class="section-number">3.5. </span>Phase-Amplitude Coupling<a class="headerlink" href="#phase-amplitude-coupling" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">3.7. </span>Phase-Amplitude Coupling<a class="headerlink" href="#phase-amplitude-coupling" title="Link to this heading">¶</a></h2>
 </section>
 <section id="cross-correlation">
-<h2><span class="section-number">3.6. </span>Cross-Correlation<a class="headerlink" href="#cross-correlation" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">3.8. </span>Cross-Correlation<a class="headerlink" href="#cross-correlation" title="Link to this heading">¶</a></h2>
 </section>
 </section>
 

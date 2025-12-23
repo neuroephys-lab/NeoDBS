@@ -21,7 +21,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="3. Features" href="features.html" />
+    <link rel="next" title="3. Signal Analysis" href="features.html" />
     <link rel="prev" title="1. In-Clinic Data" href="td.html" /> 
 </head>
 
@@ -57,12 +57,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#outlier-removal">2.1.1. Outlier Removal</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#event-locked-analysis">2.1.2. Event-locked Analysis</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#circadian-rhythm">2.1.3. Circadian Rhythm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stimulation">2.1.4. Stimulation</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#events">2.2. Events</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">3. Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">3. Signal Analysis</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul>
@@ -99,8 +100,9 @@
   <section id="at-home-data">
 <h1><span class="section-number">2. </span>At-Home Data<a class="headerlink" href="#at-home-data" title="Link to this heading">¶</a></h1>
 <p>Medtronic's Percept BrainSense™ technology allows at-home recordings to track the effects of symptoms,
-medication and routine outside of the clinic. There are two at-home recording modes: <em>Timeline</em> and <em>Events</em>.
-<em>Timeline</em> records the long-term LFP signal troughout all day and <em>Events</em> record a 30 second snapshot, manually
+medication and routine outside of the clinic.</p>
+<p>There are two <strong>at-home recording modes: Timeline</strong> and <strong>Events</strong>.</p>
+<p><em>Timeline</em> records the long-term LFP signal troughout all day and <em>Events</em> record a 30 second snapshot, manually
 triggered by the user to record important events such as symptoms, medication, etc.
 The chronic LFP recordings are acquired from a pre-selected contact pairs, and are restricted to bipolar settings
 and the stimulation electrodes used.</p>
@@ -130,25 +132,48 @@ to define the value of the threshold. If the LFP value is above the threshold it
 by the RMS.</p>
 <img alt="../_images/timeline_features.png" src="../_images/timeline_features.png" />
 <ol class="arabic simple">
-<li><p>Select threshold.</p></li>
+<li><p>Select the threshold value, by sliding the <strong>&quot;Remove Outlier&quot;</strong> item. User can readjust threshold as many times needed.</p></li>
 <li><p>The filtered signals will update the main plot.</p></li>
-<li><p>If the user wants to recalculate timeline metrics, press &quot;Recalculate Metrics&quot;.</p></li>
-<li><p>To see missing points from recordings, toggle checkbox &quot;Show missing points&quot;.</p></li>
+<li><p>If the user wants to recalculate timeline metrics, press <em>&quot;Recalculate Metrics&quot;</em>.</p></li>
+<li><p>To see missing points from recordings, toggle checkbox <em>&quot;Show missing points&quot;</em>.</p></li>
 </ol>
 </section>
 <section id="event-locked-analysis">
 <h3><span class="section-number">2.1.2. </span>Event-locked Analysis<a class="headerlink" href="#event-locked-analysis" title="Link to this heading">¶</a></h3>
 <p>When using the <strong>Combined</strong> window, the user has the possibility to epoch all the events marked by the user at-home,
-allowing an automatic event-locked analysis of the chronic recordings.</p>
+allowing an automatic event-locked analysis of the chronic recordings. The segments are centered around the marked event, with 1h-interval before and after the event.</p>
 <ol class="arabic simple">
-<li><p>Press &quot;Analyze Events&quot;.</p></li>
-<li><p>A new plot will appear with the automatically segmented signals, centered around the marked event.</p></li>
+<li><p>Press <strong>&quot;Analyze Events&quot;</strong>.</p></li>
+<li><p>A new plot will appear, under a new child tab (<em>Timeline Events</em>), with the automatically segmented signals, centered around the marked event.</p></li>
 <li><p>If the original signals were filtered, the epochs will be made from the filtered signals.</p></li>
-<li><p>The same metrics extracted for the <em>Timeline</em> recordings will be extracted for the epochs, the epoch before the event and the epoch after the event.</p></li>
+<li><p>The same metrics extracted for the <em>Timeline</em> recordings will be extracted for the <em>full</em> epochs, the epoch <em>before</em> the event and the epoch <em>after</em> the event, organized hierarchically by <strong>event</strong> and <em>hemisphere</em>.</p></li>
 </ol>
+<img alt="../_images/timeline_events.png" src="../_images/timeline_events.png" />
 </section>
 <section id="circadian-rhythm">
 <h3><span class="section-number">2.1.3. </span>Circadian Rhythm<a class="headerlink" href="#circadian-rhythm" title="Link to this heading">¶</a></h3>
+<p>From the <em>Timeline</em> recordings, NeoDBS computes the circadian rhythm by aligning all recordings by their time component.
+The respective mean and standard deviation are calculated and ploted, according to the selected signals.</p>
+<ol class="arabic simple">
+<li><p>Under the collapsing header &quot;Signal Analysis&quot;, press <strong>&quot;Circadian Rhythm&quot;</strong>.</p></li>
+<li><p>The signals are plotted, aligned by hour. Mean and standard deviation are automatically computed.</p></li>
+<li><p>Mean circadian metrics are automatically extracted.</p></li>
+<li><p>Mean, and standard deviation, are recalculated with signal toggling, reploted and metrics are recalculated.</p></li>
+<li><p>To hide the individual signals, and only show mean and standard deviation, press <em>&quot;Hide days&quot;</em>.</p></li>
+</ol>
+<img alt="../_images/circadian.png" src="../_images/circadian.png" />
+</section>
+<section id="stimulation">
+<h3><span class="section-number">2.1.4. </span>Stimulation<a class="headerlink" href="#stimulation" title="Link to this heading">¶</a></h3>
+<p>Stimulation current amplitude levels throughout the days can be accessed in the <em>Timeline</em> tab, under the header <em>Signal Analysis</em>.
+Information about the stimulation electrodes and current is tabled per day, and also presented in a graph. This information
+can be very helpful for adaptive stimulation cases or to check configuration changes made by user, such as turning off the stimulation due to discomfort/symptom worsening.</p>
+<ol class="arabic simple">
+<li><p>Under the collapsing header &quot;Signal Analysis&quot;, press <strong>&quot;Stimulation&quot;</strong>.</p></li>
+<li><p>Stimulation amplitude will be plotted and information tabled.</p></li>
+<li><p>All information can be properly exported.</p></li>
+</ol>
+<img alt="../_images/stimulation.png" src="../_images/stimulation.png" />
 </section>
 </section>
 <section id="events">
@@ -156,7 +181,16 @@ allowing an automatic event-locked analysis of the chronic recordings.</p>
 <p>The BrainSense™ Events mode (LFP Snapshots) is for at home usage and is combined with
 the BrainSense™ Timeline mode. Patients manually mark events with a wireless device, time
 stamping events in the BrainSense™ timeline data and triggering recording of high definition LFP
-for 30s. The average PSD estimate is also computed and stored.</p>
+for 30s. The average PSD estimate is also internally computed by the DBS system and stored.</p>
+<img alt="../_images/events.png" src="../_images/events.png" />
+<ol class="arabic simple">
+<li><p>Select <strong>&quot;Events&quot;</strong> tab. The respective signals, functionalities and metrics will be displayed.</p></li>
+<li><p>Metrics are organized into groups, to facilitate exportation.</p></li>
+<li><p>Mean and standard deviation plots are recalculated, as the user selects/deselect signals.</p></li>
+<li><p>To recalculate the mean metrics of the events, press <em>&quot;Recalculate Mean Metrics&quot;</em>.</p></li>
+<li><p>PSD's can be converted between dB or original power values, by toggling <em>&quot;Change to dB&quot;</em>.</p></li>
+<li><p>Standard deviation can also be converted into the 95% Confidence Interval, by choosing between the radio button under <em>&quot;Shaded Area&quot;</em>.</p></li>
+</ol>
 </section>
 </section>
 
@@ -165,7 +199,7 @@ for 30s. The average PSD estimate is also computed and stored.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="td.html" class="btn btn-neutral float-left" title="1. In-Clinic Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="features.html" class="btn btn-neutral float-right" title="3. Features" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="features.html" class="btn btn-neutral float-right" title="3. Signal Analysis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

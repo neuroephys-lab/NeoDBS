@@ -30,7 +30,33 @@ import dearpygui.dearpygui as dpg
 dpg.create_context()
 
 dpg.show_imgui_demo()
-dpg.create_viewport(title='Custom Title', width=800, height=600)
+
+# with dpg.window(label="Single Plot Demo", width=700, height=450):
+
+#     with dpg.plot(label="My Plot", height=350, width=-1):
+#         dpg.add_plot_axis(dpg.mvXAxis, label="X")
+#         y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Y")
+#         dpg.add_plot_legend()
+
+#         x = [0, 1, 2, 3, 4]
+#         y_tooltip = [0, 1, 0, 1, 0]
+#         y_popup = [1, 0, 1, 0, 1]
+
+#         # -------- Line with TOOLTIP --------
+#         line_tooltip = dpg.add_line_series(
+#             x, y_tooltip,
+#             label="Tooltip Line",
+#             parent=y_axis
+#         )
+
+#         with dpg.tooltip(parent=line_tooltip):
+#             dpg.add_text("Tooltip line")
+#             dpg.add_button(
+#                 label="Tooltip Button",
+#                 callback=lambda: print("Tooltip button pressed")
+#             )
+
+dpg.create_viewport(title="Tooltip vs Popup", width=720, height=480)
 dpg.setup_dearpygui()
 dpg.show_viewport()
 dpg.start_dearpygui()

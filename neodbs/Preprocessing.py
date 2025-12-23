@@ -406,7 +406,7 @@ def removeCardiacComponent(raw, band, filterMethod="Fixed Peak Find"):
     '''
 
     a,b = band
-    if a == 0: a = 0.01
+    if a == 0: a = 0.1
     if b == 0: b = 100
 
     band = np.array([a,b])

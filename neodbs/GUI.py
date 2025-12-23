@@ -135,7 +135,7 @@ def save_table_to_file(sender, app_data, user_data):
 
     if not dpg.does_item_exist(f"{sender}_toast"):
         with dpg.tooltip(parent=sender,tag=f"{sender}_toast"):
-            dpg.add_text(f"Saved file: {filename}.csv!")
+            dpg.add_text(f"Saved file: {filename}!")
 
 def save_band_powers_to_txt(sender, app_data, user_data):
     '''
@@ -543,7 +543,7 @@ def save_signals(sender,app_data,user_data):
                 freqs = np.linspace(*ylim,rows).tolist()
                 time = np.linspace(*xlim,cols).tolist()
                 info.append({plot_title[i]: [freqs[::-1],time,sxx]})
-            
+
     ft.export_signals(info,file_name,tfd=tfd)
     if not dpg.does_item_exist(f"{sender}_toast"):
         with dpg.tooltip(parent=sender,tag=f"{sender}_toast"):
@@ -596,7 +596,7 @@ def add_features_buttons(tab_tag, signal_tags):
     if dpg.does_item_exist(tab_tag):
         with dpg.group(parent=tab_tag, horizontal=True, width=600,tag=f"{tab_tag}_features_group"):
             # "Features" menu simulation
-            with dpg.collapsing_header(label="Features", default_open=False, parent=tab_tag,tag = f"{tab_tag}_features"):
+            with dpg.collapsing_header(label="Signal Analysis", default_open=False, parent=tab_tag,tag = f"{tab_tag}_features"):
                 add_combo_df_features(tab_tag,signal_tags)
                 add_combo_features(tab_tag,signal_tags)
                 with dpg.group(horizontal=True):
@@ -679,7 +679,7 @@ def add_combo_features(tab_tag,signal_tags):
 
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_custom_features"):
-        dpg.add_combo(label='Spectral Personalized Analysis',callback = CustomFeatures, user_data=(tab_tag,signal_tags),items = features, parent=f"{tab_tag}_custom_features", tag = f"{tab_tag}_combo_features",width=200)
+        dpg.add_combo(label='Customizable Spectral Analysis',callback = CustomFeatures, user_data=(tab_tag,signal_tags),items = features, parent=f"{tab_tag}_custom_features", tag = f"{tab_tag}_combo_features",width=200)
 
 def add_combo_df_features(tab_tag,signal_tags):
     '''
@@ -693,7 +693,7 @@ def add_combo_df_features(tab_tag,signal_tags):
 
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_df_features"):
-        dpg.add_combo(label='Spectral Default Analysis',callback = DefaultFeatures, user_data=(tab_tag,signal_tags),items = features, parent=f"{tab_tag}_df_features", tag = f"{tab_tag}_combo_df_features",width=200)
+        dpg.add_combo(label='Default Spectral Analysis',callback = DefaultFeatures, user_data=(tab_tag,signal_tags),items = features, parent=f"{tab_tag}_df_features", tag = f"{tab_tag}_combo_df_features",width=200)
 
 #--- Toggle buttons
 def deviation(sender, app_data, user_data):
@@ -1230,7 +1230,7 @@ def create_table(tab_label,table_tag,features, trial_label = "New Trial"):
                         rounded_values = [float(v) for v in np.round(value, 2)]  # Convert each np.float64 to float
                         dpg.add_input_text(default_value=f"{rounded_values}",readonly=True)  # Display clean list
                 elif isinstance(value, str):
-                    dpg.add_input_text(default_value=value,readonly=True)
+                    dpg.add_input_text(default_value=value,readonly=True,width=200)
                 else:  # Single number case
                     dpg.add_input_text(default_value=f"{float(value):.2f}",readonly=True)  # Ensure it's a clean float
 
@@ -1240,7 +1240,12 @@ def create_table(tab_label,table_tag,features, trial_label = "New Trial"):
             with dpg.table(header_row=True, borders_innerH=True, borders_innerV=True, borders_outerH=True, borders_outerV=True, tag=table_tag):
                 dpg.add_table_column(label="Trial", width=100)                          
                 for band in features.keys():
-                    dpg.add_table_column(label=band, width=100)
+                    width =100
+                    if band == 'Electrodes':
+                        width = -1
+                    dpg.add_table_column(label=band, width=width)
+                    
+
         add_row()
         if not dpg.does_item_exist(f"{table_tag}_save"):
             b1 = dpg.add_button(label='Save Table', tag = f"{table_tag}_save", callback=filename_window, user_data=(table_tag, 'csv'), parent=tab_label)
@@ -3740,7 +3745,6 @@ def switch_theme(sender, app_data, user_data):
     else:
         
         # dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 8, parent=user_data)
-        print(dpg.get_item_info(dpg.get_item_children(user_data)[1]))
         dpg.bind_theme(user_data)
 
 def change_electrodes_names(sender, app_data, user_data):
@@ -3879,6 +3883,14 @@ def change_plot_color(color_id):
             dpg.add_theme_color(dpg.mvPlotCol_MarkerOutline, color, category=dpg.mvThemeCat_Plots)
     return theme_id
 
+def classic_button():
+    with dpg.theme() as button_theme:
+        with dpg.theme_component(dpg.mvButton):
+            dpg.add_theme_color(dpg.mvThemeCol_Button, (40, 141, 184)) #(90, 110, 130)
+            dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (60, 161, 204))
+            dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (20, 121, 164))
+    return button_theme
+
 def change_line_thickness(thickness, component = dpg.mvLineSeries):
     '''
     Theme for mvLineSeries thickness
@@ -3961,6 +3973,18 @@ def set_font(size=16):
     )
 
     dpg.bind_font(default_font)
+
+def horizontal_scroll(sender,app_data,user_data):
+    wid = user_data
+    if 'Activate' in dpg.get_item_label(sender):
+        flag = True
+        label = 'Deactivate Horizontal Scrollbar'
+    else:
+        flag = False
+        label = 'Activate Horizontal Scrollbar'
+    
+    dpg.configure_item(wid,horizontal_scrollbar=flag)
+    dpg.configure_item(sender,label=label)
 
 #--- Extract signal/identifiers
 def extract_idx_from_series_tag(series_tag: str) -> int:
@@ -5516,8 +5540,6 @@ def stimulation_timeline(sender,app_data,user_data):
         files = [i for i in range(len(app_state['windows'][window_id]))]
         # files = np.unique(files)
     else: files = [None]
-    # datas = [getDatabyFile(window_id,file) for file in files]
-
 
     stimulation = {'X': [], 'Y': [], 'Info':[]}
     for file in files: 
@@ -5525,7 +5547,7 @@ def stimulation_timeline(sender,app_data,user_data):
         for x in stimus['X']: stimulation['X'].append(x)
         for x in stimus['Y']: stimulation['Y'].append(x)
         for x in stimus['Info']: 
-            if stimulation['Info']!= [] and x[:10] == stimulation['Info'][-1][:10]: 
+            if stimulation['Info']!= [] and x['Date'] == stimulation['Info'][-1]['Date']: 
                 stimulation['Info'][-1] = x
                 continue
             stimulation['Info'].append(x)
@@ -5544,10 +5566,12 @@ def stimulation_timeline(sender,app_data,user_data):
             dpg.bind_item_theme(l,change_line_thickness(4))
         with dpg.group():
             dpg.add_text('Information')
-            with dpg.child_window(height=380):
+            with dpg.child_window(height=300,tag=f"{tab_label}_information"):
                 for info in stimulation['Info']:
-                    dpg.add_text(info)
-                    dpg.add_separator()
+                    trial = info['Date']
+                    info.pop('Date')
+                    create_table(f"{tab_label}_information",f"{tab_label}_information_table",info,trial_label=trial)
+    
     
     dpg.add_separator(label='Export',parent=tab_label)
     b1 = dpg.add_button(label = 'Export Plot Figure',parent=tab_label,width=-1,callback = filename_window,user_data =('2D', plot_tag, y_axis,0))
@@ -5621,7 +5645,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
         for s, seg in enumerate(segments):
             
             segment, label = seg
-            name = label[:label.find(' ')]
+            name = label[:label.find('-')]
             name = getUpdatedEventName(name)
             x,y=segment[0],segment[1]
 
@@ -5630,7 +5654,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
                 temp_tags.append(f"{tab_label}_{label}_{s}")
             else:
                 name = label[label.find(' | ')+3:]
-                name = getUpdatedEventName(name[:name.find(' ')])
+                name = getUpdatedEventName(name[:name.find('-')])
 
             sign = {'X':x,'Y':y}                
 
@@ -6066,8 +6090,9 @@ def session_window(Data, window_id, file_id = None):
 
 def window_menu(window_id):
     with dpg.menu_bar(label='Settings'):
-        with dpg.menu(label='Change',tag=f"{window_id}_change"):
-            dpg.add_menu_item(label='Change Window Name',callback=change_window_name,user_data=f"window_{window_id}")
+        with dpg.menu(label='Edit',tag=f"{window_id}_change"):
+            dpg.add_menu_item(label='Edit Window Name',callback=change_window_name,user_data=f"window_{window_id}")
+            dpg.add_menu_item(label='Activate Horizontal Scrollbar', callback = horizontal_scroll,user_data=f"window_{window_id}")
         with dpg.menu(label='Save...'):
             p = dpg.add_menu_item(label="All Window - Plots", callback=save_all, user_data = ('Plots', window_id))
             with dpg.tooltip(parent=p):
@@ -6797,14 +6822,8 @@ def indefinite_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             plot_td(signals,parent,tab_tag,signal_tags)
 
         toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag)
-        #button_parent = f"{tab_tag}_buttons"
-        with dpg.group(parent=f"{tab_tag}_buttons"):
-            dpg.add_spacer(height=10)  # Optional: Adds some spacing
-            dpg.add_button(label='Segment Signal', show=True)
     with dpg.group(parent=tab_tag, tag = f"{tab_tag}_add_events", horizontal=True):
-        # interval_events(tab_tag,signal_tags)
         dpg.add_button(label='Insert Streaming Events', parent=f"{tab_tag}_add_events", callback = insert_events, user_data=(window_id, tab_tag, signal_tags))
-        # dpg.add_button(label='Analyze Events', parent = f"{tab_tag}_add_events", callback=align_events,user_data=(tab_tag,signal_tags), tag=f"{tab_tag}_align",show=False)
     
     add_filters_buttons(tab_tag,signal_tags)
     add_features_buttons(tab_tag, signal_tags)
@@ -7997,8 +8016,8 @@ def create_multiple_window():
 
             case 'Damaged': return
 
-        dpg.set_item_width(item=f"window_{window_id}",width=-1)
-        dpg.set_item_height(item=f"window_{window_id}",height=-1)
+        dpg.set_item_width(item=f"window_{window_id}",width=800)
+        dpg.set_item_height(item=f"window_{window_id}",height=400)
                     
     with dpg.window(label=f"Window {window_id + 1}", width=400, height=300, tag=f"window_{window_id}"):
         window_menu(window_id)
@@ -8032,7 +8051,6 @@ def create_individual_window():
     window_id = len(app_state["windows"])  # Unique ID
     app_state["windows"][window_id] = {"Files": []}  # Track window state
     app_state['windows'][window_id]['Bands'] = global_bands
-    warning_text = ''
 
     def file_dialog_callback(sender, app_data, user_data):
         window_id = user_data
@@ -8164,8 +8182,8 @@ def create_individual_window():
                         timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
                         # electrode_tab(Data,f"tab_electrode_{window_id}")
 
-        dpg.set_item_width(item=f"window_{window_id}",width=-1)
-        dpg.set_item_height(item=f"window_{window_id}",height=-1)
+        dpg.set_item_width(item=f"window_{window_id}",width=800)
+        dpg.set_item_height(item=f"window_{window_id}",height=400)
                
     def open_file_callback(sender, app_data, user_data): #open file
         window_id = user_data  # Get window-specific ID
@@ -8239,8 +8257,6 @@ def create_individual_window():
             with dpg.group():
                 dpg.add_text(f"Stimulation Information", show=False, tag = f"stimulation_parameteres_{window_id}_title")
                 dpg.add_child_window(tag = f"stimulation_parameteres_{window_id}",  height= 150, width=-1, show=False,horizontal_scrollbar=True)
-        # damage_text = ''
-        # if warning_text != '': damage_text == warning_text
         dpg.add_text('', tag=f"damage_{window_id}", show=True)
         dpg.add_text('', tag=f"modes_{window_id}", show=False) #Modes in  
         with dpg.group(horizontal=True,tag = f"mode_list_group_{window_id}"): pass  
@@ -8305,11 +8321,18 @@ if __name__ == "__main__":
                     dpg.add_menu_item(label="Light", callback=switch_theme, user_data=light_theme)
                     dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
 
+            with dpg.theme() as button_theme:
+                with dpg.theme_component(dpg.mvButton):
+                    dpg.add_theme_color(dpg.mvThemeCol_Button, (40, 141, 184)) #(90, 110, 130)
+                    dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (60, 161, 204))
+                    dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (20, 121, 164))
+
             with dpg.group(horizontal=True, pos=[150, 250]):
-                dpg.add_button(label="Individual/Recording Analysis", callback=create_individual_window,height=40,width=350)
+                dpg.add_button(label="Individual/Recording Analysis", callback=create_individual_window,height=40,width=350,tag="individual")
+                dpg.bind_item_theme("individual",button_theme)
                 dpg.add_spacer(indent=5)
-                dpg.add_button(label="Combined/Event Analysis", callback=create_multiple_window,height=40,width=350)
-                dpg.bind_item_handler_registry
+                dpg.add_button(label="Combined/Event Analysis", callback=create_multiple_window,height=40,width=350,tag="combined")
+                dpg.bind_item_theme("individual",button_theme)
             dpg.set_viewport_width(1000)
             dpg.set_viewport_height(600)
 

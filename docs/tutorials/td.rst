@@ -17,7 +17,7 @@ Preprocessing
 Tipically, the first step in any data analysis pipeline is "cleaning" the data to remove undesired noise or 
 signals. NeoDBS offers a variety of filters, and pipelines, that are customizable to the user needs.
 
-.. note::
+.. warning::
     After applying any preprocessing method (filtering, segmentation or event-marking/epoch) you will not have access
     to the raw original signals without loosing your progress. If you want to restore the original signals, the user must
     close and reopen the respective tab.
@@ -60,6 +60,7 @@ Recordings can be segmented, with a minimum of 10 seconds of duration.
 
 .. image:: ../img/segmentation.png
 
+.. _ela:
 Event-locked Analysis
 ---------------------
 NeoDBS offers two type of event-locked analysis. To load the platform with the events, the user must select a .txt file with the described events. 
@@ -83,10 +84,11 @@ has been emplyed, no more segmentation or events can be added.
 
 .. image:: ../img/marked_events.png
 
-**Features**
+Signal Analysis
+^^^^^^^^^^^^^^^
 
-Following the good practices, only after properly preparing the signal of interest, the user can employ methods to perform
-spectral analysis. Tutorials can be found in the :doc:`Features <features>` page.
+Following the good practices of signal processing, only after properly preparing the signal of interest, the user can employ methods to perform
+spectral analysis. Tutorials to apply analysis methods can be found in the :doc:`Signal Analysis <features>` page.
 
 
 

@@ -1,5 +1,11 @@
-Features
-========
+Signal Analysis
+===============
+
+Default Signal Analysis
+-----------------------
+
+Customizable Signal Analysis
+----------------------------
 
 Power Spectral Density Estimation
 ---------------------------------

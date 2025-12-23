@@ -41,10 +41,18 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/first_steps.html">First Steps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/first_usage.html">First usage</a></li>
+              <p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_steps.html">First Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html">First Usage</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/td.html">1. In-Clinic Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/chronic.html">2. At-Home Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/features.html">3. Features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
@@ -595,7 +603,7 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; - &#39;</span><span class="p">,</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
     <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
-    <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;Signals_&#39;</span><span class="o">+</span><span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span>
     <span class="n">old_filename</span> <span class="o">=</span> <span class="n">filename</span>
     <span class="k">if</span> <span class="n">tfd</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">info</span><span class="p">:</span>
