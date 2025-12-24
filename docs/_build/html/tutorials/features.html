@@ -54,20 +54,18 @@
 <li class="toctree-l1"><a class="reference internal" href="td.html">1. In-Clinic Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chronic.html">2. At-Home Data</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">3. Signal Analysis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#default-signal-analysis">3.1. Default Signal Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#customizable-signal-analysis">3.2. Customizable Signal Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#power-spectral-density-estimation">3.3. Power Spectral Density Estimation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#band-power-over-time">3.3.1. Band Power Over Time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#psd-estimation">3.1. PSD Estimation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#band-power-over-time">3.1.1. Band Power Over Time</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#spectrogram">3.4. Spectrogram</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">3.4.1. Band Power Over Time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coherence">3.2. Coherence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#spectrogram">3.3. Spectrogram</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">3.3.1. Band Power Over Time</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#coherence">3.5. Coherence</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#coherogram">3.6. Coherogram</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#phase-amplitude-coupling">3.7. Phase-Amplitude Coupling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#cross-correlation">3.8. Cross-Correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coherogram">3.4. Coherogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#phase-amplitude-coupling">3.5. Phase-Amplitude Coupling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cross-correlation">3.6. Cross-Correlation</a></li>
 </ul>
 </li>
 </ul>
@@ -105,35 +103,125 @@
              
   <section id="signal-analysis">
 <h1><span class="section-number">3. </span>Signal Analysis<a class="headerlink" href="#signal-analysis" title="Link to this heading">¶</a></h1>
-<section id="default-signal-analysis">
-<h2><span class="section-number">3.1. </span>Default Signal Analysis<a class="headerlink" href="#default-signal-analysis" title="Link to this heading">¶</a></h2>
-</section>
-<section id="customizable-signal-analysis">
-<h2><span class="section-number">3.2. </span>Customizable Signal Analysis<a class="headerlink" href="#customizable-signal-analysis" title="Link to this heading">¶</a></h2>
-</section>
-<section id="power-spectral-density-estimation">
-<h2><span class="section-number">3.3. </span>Power Spectral Density Estimation<a class="headerlink" href="#power-spectral-density-estimation" title="Link to this heading">¶</a></h2>
+<p>Acquiring intracranial recordings allows the possibility to analyze how the brain activity changes
+across different moments and locations. To properly study how the characteristics of the intracranial
+signals and oscillations change, several tools can be used. These changes are visible in the different
+domains: time, frequency and time-frequency, for which NeoDBS is fully prepared to analyze.</p>
+<p>Signal analysis methods and tools have to be fine-tuned to the acquiring conditions so conclusions can be made
+with precision and certainty. However, for users with no background or knowledge in
+signal processing, this task can turn out to be very difficult.</p>
+<p>Therefore, NeoDBS took an effort in creating robust pipelines that can be used by every user, researcher or
+physician, without any in-depth knowledge. To access these prepared methods, access <strong>&quot;Defaul Signal Analysis&quot;</strong>,
+under the header &quot;Signal Analysis&quot;.</p>
+<p>Nonetheless, signal analysis parameters can be fully customized to the researcher's needs. When customizing the parameters,
+the user will be aided by the documentation and default parameter's values, as seen in the following picture. To
+access the customizable methods, access <strong>&quot;Customizable Signal Analysis&quot;</strong>, under the header &quot;Signal Analysis&quot;.</p>
+<img alt="../_images/custom_features.png" src="../_images/custom_features.png" />
+<p>NeoDBS offers the following signal analysis tools for time-domain signals, both on the <strong>default</strong> and <strong>customizable</strong> pipelines:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Power Spectral Density (PSD) Estimation</dt><dd><ul>
+<li><p>Periodogram</p></li>
+<li><p>Welch PSD</p></li>
+<li><p>DPSS Multitaper</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Coherence</dt><dd><ul>
+<li><p>Welch Coherence</p></li>
+<li><p>Multitaper Coherence</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Cross-Correlation</p></li>
+<li><p>Spectrogram</p></li>
+<li><p>Wavelet</p></li>
+<li><p>Coherogram</p></li>
+<li><p>Phase-Amplitude Coupling</p></li>
+</ul>
+<p>Additionally, to further enhance spectral analysis, the user can add more frequency bands to be included in the analysis.
+The minimum interval for the frequency band is 2 Hz and can be added using the following buttons:</p>
+<img alt="../_images/bands.png" src="../_images/bands.png" />
+<p>The default bands are: Delta (0.1-4 Hz), Theta (4-8 Hz), Alpha (8-12 Hz), Beta (12-30 Hz) and Gamma (30-100 Hz).</p>
+<section id="psd-estimation">
+<h2><span class="section-number">3.1. </span>PSD Estimation<a class="headerlink" href="#psd-estimation" title="Link to this heading">¶</a></h2>
+<p>Analyzing the frequency component of signals is a very important tool when researching brain activity and
+biomarkers and neural signatures. Brain activity is characterized by rhythmic oscillations, whether in
+several important processes, like sleep, or by communicating within different regions and neural populations.
+It is crutial to look at how the energy of these oscillations changes in different moments.
+Using PSD estimation we can see how the power of each frequency differs.</p>
+<p>The available PSD estimation methods present all the same information, with different time and spectral resolutions, which can
+be beneficial to different tasks or research goals. You can find a more detailed explanation in: <a class="reference external" href="https://www.mathworks.com/help/signal/ug/nonparametric-methods.html">https://www.mathworks.com/help/signal/ug/nonparametric-methods.html</a>.</p>
+<ol class="arabic simple">
+<li><p>Under the &quot;Signal Analysis&quot; header, choose between <strong>default</strong> or <strong>custom</strong> signal analysis.</p></li>
+<li><p>Choose which PSD estimation method you want to implement: <strong>Periodogram, Welch or DPSS</strong>.</p></li>
+<li><p>If you chose <strong>custom</strong> analysis, fill the required parameters and press <strong>&quot;Save Parameters&quot;</strong>. Then, press <strong>&quot;Plot filtered signal&quot;</strong>.</p></li>
+<li><p>A new child tab will be created, under the name of the method employed, with the result of the analysis and extracted features.</p></li>
+</ol>
+<img alt="../_images/psd.png" src="../_images/psd.png" />
+<ol class="arabic simple" start="5">
+<li><p>Mean and standard deviation are recalculated with every signal toggle.</p></li>
+<li><p>To convert the PSD between original units and dB, toggle <strong>&quot;Change to dB&quot;</strong>.</p></li>
+<li><p>To show only the mean PSD, and respective standard deviation, toggle <strong>&quot;Show Mean Only&quot;</strong>.</p></li>
+<li><p>The standard deviation can be converted to the 95% Confidence Interval, by choosing in the radio button under <strong>&quot;Shaded Area&quot;</strong>.</p></li>
+<li><p>Automatically extracted features are organized into convenient groups, to facilitate visualization and exportation of features.</p></li>
+<li><p>Plots, signals and tables can be easily exported.</p></li>
+</ol>
 <section id="band-power-over-time">
-<h3><span class="section-number">3.3.1. </span>Band Power Over Time<a class="headerlink" href="#band-power-over-time" title="Link to this heading">¶</a></h3>
-</section>
-</section>
-<section id="spectrogram">
-<h2><span class="section-number">3.4. </span>Spectrogram<a class="headerlink" href="#spectrogram" title="Link to this heading">¶</a></h2>
-<section id="id1">
-<h3><span class="section-number">3.4.1. </span>Band Power Over Time<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<h3><span class="section-number">3.1.1. </span>Band Power Over Time<a class="headerlink" href="#band-power-over-time" title="Link to this heading">¶</a></h3>
+<p>When more than one recording from the same-channel is present when employing the PSD method, the user can see how the mean
+power of each frequency band changes over time.</p>
+<img alt="../_images/smpot.png" src="../_images/smpot.png" />
+<ol class="arabic simple">
+<li><p>Press <strong>&quot;Show Mean Power Across Time&quot;</strong>.</p></li>
+<li><p>The mean power per band, per channel, is plotted. The respective dates are indexed on the right side of the plot.</p></li>
+</ol>
+<img alt="../_images/smpot_graph.png" src="../_images/smpot_graph.png" />
+<ol class="arabic simple" start="3">
+<li><p>If you want to add an external information, press <strong>&quot;Insert Line Series&quot;</strong>. This will accept an txt file, with the following structure: first line is the label of the series, and every line stores the value of each time point.</p></li>
+</ol>
+<img alt="../_images/insert_file.png" src="../_images/insert_file.png" />
+<ol class="arabic simple" start="4">
+<li><p>The inserted series is plotted on secondary axis allowing the user to zoom and move around the inserted values independently from the mean power.</p></li>
+</ol>
+<img alt="../_images/smpot_wl.png" src="../_images/smpot_wl.png" />
+<ol class="arabic simple" start="5">
+<li><p>You can insert multiple line series, although it is not recommended.</p></li>
+</ol>
 </section>
 </section>
 <section id="coherence">
-<h2><span class="section-number">3.5. </span>Coherence<a class="headerlink" href="#coherence" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">3.2. </span>Coherence<a class="headerlink" href="#coherence" title="Link to this heading">¶</a></h2>
+<p>Coherence is a tool that analyzes the synchrony between two signals, serving tipically to study functional connectivity between regions and populations.
+Coherence values ranges from 0 to 1, with 0 meaning no linear relationship at the frequency and 1 representing
+perfect linear coupling.</p>
+<ol class="arabic simple">
+<li><p>Under the &quot;Signal Analysis&quot; header, choose between <strong>default</strong> or <strong>custom</strong> signal analysis.</p></li>
+<li><p>Choose which coherence method you want to implement: <strong>Coherence</strong> (Welch) or <strong>Multitaper Coherence</strong>.</p></li>
+<li><p>Select which combination of signals you want to analyze. After, press <strong>&quot;Plot Coherence&quot;</strong>.</p></li>
+</ol>
+<img alt="../_images/coh.png" src="../_images/coh.png" />
+<ol class="arabic simple" start="4">
+<li><p>Both Absolute and Imaginary components of coherence are plotted and features are automatically extracted.</p></li>
+</ol>
+</section>
+<section id="spectrogram">
+<h2><span class="section-number">3.3. </span>Spectrogram<a class="headerlink" href="#spectrogram" title="Link to this heading">¶</a></h2>
+<section id="id1">
+<h3><span class="section-number">3.3.1. </span>Band Power Over Time<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+</section>
 </section>
 <section id="coherogram">
-<h2><span class="section-number">3.6. </span>Coherogram<a class="headerlink" href="#coherogram" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">3.4. </span>Coherogram<a class="headerlink" href="#coherogram" title="Link to this heading">¶</a></h2>
 </section>
 <section id="phase-amplitude-coupling">
-<h2><span class="section-number">3.7. </span>Phase-Amplitude Coupling<a class="headerlink" href="#phase-amplitude-coupling" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">3.5. </span>Phase-Amplitude Coupling<a class="headerlink" href="#phase-amplitude-coupling" title="Link to this heading">¶</a></h2>
 </section>
 <section id="cross-correlation">
-<h2><span class="section-number">3.8. </span>Cross-Correlation<a class="headerlink" href="#cross-correlation" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">3.6. </span>Cross-Correlation<a class="headerlink" href="#cross-correlation" title="Link to this heading">¶</a></h2>
 </section>
 </section>
 

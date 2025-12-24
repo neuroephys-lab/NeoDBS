@@ -11,6 +11,23 @@ triggered by the user to record important events such as symptoms, medication, e
 The chronic LFP recordings are acquired from a pre-selected contact pairs, and are restricted to bipolar settings 
 and the stimulation electrodes used. 
 
++--------------------+---------------+-------------+--------------------------+
+| Mode               | Usage Con-    | Stimulation | Key Features             |                    
+|                    | text          | Status      |                          |                          
++====================+===============+=============+==========================+
+| *Timeline*         | At home       | On          | Long-term monitoring     | 
+|                    |               |             | from pre-selected bipolar| 
+|                    |               |             | pair, power of 5 Hz band |
+|                    |               |             | stored every 10 min;     |                      
+|                    |               |             | Contact pairs limited to |                          
+|                    |               |             | stimulation-compatible.  |                          
++--------------------+---------------+-------------+--------------------------+
+| *Events* (LFP      | At home       | On          | Event-marked recordings, |
+| Snapshots)         |               |             | 30s LFP + PSD snapshot,  | 
+|                    |               |             | time-stamped by patient  |                          
+|                    |               |             | manual input             |                          
++--------------------+---------------+-------------+--------------------------+
+
 Timeline
 --------
 

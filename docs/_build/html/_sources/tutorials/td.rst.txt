@@ -6,6 +6,33 @@ In this tutorial, a simple workflow is given to perform the analysis of recordin
 After selecting the type of window and file(s) to be analyzed, you must choose the type of recording you want 
 to analyze, which will open a tab with the respective plotted signals and functionalities, as described in :doc:`First Usage <../quickstart/first_usage>`.
 
++--------------------+---------------+-------------+--------------------------+
+| Mode               | Usage Context | Stimulation | Key Features             | 
+|                    |               | Status      |                          |                          
++====================+===============+=============+==========================+
+| *Setup*            | In-clinic     | On or Off   | Required before other    |
+|                    |               |             | modes (except *Survey*); |
+|                    |               |             | Records each segment for |
+|                    |               |             | 21s each (~90s duration) |
++--------------------+---------------+-------------+--------------------------+
+| *Survey*           | In-clinic     | Off         | Records each segment for |
+|                    |               |             | 21s each (~90s duration) |
+|                    |               |             |                          |
++--------------------+---------------+-------------+--------------------------+
+| *Survey*           | In-clinic     | Off         | Long-duration LFP        | 
+| *Indefinite*       |               |             | recording from contact   | 
+| *Streaming*        |               |             | pairs (0-2, 0-3, 1-3),   |                          
+|                    |               |             | full-bandwidth (up to 125|                          
+|                    |               |             | Hz)                      |                           
++--------------------+---------------+-------------+--------------------------+
+| *Streaming*        | In-clinic     | On or Off   | Long-duration LFP        | 
+| *Indefinite*       |               |             | recording from contact   | 
+| *Streaming*        |               |             | pairs compatible with sti|                          
+|                    |               |             | mulation.                |                          
+|                    |               |             |                          |
++--------------------+---------------+-------------+--------------------------+
+
+
 .. note::
     NeoDBS works with a visibility approach, meaning selected methods will only be applied to the 
     signals visible/selected on the main plot of the respective tab. **If the signal is not visible,

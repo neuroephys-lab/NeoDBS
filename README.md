@@ -2,7 +2,11 @@
 
 ### 24.12.2025
 ### Documentation:
-
+- FU
+- Individual vs Combined table added
+- Recording mode table added
+- PSD
+- Coherence (tbf)
 
 ### GUI
 - Main buttons colored - both
@@ -12,6 +16,7 @@
 ### Debug:
 - Custom Features were not parsing the signals (i had them removed so they wouldnt appears as parameters, but wasnt addind them properly to the dict of signals)
 - Removed deprecated functions
+- Show mean power over time --> tags were being masked 2 times for the same visibility!
 
 ## 23.12.2025
 ### Documentation:

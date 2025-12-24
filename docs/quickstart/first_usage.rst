@@ -11,12 +11,20 @@ open multiple windows, each one corresponding to an independent workspace. Just 
 
 Inside each window (or workspace), all the mentioned data is organized and accessed in a hierarchical order:
 
+
 * Window |rarrow| File(s)
 * Tab |rarrow| Recording(s)
 * Child Tab |rarrow| Recording Analysis
 
-This facilitates access to data, while ensuring multiple independent and simultaneous analysis pipelines for 
+.. |rarrow| unicode:: U+2192 .. RIGHT ARROW
+
+This workflow is explained more in depth :ref:`below <general>`. With this arrangement, the platform facilitates access to data, while ensuring multiple independent and simultaneous analysis pipelines for 
 each recording available. 
+
+NeoDBS brings novelty in signal processing platforms by facilitating the user with 
+signal **filtering** and **spectral analysis** pipelines with **default** or **customizable** parameters. Perfect for both unexperienced users 
+like health professionals, or experienced users such as data analists and researchers.
+
 
 .. image:: ../img/browser.png
 
@@ -30,7 +38,7 @@ Additionally, NeoDBS offers two different types of workspaces (windows). The **I
 Individual Window
 ^^^^^^^^^^^^^^^^^
 
-The **Individual** window is to analyze a single recording session, focusing on the evolution of signals and 
+The **Individual** window goal is to analyze a single recording session, focusing on the evolution of signals and 
 events inside the same session. Therefore it includes functionalities like:
 
 * Event marking in time-domain signals, and their time-frequency domain methods, according to user input;
@@ -40,14 +48,14 @@ These are exclusive to this workspace, in order to enhance computing power and h
 
 Combined Window
 ^^^^^^^^^^^^^^^
-Unlike the individual window, the **Combined** window, allow the selection of multiple files, focusing therefore on 
-evolution of the signals across different recording sessions. Additionally, it includes functionalities such as:
+Unlike the individual window, the **Combined** window allows the selection of multiple files, focusing therefore on 
+the evolution of the signals across different recording sessions. Additionally, it includes functionalities such as:
 
 * Event-locked segmentation, automatically epoching recordings according to user input.
 
 These functionalities are further explained in :ref:`here <ela>`.
 
-Here's a summary of the functionalities present in each type of window.
+If you're wondering what is the best window to use, here's a summary of the functionalities present in each type of window.
 
 +------------------------------------+---------------------+--------------------+
 | Feature                            | Individual Analysis | Combined Analysis  |
@@ -56,33 +64,36 @@ Here's a summary of the functionalities present in each type of window.
 +------------------------------------+---------------------+--------------------+
 | Metadata display                   | |check|             | |check|            |
 +------------------------------------+---------------------+--------------------+
-| Default analysis parameters        | |check|             | |check|            |
+| Default/Customizable Filtering     | |check|             | |check|            |
 +------------------------------------+---------------------+--------------------+
-| Custom analysis parameters         | |check|             | |check|            |
+| Default/Customizable Spectral      | |check|             | |check|            |
+| Analysis                           |                     |                    |
 +------------------------------------+---------------------+--------------------+
-| Event-Annotation                   | |check|             | |check|            |
+| Event Annotation                   | |check|             | X                  |
 +------------------------------------+---------------------+--------------------+
-| Manual Segmentation                | |check|             | |check|            |
+| Automatic Event-locked Segmentation| |check|             | |check|            |
 +------------------------------------+---------------------+--------------------+
-| Examination of merged recordings   | |check|             | X                  |
+| Merged Same-Channel Recordings     | |check|             | X                  |
 +------------------------------------+---------------------+--------------------+
-| Automatic Event-locked segmentation| X                   | |check|            |
+| Manual Segmentation                | X                   | |check|            |
 +------------------------------------+---------------------+--------------------+
-| Before/after event examination     | X                   | |check|            |
+| Before/After Event Analysis        | X                   | |check|            |
 +------------------------------------+---------------------+--------------------+
 
 .. |check| unicode:: U+2713 .. CHECK MARK
 
+
+.. _general:
 General Workflow
 ----------------
 
 After understanding what workspaces exist, here is a simple workflow for analysis using NeoDBS.
 
-1. **Select type of analysis to be performed:** **Individual Window** (only analyzes one file - focused on the recording) or **Combined Window** (analyzes as many files as selected - allows event-locked analysis).
+1. **Select type of analysis to be performed:** Individual Window or Combined Window.
 
 .. image:: ../img/main.png
 
-2. **Select the recording session's file(s)**, in JSON format, to be analyzed.
+2. **Select the recording session's file(s)**, in JSON format, to be analyzed. JSON files are highlighted with green letters.
 
 .. image:: ../img/select_file.png
 
@@ -103,6 +114,12 @@ After understanding what workspaces exist, here is a simple workflow for analysi
 
 .. image:: ../img/custom.png
 
-8. **Signals, plots and tables can be easily exported** either individually, per window (workspace) or all windows at once.
+8. **Filtering** methods will update the signals in the main plot. **Signal Analysis** methods create a new plot, under a **child tab** named after the applied method.
+
+9. **Signals, plots and tables can be easily exported** either individually, per window (workspace) or all windows at once.
 
 .. image:: ../img/save.png
+
+Here you can find a scheme that represents the possible workflow in NeoDBS.
+
+.. image:: ../img/workflow.png

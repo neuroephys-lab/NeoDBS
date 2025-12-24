@@ -317,7 +317,7 @@ def save_plot(sender,app_data,user_data):
         if axis[-1] != '':
             extra_tags = dpg.get_item_children(axis_tags[-1])[1]
             mask2 = [dpg.get_item_configuration(tag)['show'] for tag in extra_tags]
-            tags = np.array(tags)[mask].tolist()
+            tags = np.array(tags).tolist()
             mask = mask + mask2
 
         colors = np.array(colors)[mask].tolist()
@@ -655,7 +655,7 @@ def add_combo_features(tab_tag,signal_tags):
 
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_custom_features"):
-        dpg.add_combo(label='Customizable Spectral Analysis',callback = CustomFeatures, user_data=(tab_tag,signal_tags),items = features, parent=f"{tab_tag}_custom_features", tag = f"{tab_tag}_combo_features",width=200)
+        dpg.add_combo(label='Customizable Signal Analysis',callback = CustomFeatures, user_data=(tab_tag,signal_tags),items = features, parent=f"{tab_tag}_custom_features", tag = f"{tab_tag}_combo_features",width=200)
 
 def add_combo_df_features(tab_tag,signal_tags):
     '''
@@ -669,7 +669,7 @@ def add_combo_df_features(tab_tag,signal_tags):
 
     dpg.add_spacer(parent=f"{tab_tag}_features")
     with dpg.group(parent=f"{tab_tag}_features", tag = f"{tab_tag}_df_features"):
-        dpg.add_combo(label='Default Spectral Analysis',callback = DefaultFeatures, user_data=(tab_tag,signal_tags),items = features, parent=f"{tab_tag}_df_features", tag = f"{tab_tag}_combo_df_features",width=200)
+        dpg.add_combo(label='Default Signal Analysis',callback = DefaultFeatures, user_data=(tab_tag,signal_tags),items = features, parent=f"{tab_tag}_df_features", tag = f"{tab_tag}_combo_df_features",width=200)
 
 #--- Toggle buttons
 def deviation(sender, app_data, user_data):
@@ -1779,7 +1779,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             ch,colors = [], []
             if dpg.does_item_exist(f"{tab_label}_smp"): dpg.delete_item(f"{tab_label}_smp")
 
-            with dpg.group(parent=tab_tag, horizontal=True,tag=f"{tab_label}_smp"):
+            with dpg.group(parent=tab_label, horizontal=True,tag=f"{tab_label}_smp"):
                 with dpg.plot(label='Band Mean Power over Time',height=400, width=700,tag=f"{tab_label}_smp_plot"):
                     dpg.add_plot_legend(horizontal=True)
                     xx = dpg.add_plot_axis(dpg.mvXAxis,label='Session Days')

@@ -399,7 +399,7 @@ def export_plot(info, plot_type, size=None, line_types = None,dpi=600):
             if 'Scatter' in line_types[key][i]:
                 secay.scatter(signal['X'],signal['Y'],label=labels[key][i],color=colors[i+len(signals['Y1'])])
             else:
-                secay.plot(signal['X'],signal['Y'],label=labels[key][i],color=colors[i+len(signals['Y1'])],thickness=3)
+                secay.plot(signal['X'],signal['Y'],label=labels[key][i],color=colors[i+len(signals['Y1'])],linewidth=3)
         
         ax.set_title(title)
         ax.set_xlabel(axis[0])

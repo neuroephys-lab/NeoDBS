@@ -8,10 +8,12 @@ About NeoDBS
 .. image:: img/NeoDBS.png
 
 NeoDBS is an open-source user-oriented platform developed in Python, designed to examine electrophysiological 
-brain activity data offline from recordings acquired with Medtronic's Percept BrainSense™ Technology.
+brain activity data offline from recordings acquired with Medtronic's Percept BrainSense™ Technology, present 
+in deep brain stimulation (DBS) equipments. The final goal of NeoDBS is to accelerate and facilitate the biomarker 
+research in intracranial recordings, acquired by DBS systems.
 
 This new platform was developed in order to facilitate the analysis of multiple independent recordings,
-by experienced or non-experienced users like health physicians. It offers a:
+by experienced or non-experienced users like health physicians. It offers:
 
 * **Browser-like design**, allowing multiple workspaces open simultaneously;
 * Workspaces focused on a **single recording session** or on **multiple recording sessions**;
