@@ -617,37 +617,13 @@ def add_timeline_features_buttons(tab_tag, signal_tags):
     if dpg.does_item_exist(tab_tag):
         with dpg.group(parent=tab_tag, horizontal=True, width=600,tag=f"{tab_tag}_features_group"):
             # "Features" menu simulation
-            with dpg.collapsing_header(label="Features", default_open=False, parent=tab_tag,tag = f"{tab_tag}_features"):
+            with dpg.collapsing_header(label="Signal Analysis", default_open=False, parent=tab_tag,tag = f"{tab_tag}_features"):
                 with dpg.group(horizontal=True):
                     dpg.add_button(label='Circadian Rhythm', callback=circadian_rhythm, user_data=(tab_tag, signal_tags, tab_tag))
                     dpg.add_button(label='Stimulation',callback=stimulation_timeline, user_data=(tab_tag, signal_tags, tab_tag))
     else:
         print(f"Tab {tab_tag} does not exist yet.")
 
-def add_menu_bar(tab_tag):
-    '''
-    Internal: adds menu to tab
-    
-    :param tab_tag: (int or str) alias of tab
-    '''
-    if dpg.does_item_exist(tab_tag):
-        with dpg.group(parent=tab_tag, horizontal=True, width=600):
-
-            with dpg.collapsing_header(label="Filters", default_open=False, parent=tab_tag):
-                dpg.add_button(label="Default Filtering",width=-1)
-                dpg.add_button(label="Personalized Filtering",width=-1)
-
-            # "Features" menu simulation
-            with dpg.collapsing_header(label="Features", default_open=False, parent=tab_tag):
-                dpg.add_button(label="Default Feature Extraction",width=-1)
-                dpg.add_button(label="Personalized Feature Extraction",width=-1)
-
-            # "Correlation" menu simulation
-            with dpg.collapsing_header(label="Correlation", default_open=False, parent=tab_tag):
-                dpg.add_button(label="Statistical Analysis",width=-1)
-                dpg.add_button(label="Machine Learning Analysis",width=-1)
-    else:
-        print(f"Tab {tab_tag} does not exist yet.")
 
 def add_combo_filters(sender, app_data, user_data):
     '''
@@ -3743,8 +3719,6 @@ def switch_theme(sender, app_data, user_data):
     if user_data==203:
         dpg.bind_theme(design())
     else:
-        
-        # dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 8, parent=user_data)
         dpg.bind_theme(user_data)
 
 def change_electrodes_names(sender, app_data, user_data):
@@ -5059,7 +5033,9 @@ def CustomFeatures(sender,app_data,user_data):
                             parent=param_container,
                         )
                     combos[param] = input_id
-                elif (param == 'data' and app_data=='wavelet') or (param=='x' and app_data in ['dpss', 'spectrogram','welch','periodogram']): 
+                elif  (param=='x' and app_data in ['dpss', 'spectrogram','welch','periodogram']): 
+                    combos[param] = input_id
+                elif (param == 'data' and app_data=='wavelet'): # or (param=='x' and app_data in ['dpss', 'spectrogram','welch','periodogram']): 
                     continue
                 else:
                     # Default to input text
@@ -7975,6 +7951,7 @@ def create_multiple_window():
             
         dpg.configure_item(f"mode_list_group_{window_id}", show = True)
         dpg.configure_item(f"session_parameteres_{window_id}", show = True)
+        dpg.configure_item(f"window_{window_id}",width=900, height=500)
    
     def open_tab_mode(sender,app_data,user_data): 
         mode, window_id = user_data
@@ -7995,9 +7972,7 @@ def create_multiple_window():
             if mode == 'Survey': dpg.delete_item(f"{tab_tag}_psd")
         
         plot_tag = f"plot_{tab_tag}"
-        signal_tags = {}
-
-        
+        signal_tags = {}     
 
         match mode:
             case 'Setup': comb_setup_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags=signal_tags)
@@ -8016,8 +7991,6 @@ def create_multiple_window():
 
             case 'Damaged': return
 
-        dpg.set_item_width(item=f"window_{window_id}",width=800)
-        dpg.set_item_height(item=f"window_{window_id}",height=400)
                     
     with dpg.window(label=f"Window {window_id + 1}", width=400, height=300, tag=f"window_{window_id}"):
         window_menu(window_id)
@@ -8181,9 +8154,6 @@ def create_individual_window():
                     if len(signals)>0:
                         timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags)
                         # electrode_tab(Data,f"tab_electrode_{window_id}")
-
-        dpg.set_item_width(item=f"window_{window_id}",width=800)
-        dpg.set_item_height(item=f"window_{window_id}",height=400)
                
     def open_file_callback(sender, app_data, user_data): #open file
         window_id = user_data  # Get window-specific ID
@@ -8240,6 +8210,8 @@ def create_individual_window():
                 
                 dpg.configure_item(f"mode_list_group_{window_id}", show = True)
                 app_state['windows'][window_id]['PreviousFilePath'] = file_path
+        
+        dpg.configure_item(f"window_{window_id}",width=900, height=500)
 
     with dpg.window(label=f"Window {window_id + 1}", width=400, height=300, tag=f"window_{window_id}"): #individual window 
         window_menu(window_id)
@@ -8332,7 +8304,7 @@ if __name__ == "__main__":
                 dpg.bind_item_theme("individual",button_theme)
                 dpg.add_spacer(indent=5)
                 dpg.add_button(label="Combined/Event Analysis", callback=create_multiple_window,height=40,width=350,tag="combined")
-                dpg.bind_item_theme("individual",button_theme)
+                dpg.bind_item_theme("combined",button_theme)
             dpg.set_viewport_width(1000)
             dpg.set_viewport_height(600)
 

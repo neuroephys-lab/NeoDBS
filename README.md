@@ -1,7 +1,19 @@
 # NeoDBS
 
-## 23.12.2025
+### 24.12.2025
+### Documentation:
 
+
+### GUI
+- Main buttons colored - both
+- "Features" --> "Signal Analysis" - Timeline
+- Resizing window only one time - when file is opened
+
+### Debug:
+- Custom Features were not parsing the signals (i had them removed so they wouldnt appears as parameters, but wasnt addind them properly to the dict of signals)
+- Removed deprecated functions
+
+## 23.12.2025
 ### Documentation:
 - At-home data
 
@@ -9,6 +21,8 @@
 - Add horizontal scrollbar: it keeps growing, so it can be activated or deactivated
 - Remove random segment button lost in indefinite
 - Stimulation information changed into table + export table (so it goes with electrode information per dat)
+- Main buttons colored
+- "Features" --> "Signal Analysis"
 
 ## 22.12.2025
 

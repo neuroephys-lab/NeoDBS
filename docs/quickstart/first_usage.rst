@@ -7,12 +7,13 @@ First Usage
 NeoDBS is a platform designed for maximal user-experience, with every item and functionality optimized for 
 easy data analysis and natural workflow. *Even for unexperienced users in signal processing and analysis.*
 With this, NeoDBS was developed to allow **several workspaces open symultaneously**. For that, the user can 
-open multiple windows, each one corresponding to an independent workspace. 
+open multiple windows, each one corresponding to an independent workspace. Just like a browser.
 
 Inside each window (or workspace), all the mentioned data is organized and accessed in a hierarchical order:
-* Window --> File(s)
-* Tab --> Recording(s)
-* Child Tab --> Recording Analysis
+
+* Window |rarrow| File(s)
+* Tab |rarrow| Recording(s)
+* Child Tab |rarrow| Recording Analysis
 
 This facilitates access to data, while ensuring multiple independent and simultaneous analysis pipelines for 
 each recording available. 
@@ -46,11 +47,36 @@ evolution of the signals across different recording sessions. Additionally, it i
 
 These functionalities are further explained in :ref:`here <ela>`.
 
+Here's a summary of the functionalities present in each type of window.
+
++------------------------------------+---------------------+--------------------+
+| Feature                            | Individual Analysis | Combined Analysis  |
++====================================+=====================+====================+
+| File Ingestion                     | Single file         | Multiple files     |
++------------------------------------+---------------------+--------------------+
+| Metadata display                   | |check|             | |check|            |
++------------------------------------+---------------------+--------------------+
+| Default analysis parameters        | |check|             | |check|            |
++------------------------------------+---------------------+--------------------+
+| Custom analysis parameters         | |check|             | |check|            |
++------------------------------------+---------------------+--------------------+
+| Event-Annotation                   | |check|             | |check|            |
++------------------------------------+---------------------+--------------------+
+| Manual Segmentation                | |check|             | |check|            |
++------------------------------------+---------------------+--------------------+
+| Examination of merged recordings   | |check|             | X                  |
++------------------------------------+---------------------+--------------------+
+| Automatic Event-locked segmentation| X                   | |check|            |
++------------------------------------+---------------------+--------------------+
+| Before/after event examination     | X                   | |check|            |
++------------------------------------+---------------------+--------------------+
+
+.. |check| unicode:: U+2713 .. CHECK MARK
+
 General Workflow
 ----------------
 
-Here follows a simple workflow for analysis using NeoDBS. You can open several independent workspaces (windows) that have
-a browser-like design, offering maximal user-experience, for all levels of data analysis experience.
+After understanding what workspaces exist, here is a simple workflow for analysis using NeoDBS.
 
 1. **Select type of analysis to be performed:** **Individual Window** (only analyzes one file - focused on the recording) or **Combined Window** (analyzes as many files as selected - allows event-locked analysis).
 
