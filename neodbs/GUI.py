@@ -127,6 +127,12 @@ def save_table_to_file(sender, app_data, user_data):
 
     filename = sanitize_filename(f"{filename}.{file_type}")
 
+    if isinstance(app_data,str):
+        last = app_data[app_data.find(' ')+1:]
+        if last != 'None': 
+            last = dpg.get_item_label(f"window_{last}")
+            filename = f"Window {last}//{filename}"
+
     with open(filename, mode="w", newline="") as file:
         writer = csv.writer(file)
         if headers:
@@ -194,7 +200,7 @@ def filename_window(sender,app_data,user_data):
     title = dpg.get_item_label(plot_tag)
 
     x, y = dpg.get_item_rect_min(sender)
-    window_pos = (x - 10, y - 10)
+    window_pos = (x - 10, y + 10)
     final_userdata = user_data
     parent_sender = sender
 
@@ -207,18 +213,17 @@ def filename_window(sender,app_data,user_data):
             dpg.configure_item(f"{plot_tag}_file",show=False)
         if 'Plot' in label:
             save_plot(parent_sender,app_data,final_userdata)
-            
         elif 'Save Table' ==  label:
             other, _ = final_userdata
             save_table_to_file(parent_sender,app_data,(other,plot_tag))
         else:
             save_signals(parent_sender,app_data,final_userdata)
 
-    if app_data=='All':
-        handle_submit(None,None,None)
+    if app_data and 'All' in app_data:
+        handle_submit(None,app_data,None)
         return
     
-    with dpg.window(label='File Name',tag=f"{plot_tag}_file", width = 160,pos=window_pos,no_collapse=True):
+    with dpg.window(label='File Name',tag=f"{plot_tag}_file", width = 160,pos=window_pos,no_collapse=True,modal=True):
         dpg.add_text("Save file as: ")
         dpg.add_input_text(default_value=title, width=150,tag=f"{plot_tag}_file_name")
         if 'plot' in label.lower():
@@ -387,6 +392,12 @@ def save_plot(sender,app_data,user_data):
     new_title = dpg.get_value(f"{plot_tag}_file_name")
     if new_title is not None: title=new_title
 
+    if isinstance(app_data,str):
+        last = app_data[app_data.find(' ')+1:]
+        if last != 'None': 
+            last = dpg.get_item_label(f"window_{last}")
+            title = f"Window {last}//{title}"
+
     info = signals,labels,colors,title,axis,limits
 
     #signals, labels, colors, title, axis = info
@@ -544,6 +555,12 @@ def save_signals(sender,app_data,user_data):
                 time = np.linspace(*xlim,cols).tolist()
                 info.append({plot_title[i]: [freqs[::-1],time,sxx]})
 
+    if isinstance(app_data,str):
+        last = app_data[app_data.find(' ')+1:]
+        if last != 'None': 
+            last = dpg.get_item_label(f"window_{last}")
+            file_name = f"Window {last}//{file_name}"
+
     ft.export_signals(info,file_name,tfd=tfd)
     if not dpg.does_item_exist(f"{sender}_toast"):
         with dpg.tooltip(parent=sender,tag=f"{sender}_toast"):
@@ -560,7 +577,8 @@ def save_all(sender,app_data,user_data):
         callback = dpg.get_item_callback(button)
         new_user_data = dpg.get_item_user_data(button)
         if callback:
-            callback(button,'All',new_user_data)
+            ad = 'All ' + str(window_id)
+            callback(button,ad,new_user_data)
 
 #--- Add common buttons
 def add_filters_buttons(tab_tag,signal_tags):
@@ -4253,7 +4271,6 @@ def getUpdatedElectrodeName(electrode):
         electrodes_names[electrode] = electrode
 
     return electrodes_names[electrode]
-
 
 def getDatabyTag(series_tag):
     '''

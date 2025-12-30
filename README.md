@@ -1,6 +1,16 @@
 # NeoDBS
 
-### 24.12.2025
+## 30.12.2025
+### Documentation
+- Coherence
+
+### GUI
+- filename window: modal true
+
+### New
+- Save all per window: saves exportations into folder with name of window
+
+## 24.12.2025
 ### Documentation:
 - FU
 - Individual vs Combined table added

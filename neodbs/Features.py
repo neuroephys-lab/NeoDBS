@@ -4,6 +4,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from datetime import datetime
 import utils as utl
+from pathlib import Path
 
 bands = {
             'Delta': [0.01,4],
@@ -473,6 +474,8 @@ def export_plot(info, plot_type, size=None, line_types = None,dpi=600):
                 startangle=90)
         plt.title(title)
 
+    output_path = Path(f"{title}.png")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(f'{title}.png', bbox_inches='tight',dpi=dpi) #
 
     plt.close(fig)
@@ -486,7 +489,6 @@ def export_signals(info,filename, tfd = False):
     :param tfd: Optional. Default to False, if True exports 3D signals (spectrogram/coherogram)
     '''
     filename = filename.replace(' - ','_')
-    filename = filename.replace(' ','_')
     filename = filename + ".csv"
     old_filename = filename
     if tfd:
