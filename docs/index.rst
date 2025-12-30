@@ -61,6 +61,7 @@ explain in complete detail all possible pipelines.
    tutorials/td
    tutorials/chronic
    tutorials/features
+   tutorials/extra
    
 
 API Documentation

@@ -152,6 +152,7 @@ def get_sum_mean_power(p,band=None):
         mask = (x >= v[0]) & (x <= v[1])
         temp = y[mask]
         all.append(np.nanmean(temp))
+        
     return np.sum(all)
 
 def extract_psd_features(p, band, bands=None):

@@ -106,20 +106,123 @@ perfect linear coupling.
 
 .. image:: ../img/coh.png
 
-4. Both Absolute and Imaginary components of coherence are plotted and features are automatically extracted.
+4. Both Absolute and Imaginary components of coherence are plotted and features are automatically extracted. Features are organized into tables.
+
+.. image:: ../img/coh_plot.png
+
+5. To plot a new coherence, repeat the process from step 3. If you want to maintain the previous computed coherence plotted, unselect the checkbox **"Clean Previous Plot"**.
+
+6. If you selected the **Multitaper Coherence**, you can also compute the coherogram. Check more in :ref:`here <coherogram>`. 
+
+7. Plots, tables and signals are easily exported.
 
 Spectrogram
 -----------
 
+The Welch Spectrogram is available on both default and customizable pipelines. 
+
+In the **Individual** window, it allows for spectrograms to be 
+computed per signal or to join recordings (if there are multiple recordings from the same channel). Additionally, if there are any marked events,
+those will also be automatically included in the representation of the spectrogram.
+
+In the **Combined** window, spectrogram is only available for event-locked segments (after inserting events). 
+
+.. warning::
+    Since computing spectrogram has a high computational cost, it is advised to perform this method on smaller segments, or 
+    to properly account for segment duration when customizing spectrogram parameters. Number of computed spectrograms 
+    also highly impacts the computational performance.
+
+1. After selecting the "Spectrogram" method, the plot and respective buttons will be displayed. In the 
+figure below we can see the example of the spectrogram being computed on an Individual window with marked events.
+
+.. image:: ../img/spectrogram.png
+
+2. To synchronize axis between plots, toggle **"Synchronize Axis"**.
+3. To plot the band mean power over time, per recording, press **"Band Power Over Time"**. See more in :ref:`here <bpot>`.
+4. To compute the mean spectrogram, press **Mean Spectrogram**. The mean spectrogram and respective buttons will appear under the collapsing header named "Mean Spectrogram".
+
+.. image:: ../img/mean_spec.png
+
+5. To adjust the colormap scale of all the plotted spectrograms, define the minimum and maximum values of the scale. After defining, press **"Set Colormap Range"**.
+
+.. image:: ../img/spec_int.png
+
+6. Exportation is facilitated in the respective buttons.
+
+.. _bpot:
 Band Power Over Time
 ^^^^^^^^^^^^^^^^^^^^
 
+By pressing the **"Band Power Over Time"** button, the mean power of each frequency band will be extracted and plotted per recording. 
+
+.. image:: ../img/bpot.png
+
+
+.. _coherogram:
 Coherogram
 ----------
+
+When selecting the **Multitaper Coherence**, user may also compute the coherogram, by pressing **"Plot Coherogram"**. 
+Exportation of all signals, plot and tables is facilitated by the respective buttons.
+
+This a very useful tool that allows to check how coherence between signals and frequencies change over time. However, 
+coherogram does not mark inserted events as spectrogram does. 
+
+.. image:: ../img/coherogram.png
+
+Band Coherence Over Time
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Additionally, band coherence over time is also computed automatically, in simultaneous with the coherogram. It can be
+accessed under the collapsing header **"Coherence over time"**. Exportation is also facilitated.
+
+.. image:: ../img/coh_ot.png
 
 Phase-Amplitude Coupling
 ------------------------
 
+Phase-Amplitude Coupling (PAC) is a cross-frequency coupling that allows to observe modulations, or coordination, between the phase of a signal with the amplitude of the second signal.
+It is typically used to analyze the modulation between low-frequency phases and high-frequency amplitudes, reflecting interactions across different time scales (band frequencies) and spatial locations.
+To quantify the degree of coupling, the Modulation Index (MI) proposed by Tort et al. for PAC analysis of neuronal signals was calculated. MI is calculated as the normalized difference between the maximum possible entropy and the
+observed entropy, with **0** corresponding to **no coupling** and **1** to **strong coupling**. 
+
+1. To compute the phase-amplitude coupling method, press **"PAC"**.
+2. Select the signals to be analyzed, in **Signal 1** and **2**. 
+3. Select the frequency bands to be analyzed, respective to the signals. From signal/band 1, the phase will be extracted. From signal/band 2, the amplitude will be extracted.
+4. Once all parameters are filled, press **"Plot Phase-Amplitude Coupling"**. 
+
+.. image:: ../img/pac1.png
+
+5. The respective representation of PAC will be displayed, as well as the extracted features. 
+
+.. image:: ../img/pac2.png
+
+6. To compute a new pac, repeat the process since step 2. New metrics will be added to the table.
+
+.. image:: ../img/pac3.png
+
+7. Exportation is also facilitated.
+
 Cross-Correlation
 -----------------
 
+Cross-correlation (CC) is a powerful tool that can reveal synchrony or coupling between two different signals across time. It is typically used to study functional connectivity across different
+brain locations. It is a normalized dimensionless metric, with **0** corresponding to **no correlation** between signals and **1** representing **maximum correlation**.
+
+Half Max (HM) correlation and width (HMW) enables the investigation of the spread and periodicity of the correlation. HMW is calculated through
+the intersection of the correlation signal and HM. **Narrow HMW** represent **very precise temporal coupling**, which may be a reflection of pathological coupling or over-synchronized frequencies.
+For further offline feature analysis, the root mean square (RMS) correlation is extracted, to cancel out symmetric signals, while still representing the mean correlation across time. The maximum
+correlation, and respective lag, are also extracted.
+
+1. Press **"Cross-Correlation"**. 
+2. If you want to compute CC per frequency band, toggle **"Band Cross-Correlation"**. Else it will compute CC for the entire spectrum.
+3. Select the signals and press **"Plot Cross-Correlation"**.
+4. The computed method and extracted features will be displayed.
+
+.. image:: ../img/cc1.png
+
+5. New extracted metrics will be added to the table. Toggling buttons appear to aid in visualization and exportation.
+
+.. image:: ../img/cc2.png
+
+6. Exportation is also facilitated.

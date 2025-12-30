@@ -348,7 +348,7 @@ def save_plot(sender,app_data,user_data):
         signals = []
         for i,tag in enumerate(tags):
             values = dpg.get_value(tag)
-            if labels[i] == 'Std. Dev':
+            if 'Std. Dev' in labels[i]:
                 colors[i][-1]=0.5
                 x,y1,y2 = values[:3]
                 sign = {'X':x,'Y1':y1,'Y2':y2}
@@ -641,7 +641,6 @@ def add_timeline_features_buttons(tab_tag, signal_tags):
                     dpg.add_button(label='Stimulation',callback=stimulation_timeline, user_data=(tab_tag, signal_tags, tab_tag))
     else:
         print(f"Tab {tab_tag} does not exist yet.")
-
 
 def add_combo_filters(sender, app_data, user_data):
     '''
@@ -2458,8 +2457,8 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
 
         if not dpg.does_item_exist(f"{tab_label}_coh_spec"):
             dpg.add_separator(parent=f"{tab_label}_space")
-            dpg.add_button(label = 'Plot Coherence Spectrogram',width=-1,tag=f"{tab_label}_coh_spec", callback=spectrogram, user_data = (signal1,signal2, tapers, freq, mask), parent=f"{tab_label}_space")
-            dpg.bind_item_theme(f"{tab_label}_coh_spec",change_button_color())
+            dpg.add_button(label = 'Plot Coherogram',width=-1,tag=f"{tab_label}_coh_spec", callback=spectrogram, user_data = (signal1,signal2, tapers, freq, mask), parent=f"{tab_label}_space")
+            dpg.bind_item_theme(f"{tab_label}_coh_spec",change_button_color(3))
         else:
             dpg.set_item_user_data(f"{tab_label}_coh_spec", user_data=(signal1,signal2, tapers, freq, mask))
 
@@ -2571,7 +2570,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
 
                 alpha_theme = create_alpha_theme()
 
-                with dpg.plot(label='Coherence over time', width=-1):
+                with dpg.plot(label='Coherence over time',height=400, width=-1,tag=f"{header_tag}_plot"):
                     dpg.add_plot_legend()
                     x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                     y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Power (dB)")
@@ -2580,14 +2579,20 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
                         mask = (freqs >= v[0]) & (freqs < v[1])
                         if np.any(mask):
                             power = np.flipud(matrix)[mask, :]
-                            std = np.std(matrix[mask, :], axis=0)
+                            std = np.std(power, axis=0)
+                            power = np.mean(power,axis=0)
                             min_std = power-std
                             max_std = power+std
 
-                            c = dpg.add_shade_series(times,min_std,y2=max_std,label = f"{b} Std. Deviation", parent=y_axis)
+                            c = dpg.add_shade_series(times,min_std,y2=max_std,label = f"{b} Std. Dev", parent=y_axis)
                             dpg.bind_item_theme(c, alpha_theme)
                             l = dpg.add_line_series(times,power,label = f"{b} Power", parent=y_axis)
                             dpg.bind_item_theme(l, change_line_thickness(3))
+
+                dpg.add_separator(label='Export',parent=header_tag)
+                b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,parent=header_tag,callback = filename_window,user_data =('2D', f"{header_tag}_plot", y_axis,0))
+                b2 = dpg.add_button(label='Export Signals',width=-1,parent=header_tag,callback=filename_window,user_data=(y_axis,f"{header_tag}_plot",'2D'))
+                add_exporting_tag(window_id,plot=b1,signal=b2)
                   
     combos = {}
     if flag == None: #Default
@@ -2670,14 +2675,15 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
             dpg.add_text("Mode changed to 'full' because signals have the same length!", parent=tab_label, tag = f"{tab_label}_size_warning")
 
         if dpg.does_item_exist(f"{tab_label}_cc"): 
-            dpg.delete_item(f"{tab_label}_text")
+            dpg.delete_item(f"{tab_label}_text",children_only=True)
             dpg.delete_item(f"{tab_label}_cc",children_only=True)
         else: 
             dpg.add_group(tag=f"{tab_label}_cc", parent=tab_label, horizontal=True)
+            dpg.add_group(tag=f"{tab_label}_text", parent=tab_label)
 
-        with dpg.group(tag=f"{tab_label}_text", parent=tab_label):
-            dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}",parent=f"{tab_label}_text")
-            dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}",parent=f"{tab_label}_text")
+        dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}",parent=f"{tab_label}_text")
+        dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}",parent=f"{tab_label}_text")
+
         plot_tag = f"{tab_label}_ccplot"
         with dpg.plot(label="Cross-correlation", height=300, width=800, tag = plot_tag, parent=f"{tab_label}_cc"):
             dpg.add_plot_legend()
@@ -2740,10 +2746,12 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
 
             create_table(f"{tab_label}_header",f"{tab_label}_table",info,f"{b} | {label}")
         
-        dpg.add_separator(label='Export',parent=tab_label)
-        b1 = dpg.add_button(label = 'Export Plot Figure',parent=tab_label,width=-1,callback = filename_window,user_data =('CC', plot_tag, cross_y,0))
-        b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,parent=tab_label,user_data=(cross_y,plot_tag,'CC'))
-        add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
+        if not dpg.does_item_exist(f"{tab_label}_export_group"):
+            with dpg.group(tag=f"{tab_label}_export_group",parent=tab_label):
+                dpg.add_separator(label='Export',parent=tab_label)
+                b1 = dpg.add_button(label = 'Export Plot Figure',parent=tab_label,width=-1,callback = filename_window,user_data =('CC', plot_tag, cross_y,0))
+                b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,parent=tab_label,user_data=(cross_y,plot_tag,'CC'))
+                add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
 
     if not dpg.does_item_exist(f"{tab_label}_band"): 
         dpg.add_checkbox(label='Band Cross-Correlation', parent=tab_label, tag = f"{tab_label}_band", callback=plot)
@@ -2834,7 +2842,6 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
             for i,tag in enumerate(tags):
                 stream = getSignalbyIdx(window_id, tab_tag, tag, mode=mode)
                 stream_events = getEventsbyTag(tab_tag,tag)
-                if stream_events!=[]: all_events = stream_events
                 file = extract_file_from_series_tag(tag)
                 y = stream['Y']
                 channel = getUpdatedElectrodeName(stream['Channel'])
@@ -4525,10 +4532,9 @@ def extract_cc_features(p, y_axis, tab_label ,mode = None) -> dict:
     freq_std = np.std(diff)
     info = {
         'RMS Correlation': rms,
-        'Max Correlation': max_value,
         'Lag til Max (s)': lag,
         'Half Max Width (s)': width,
-        'Peak Frequency (mean, std)': [freq_mean,freq_std]
+        'Frequency of Peaks (mean, std)': [freq_mean,freq_std]
     }
     
 
@@ -4897,6 +4903,7 @@ def DefaultFeatures(sender, app_data, user_data):
 
     if dpg.does_item_exist(tab_label):
         dpg.delete_item(tab_label, children_only=True)
+        dpg.configure_item(tab_label,show=True)
     else:
         dpg.add_tab(label=f"Default {func}", parent=f"{tab_tag}_features_bar", tag=tab_label, closable=True)  
     
@@ -5100,6 +5107,7 @@ def CustomFeatures(sender,app_data,user_data):
 
         if dpg.does_item_exist(tab_label):
             dpg.delete_item(tab_label, children_only=True)
+            dpg.configure_item(tab_label,show=True)
         else:
             dpg.add_tab(label=f"{func}", parent=f"{tab_tag}_features_bar", tag=tab_label, closable=True)  
         

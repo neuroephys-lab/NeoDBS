@@ -21,7 +21,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Data Handling" href="../api/neodbs.html" />
+    <link rel="next" title="4. Extra Features" href="extra.html" />
     <link rel="prev" title="2. At-Home Data" href="chronic.html" /> 
 </head>
 
@@ -60,14 +60,18 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#coherence">3.2. Coherence</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#spectrogram">3.3. Spectrogram</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">3.3.1. Band Power Over Time</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bpot">3.3.1. Band Power Over Time</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#coherogram">3.4. Coherogram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coherogram">3.4. Coherogram</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#band-coherence-over-time">3.4.1. Band Coherence Over Time</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#phase-amplitude-coupling">3.5. Phase-Amplitude Coupling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cross-correlation">3.6. Cross-Correlation</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="extra.html">4. Extra Features</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul>
@@ -205,23 +209,111 @@ perfect linear coupling.</p>
 </ol>
 <img alt="../_images/coh.png" src="../_images/coh.png" />
 <ol class="arabic simple" start="4">
-<li><p>Both Absolute and Imaginary components of coherence are plotted and features are automatically extracted.</p></li>
+<li><p>Both Absolute and Imaginary components of coherence are plotted and features are automatically extracted. Features are organized into tables.</p></li>
+</ol>
+<img alt="../_images/coh_plot.png" src="../_images/coh_plot.png" />
+<ol class="arabic simple" start="5">
+<li><p>To plot a new coherence, repeat the process from step 3. If you want to maintain the previous computed coherence plotted, unselect the checkbox <strong>&quot;Clean Previous Plot&quot;</strong>.</p></li>
+<li><p>If you selected the <strong>Multitaper Coherence</strong>, you can also compute the coherogram. Check more in <a class="reference internal" href="#coherogram"><span class="std std-ref">here</span></a>.</p></li>
+<li><p>Plots, tables and signals are easily exported.</p></li>
 </ol>
 </section>
 <section id="spectrogram">
 <h2><span class="section-number">3.3. </span>Spectrogram<a class="headerlink" href="#spectrogram" title="Link to this heading">¶</a></h2>
-<section id="id1">
-<h3><span class="section-number">3.3.1. </span>Band Power Over Time<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<p>The Welch Spectrogram is available on both default and customizable pipelines.</p>
+<p>In the <strong>Individual</strong> window, it allows for spectrograms to be
+computed per signal or to join recordings (if there are multiple recordings from the same channel). Additionally, if there are any marked events,
+those will also be automatically included in the representation of the spectrogram.</p>
+<p>In the <strong>Combined</strong> window, spectrogram is only available for event-locked segments (after inserting events).</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Since computing spectrogram has a high computational cost, it is advised to perform this method on smaller segments, or
+to properly account for segment duration when customizing spectrogram parameters. Number of computed spectrograms
+also highly impacts the computational performance.</p>
+</div>
+<p>1. After selecting the &quot;Spectrogram&quot; method, the plot and respective buttons will be displayed. In the
+figure below we can see the example of the spectrogram being computed on an Individual window with marked events.</p>
+<img alt="../_images/spectrogram.png" src="../_images/spectrogram.png" />
+<ol class="arabic simple" start="2">
+<li><p>To synchronize axis between plots, toggle <strong>&quot;Synchronize Axis&quot;</strong>.</p></li>
+<li><p>To plot the band mean power over time, per recording, press <strong>&quot;Band Power Over Time&quot;</strong>. See more in <a class="reference internal" href="#bpot"><span class="std std-ref">here</span></a>.</p></li>
+<li><p>To compute the mean spectrogram, press <strong>Mean Spectrogram</strong>. The mean spectrogram and respective buttons will appear under the collapsing header named &quot;Mean Spectrogram&quot;.</p></li>
+</ol>
+<img alt="../_images/mean_spec.png" src="../_images/mean_spec.png" />
+<ol class="arabic simple" start="5">
+<li><p>To adjust the colormap scale of all the plotted spectrograms, define the minimum and maximum values of the scale. After defining, press <strong>&quot;Set Colormap Range&quot;</strong>.</p></li>
+</ol>
+<img alt="../_images/spec_int.png" src="../_images/spec_int.png" />
+<ol class="arabic simple" start="6">
+<li><p>Exportation is facilitated in the respective buttons.</p></li>
+</ol>
+<section id="bpot">
+<span id="id1"></span><h3><span class="section-number">3.3.1. </span>Band Power Over Time<a class="headerlink" href="#bpot" title="Link to this heading">¶</a></h3>
+<p>By pressing the <strong>&quot;Band Power Over Time&quot;</strong> button, the mean power of each frequency band will be extracted and plotted per recording.</p>
+<img alt="../_images/bpot.png" src="../_images/bpot.png" />
 </section>
 </section>
 <section id="coherogram">
-<h2><span class="section-number">3.4. </span>Coherogram<a class="headerlink" href="#coherogram" title="Link to this heading">¶</a></h2>
+<span id="id2"></span><h2><span class="section-number">3.4. </span>Coherogram<a class="headerlink" href="#coherogram" title="Link to this heading">¶</a></h2>
+<p>When selecting the <strong>Multitaper Coherence</strong>, user may also compute the coherogram, by pressing <strong>&quot;Plot Coherogram&quot;</strong>.
+Exportation of all signals, plot and tables is facilitated by the respective buttons.</p>
+<p>This a very useful tool that allows to check how coherence between signals and frequencies change over time. However,
+coherogram does not mark inserted events as spectrogram does.</p>
+<img alt="../_images/coherogram.png" src="../_images/coherogram.png" />
+<section id="band-coherence-over-time">
+<h3><span class="section-number">3.4.1. </span>Band Coherence Over Time<a class="headerlink" href="#band-coherence-over-time" title="Link to this heading">¶</a></h3>
+<p>Additionally, band coherence over time is also computed automatically, in simultaneous with the coherogram. It can be
+accessed under the collapsing header <strong>&quot;Coherence over time&quot;</strong>. Exportation is also facilitated.</p>
+<img alt="../_images/coh_ot.png" src="../_images/coh_ot.png" />
+</section>
 </section>
 <section id="phase-amplitude-coupling">
 <h2><span class="section-number">3.5. </span>Phase-Amplitude Coupling<a class="headerlink" href="#phase-amplitude-coupling" title="Link to this heading">¶</a></h2>
+<p>Phase-Amplitude Coupling (PAC) is a cross-frequency coupling that allows to observe modulations, or coordination, between the phase of a signal with the amplitude of the second signal.
+It is typically used to analyze the modulation between low-frequency phases and high-frequency amplitudes, reflecting interactions across different time scales (band frequencies) and spatial locations.
+To quantify the degree of coupling, the Modulation Index (MI) proposed by Tort et al. for PAC analysis of neuronal signals was calculated. MI is calculated as the normalized difference between the maximum possible entropy and the
+observed entropy, with <strong>0</strong> corresponding to <strong>no coupling</strong> and <strong>1</strong> to <strong>strong coupling</strong>.</p>
+<ol class="arabic simple">
+<li><p>To compute the phase-amplitude coupling method, press <strong>&quot;PAC&quot;</strong>.</p></li>
+<li><p>Select the signals to be analyzed, in <strong>Signal 1</strong> and <strong>2</strong>.</p></li>
+<li><p>Select the frequency bands to be analyzed, respective to the signals. From signal/band 1, the phase will be extracted. From signal/band 2, the amplitude will be extracted.</p></li>
+<li><p>Once all parameters are filled, press <strong>&quot;Plot Phase-Amplitude Coupling&quot;</strong>.</p></li>
+</ol>
+<img alt="../_images/pac1.png" src="../_images/pac1.png" />
+<ol class="arabic simple" start="5">
+<li><p>The respective representation of PAC will be displayed, as well as the extracted features.</p></li>
+</ol>
+<img alt="../_images/pac2.png" src="../_images/pac2.png" />
+<ol class="arabic simple" start="6">
+<li><p>To compute a new pac, repeat the process since step 2. New metrics will be added to the table.</p></li>
+</ol>
+<img alt="../_images/pac3.png" src="../_images/pac3.png" />
+<ol class="arabic simple" start="7">
+<li><p>Exportation is also facilitated.</p></li>
+</ol>
 </section>
 <section id="cross-correlation">
 <h2><span class="section-number">3.6. </span>Cross-Correlation<a class="headerlink" href="#cross-correlation" title="Link to this heading">¶</a></h2>
+<p>Cross-correlation (CC) is a powerful tool that can reveal synchrony or coupling between two different signals across time. It is typically used to study functional connectivity across different
+brain locations. It is a normalized dimensionless metric, with <strong>0</strong> corresponding to <strong>no correlation</strong> between signals and <strong>1</strong> representing <strong>maximum correlation</strong>.</p>
+<p>Half Max (HM) correlation and width (HMW) enables the investigation of the spread and periodicity of the correlation. HMW is calculated through
+the intersection of the correlation signal and HM. <strong>Narrow HMW</strong> represent <strong>very precise temporal coupling</strong>, which may be a reflection of pathological coupling or over-synchronized frequencies.
+For further offline feature analysis, the root mean square (RMS) correlation is extracted, to cancel out symmetric signals, while still representing the mean correlation across time. The maximum
+correlation, and respective lag, are also extracted.</p>
+<ol class="arabic simple">
+<li><p>Press <strong>&quot;Cross-Correlation&quot;</strong>.</p></li>
+<li><p>If you want to compute CC per frequency band, toggle <strong>&quot;Band Cross-Correlation&quot;</strong>. Else it will compute CC for the entire spectrum.</p></li>
+<li><p>Select the signals and press <strong>&quot;Plot Cross-Correlation&quot;</strong>.</p></li>
+<li><p>The computed method and extracted features will be displayed.</p></li>
+</ol>
+<img alt="../_images/cc1.png" src="../_images/cc1.png" />
+<ol class="arabic simple" start="5">
+<li><p>New extracted metrics will be added to the table. Toggling buttons appear to aid in visualization and exportation.</p></li>
+</ol>
+<img alt="../_images/cc2.png" src="../_images/cc2.png" />
+<ol class="arabic simple" start="6">
+<li><p>Exportation is also facilitated.</p></li>
+</ol>
 </section>
 </section>
 
@@ -230,7 +322,7 @@ perfect linear coupling.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="chronic.html" class="btn btn-neutral float-left" title="2. At-Home Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../api/neodbs.html" class="btn btn-neutral float-right" title="Data Handling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="extra.html" class="btn btn-neutral float-right" title="4. Extra Features" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

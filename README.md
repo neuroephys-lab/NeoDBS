@@ -2,13 +2,16 @@
 
 ## 30.12.2025
 ### Documentation
-- Coherence
+- Signal Analysis done
+- Extra tbd
 
 ### GUI
 - filename window: modal true
 
 ### New
 - Save all per window: saves exportations into folder with name of window
+- Coherence over time: added export buttons
+- CC debuged
 
 ## 24.12.2025
 ### Documentation:
