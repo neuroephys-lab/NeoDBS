@@ -3950,7 +3950,8 @@ def resize_font(sender,app_data,user_data):
     with dpg.window(label="Resize Font",tag=this, autosize=True,no_collapse=True):
         dpg.add_text("Resize Font")
         with dpg.group(horizontal=True,width=90):
-            slider=dpg.add_slider_int(default_value=16,min_value=8,max_value=25,callback=set_size,width=80)
+            dv = int(dpg.get_item_configuration("CURRENT_FONT").get('size'))
+            slider=dpg.add_slider_int(default_value=dv,min_value=8,max_value=25,callback=set_size,width=80)
             dpg.add_button(label='Reset',callback= reset,small=True,user_data=slider)
 
 def set_font(size=16):

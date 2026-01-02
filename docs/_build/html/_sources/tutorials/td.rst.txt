@@ -46,7 +46,7 @@ signals. NeoDBS offers a variety of filters, and pipelines, that are customizabl
 
 .. warning::
     After applying any preprocessing method (filtering, segmentation or event-marking/epoch) you will not have access
-    to the raw original signals without loosing your progress. If you want to restore the original signals, the user must
+    to the raw original signals without losing your progress. If you want to restore the original signals, the user must
     close and reopen the respective tab.
 
 Default Filter
@@ -112,7 +112,7 @@ has been emplyed, no more segmentation or events can be added.
 .. image:: ../img/marked_events.png
 
 Signal Analysis
-^^^^^^^^^^^^^^^
+---------------
 
 Following the good practices of signal processing, only after properly preparing the signal of interest, the user can employ methods to perform
 spectral analysis. Tutorials to apply analysis methods can be found in the :doc:`Signal Analysis <features>` page.

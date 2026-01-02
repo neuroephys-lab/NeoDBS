@@ -1,5 +1,16 @@
 # NeoDBS
 
+## 02.01.2026
+
+### Structure:
+- src/neodbs --> good for executables and pip installs
+
+### Documentation
+- Extra
+
+### Debug:
+- resize font: shows the actual font size
+
 ## 30.12.2025
 ### Documentation
 - Signal Analysis done
