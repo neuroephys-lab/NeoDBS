@@ -25,9 +25,9 @@ to analyze, which will open a tab with the respective plotted signals and functi
 |                    |               |             | full-bandwidth (up to 125|                          
 |                    |               |             | Hz)                      |                           
 +--------------------+---------------+-------------+--------------------------+
-| *Streaming*        | In-clinic     | On or Off   | Long-duration LFP        | 
-| *Indefinite*       |               |             | recording from contact   | 
-| *Streaming*        |               |             | pairs compatible with sti|                          
+| *Indefinite*       | In-clinic     | On or Off   | Long-duration LFP        | 
+| *Streaming*        |               |             | recording from contact   | 
+|                    |               |             | pairs compatible with sti|                          
 |                    |               |             | mulation.                |                          
 |                    |               |             |                          |
 +--------------------+---------------+-------------+--------------------------+

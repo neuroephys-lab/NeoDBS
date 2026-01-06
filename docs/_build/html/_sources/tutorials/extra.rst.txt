@@ -121,11 +121,11 @@ be included in signal analysis and feature extraction.
 
 .. image:: ../img/band.png
 
-Save...
--------
+Export
+------
 
 As mentioned above, NeoDBS offers exportation functionalities for all created plots, tables and series.
-They can be individually exported, exported by window or export all created items in the platform.
+They can be **individually** exported, exported **by window** or **export all** created items in the platform.
 
 1. To save individually the created item, press "Export Plot/Signals" or "Save Table", according to the item of interest.
 2. To save all the chosen items per window, press "Save..." in the window menu bar. Items are saved into a folder with the window name.

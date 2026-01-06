@@ -1,5 +1,17 @@
 # NeoDBS
 
+## 06.01.2025
+- Dummy test Andreia --> big to do list
+- File example (DBScope)
+- License: Creative Commons
+- EEG Protocol
+
+### Documentation
+- recording mode table in FU
+
+## 05.01.2026
+- Gitea sync
+
 ## 02.01.2026
 
 ### Structure:

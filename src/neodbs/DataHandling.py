@@ -29,7 +29,16 @@ def info_electrodes(data,version='Initial',side=0):
     Group_id=di["GroupId"]
     ProgramSettings=di["ProgramSettings"]
     GroupSettings = di["GroupSettings"]
-    Rate_in_hertz=ProgramSettings["RateInHertz"]
+    try:
+        Rate_in_hertz=ProgramSettings["RateInHertz"]
+    except KeyError as e:
+        if e.args[0] == "RateInHertz":
+            if isinstance(ProgramSettings['SensingChannel'],dict):
+                Rate_in_hertz=ProgramSettings['SensingChannel']["RateInHertz"]
+            elif isinstance(ProgramSettings['SensingChannel'],list): 
+                Rate_in_hertz=0
+            else: 
+                return None
     try:
         SensingChannel=ProgramSettings['SensingChannel']
         Sensing_electrodes=SensingChannel[side]["Channel"]
@@ -69,8 +78,11 @@ def info_electrodes(data,version='Initial',side=0):
     }
 
     if not isinstance(Sensing_freq,str):
-        
-        ChannelPSD = data['Device']['GroupHistory'][0]['Groups'][0]['ProgramSettings']['SensingChannel'][side]['SensingSetup']['ChannelSignalResult']
+        for g in range(4):
+            try:
+                ChannelPSD = data['Device']['GroupHistory'][0]['Groups'][g]['ProgramSettings']['SensingChannel'][side]['SensingSetup']['ChannelSignalResult']
+                break
+            except Exception as e: continue
         date = utl.parse_datetime(data['Device']['GroupHistory'][0]['SessionDate']).date()
         if ChannelPSD == {}:
             ChannelPSD = SensingChannel[side]['SensingSetup']['ChannelSignalResult']

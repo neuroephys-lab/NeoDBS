@@ -54,6 +54,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#combined-window">Combined Window</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#types-of-recordings">Types of Recordings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#general-workflow">General Workflow</a></li>
 </ul>
 </li>
@@ -68,9 +69,9 @@
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Preprocessing">Preprocessing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-utils">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#preprocessing">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#utils">Utils</a></li>
 </ul>
 
         </div>
@@ -187,6 +188,86 @@ Analysis</p></td>
 </tbody>
 </table>
 </section>
+</section>
+<section id="types-of-recordings">
+<h2>Types of Recordings<a class="headerlink" href="#types-of-recordings" title="Link to this heading">¶</a></h2>
+<p>NeoDBS is adapted to ingest and analyze files from commercialy available DBS systems with sensing capacities (Medtronic Percept + BrainSense™ system).
+The system allows to record signals on different recording modes with different purposes and configurations. To know more about these recording modes
+see <a class="reference external" href="https://iopscience.iop.org/article/10.1088/1741-2552/ac1d5b">here</a> (table 1).</p>
+<p>Because of the differences in purpose and configuration across the recording modes, they are accessed and treated independently, in the respective tabs, as mentioned above.</p>
+<p>Here follows a simple summary of the recording modes, with their associated name in system and NeoDBS:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>System Name</p></th>
+<th class="head"><p>NeoDBS Name</p></th>
+<th class="head"><p>Usage Con-
+text</p></th>
+<th class="head"><p>Stimulation
+Status</p></th>
+<th class="head"><p>Key Features</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BrainSense™ <em>Setup</em></p></td>
+<td><p><em>Setup</em></p></td>
+<td><p>In-clinic</p></td>
+<td><p>On or Off</p></td>
+<td><p>Required before other
+modes (except <em>Survey</em>);
+Records each segment for
+21s each (~90s duration)</p></td>
+</tr>
+<tr class="row-odd"><td><p>BrainSense™ <em>Survey</em></p></td>
+<td><p><em>Survey</em></p></td>
+<td><p>In-clinic</p></td>
+<td><p>Off</p></td>
+<td><p>Records each segment for
+21s each (~90s duration)</p></td>
+</tr>
+<tr class="row-even"><td><p>BrainSense™ <em>Survey Indefinite
+Streaming</em></p></td>
+<td><p><em>Indefinite</em>
+<em>Streaming</em></p></td>
+<td><p>In-clinic</p></td>
+<td><p>Off</p></td>
+<td><p>Long-duration LFP
+recording from contact
+pairs (0–2, 0–3, 1–3),
+full-bandwidth (up to
+125 Hz)</p></td>
+</tr>
+<tr class="row-odd"><td><p>BrainSense™ <em>Streaming</em></p></td>
+<td><p><em>Streaming</em></p></td>
+<td><p>In-clinic</p></td>
+<td><p>On or Off</p></td>
+<td><p>Long-duration LFP
+recording from contact
+pairs compatible with
+stimulation</p></td>
+</tr>
+<tr class="row-even"><td><p>BrainSense™ <em>Timeline</em></p></td>
+<td><p><em>Timeline</em></p></td>
+<td><p>At home</p></td>
+<td><p>On</p></td>
+<td><p>Long-term monitoring
+from pre-selected
+bipolar pair; power of
+5 Hz band stored every
+10 min; contact pairs
+limited to stimulation-
+compatible</p></td>
+</tr>
+<tr class="row-odd"><td><p>BrainSense™ <em>Events</em></p></td>
+<td><p><em>Events</em></p></td>
+<td><p>At home</p></td>
+<td><p>On</p></td>
+<td><p>Event-marked recordings,
+30 s LFP saved into PSD,
+time-stamped by patient
+manual input</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="general-workflow">
 <span id="general"></span><h2>General Workflow<a class="headerlink" href="#general-workflow" title="Link to this heading">¶</a></h2>

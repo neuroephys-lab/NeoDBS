@@ -82,6 +82,53 @@ If you're wondering what is the best window to use, here's a summary of the func
 
 .. |check| unicode:: U+2713 .. CHECK MARK
 
+Types of Recordings
+-------------------
+
+NeoDBS is adapted to ingest and analyze files from commercialy available DBS systems with sensing capacities (Medtronic Percept + BrainSense™ system). 
+The system allows to record signals on different recording modes with different purposes and configurations. To know more about these recording modes 
+see `here <https://iopscience.iop.org/article/10.1088/1741-2552/ac1d5b>`_ (table 1). 
+
+Because of the differences in purpose and configuration across the recording modes, they are accessed and treated independently, in the respective tabs, as mentioned above.
+
+Here follows a simple summary of the recording modes, with their associated name in system and NeoDBS:
+
++-------------------------------+--------------------+-------------+-------------+--------------------------+
+| System Name                   | NeoDBS Name        | Usage Con-  | Stimulation | Key Features             |
+|                               |                    | text        | Status      |                          |
++===============================+====================+=============+=============+==========================+
+| BrainSense™ *Setup*           | *Setup*            | In-clinic   | On or Off   | Required before other    |
+|                               |                    |             |             | modes (except *Survey*); |
+|                               |                    |             |             | Records each segment for |
+|                               |                    |             |             | 21s each (~90s duration) |
++-------------------------------+--------------------+-------------+-------------+--------------------------+
+| BrainSense™ *Survey*          | *Survey*           | In-clinic   | Off         | Records each segment for |
+|                               |                    |             |             | 21s each (~90s duration) |
++-------------------------------+--------------------+-------------+-------------+--------------------------+
+| BrainSense™ *Survey Indefinite| *Indefinite*       | In-clinic   | Off         | Long-duration LFP        |
+| Streaming*                    | *Streaming*        |             |             | recording from contact   |
+|                               |                    |             |             | pairs (0–2, 0–3, 1–3),   |
+|                               |                    |             |             | full-bandwidth (up to    |
+|                               |                    |             |             | 125 Hz)                  |
++-------------------------------+--------------------+-------------+-------------+--------------------------+
+| BrainSense™ *Streaming*       | *Streaming*        | In-clinic   | On or Off   | Long-duration LFP        |
+|                               |                    |             |             | recording from contact   |
+|                               |                    |             |             | pairs compatible with    |
+|                               |                    |             |             | stimulation              |
++-------------------------------+--------------------+-------------+-------------+--------------------------+
+| BrainSense™ *Timeline*        | *Timeline*         | At home     | On          | Long-term monitoring     |
+|                               |                    |             |             | from pre-selected        |
+|                               |                    |             |             | bipolar pair; power of   |
+|                               |                    |             |             | 5 Hz band stored every   |
+|                               |                    |             |             | 10 min; contact pairs    |
+|                               |                    |             |             | limited to stimulation-  |
+|                               |                    |             |             | compatible               |
++-------------------------------+--------------------+-------------+-------------+--------------------------+
+| BrainSense™ *Events*          | *Events*           | At home     | On          | Event-marked recordings, |
+|                               |                    |             |             | 30 s LFP saved into PSD, |
+|                               |                    |             |             | time-stamped by patient  |
+|                               |                    |             |             | manual input             |
++-------------------------------+--------------------+-------------+-------------+--------------------------+
 
 .. _general:
 General Workflow
