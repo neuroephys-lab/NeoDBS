@@ -50,7 +50,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/td.html">1. In-Clinic Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/chronic.html">2. At-Home Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/features.html">3. Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/features.html">3. Signal Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/extra.html">4. Extra Features</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul>
@@ -118,7 +119,16 @@
     <span class="n">Group_id</span><span class="o">=</span><span class="n">di</span><span class="p">[</span><span class="s2">&quot;GroupId&quot;</span><span class="p">]</span>
     <span class="n">ProgramSettings</span><span class="o">=</span><span class="n">di</span><span class="p">[</span><span class="s2">&quot;ProgramSettings&quot;</span><span class="p">]</span>
     <span class="n">GroupSettings</span> <span class="o">=</span> <span class="n">di</span><span class="p">[</span><span class="s2">&quot;GroupSettings&quot;</span><span class="p">]</span>
-    <span class="n">Rate_in_hertz</span><span class="o">=</span><span class="n">ProgramSettings</span><span class="p">[</span><span class="s2">&quot;RateInHertz&quot;</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">Rate_in_hertz</span><span class="o">=</span><span class="n">ProgramSettings</span><span class="p">[</span><span class="s2">&quot;RateInHertz&quot;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;RateInHertz&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ProgramSettings</span><span class="p">[</span><span class="s1">&#39;SensingChannel&#39;</span><span class="p">],</span><span class="nb">dict</span><span class="p">):</span>
+                <span class="n">Rate_in_hertz</span><span class="o">=</span><span class="n">ProgramSettings</span><span class="p">[</span><span class="s1">&#39;SensingChannel&#39;</span><span class="p">][</span><span class="s2">&quot;RateInHertz&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ProgramSettings</span><span class="p">[</span><span class="s1">&#39;SensingChannel&#39;</span><span class="p">],</span><span class="nb">list</span><span class="p">):</span> 
+                <span class="n">Rate_in_hertz</span><span class="o">=</span><span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span> 
+                <span class="k">return</span> <span class="kc">None</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">SensingChannel</span><span class="o">=</span><span class="n">ProgramSettings</span><span class="p">[</span><span class="s1">&#39;SensingChannel&#39;</span><span class="p">]</span>
         <span class="n">Sensing_electrodes</span><span class="o">=</span><span class="n">SensingChannel</span><span class="p">[</span><span class="n">side</span><span class="p">][</span><span class="s2">&quot;Channel&quot;</span><span class="p">]</span>
@@ -158,8 +168,11 @@
     <span class="p">}</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Sensing_freq</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
-        
-        <span class="n">ChannelPSD</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Device&#39;</span><span class="p">][</span><span class="s1">&#39;GroupHistory&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;Groups&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;ProgramSettings&#39;</span><span class="p">][</span><span class="s1">&#39;SensingChannel&#39;</span><span class="p">][</span><span class="n">side</span><span class="p">][</span><span class="s1">&#39;SensingSetup&#39;</span><span class="p">][</span><span class="s1">&#39;ChannelSignalResult&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ChannelPSD</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Device&#39;</span><span class="p">][</span><span class="s1">&#39;GroupHistory&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;Groups&#39;</span><span class="p">][</span><span class="n">g</span><span class="p">][</span><span class="s1">&#39;ProgramSettings&#39;</span><span class="p">][</span><span class="s1">&#39;SensingChannel&#39;</span><span class="p">][</span><span class="n">side</span><span class="p">][</span><span class="s1">&#39;SensingSetup&#39;</span><span class="p">][</span><span class="s1">&#39;ChannelSignalResult&#39;</span><span class="p">]</span>
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span> <span class="k">continue</span>
         <span class="n">date</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">parse_datetime</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Device&#39;</span><span class="p">][</span><span class="s1">&#39;GroupHistory&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;SessionDate&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">ChannelPSD</span> <span class="o">==</span> <span class="p">{}:</span>
             <span class="n">ChannelPSD</span> <span class="o">=</span> <span class="n">SensingChannel</span><span class="p">[</span><span class="n">side</span><span class="p">][</span><span class="s1">&#39;SensingSetup&#39;</span><span class="p">][</span><span class="s1">&#39;ChannelSignalResult&#39;</span><span class="p">]</span>
@@ -370,7 +383,7 @@
     <span class="k">if</span> <span class="n">modes</span> <span class="o">==</span> <span class="p">[</span><span class="s1">&#39;Damaged&#39;</span><span class="p">]:</span>
         <span class="n">modes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">modes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;None. Recording is Damaged!&#39;</span><span class="p">)</span>
-
+    <span class="n">modes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">modes</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">modes</span></div>
 
 

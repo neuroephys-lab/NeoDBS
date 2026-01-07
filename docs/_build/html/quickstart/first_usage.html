@@ -54,7 +54,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#combined-window">Combined Window</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#types-of-recordings">Types of Recordings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#types-of-recordings">Types of Recordings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#in-clinic-data">In-Clinic Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#at-home-data">At Home Data</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#general-workflow">General Workflow</a></li>
 </ul>
 </li>
@@ -69,9 +73,9 @@
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#features">Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#preprocessing">Preprocessing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#utils">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Preprocessing">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-utils">Utils</a></li>
 </ul>
 
         </div>
@@ -126,8 +130,8 @@ Additionally, NeoDBS offers two different types of workspaces (windows). The <st
 <p>The <strong>Individual</strong> window goal is to analyze a single recording session, focusing on the evolution of signals and
 events inside the same session. Therefore it includes functionalities like:</p>
 <ul class="simple">
-<li><p>Event marking in time-domain signals, and their time-frequency domain methods, according to user input;</p></li>
-<li><p>Compute joined time-frequency domain methods in same-channel recordings;</p></li>
+<li><p><strong>Event marking</strong> in time-domain signals, and their time-frequency domain methods, according to user input;</p></li>
+<li><p>Compute <strong>joined time-frequency domain</strong> methods in same-channel recordings;</p></li>
 </ul>
 <p>These are exclusive to this workspace, in order to enhance computing power and hetereogeneity in workspaces.</p>
 </section>
@@ -136,7 +140,7 @@ events inside the same session. Therefore it includes functionalities like:</p>
 <p>Unlike the individual window, the <strong>Combined</strong> window allows the selection of multiple files, focusing therefore on
 the evolution of the signals across different recording sessions. Additionally, it includes functionalities such as:</p>
 <ul class="simple">
-<li><p>Event-locked segmentation, automatically epoching recordings according to user input.</p></li>
+<li><p><strong>Event-locked segmentation</strong>, automatically epoching recordings according to user input.</p></li>
 </ul>
 <p>These functionalities are further explained in <a class="reference internal" href="../tutorials/td.html#ela"><span class="std std-ref">here</span></a>.</p>
 <p>If you're wondering what is the best window to use, here's a summary of the functionalities present in each type of window.</p>
@@ -194,14 +198,34 @@ Analysis</p></td>
 <p>NeoDBS is adapted to ingest and analyze files from commercialy available DBS systems with sensing capacities (Medtronic Percept + BrainSense™ system).
 The system allows to record signals on different recording modes with different purposes and configurations. To know more about these recording modes
 see <a class="reference external" href="https://iopscience.iop.org/article/10.1088/1741-2552/ac1d5b">here</a> (table 1).</p>
-<p>Because of the differences in purpose and configuration across the recording modes, they are accessed and treated independently, in the respective tabs, as mentioned above.</p>
+<p>Because of the differences in purpose and configuration across the recording modes, they are accessed and treated independently, in the respective tabs, as mentioned above.
+Two main types of recordings can be identified: recordings made <strong>In-Clinic</strong> or <strong>At Home</strong>.</p>
+<section id="in-clinic-data">
+<h3>In-Clinic Data<a class="headerlink" href="#in-clinic-data" title="Link to this heading">¶</a></h3>
+<p><strong>In-Clinic</strong> recordings are acquired in the presence of the physician and are primarily used to configure electrodes, assess electrode integrity, identify artifacts,
+and analyze the patient's neural activity with or without active stimulation therapy. These recordings are stored in the session file in their <strong>raw format as time-domain signals</strong>.</p>
+<img alt="../_images/in-clinic.png" src="../_images/in-clinic.png" />
+<p>Because the underlying neural signals are preserved, both <strong>time-domain and spectral analyses</strong> can be applied to extract relevant metrics and features for therapy optimization.</p>
+<p>After reviewing how the <a class="reference internal" href="#general"><span class="std std-ref">NeoDBS workflow</span></a> operates, a simple <a class="reference internal" href="../tutorials/td.html#icd"><span class="std std-ref">tutorial</span></a> is available to guide the analysis of this type of recording.</p>
+</section>
+<section id="at-home-data">
+<h3>At Home Data<a class="headerlink" href="#at-home-data" title="Link to this heading">¶</a></h3>
+<p><strong>At-Home</strong> recordings are available when chronic sensing has been enabled by the physician and allow long-term (24/7) monitoring of the patient's
+neural activity under real-world conditions. These recordings follow specific constraints imposed by the device and are stored in the session file
+in <strong>derived formats</strong> rather than as raw signals.</p>
+<img alt="../_images/at-home.png" src="../_images/at-home.png" />
+<p>Specifically, at-home recordings are stored either as <strong>frequency-domain representations</strong> (BrainSense™ Events) or as
+<strong>band-power time-series signals</strong> (BrainSense™ Timeline). Because the raw time-domain LFP is not available, <strong>primary
+spectral analyses cannot be performed</strong>. Instead, metrics are directly extracted using analysis methods appropriate
+for frequency-domain data or for ultra-slow temporal modulation of band-limited power.</p>
+<p>After reviewing how the <a class="reference internal" href="#general"><span class="std std-ref">NeoDBS workflow</span></a> operates, a simple <a class="reference internal" href="../tutorials/chronic.html#ahd"><span class="std std-ref">tutorial</span></a> is available to guide the analysis of this type of recording.</p>
 <p>Here follows a simple summary of the recording modes, with their associated name in system and NeoDBS:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>System Name</p></th>
 <th class="head"><p>NeoDBS Name</p></th>
-<th class="head"><p>Usage Con-
-text</p></th>
+<th class="head"><p>Usage
+Context</p></th>
 <th class="head"><p>Stimulation
 Status</p></th>
 <th class="head"><p>Key Features</p></th>
@@ -226,15 +250,13 @@ Records each segment for
 </tr>
 <tr class="row-even"><td><p>BrainSense™ <em>Survey Indefinite
 Streaming</em></p></td>
-<td><p><em>Indefinite</em>
-<em>Streaming</em></p></td>
+<td><p><em>Indefinite</em></p></td>
 <td><p>In-clinic</p></td>
 <td><p>Off</p></td>
 <td><p>Long-duration LFP
 recording from contact
 pairs (0–2, 0–3, 1–3),
-full-bandwidth (up to
-125 Hz)</p></td>
+full-bandwidth</p></td>
 </tr>
 <tr class="row-odd"><td><p>BrainSense™ <em>Streaming</em></p></td>
 <td><p><em>Streaming</em></p></td>
@@ -269,6 +291,7 @@ manual input</p></td>
 </tbody>
 </table>
 </section>
+</section>
 <section id="general-workflow">
 <span id="general"></span><h2>General Workflow<a class="headerlink" href="#general-workflow" title="Link to this heading">¶</a></h2>
 <p>After understanding what workspaces exist, here is a simple workflow for analysis using NeoDBS.</p>
@@ -281,23 +304,26 @@ manual input</p></td>
 </ol>
 <img alt="../_images/select_file.png" src="../_images/select_file.png" />
 <ol class="arabic simple" start="3">
+<li><p>Once you have selected all the desired file(s), press <strong>&quot;Open File&quot;</strong>. You can change the desired files while the &quot;File Selector&quot; button is visible.</p></li>
+</ol>
+<img alt="../_images/open_file.png" src="../_images/open_file.png" />
+<ol class="arabic simple" start="4">
 <li><p>Window will present <strong>session, device and stimulation information</strong> for each recording session.</p></li>
 </ol>
 <img alt="../_images/window.png" src="../_images/window.png" />
-<ol class="arabic simple" start="4">
+<ol class="arabic simple" start="5">
 <li><p>Recordings can be accessed by clicking on the <strong>respective recording mode button</strong>.</p></li>
 <li><p><strong>Each recording mode will have its respective tab</strong>, with the associated recordings and functionalities. Preprocessing and spectral analysis methods will only be applied to the selected signals (visible on the main plot of tab).</p></li>
 </ol>
 <img alt="../_images/tab.png" src="../_images/tab.png" />
-<ol class="arabic simple" start="6">
-<li><p><strong>Default methods</strong> have the parameters predefined for an easier analysis, properly adapted for the recordings configuration.</p></li>
-</ol>
-<img alt="../_images/default.png" src="../_images/default.png" />
 <ol class="arabic simple" start="7">
-<li><p><strong>Custom methods</strong> allow the parameters to be adjusted according to the user needs. Documentation of the selected method and required parameters will appear to aid the user in selecting the best parameters.</p></li>
+<li><p>To access <strong>Filtering Methods</strong>, open the header named &quot;Filters&quot;. To access time and spectral analysis methods open the header named <strong>Signal Analysis</strong>.</p></li>
 </ol>
+<img alt="../_images/methods.png" src="../_images/methods.png" />
+<p>8. <strong>Default methods</strong> have the parameters predefined for an easier analysis, properly adapted for the recordings configuration.
+<strong>Custom methods</strong> allow the parameters to be adjusted according to the user needs. Documentation of the selected method and required parameters will appear to aid the user in selecting the best parameters.</p>
 <img alt="../_images/custom.png" src="../_images/custom.png" />
-<ol class="arabic simple" start="8">
+<ol class="arabic simple" start="9">
 <li><p><strong>Filtering</strong> methods will update the signals in the main plot. <strong>Signal Analysis</strong> methods create a new plot, under a <strong>child tab</strong> named after the applied method.</p></li>
 <li><p><strong>Signals, plots and tables can be easily exported</strong> either individually, per window (workspace) or all windows at once.</p></li>
 </ol>

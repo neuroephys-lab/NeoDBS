@@ -20,7 +20,7 @@ by experienced or non-experienced users like health physicians. It offers:
 * Analysis pipelines with **default or customizable parameters**;
 * **Event-locked analysis** and event marking;
 * **Exportation** of tables, signals and images;
-* Several **filtering and spectral analysis methods**;
+* Several **filtering and spectral analysis methods** for recorded local field potentials (LFP);
 * Interface and data **customization**;
 
 NeoDBS includes several open-source organized modules focused in data preparation (Data Handling), data processing - including filtering, 

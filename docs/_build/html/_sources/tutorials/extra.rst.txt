@@ -103,6 +103,7 @@ Tables
 In signal analysis, extracted features are organized into tables for easy visualization and exportation. 
 Additionally, the name of all rows can be customized.
 
+.. image:: ../img/table.png
 
 Spectral Band Analysis
 ----------------------

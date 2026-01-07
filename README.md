@@ -1,10 +1,30 @@
 # NeoDBS
 
+## 07.01.2025
+### Documentation:
+- better explaining of recordings and types of windows
+- wavelet 
+- event summary
+- table figure
+- wasnt getting to the modules because now i have src folder before neodbs --> conf.py: sys.path.insert(0, os.path.abspath('../src/neodbs'))
+
+### Debug:
+- event toggling in timeline tabs
+- Timeline: "signal analysis" --> closable tabs and properly deleted/reopened
+- Survey combined working (psd wasnt opening because it wasnt with the right ident)
+
+
+### GUI:
+- Individual and combined: modes alphabetically sorted
+- Custom parameters under tree node to hide
+- Coherence doesnt change places with export plot if multiple employments (welch and multitaper)
+
 ## 06.01.2025
 - Dummy test Andreia --> big to do list
 - File example (DBScope)
 - License: Creative Commons
 - EEG Protocol
+- Coherence features corrected: double mask was happening
 
 ### Documentation
 - recording mode table in FU

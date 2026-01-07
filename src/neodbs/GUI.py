@@ -618,8 +618,8 @@ def add_features_buttons(tab_tag, signal_tags):
                 add_combo_df_features(tab_tag,signal_tags)
                 add_combo_features(tab_tag,signal_tags)
                 with dpg.group(horizontal=True):
-                    dpg.add_input_int(label='Hz', tag=f"{tab_tag}_band_min", width=90, default_value=0, callback=enforce_min_max, user_data=(f"{tab_tag}_band_min", f"{tab_tag}_band_max", 2))
-                    dpg.add_input_int(label='Hz', tag=f"{tab_tag}_band_max", width=90, default_value=100, callback=enforce_min_max, user_data=(f"{tab_tag}_band_min", f"{tab_tag}_band_max", 2))
+                    dpg.add_input_int(label='Hz', tag=f"{tab_tag}_band_min", width=90, default_value=0, min_value=0,max_value=98, callback=enforce_min_max, user_data=(f"{tab_tag}_band_min", f"{tab_tag}_band_max", 2))
+                    dpg.add_input_int(label='Hz', tag=f"{tab_tag}_band_max", width=90, default_value=100, min_value=2,max_value=100, callback=enforce_min_max, user_data=(f"{tab_tag}_band_min", f"{tab_tag}_band_max", 2))
                     dpg.add_button(label='Insert Band of Interest', show=True, callback=add_band,user_data=(tab_tag))
                     dpg.add_button(label='Reset Bands', show=True, callback=reset_bands,user_data=tab_tag)
     else:
@@ -780,8 +780,11 @@ def toggleVisibility(signal_tags, parent, group, user_data):
             # Create checkboxes for each plot
             for series_tag, visible in signal_tags.items():
                 series_config = dpg.get_item_configuration(series_tag)
-                label = series_config.get('label', series_tag.split('_')[-1])
-                 
+                try:
+                    label = series_config.get('label', series_tag.split('_')[-1])
+                except: 
+                    label = series_config.get('label')
+
                 checkbox = dpg.add_checkbox(label=label, default_value=visible,
                                             callback=toggle_visibility, user_data=series_tag)
                 checkboxes[series_tag] = checkbox
@@ -2279,6 +2282,7 @@ def plot_coherence(parameter_values, tab_label):
 
     if not dpg.does_item_exist(f"{tab_label}_clean"): 
         dpg.add_checkbox(label = 'Clean Previous Plot', parent=tab_label,default_value=True,tag=f"{tab_label}_clean")
+    
 
     signal1 = parameter_values['x']
     signal2 = parameter_values['y']
@@ -2288,8 +2292,7 @@ def plot_coherence(parameter_values, tab_label):
 
     clean = dpg.get_value(f"{tab_label}_clean")
     if clean==True: 
-        dpg.delete_item(f"{tab_label}_plot_group")
-        dpg.delete_item(f"{tab_label}_plot_group_text")
+        dpg.delete_item(f"{tab_label}_plot_group_text",children_only=True)
 
     freq, coh = pre.call_function('coherence', parameter_values)
     mask = freq <= 100
@@ -2314,6 +2317,7 @@ def plot_coherence(parameter_values, tab_label):
     dpg.add_text(f"Signal 1: {signal1['Label']}", parent=f"{tab_label}_plot_group_text")
     dpg.add_text(f"Signal 2: {signal2['Label']}",parent=f"{tab_label}_plot_group_text")
     plot_tag = f"{tab_label}_plot"
+
     if clean:
         with dpg.plot(label = 'Coherence', width=-1, height=400, tag=plot_tag, parent=f"{tab_label}_plot_group_text"):
             dpg.bind_colormap(plot_tag, 0)
@@ -2331,20 +2335,19 @@ def plot_coherence(parameter_values, tab_label):
         dpg.add_collapsing_header(tag=f"{tab_label}_header",parent=tab_label,label='Extracted Features',default_open=False)
 
     for b,band in bands.items():
-        # mask2 = (freq >= band[0]) & (freq <= band[1])
-        # p = {'X': freq[mask2], 'Y':coh[mask2]}
         p = {'X': freq, 'Y':coh}
-        # info = ft.extract_timeline_features(p,coh, coherence=True)
         info = ft.extract_psd_features(p,[b,band],bands=bands)
         create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
 
-    dpg.add_separator(label='Export',parent=tab_label)
-    b1 = dpg.add_button(label = 'Export Plot Figure',parent=tab_label,callback = filename_window,user_data =('2D', plot_tag, y_axis,0),width=-1)
-    b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,parent=tab_label,user_data=(y_axis,plot_tag,'2D'))
-    add_exporting_tag(extract_window_id(tab_label),plot=b1,signal=b2)
+    if not dpg.does_item_exist(f"{tab_label}_exp"):
+        with dpg.group(tag=f"{tab_label}_exp", parent=tab_label):
+            dpg.add_separator(label='Export')
+            b1 = dpg.add_button(label = 'Export Plot Figure',callback = filename_window,user_data =('2D', plot_tag, y_axis,0),width=-1)
+            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(y_axis,plot_tag,'2D'))
+            add_exporting_tag(extract_window_id(tab_label),plot=b1,signal=b2)
 
-    time.sleep(0.2)
-    dpg.set_axis_limits_auto(f"{tab_label}_y_axis")
+    # time.sleep(0.2)
+    # dpg.set_axis_limits_auto(f"{tab_label}_y_axis")
 
 def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
     '''
@@ -2364,7 +2367,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
 
     def calculate():
         if dpg.does_item_exist(f"{tab_label}_plot_group"): 
-            dpg.delete_item(f"{tab_label}_plot_group")
+            dpg.delete_item(f"{tab_label}_plot_group",children_only=True)
 
         if dpg.does_item_exist(f"{tab_label}_spec_group"): 
             dpg.delete_item(f"{tab_label}_spec_group")
@@ -2456,6 +2459,7 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
         plot(signal1,signal2,freq,coh,imcoh, label)
 
         if not dpg.does_item_exist(f"{tab_label}_coh_spec"):
+            dpg.add_group(tag=f"{tab_label}_space",parent=tab_label)
             dpg.add_separator(parent=f"{tab_label}_space")
             dpg.add_button(label = 'Plot Coherogram',width=-1,tag=f"{tab_label}_coh_spec", callback=spectrogram, user_data = (signal1,signal2, tapers, freq, mask), parent=f"{tab_label}_space")
             dpg.bind_item_theme(f"{tab_label}_coh_spec",change_button_color(3))
@@ -2464,39 +2468,37 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
 
     def plot(signal1,signal2,freq,coh,imcoh,label):
         plot_tag = f"{tab_label}_plot"
-        with dpg.group(parent=tab_label, tag=f"{tab_label}_plot_group"):
-            dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}")
-            dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}")
-            with dpg.plot(label = 'Multitaper Coherence', width=-1, height=400, tag=plot_tag):
-                dpg.bind_colormap(plot_tag, 0)
-                dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
-                x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
-                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Coherence", tag= f"{tab_label}_y_axis")
+        if not dpg.does_item_exist(f"{tab_label}_plot_group"):
+            dpg.add_group(parent=tab_label, tag=f"{tab_label}_plot_group")
 
-                # freq, coh = freq.tolist(), coh.tolist()
-                dpg.add_line_series(freq.tolist(), coh.tolist(), label=f'Multitaper Coherence | {label}', parent=y_axis)
-                dpg.add_line_series(freq.tolist(), imcoh.tolist(), label=f'Imaginary Multitaper Coherence | {label}', parent=y_axis)
-                dpg.set_axis_limits(y_axis,ymin=0,ymax=1)
+        dpg.add_text(f"Signal 1: {signal1['Channel']} - {signal1['Date']}", parent=f"{tab_label}_plot_group")
+        dpg.add_text(f"Signal 2: {signal2['Channel']} - {signal2['Date']}", parent=f"{tab_label}_plot_group")
+        with dpg.plot(label = 'Multitaper Coherence', width=-1, height=400, tag=plot_tag, parent=f"{tab_label}_plot_group"):
+            dpg.bind_colormap(plot_tag, 0)
+            dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
+            y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Coherence", tag= f"{tab_label}_y_axis")
 
-                if not dpg.does_item_exist(f"{tab_label}_header"):
-                    dpg.add_collapsing_header(tag=f"{tab_label}_header",label='Extracted Feautres',parent=tab_label,default_open=False)
+            # freq, coh = freq.tolist(), coh.tolist()
+            dpg.add_line_series(freq.tolist(), coh.tolist(), label=f'Multitaper Coherence | {label}', parent=y_axis)
+            dpg.add_line_series(freq.tolist(), imcoh.tolist(), label=f'Imaginary Multitaper Coherence | {label}', parent=y_axis)
+            dpg.set_axis_limits(y_axis,ymin=0,ymax=1)
 
-                for b,band in bands.items():
-                    mask2 = (freq >= band[0]) & (freq <= band[1])
-                    p = {'X': freq[mask2], 'Y':coh[mask2]}
-                    # info = ft.extract_timeline_features(p,coh, coherence=True)
-                    info = ft.extract_psd_features(p,[b,band],bands=bands)
-                    create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
+            if not dpg.does_item_exist(f"{tab_label}_header"):
+                dpg.add_collapsing_header(tag=f"{tab_label}_header",label='Extracted Feautres',parent=f"{tab_label}_plot_group",default_open=False)
 
-        dpg.add_separator(label='Export',parent=tab_label)
-        b1 = dpg.add_button(label = 'Export Plot Figure',parent=tab_label,callback = filename_window,user_data =('2D', plot_tag, y_axis,0),width=-1)
-        b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,parent=tab_label,user_data=(y_axis,plot_tag,'2D'))
-        add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
-        dpg.add_group(tag=f"{tab_label}_space",parent=tab_label)
+            for b,band in bands.items():
+                p = {'X': freq, 'Y':coh}
+                info = ft.extract_psd_features(p,[b,band],bands=bands)
+                create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=f"{b} | {signal1['Channel']}-{signal2['Channel']}")
 
-        time.sleep(0.2)
-        dpg.set_axis_limits_auto(y_axis)
-
+        if not dpg.does_item_exist(f"{tab_label}_exp"):
+            with dpg.group(tag=f"{tab_label}_exp", parent=tab_label):
+                dpg.add_separator(label='Export')
+                b1 = dpg.add_button(label = 'Export Plot Figure',callback = filename_window,user_data =('2D', plot_tag, y_axis,0),width=-1)
+                b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(y_axis,plot_tag,'2D'))
+                add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
+    
     def spectrogram(sender,app_data,user_data):
         signal1,signal2, tapers, freqs, mask = user_data
         
@@ -4042,7 +4044,9 @@ def extract_event_from_series_tag(event_string):
     :param series_tag: str, series id (ex.: tab_Streaming_0_series_0)
     :return: str, event name (ex.: series_0)
     '''
-    parts = event_string.split('_')
+    try:
+        parts = event_string.split('_')
+    except: return None
     
     # Skip the first three (e.g., tab, Streaming, 0), then look for the next non-number
     for i in range(3, len(parts), 2):  # step by 2 to skip the numbers
@@ -4797,7 +4801,8 @@ def CustomFilter(sender,app_data,user_data):
         dpg.delete_item(param_container,children_only=True)
         dpg.delete_item(doc_container,children_only=True)
     else:
-        with dpg.group(parent=f"{tab_tag}_filters",horizontal=True):    
+        ch = dpg.add_tree_node(label='Custom Parameters',parent=f"{tab_tag}_filters",default_open=True, tag = f"{tab_tag}_tree_filters")
+        with dpg.group(parent=ch,horizontal=True):    
             dpg.add_child_window(width=200, height=300, tag = param_container)  # Space to add inputs dynamically
             dpg.add_child_window(width=600, height=300, tag = doc_container)
     parameter_values = {}
@@ -4971,7 +4976,8 @@ def CustomFeatures(sender,app_data,user_data):
         dpg.delete_item(f"{tab_tag}_ft_doc", children_only=True) 
         doc_container = f"{tab_tag}_ft_doc"
     else:
-        group = dpg.add_group(parent=f"{tab_tag}_custom_features", tag = f"{tab_tag}_cf_group", horizontal=True)
+        ch = dpg.add_tree_node(label='Custom Parameters',parent=f"{tab_tag}_custom_features",default_open=True, tag = f"{tab_tag}_tree_features")
+        group = dpg.add_group(parent=ch, tag = f"{tab_tag}_cf_group", horizontal=True)
         param_container = dpg.add_child_window(width=200, height=300, tag = f"{tab_tag}_ft_input", parent=group)  # Space to add inputs dynamically 
         doc_container = dpg.add_child_window(width=600, height=300, tag = f"{tab_tag}_ft_doc", parent=group)
 
@@ -5350,9 +5356,11 @@ def circadian_rhythm(sender, app_data, user_data):
         dpg.add_tab_bar(reorderable=True,parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar")
 
     if dpg.does_item_exist(tab_label):
-        dpg.delete_item(tab_label,children_only=True)
-    else:
-        dpg.add_tab(label=f"Circadian Rhythm", parent=f"{tab_tag}_features_bar", tag=tab_label)
+        if not dpg.get_item_configuration(tab_label)['show']: 
+            dpg.delete_item(tab_label)
+        return
+    
+    dpg.add_tab(label=f"Circadian Rhythm", parent=f"{tab_tag}_features_bar", tag=tab_label,closable=True)
 
     tags = getActiveSeries(signal_tags)
 
@@ -5521,9 +5529,11 @@ def stimulation_timeline(sender,app_data,user_data):
         dpg.add_tab_bar(reorderable=True,parent=f"{tab_tag}_features", tag = f"{tab_tag}_features_bar")
 
     if dpg.does_item_exist(tab_label):
-        dpg.delete_item(tab_label)
-    else:
-        dpg.add_tab(label=f"Stimulation", parent=f"{tab_tag}_features_bar", tag=tab_label)
+        if not dpg.get_item_configuration(tab_label)['show']: 
+            dpg.delete_item(tab_label)
+        return
+    
+    dpg.add_tab(label=f"Stimulation", parent=f"{tab_tag}_features_bar", tag=tab_label,closable=True)
 
     if extract_type_window(window_id) == 'Combined': 
         tag_date_pairs = []
@@ -6125,7 +6135,9 @@ def show_event_summary(mode,tab_tag,plot_tag,files=None):
             for n in names_file: names.append(n)
         names = np.unique(names).tolist()
 
+    names = [getUpdatedEventName(name) for name in names]
     event_summary = {name: {} for name in names}
+    
     for event in temp:
         eventname = getUpdatedEventName(event['EventName'])
     # if utl.parse_datetime(previous_session).date()>utl.parse_datetime(event['DateTime']).date(): continue
@@ -6469,8 +6481,10 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             theme = change_inf_line_color(color)
             ploted_colors.append(colors[color])
             dpg.bind_item_theme(e, theme)
+            signal_tags[e] = True
 
         dpg.configure_item(legend, show=False)
+
         with dpg.group(label = f"{tab_tag}_buttons", parent=f"{tab_tag}_group",):
             toggleVisibility(signal_tags,parent=tab_tag, group=f"{tab_tag}_buttons", user_data = window_id)
             with dpg.group(horizontal=True):
@@ -7458,71 +7472,71 @@ def comb_survey_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     new_signals = file['Data'][mode]['LFPMontage']
                     date = file['Data']['Device']['SessionDate'][:10]
                     dates.append(date)
-                for _,signal in enumerate(new_signals):
-                    app_state['windows'][window_id]['Files'][idx]['Data'][new_tab_tag]['Signals'].append(signal)
-                    all_signals.append(signal)
-                    side = utl.after_point(signal['Hemisphere'])
-                    f = signal['LFPFrequency']
-                    m = signal['LFPMagnitude']
-                    channel = utl.after_point(signal['SensingElectrodes'])
-                    if len(files)>1:
-                        line_label = f"{date} | {channel} | {side}"
-                    else: 
-                        line_label = f"{channel} | {side}"
-                    # line_tag = f"{file['name']}_{new_tab_tag}_{channel}_{side}"
-                    line_tag = f"{new_tab_tag}_file_{idx}_series_{_}"
-                    line_tags.append(line_tag)
-                    channels.append(channel)
-                    artifact = utl.after_point(signal['ArtifactStatus'])
-                    dpg.add_line_series(f,m,label=line_label,parent=parent, tag = line_tag)
-                    colors.append(dpg.get_colormap_color(0,_*(idx+1)))
-
-                    artifact_info = f"{date}_{tab_tag}"
-                    if dpg.does_item_exist(artifact_info):
-                        tt = dpg.add_text(f"{channel}_{side}: {artifact}", parent=artifact_info)
-                    else:
-                        dpg.add_collapsing_header(label = date, tag=artifact_info, parent=child)
-                        tt = dpg.add_text(f"{channel}_{side}: {artifact}", parent=artifact_info)
-
-                    if artifact != 'ARTIFACT_NOT_PRESENT':
-                        dpg.bind_item_theme(tt, change_text_color(1))
-                    signal_tags[line_tag] = True
-                    if 'PeakFrequencyInHertz' in signal:
-                        peak = signal['PeakFrequencyInHertz']
-                        peak_m = m[f.index(peak)]
-                        dpg.add_scatter_series([peak],[peak_m], parent=parent, tag =f"{line_tag}_peak")
-                        dpg.bind_item_theme(f"{line_tag}_peak",change_plot_color(dpg.get_colormap_color(0,_)))
+                    for _,signal in enumerate(new_signals):
+                        app_state['windows'][window_id]['Files'][idx]['Data'][new_tab_tag]['Signals'].append(signal)
+                        all_signals.append(signal)
+                        side = utl.after_point(signal['Hemisphere'])
+                        f = signal['LFPFrequency']
+                        m = signal['LFPMagnitude']
+                        channel = utl.after_point(signal['SensingElectrodes'])
+                        if len(files)>1:
+                            line_label = f"{date} | {channel} | {side}"
+                        else: 
+                            line_label = f"{channel} | {side}"
+                        # line_tag = f"{file['name']}_{new_tab_tag}_{channel}_{side}"
+                        line_tag = f"{new_tab_tag}_file_{idx}_series_{_}"
+                        line_tags.append(line_tag)
+                        channels.append(channel)
+                        artifact = utl.after_point(signal['ArtifactStatus'])
+                        dpg.add_line_series(f,m,label=line_label,parent=parent, tag = line_tag)
                         colors.append(dpg.get_colormap_color(0,_*(idx+1)))
-                        line_tags.append(f"{line_tag}_peak")
-                    
-                    if not dpg.does_item_exist(f"side_{new_tab_tag}"):
-                        dpg.add_tree_node(label = f"By Hemisphere", tag =f"side_{new_tab_tag}", parent = new_tab_tag,default_open=False)
 
-                    if not dpg.does_item_exist(f"channel_{new_tab_tag}"):
-                        dpg.add_tree_node(label = f"By Channel", tag =f"channel_{new_tab_tag}", parent = new_tab_tag,default_open=False)
+                        artifact_info = f"{date}_{tab_tag}"
+                        if dpg.does_item_exist(artifact_info):
+                            tt = dpg.add_text(f"{channel}_{side}: {artifact}", parent=artifact_info)
+                        else:
+                            dpg.add_collapsing_header(label = date, tag=artifact_info, parent=child)
+                            tt = dpg.add_text(f"{channel}_{side}: {artifact}", parent=artifact_info)
 
-                    if not dpg.does_item_exist(f"ind_{new_tab_tag}"):
-                        dpg.add_tree_node(label = f"Individual Streams", tag =f"ind_{new_tab_tag}", parent = new_tab_tag,default_open=False)
-                    
-                    if not dpg.does_item_exist(f"{side}_{new_tab_tag}"):
-                        dpg.add_collapsing_header(label = f"{side} Hemisphere", tag =f"{side}_{new_tab_tag}", parent = f"side_{new_tab_tag}")
+                        if artifact != 'ARTIFACT_NOT_PRESENT':
+                            dpg.bind_item_theme(tt, change_text_color(1))
+                        signal_tags[line_tag] = True
+                        if 'PeakFrequencyInHertz' in signal:
+                            peak = signal['PeakFrequencyInHertz']
+                            peak_m = m[f.index(peak)]
+                            dpg.add_scatter_series([peak],[peak_m], parent=parent, tag =f"{line_tag}_peak")
+                            dpg.bind_item_theme(f"{line_tag}_peak",change_plot_color(dpg.get_colormap_color(0,_)))
+                            colors.append(dpg.get_colormap_color(0,_*(idx+1)))
+                            line_tags.append(f"{line_tag}_peak")
+                        
+                        if not dpg.does_item_exist(f"side_{new_tab_tag}"):
+                            dpg.add_tree_node(label = f"By Hemisphere", tag =f"side_{new_tab_tag}", parent = new_tab_tag,default_open=False)
 
-                    if not dpg.does_item_exist(f"{channel}_{side}_{new_tab_tag}"):
-                        dpg.add_collapsing_header(label = f"{channel} | {side}", tag =f"{channel}_{side}_{new_tab_tag}", parent = f"channel_{new_tab_tag}")
+                        if not dpg.does_item_exist(f"channel_{new_tab_tag}"):
+                            dpg.add_tree_node(label = f"By Channel", tag =f"channel_{new_tab_tag}", parent = new_tab_tag,default_open=False)
 
-                    if not dpg.does_item_exist(f"{line_tag}_header"):
-                        header = dpg.get_item_label(line_tag)
-                        dpg.add_collapsing_header(label = header, tag =f"{line_tag}_header", parent = f"ind_{new_tab_tag}")
-                    else:
-                        dpg.delete_item(f"{line_tag}_header", children_only=True)
+                        if not dpg.does_item_exist(f"ind_{new_tab_tag}"):
+                            dpg.add_tree_node(label = f"Individual Streams", tag =f"ind_{new_tab_tag}", parent = new_tab_tag,default_open=False)
+                        
+                        if not dpg.does_item_exist(f"{side}_{new_tab_tag}"):
+                            dpg.add_collapsing_header(label = f"{side} Hemisphere", tag =f"{side}_{new_tab_tag}", parent = f"side_{new_tab_tag}")
 
-                    #TABLE CONTENT
-                    p = {'X': f, 'Y': m}
-                    for band in bands.items():
-                        info = ft.extract_psd_features(p, band,bands=bands)
-                        create_table(f"{line_tag}_header",f"{line_tag}_header_table", info, trial_label=band[0]) #individual
-                        create_table(f"{side}_{new_tab_tag}",f"{side}_{new_tab_tag}_table", info, trial_label=f"{band[0]} | {channel} | {date[:10]}") #hemisphere
-                        create_table(f"{channel}_{side}_{new_tab_tag}",f"{channel}_{side}_{new_tab_tag}_table", info, trial_label=f"{band[0]} | {date[:10]}") #by channel
+                        if not dpg.does_item_exist(f"{channel}_{side}_{new_tab_tag}"):
+                            dpg.add_collapsing_header(label = f"{channel} | {side}", tag =f"{channel}_{side}_{new_tab_tag}", parent = f"channel_{new_tab_tag}")
+
+                        if not dpg.does_item_exist(f"{line_tag}_header"):
+                            header = dpg.get_item_label(line_tag)
+                            dpg.add_collapsing_header(label = header, tag =f"{line_tag}_header", parent = f"ind_{new_tab_tag}")
+                        else:
+                            dpg.delete_item(f"{line_tag}_header", children_only=True)
+
+                        #TABLE CONTENT
+                        p = {'X': f, 'Y': m}
+                        for band in bands.items():
+                            info = ft.extract_psd_features(p, band,bands=bands)
+                            create_table(f"{line_tag}_header",f"{line_tag}_header_table", info, trial_label=band[0]) #individual
+                            create_table(f"{side}_{new_tab_tag}",f"{side}_{new_tab_tag}_table", info, trial_label=f"{band[0]} | {channel} | {date[:10]}") #hemisphere
+                            create_table(f"{channel}_{side}_{new_tab_tag}",f"{channel}_{side}_{new_tab_tag}_table", info, trial_label=f"{band[0]} | {date[:10]}") #by channel
 
             mean, std = pre.MeanSignal(new_signals,'LFPMagnitude'), pre.StdDevSignal(new_signals,'LFPMagnitude')
             dev = getDeviation(new_tab_tag)
@@ -7776,6 +7790,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         theme = change_inf_line_color(color)
                         ploted_colors.append(colors[color])
                         dpg.bind_item_theme(t, theme)
+                        signal_tags[t] = True
 
                     date = file['Data']['Device']['SessionDate'][:final_index]
                     dpg.add_text(f"Total days: {len(days)}", parent=f"{date}_{tab_tag}")
@@ -7797,6 +7812,11 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                     dpg.add_text('By hemisphere: ')
                     for day in sides:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(day, window_id, tab_tag))
+                if len(ocd_events)>1:
+                    with dpg.child_window(height=cwh, auto_resize_x=True):
+                        dpg.add_text('By Event: ')
+                        for ocd in ocd_events:
+                            toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(ocd, window_id, tab_tag)) #check hemisphere
             dpg.add_separator()
             b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",ploted_colors),tag=f"{plot_tag}_export_plot")
             b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(y_axis,plot_tag,'2D'))

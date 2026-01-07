@@ -1,3 +1,4 @@
+.. _AHD:
 At-Home Data
 ============
 
@@ -6,9 +7,9 @@ medication and routine outside of the clinic.
 
 There are two **at-home recording modes: Timeline** and **Events**.
 
-*Timeline* records the long-term LFP signal troughout all day and *Events* record a 30 second snapshot, manually 
+*Timeline* records the long-term band power troughout all day and *Events* record a 30 second snapshot, manually 
 triggered by the user to record important events such as symptoms, medication, etc.
-The chronic LFP recordings are acquired from a pre-selected contact pairs, and are restricted to bipolar settings 
+The chronic recordings are acquired from a pre-selected contact pairs, and are restricted to bipolar settings 
 and the stimulation electrodes used. 
 
 +--------------------+---------------+-------------+--------------------------+
@@ -31,20 +32,20 @@ and the stimulation electrodes used.
 Timeline
 --------
 
-The BrainSense™ *Timeline* mode acquires the signal power of a pre-defined sensing band (5 Hz bandwidth) every 
-10 minutes. To access the signals, the user must select the respective tab. Automatically, the chronic recordings
-and the patient-marked events are plotted. Respective information of the sensing configuration is also displayed, as well as 
-the plot legend.
+The BrainSense™ *Timeline* mode acquires the mean signal power of a pre-defined sensing band (5 Hz bandwidth) every 
+10 minutes. 
 
-Recordings from the left hemisphere appear with the color green, and recordings from the right hemisphere 
-appear with the color purple. Marked events appear as vertical lines, marking the moment of the event. Additionally,
-power features are extracted per signal (mean power, peak power and peak time). Extracted features are also organized
-into groups to facilitate exportation of analog/related signals, for offline analysis.
+1. To access the signals, the user must select the **"Timeline"** tab. Automatically, the chronic recordings and the patient-marked events are plotted. 
+2. Respective information of the sensing configuration is also displayed, as well as the plot legend.
+3. Recordings from the left hemisphere appear with the color green, and recordings from the right hemisphere appear with the color purple. 
+4. **Marked events** appear as **vertical lines**, marking the moment of the event. 
+5. Power features are extracted per signal (mean power, peak power and peak time). 
+6. Extracted features are also **organized into groups** to facilitate exportation of analog/related signals, for offline analysis.
 
 .. image:: ../img/timeline.png
 
 The image above represent the *Timeline* tab in the **Individual** window. When in the **Combined** window, has access 
-to event-locked analysis functionalities, described below. Additionally, the information correspondant to the sensing
+to event-locked analysis functionalities, described :ref:`below <elat>`. Additionally, the information correspondant to the sensing
 configuration of each file selected, is organized under the correspondant header.
 
 .. image:: ../img/timeline_comb.png
@@ -52,10 +53,10 @@ configuration of each file selected, is organized under the correspondant header
 Outlier Removal
 ^^^^^^^^^^^^^^^
 
-Because this a signal acquired with a very low resolution, it is very important to be careful when 
-infering conclusions from this signals. NeoDBS offers an outlier removal filter, based on the root mean square (RMS)
-of each signal (per channel-day) and also allows the user to see moments where there are missing points. Extracted 
-features can be recalculated as many times needed to allow the user to extract the metrics to the filtered signal.
+Because this a signal acquired with a **very low resolution**, it is very important to be careful when 
+infering conclusions from this signals. NeoDBS offers an **outlier removal filter**, based on the root mean square (RMS)
+of each signal (per channel-day) and also allows the user to see moments where there are **missing points**. **Extracted 
+features can be recalculated** as many times needed to allow the user to extract the metrics to the filtered signal.
 
 To apply the outlier removal, the user must select the factor value. This factor is multiplied to the computed RMS 
 to define the value of the threshold. If the LFP value is above the threshold it is considered an outlier and replaced
@@ -65,10 +66,11 @@ by the RMS.
 
 1. Select the threshold value, by sliding the **"Remove Outlier"** item. User can readjust threshold as many times needed.
 2. The filtered signals will update the main plot.
-3. If the user wants to recalculate timeline metrics, press *"Recalculate Metrics"*.
-4. To see missing points from recordings, toggle checkbox *"Show missing points"*.
+3. If the user wants to recalculate timeline metrics, press **"Recalculate Metrics"**.
+4. To see missing points from recordings, toggle checkbox **"Show missing points"**.
 
 
+.. _elat:
 Event-locked Analysis
 ^^^^^^^^^^^^^^^^^^^^^
 When using the **Combined** window, the user has the possibility to epoch all the events marked by the user at-home,
@@ -84,7 +86,7 @@ allowing an automatic event-locked analysis of the chronic recordings. The segme
 Circadian Rhythm
 ^^^^^^^^^^^^^^^^
 
-From the *Timeline* recordings, NeoDBS computes the circadian rhythm by aligning all recordings by their time component.
+From the *Timeline* recordings, NeoDBS computes the **circadian rhythm** by aligning all recordings by their time component.
 The respective mean and standard deviation are calculated and ploted, according to the selected signals.
 
 1. Under the collapsing header "Signal Analysis", press **"Circadian Rhythm"**.
@@ -111,8 +113,8 @@ can be very helpful for adaptive stimulation cases or to check configuration cha
 Events
 ------
 
-The BrainSense™ Events mode (LFP Snapshots) is for at home usage and is combined with
-the BrainSense™ Timeline mode. Patients manually mark events with a wireless device, time
+The BrainSense™ Events mode (LFP Snapshots) is for at home usage and **is combined with
+the BrainSense™ Timeline mode**. Patients manually mark events with a wireless device, time
 stamping events in the BrainSense™ timeline data and triggering recording of high definition LFP
 for 30s. The average PSD estimate is also internally computed by the DBS system and stored.
 
@@ -121,8 +123,23 @@ for 30s. The average PSD estimate is also internally computed by the DBS system 
 
 1. Select **"Events"** tab. The respective signals, functionalities and metrics will be displayed.
 2. Metrics are organized into groups, to facilitate exportation.
-3. Mean and standard deviation plots are recalculated, as the user selects/deselect signals.
-4. To recalculate the mean metrics of the events, press *"Recalculate Mean Metrics"*.
-5. PSD's can be converted between dB or original power values, by toggling *"Change to dB"*.
-6. Standard deviation can also be converted into the 95% Confidence Interval, by choosing between the radio button under *"Shaded Area"*.
+3. **Mean and standard deviation plots are recalculated**, as the user selects/deselect signals.
+4. To recalculate the mean metrics of the events, press **"Recalculate Mean Metrics"**.
+5. PSD's can be converted between dB or original power values, by toggling **"Change to dB"**.
+6. **Standard deviation** can also be converted into the **95% Confidence Interval**, by choosing between the radio button under *"Shaded Area"*.
 
+Event Summary
+^^^^^^^^^^^^^
+
+**However**, if chronic sensing is disabled (no *Timeline* button, but *Events* button is available) the user is still able to mark the events through the Medtronics Patient App.
+
+Through the same button, the timestamps of the marked events are displayed. 
+
+.. image:: ../img/event_summary.png
+
+1. Select **"Events"** tab. The event summary will be displayed.
+2. You can change between showing the plot per **day** or **hour**, showing the **count of events per day** or the **circadian rhythm** respectively.
+
+.. image:: ../img/event_summary2.png
+
+3. Plots and signals are easily exported.

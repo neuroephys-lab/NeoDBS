@@ -59,7 +59,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#coherence">3.2. Coherence</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#spectrogram">3.3. Spectrogram</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#time-frequency-domain-representation">3.3. Time-Frequency Domain Representation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#bpot">3.3.1. Band Power Over Time</a></li>
 </ul>
 </li>
@@ -76,9 +76,9 @@
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#features">Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#preprocessing">Preprocessing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#utils">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Preprocessing">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-utils">Utils</a></li>
 </ul>
 
         </div>
@@ -218,9 +218,10 @@ perfect linear coupling.</p>
 <li><p>Plots, tables and signals are easily exported.</p></li>
 </ol>
 </section>
-<section id="spectrogram">
-<h2><span class="section-number">3.3. </span>Spectrogram<a class="headerlink" href="#spectrogram" title="Link to this heading">¶</a></h2>
-<p>The Welch Spectrogram is available on both default and customizable pipelines.</p>
+<section id="time-frequency-domain-representation">
+<h2><span class="section-number">3.3. </span>Time-Frequency Domain Representation<a class="headerlink" href="#time-frequency-domain-representation" title="Link to this heading">¶</a></h2>
+<p>To compute Time-Frequency Domain (TFD) representation, NeoDBS is able to compute the <strong>Welch Spetrogram</strong> or <strong>Wavelet</strong>, available on both default and customizable pipelines.</p>
+<img alt="../_images/spec_wav.png" src="../_images/spec_wav.png" />
 <p>In the <strong>Individual</strong> window, it allows for spectrograms to be
 computed per signal or to join recordings (if there are multiple recordings from the same channel). Additionally, if there are any marked events,
 those will also be automatically included in the representation of the spectrogram.</p>
@@ -231,11 +232,15 @@ those will also be automatically included in the representation of the spectrogr
 to properly account for segment duration when customizing spectrogram parameters. Number of computed spectrograms
 also highly impacts the computational performance.</p>
 </div>
-<p>1. After selecting the &quot;Spectrogram&quot; method, the plot and respective buttons will be displayed. In the
+<p>1. After selecting the <strong>&quot;Spectrogram&quot;</strong> method, the plot and respective buttons will be displayed. In the
 figure below we can see the example of the spectrogram being computed on an Individual window with marked events.</p>
 <img alt="../_images/spectrogram.png" src="../_images/spectrogram.png" />
 <ol class="arabic simple" start="2">
-<li><p>To synchronize axis between plots, toggle <strong>&quot;Synchronize Axis&quot;</strong>.</p></li>
+<li><p>If more than you recording per channel is visible, the user must select between <strong>joined</strong> or <strong>separate</strong> spectrogram of the signals. By pressing the <strong>&quot;Joined Recordings&quot;</strong>, the spectrogram will be computed for the joined recordings by channel. Else, if you press <strong>Separate Recordings</strong> an individual spectrogram will be computed per recording.</p></li>
+</ol>
+<img alt="../_images/join_or_ind.png" src="../_images/join_or_ind.png" />
+<ol class="arabic simple" start="2">
+<li><p>Toggle <strong>&quot;Synchronize Axis&quot;</strong> to synchronize axis between plots.</p></li>
 <li><p>To plot the band mean power over time, per recording, press <strong>&quot;Band Power Over Time&quot;</strong>. See more in <a class="reference internal" href="#bpot"><span class="std std-ref">here</span></a>.</p></li>
 <li><p>To compute the mean spectrogram, press <strong>Mean Spectrogram</strong>. The mean spectrogram and respective buttons will appear under the collapsing header named &quot;Mean Spectrogram&quot;.</p></li>
 </ol>

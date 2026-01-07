@@ -116,10 +116,12 @@ perfect linear coupling.
 
 7. Plots, tables and signals are easily exported.
 
-Spectrogram
------------
+Time-Frequency Domain Representation
+------------------------------------
 
-The Welch Spectrogram is available on both default and customizable pipelines. 
+To compute Time-Frequency Domain (TFD) representation, NeoDBS is able to compute the **Welch Spetrogram** or **Wavelet**, available on both default and customizable pipelines.
+
+.. image:: ../img/spec_wav.png
 
 In the **Individual** window, it allows for spectrograms to be 
 computed per signal or to join recordings (if there are multiple recordings from the same channel). Additionally, if there are any marked events,
@@ -132,12 +134,16 @@ In the **Combined** window, spectrogram is only available for event-locked segme
     to properly account for segment duration when customizing spectrogram parameters. Number of computed spectrograms 
     also highly impacts the computational performance.
 
-1. After selecting the "Spectrogram" method, the plot and respective buttons will be displayed. In the 
+1. After selecting the **"Spectrogram"** method, the plot and respective buttons will be displayed. In the 
 figure below we can see the example of the spectrogram being computed on an Individual window with marked events.
 
 .. image:: ../img/spectrogram.png
 
-2. To synchronize axis between plots, toggle **"Synchronize Axis"**.
+2. If more than you recording per channel is visible, the user must select between **joined** or **separate** spectrogram of the signals. By pressing the **"Joined Recordings"**, the spectrogram will be computed for the joined recordings by channel. Else, if you press **Separate Recordings** an individual spectrogram will be computed per recording.
+
+.. image:: ../img/join_or_ind.png
+
+2. Toggle **"Synchronize Axis"** to synchronize axis between plots.
 3. To plot the band mean power over time, per recording, press **"Band Power Over Time"**. See more in :ref:`here <bpot>`.
 4. To compute the mean spectrogram, press **Mean Spectrogram**. The mean spectrogram and respective buttons will appear under the collapsing header named "Mean Spectrogram".
 

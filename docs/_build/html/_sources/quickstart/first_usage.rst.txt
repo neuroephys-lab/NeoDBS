@@ -41,8 +41,8 @@ Individual Window
 The **Individual** window goal is to analyze a single recording session, focusing on the evolution of signals and 
 events inside the same session. Therefore it includes functionalities like:
 
-* Event marking in time-domain signals, and their time-frequency domain methods, according to user input;
-* Compute joined time-frequency domain methods in same-channel recordings;
+* **Event marking** in time-domain signals, and their time-frequency domain methods, according to user input;
+* Compute **joined time-frequency domain** methods in same-channel recordings;
 
 These are exclusive to this workspace, in order to enhance computing power and hetereogeneity in workspaces.
 
@@ -51,7 +51,7 @@ Combined Window
 Unlike the individual window, the **Combined** window allows the selection of multiple files, focusing therefore on 
 the evolution of the signals across different recording sessions. Additionally, it includes functionalities such as:
 
-* Event-locked segmentation, automatically epoching recordings according to user input.
+* **Event-locked segmentation**, automatically epoching recordings according to user input.
 
 These functionalities are further explained in :ref:`here <ela>`.
 
@@ -90,45 +90,74 @@ The system allows to record signals on different recording modes with different 
 see `here <https://iopscience.iop.org/article/10.1088/1741-2552/ac1d5b>`_ (table 1). 
 
 Because of the differences in purpose and configuration across the recording modes, they are accessed and treated independently, in the respective tabs, as mentioned above.
+Two main types of recordings can be identified: recordings made **In-Clinic** or **At Home**. 
+
+In-Clinic Data
+^^^^^^^^^^^^^^
+
+**In-Clinic** recordings are acquired in the presence of the physician and are primarily used to configure electrodes, assess electrode integrity, identify artifacts, 
+and analyze the patient's neural activity with or without active stimulation therapy. These recordings are stored in the session file in their **raw format as time-domain signals**.
+
+.. image:: ../img/in-clinic.png
+
+Because the underlying neural signals are preserved, both **time-domain and spectral analyses** can be applied to extract relevant metrics and features for therapy optimization.
+
+After reviewing how the :ref:`NeoDBS workflow <general>` operates, a simple :ref:`tutorial <ICD>` is available to guide the analysis of this type of recording.
+
+At Home Data
+^^^^^^^^^^^^
+
+**At-Home** recordings are available when chronic sensing has been enabled by the physician and allow long-term (24/7) monitoring of the patient's 
+neural activity under real-world conditions. These recordings follow specific constraints imposed by the device and are stored in the session file 
+in **derived formats** rather than as raw signals.
+
+.. image:: ../img/at-home.png
+
+Specifically, at-home recordings are stored either as **frequency-domain representations** (BrainSense™ Events) or as 
+**band-power time-series signals** (BrainSense™ Timeline). Because the raw time-domain LFP is not available, **primary 
+spectral analyses cannot be performed**. Instead, metrics are directly extracted using analysis methods appropriate 
+for frequency-domain data or for ultra-slow temporal modulation of band-limited power.
+
+After reviewing how the :ref:`NeoDBS workflow <general>` operates, a simple :ref:`tutorial <AHD>` is available to guide the analysis of this type of recording.
 
 Here follows a simple summary of the recording modes, with their associated name in system and NeoDBS:
 
-+-------------------------------+--------------------+-------------+-------------+--------------------------+
-| System Name                   | NeoDBS Name        | Usage Con-  | Stimulation | Key Features             |
-|                               |                    | text        | Status      |                          |
-+===============================+====================+=============+=============+==========================+
-| BrainSense™ *Setup*           | *Setup*            | In-clinic   | On or Off   | Required before other    |
-|                               |                    |             |             | modes (except *Survey*); |
-|                               |                    |             |             | Records each segment for |
-|                               |                    |             |             | 21s each (~90s duration) |
-+-------------------------------+--------------------+-------------+-------------+--------------------------+
-| BrainSense™ *Survey*          | *Survey*           | In-clinic   | Off         | Records each segment for |
-|                               |                    |             |             | 21s each (~90s duration) |
-+-------------------------------+--------------------+-------------+-------------+--------------------------+
-| BrainSense™ *Survey Indefinite| *Indefinite*       | In-clinic   | Off         | Long-duration LFP        |
-| Streaming*                    | *Streaming*        |             |             | recording from contact   |
-|                               |                    |             |             | pairs (0–2, 0–3, 1–3),   |
-|                               |                    |             |             | full-bandwidth (up to    |
-|                               |                    |             |             | 125 Hz)                  |
-+-------------------------------+--------------------+-------------+-------------+--------------------------+
-| BrainSense™ *Streaming*       | *Streaming*        | In-clinic   | On or Off   | Long-duration LFP        |
-|                               |                    |             |             | recording from contact   |
-|                               |                    |             |             | pairs compatible with    |
-|                               |                    |             |             | stimulation              |
-+-------------------------------+--------------------+-------------+-------------+--------------------------+
-| BrainSense™ *Timeline*        | *Timeline*         | At home     | On          | Long-term monitoring     |
-|                               |                    |             |             | from pre-selected        |
-|                               |                    |             |             | bipolar pair; power of   |
-|                               |                    |             |             | 5 Hz band stored every   |
-|                               |                    |             |             | 10 min; contact pairs    |
-|                               |                    |             |             | limited to stimulation-  |
-|                               |                    |             |             | compatible               |
-+-------------------------------+--------------------+-------------+-------------+--------------------------+
-| BrainSense™ *Events*          | *Events*           | At home     | On          | Event-marked recordings, |
-|                               |                    |             |             | 30 s LFP saved into PSD, |
-|                               |                    |             |             | time-stamped by patient  |
-|                               |                    |             |             | manual input             |
-+-------------------------------+--------------------+-------------+-------------+--------------------------+
++-------------------------------+---------------+-------------+-------------+--------------------------+
+| System Name                   | NeoDBS Name   | Usage       | Stimulation | Key Features             |
+|                               |               | Context     | Status      |                          |
++===============================+===============+=============+=============+==========================+
+| BrainSense™ *Setup*           | *Setup*       | In-clinic   | On or Off   | Required before other    |
+|                               |               |             |             | modes (except *Survey*); |
+|                               |               |             |             | Records each segment for |
+|                               |               |             |             | 21s each (~90s duration) |
++-------------------------------+---------------+-------------+-------------+--------------------------+
+| BrainSense™ *Survey*          | *Survey*      | In-clinic   | Off         | Records each segment for |
+|                               |               |             |             | 21s each (~90s duration) |
++-------------------------------+---------------+-------------+-------------+--------------------------+
+| BrainSense™ *Survey Indefinite| *Indefinite*  | In-clinic   | Off         | Long-duration LFP        |
+| Streaming*                    |               |             |             | recording from contact   |
+|                               |               |             |             | pairs (0–2, 0–3, 1–3),   |
+|                               |               |             |             | full-bandwidth           |
+|                               |               |             |             |                          |
++-------------------------------+---------------+-------------+-------------+--------------------------+
+| BrainSense™ *Streaming*       | *Streaming*   | In-clinic   | On or Off   | Long-duration LFP        |
+|                               |               |             |             | recording from contact   |
+|                               |               |             |             | pairs compatible with    |
+|                               |               |             |             | stimulation              |
++-------------------------------+---------------+-------------+-------------+--------------------------+
+| BrainSense™ *Timeline*        | *Timeline*    | At home     | On          | Long-term monitoring     |
+|                               |               |             |             | from pre-selected        |
+|                               |               |             |             | bipolar pair; power of   |
+|                               |               |             |             | 5 Hz band stored every   |
+|                               |               |             |             | 10 min; contact pairs    |
+|                               |               |             |             | limited to stimulation-  |
+|                               |               |             |             | compatible               |
++-------------------------------+---------------+-------------+-------------+--------------------------+
+| BrainSense™ *Events*          | *Events*      | At home     | On          | Event-marked recordings, |
+|                               |               |             |             | 30 s LFP saved into PSD, |
+|                               |               |             |             | time-stamped by patient  |
+|                               |               |             |             | manual input             |
++-------------------------------+---------------+-------------+-------------+--------------------------+
 
 .. _general:
 General Workflow
@@ -144,26 +173,31 @@ After understanding what workspaces exist, here is a simple workflow for analysi
 
 .. image:: ../img/select_file.png
 
-3. Window will present **session, device and stimulation information** for each recording session.
+3. Once you have selected all the desired file(s), press **"Open File"**. You can change the desired files while the "File Selector" button is visible.  
+
+.. image:: ../img/open_file.png
+
+4. Window will present **session, device and stimulation information** for each recording session.
 
 .. image:: ../img/window.png
 
-4. Recordings can be accessed by clicking on the **respective recording mode button**. 
-5. **Each recording mode will have its respective tab**, with the associated recordings and functionalities. Preprocessing and spectral analysis methods will only be applied to the selected signals (visible on the main plot of tab).
+5. Recordings can be accessed by clicking on the **respective recording mode button**. 
+6. **Each recording mode will have its respective tab**, with the associated recordings and functionalities. Preprocessing and spectral analysis methods will only be applied to the selected signals (visible on the main plot of tab).
 
 .. image:: ../img/tab.png
 
-6. **Default methods** have the parameters predefined for an easier analysis, properly adapted for the recordings configuration.
+7. To access **Filtering Methods**, open the header named "Filters". To access time and spectral analysis methods open the header named **Signal Analysis**. 
 
-.. image:: ../img/default.png
+.. image:: ../img/methods.png
 
-7. **Custom methods** allow the parameters to be adjusted according to the user needs. Documentation of the selected method and required parameters will appear to aid the user in selecting the best parameters. 
+8. **Default methods** have the parameters predefined for an easier analysis, properly adapted for the recordings configuration.
+**Custom methods** allow the parameters to be adjusted according to the user needs. Documentation of the selected method and required parameters will appear to aid the user in selecting the best parameters. 
 
 .. image:: ../img/custom.png
 
-8. **Filtering** methods will update the signals in the main plot. **Signal Analysis** methods create a new plot, under a **child tab** named after the applied method.
+9. **Filtering** methods will update the signals in the main plot. **Signal Analysis** methods create a new plot, under a **child tab** named after the applied method.
 
-9. **Signals, plots and tables can be easily exported** either individually, per window (workspace) or all windows at once.
+10. **Signals, plots and tables can be easily exported** either individually, per window (workspace) or all windows at once.
 
 .. image:: ../img/save.png
 

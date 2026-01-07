@@ -281,7 +281,7 @@ def getModes(Data):
     if modes == ['Damaged']:
         modes = []
         modes.append('None. Recording is Damaged!')
-
+    modes = sorted(modes)
     return modes
 
 def getStimStatus(Data):

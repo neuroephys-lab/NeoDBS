@@ -60,6 +60,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#segmentation">1.2. Segmentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#event-locked-analysis">1.3. Event-locked Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#signal-analysis">1.4. Signal Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#impedance">1.5. Impedance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="chronic.html">2. At-Home Data</a></li>
@@ -69,9 +70,9 @@
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#features">Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#preprocessing">Preprocessing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#utils">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Preprocessing">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-utils">Utils</a></li>
 </ul>
 
         </div>
@@ -99,7 +100,7 @@
            <div itemprop="articleBody">
              
   <section id="in-clinic-data">
-<h1><span class="section-number">1. </span>In-Clinic Data<a class="headerlink" href="#in-clinic-data" title="Link to this heading">¶</a></h1>
+<span id="icd"></span><h1><span class="section-number">1. </span>In-Clinic Data<a class="headerlink" href="#in-clinic-data" title="Link to this heading">¶</a></h1>
 <p>In this tutorial, a simple workflow is given to perform the analysis of recordings saved in the time-domain
 <strong>(Streaming, Indefinite Streaming, Survey and Setup)</strong>.
 After selecting the type of window and file(s) to be analyzed, you must choose the type of recording you want
@@ -163,17 +164,18 @@ signals. NeoDBS offers a variety of filters, and pipelines, that are customizabl
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>After applying any preprocessing method (filtering, segmentation or event-marking/epoch) you will not have access
-to the raw original signals without losing your progress. If you want to restore the original signals, the user must
-close and reopen the respective tab.</p>
+to the raw original signals without losing your progress, <strong>as the main plot of the tab will be replaced with the preprocessed signals</strong>.
+If you want to restore the original signals, the user must close and reopen the respective tab.</p>
 </div>
 <section id="default-filter">
 <h3><span class="section-number">1.1.1. </span>Default Filter<a class="headerlink" href="#default-filter" title="Link to this heading">¶</a></h3>
 <p>For more non-experienced users, NeoDBS offers a <strong>Default Filter</strong> that removes cardiac component and
 maintains only the desired frequencies, selected in the respective input spaces. This method was developed
-from UF BRAVO's Platform (<a class="reference external" href="https://github.com/Fixel-Institute/BRAVO">https://github.com/Fixel-Institute/BRAVO</a>).</p>
+from UF BRAVO's Platform (<a class="reference external" href="https://github.com/Fixel-Institute/BRAVO">https://github.com/Fixel-Institute/BRAVO</a>). This filter performs a 5th order Butterworth
+Bandpass filter with cardiac artifact removal.</p>
 <ol class="arabic simple">
-<li><p>Select the interval of frequencies you want to keep in the signal.</p></li>
-<li><p>Press &quot;Default Filtering&quot;.</p></li>
+<li><p>Select the <strong>interval of frequencies</strong> you want to keep in the signal.</p></li>
+<li><p>Press <strong>&quot;Default Filtering&quot;</strong>.</p></li>
 <li><p>The main plot will be updated with the filtered signals.</p></li>
 </ol>
 <img alt="../_images/default_filter.png" src="../_images/default_filter.png" />
@@ -183,10 +185,10 @@ from UF BRAVO's Platform (<a class="reference external" href="https://github.com
 <p>For users that require specific filtering parameters, NeoDBS also presents 7 different infinite impulse response
 (IIR) filters.</p>
 <ol class="arabic simple">
-<li><p>Press &quot;Custom Filtering&quot; to show the available filters.</p></li>
-<li><p>Select the type of filter you want apply. The required parameters and the method documentation will appear to guide you in filling in the parameters. Parameters are set to default values, but can be adjusted. Parameters that are associated to signal acquiring configurations are hard-coded (ex.: sampling frequency, 250 Hz).</p></li>
-<li><p>After completing the parameters, press &quot;Save Parameters&quot;.</p></li>
-<li><p>If you are sure you want to apply the filter, press &quot;Plot filtered signal&quot;.</p></li>
+<li><p>Press <strong>&quot;Custom Filtering&quot;</strong> to show the available filters.</p></li>
+<li><p>Select the <strong>type of filter</strong> you want apply. The required parameters and the method documentation will appear to guide you in filling in the parameters. Parameters are set to default values, but can be adjusted. Parameters that are associated to signal acquiring configurations are hard-coded (ex.: sampling frequency, 250 Hz).</p></li>
+<li><p>After completing the parameters, press <strong>&quot;Save Parameters&quot;</strong>.</p></li>
+<li><p>If you are sure you want to apply the filter, press <strong>&quot;Plot filtered signal&quot;</strong>.</p></li>
 <li><p>The main plot will be updated with the filtered signals.</p></li>
 </ol>
 <img alt="../_images/custom_filter.png" src="../_images/custom_filter.png" />
@@ -196,8 +198,8 @@ from UF BRAVO's Platform (<a class="reference external" href="https://github.com
 <h2><span class="section-number">1.2. </span>Segmentation<a class="headerlink" href="#segmentation" title="Link to this heading">¶</a></h2>
 <p>Recordings can be segmented, with a minimum of 10 seconds of duration.</p>
 <ol class="arabic simple">
-<li><p>Select the start and end of the segment.</p></li>
-<li><p>Press &quot;Segment Signal&quot;.</p></li>
+<li><p>Select the <strong>start</strong> and <strong>end</strong> of the segment.</p></li>
+<li><p>Press <strong>&quot;Segment Signal&quot;</strong>.</p></li>
 <li><p>The main plot will be updated with the segmented signals.</p></li>
 </ol>
 <img alt="../_images/segmentation.png" src="../_images/segmentation.png" />
@@ -210,11 +212,12 @@ The .txt file must be with the following structure: HH:MM:SS, name of event.</p>
 <p>If the user is working in an <strong>Individual Window</strong>, the user can only mark the event timestamp, which will
 appear in the main plot and all time-spectral analysis that the user computes posteriorly. If the user is
 working in a <strong>Combined Window</strong>, the recordings will be segmented with the event centered. The user can
-select the duration of the epoch.</p>
+select the <strong>duration of the epoch</strong>, by defining the time <strong>before and after the event</strong>.</p>
 <ol class="arabic simple">
-<li><p>Press &quot;Insert Events&quot;, in the <em>Individual Window</em>, or &quot;Analyze Streaming Events&quot;, in <em>Combined Window</em>, after selecting the interval prior and after the event.</p></li>
-<li><p>Select .txt file with the described events.</p></li>
-<li><p>The marked events or event-locked segments, will appear or replace, respectively, the main plot of the tab.</p></li>
+<li><p>Press <strong>&quot;Insert Events&quot;</strong>, in the <em>Individual Window</em>, or <strong>&quot;Analyze Streaming Events&quot;</strong>, in <em>Combined Window</em>, <strong>after selecting the interval prior and after the event</strong>.</p></li>
+<li><p>Select <em>.txt</em> file with the described events.</p></li>
+<li><p>The marked events or event-locked segments, will <strong>appear or replace</strong>, respectively, the <strong>main plot</strong> of the tab.</p></li>
+<li><p>The time axis will convert from seconds to datetime format. If the signals are not visible, click two times on the plot to recenter.</p></li>
 </ol>
 <img alt="../_images/select_events.png" src="../_images/select_events.png" />
 <p>In the Individual Window, events can be inserted several times. In the Combined Window, after an event-locked segmentation
@@ -225,6 +228,22 @@ has been emplyed, no more segmentation or events can be added.</p>
 <h2><span class="section-number">1.4. </span>Signal Analysis<a class="headerlink" href="#signal-analysis" title="Link to this heading">¶</a></h2>
 <p>Following the good practices of signal processing, only after properly preparing the signal of interest, the user can employ methods to perform
 spectral analysis. Tutorials to apply analysis methods can be found in the <a class="reference internal" href="features.html"><span class="doc">Signal Analysis</span></a> page.</p>
+</section>
+<section id="impedance">
+<h2><span class="section-number">1.5. </span>Impedance<a class="headerlink" href="#impedance" title="Link to this heading">¶</a></h2>
+<p>If during the recording session any impedance test was performed, either with <em>Setup</em> or <em>Survey</em> modes, the impedance values can be accessed in an independent tab.</p>
+<ol class="arabic simple">
+<li><p>Press <strong>&quot;Impedance&quot;</strong> to open the impedance tab.</p></li>
+<li><p>The tab is organized by type of impedance tests: <strong>Monopolar</strong> or <strong>Bipolar</strong>, and hemispheres.</p></li>
+</ol>
+<img alt="../_images/impedance_tab.png" src="../_images/impedance_tab.png" />
+<ol class="arabic simple" start="3">
+<li><p>Click on each header to display the table with the imepdance values and the plot of the respective values.</p></li>
+</ol>
+<img alt="../_images/impedance_values.png" src="../_images/impedance_values.png" />
+<ol class="arabic simple" start="4">
+<li><p>Both table and plot can easily be exported by the respective buttons.</p></li>
+</ol>
 </section>
 </section>
 

@@ -60,7 +60,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#stimulation">2.1.4. Stimulation</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#events">2.2. Events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#events">2.2. Events</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#event-summary">2.2.1. Event Summary</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">3. Signal Analysis</a></li>
@@ -69,9 +72,9 @@
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#features">Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#preprocessing">Preprocessing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#utils">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Preprocessing">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-utils">Utils</a></li>
 </ul>
 
         </div>
@@ -99,13 +102,13 @@
            <div itemprop="articleBody">
              
   <section id="at-home-data">
-<h1><span class="section-number">2. </span>At-Home Data<a class="headerlink" href="#at-home-data" title="Link to this heading">¶</a></h1>
+<span id="ahd"></span><h1><span class="section-number">2. </span>At-Home Data<a class="headerlink" href="#at-home-data" title="Link to this heading">¶</a></h1>
 <p>Medtronic's Percept BrainSense™ technology allows at-home recordings to track the effects of symptoms,
 medication and routine outside of the clinic.</p>
 <p>There are two <strong>at-home recording modes: Timeline</strong> and <strong>Events</strong>.</p>
-<p><em>Timeline</em> records the long-term LFP signal troughout all day and <em>Events</em> record a 30 second snapshot, manually
+<p><em>Timeline</em> records the long-term band power troughout all day and <em>Events</em> record a 30 second snapshot, manually
 triggered by the user to record important events such as symptoms, medication, etc.
-The chronic LFP recordings are acquired from a pre-selected contact pairs, and are restricted to bipolar settings
+The chronic recordings are acquired from a pre-selected contact pairs, and are restricted to bipolar settings
 and the stimulation electrodes used.</p>
 <table class="docutils align-default">
 <thead>
@@ -141,25 +144,27 @@ manual input</p></td>
 </table>
 <section id="timeline">
 <h2><span class="section-number">2.1. </span>Timeline<a class="headerlink" href="#timeline" title="Link to this heading">¶</a></h2>
-<p>The BrainSense™ <em>Timeline</em> mode acquires the signal power of a pre-defined sensing band (5 Hz bandwidth) every
-10 minutes. To access the signals, the user must select the respective tab. Automatically, the chronic recordings
-and the patient-marked events are plotted. Respective information of the sensing configuration is also displayed, as well as
-the plot legend.</p>
-<p>Recordings from the left hemisphere appear with the color green, and recordings from the right hemisphere
-appear with the color purple. Marked events appear as vertical lines, marking the moment of the event. Additionally,
-power features are extracted per signal (mean power, peak power and peak time). Extracted features are also organized
-into groups to facilitate exportation of analog/related signals, for offline analysis.</p>
+<p>The BrainSense™ <em>Timeline</em> mode acquires the mean signal power of a pre-defined sensing band (5 Hz bandwidth) every
+10 minutes.</p>
+<ol class="arabic simple">
+<li><p>To access the signals, the user must select the <strong>&quot;Timeline&quot;</strong> tab. Automatically, the chronic recordings and the patient-marked events are plotted.</p></li>
+<li><p>Respective information of the sensing configuration is also displayed, as well as the plot legend.</p></li>
+<li><p>Recordings from the left hemisphere appear with the color green, and recordings from the right hemisphere appear with the color purple.</p></li>
+<li><p><strong>Marked events</strong> appear as <strong>vertical lines</strong>, marking the moment of the event.</p></li>
+<li><p>Power features are extracted per signal (mean power, peak power and peak time).</p></li>
+<li><p>Extracted features are also <strong>organized into groups</strong> to facilitate exportation of analog/related signals, for offline analysis.</p></li>
+</ol>
 <img alt="../_images/timeline.png" src="../_images/timeline.png" />
 <p>The image above represent the <em>Timeline</em> tab in the <strong>Individual</strong> window. When in the <strong>Combined</strong> window, has access
-to event-locked analysis functionalities, described below. Additionally, the information correspondant to the sensing
+to event-locked analysis functionalities, described <a class="reference internal" href="#elat"><span class="std std-ref">below</span></a>. Additionally, the information correspondant to the sensing
 configuration of each file selected, is organized under the correspondant header.</p>
 <img alt="../_images/timeline_comb.png" src="../_images/timeline_comb.png" />
 <section id="outlier-removal">
 <h3><span class="section-number">2.1.1. </span>Outlier Removal<a class="headerlink" href="#outlier-removal" title="Link to this heading">¶</a></h3>
-<p>Because this a signal acquired with a very low resolution, it is very important to be careful when
-infering conclusions from this signals. NeoDBS offers an outlier removal filter, based on the root mean square (RMS)
-of each signal (per channel-day) and also allows the user to see moments where there are missing points. Extracted
-features can be recalculated as many times needed to allow the user to extract the metrics to the filtered signal.</p>
+<p>Because this a signal acquired with a <strong>very low resolution</strong>, it is very important to be careful when
+infering conclusions from this signals. NeoDBS offers an <strong>outlier removal filter</strong>, based on the root mean square (RMS)
+of each signal (per channel-day) and also allows the user to see moments where there are <strong>missing points</strong>. <strong>Extracted
+features can be recalculated</strong> as many times needed to allow the user to extract the metrics to the filtered signal.</p>
 <p>To apply the outlier removal, the user must select the factor value. This factor is multiplied to the computed RMS
 to define the value of the threshold. If the LFP value is above the threshold it is considered an outlier and replaced
 by the RMS.</p>
@@ -167,12 +172,12 @@ by the RMS.</p>
 <ol class="arabic simple">
 <li><p>Select the threshold value, by sliding the <strong>&quot;Remove Outlier&quot;</strong> item. User can readjust threshold as many times needed.</p></li>
 <li><p>The filtered signals will update the main plot.</p></li>
-<li><p>If the user wants to recalculate timeline metrics, press <em>&quot;Recalculate Metrics&quot;</em>.</p></li>
-<li><p>To see missing points from recordings, toggle checkbox <em>&quot;Show missing points&quot;</em>.</p></li>
+<li><p>If the user wants to recalculate timeline metrics, press <strong>&quot;Recalculate Metrics&quot;</strong>.</p></li>
+<li><p>To see missing points from recordings, toggle checkbox <strong>&quot;Show missing points&quot;</strong>.</p></li>
 </ol>
 </section>
 <section id="event-locked-analysis">
-<h3><span class="section-number">2.1.2. </span>Event-locked Analysis<a class="headerlink" href="#event-locked-analysis" title="Link to this heading">¶</a></h3>
+<span id="elat"></span><h3><span class="section-number">2.1.2. </span>Event-locked Analysis<a class="headerlink" href="#event-locked-analysis" title="Link to this heading">¶</a></h3>
 <p>When using the <strong>Combined</strong> window, the user has the possibility to epoch all the events marked by the user at-home,
 allowing an automatic event-locked analysis of the chronic recordings. The segments are centered around the marked event, with 1h-interval before and after the event.</p>
 <ol class="arabic simple">
@@ -185,7 +190,7 @@ allowing an automatic event-locked analysis of the chronic recordings. The segme
 </section>
 <section id="circadian-rhythm">
 <h3><span class="section-number">2.1.3. </span>Circadian Rhythm<a class="headerlink" href="#circadian-rhythm" title="Link to this heading">¶</a></h3>
-<p>From the <em>Timeline</em> recordings, NeoDBS computes the circadian rhythm by aligning all recordings by their time component.
+<p>From the <em>Timeline</em> recordings, NeoDBS computes the <strong>circadian rhythm</strong> by aligning all recordings by their time component.
 The respective mean and standard deviation are calculated and ploted, according to the selected signals.</p>
 <ol class="arabic simple">
 <li><p>Under the collapsing header &quot;Signal Analysis&quot;, press <strong>&quot;Circadian Rhythm&quot;</strong>.</p></li>
@@ -211,19 +216,33 @@ can be very helpful for adaptive stimulation cases or to check configuration cha
 </section>
 <section id="events">
 <h2><span class="section-number">2.2. </span>Events<a class="headerlink" href="#events" title="Link to this heading">¶</a></h2>
-<p>The BrainSense™ Events mode (LFP Snapshots) is for at home usage and is combined with
-the BrainSense™ Timeline mode. Patients manually mark events with a wireless device, time
+<p>The BrainSense™ Events mode (LFP Snapshots) is for at home usage and <strong>is combined with
+the BrainSense™ Timeline mode</strong>. Patients manually mark events with a wireless device, time
 stamping events in the BrainSense™ timeline data and triggering recording of high definition LFP
 for 30s. The average PSD estimate is also internally computed by the DBS system and stored.</p>
 <img alt="../_images/events.png" src="../_images/events.png" />
 <ol class="arabic simple">
 <li><p>Select <strong>&quot;Events&quot;</strong> tab. The respective signals, functionalities and metrics will be displayed.</p></li>
 <li><p>Metrics are organized into groups, to facilitate exportation.</p></li>
-<li><p>Mean and standard deviation plots are recalculated, as the user selects/deselect signals.</p></li>
-<li><p>To recalculate the mean metrics of the events, press <em>&quot;Recalculate Mean Metrics&quot;</em>.</p></li>
-<li><p>PSD's can be converted between dB or original power values, by toggling <em>&quot;Change to dB&quot;</em>.</p></li>
-<li><p>Standard deviation can also be converted into the 95% Confidence Interval, by choosing between the radio button under <em>&quot;Shaded Area&quot;</em>.</p></li>
+<li><p><strong>Mean and standard deviation plots are recalculated</strong>, as the user selects/deselect signals.</p></li>
+<li><p>To recalculate the mean metrics of the events, press <strong>&quot;Recalculate Mean Metrics&quot;</strong>.</p></li>
+<li><p>PSD's can be converted between dB or original power values, by toggling <strong>&quot;Change to dB&quot;</strong>.</p></li>
+<li><p><strong>Standard deviation</strong> can also be converted into the <strong>95% Confidence Interval</strong>, by choosing between the radio button under <em>&quot;Shaded Area&quot;</em>.</p></li>
 </ol>
+<section id="event-summary">
+<h3><span class="section-number">2.2.1. </span>Event Summary<a class="headerlink" href="#event-summary" title="Link to this heading">¶</a></h3>
+<p><strong>However</strong>, if chronic sensing is disabled (no <em>Timeline</em> button, but <em>Events</em> button is available) the user is still able to mark the events through the Medtronics Patient App.</p>
+<p>Through the same button, the timestamps of the marked events are displayed.</p>
+<img alt="../_images/event_summary.png" src="../_images/event_summary.png" />
+<ol class="arabic simple">
+<li><p>Select <strong>&quot;Events&quot;</strong> tab. The event summary will be displayed.</p></li>
+<li><p>You can change between showing the plot per <strong>day</strong> or <strong>hour</strong>, showing the <strong>count of events per day</strong> or the <strong>circadian rhythm</strong> respectively.</p></li>
+</ol>
+<img alt="../_images/event_summary2.png" src="../_images/event_summary2.png" />
+<ol class="arabic simple" start="3">
+<li><p>Plots and signals are easily exported.</p></li>
+</ol>
+</section>
 </section>
 </section>
 

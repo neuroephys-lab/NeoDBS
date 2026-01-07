@@ -141,7 +141,8 @@ def get_sum_mean_power(p,band=None):
     :param bands: dict, 'band name': [f0,f1]
     :return: float
     '''
-    if band == None: band = bands
+    if band == None: 
+        band = bands
     x,y=p['X'],p['Y']
     all = []
     if isinstance(x,list):

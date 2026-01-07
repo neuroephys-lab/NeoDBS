@@ -1,3 +1,4 @@
+.. _ICD:
 In-Clinic Data
 ==============
 
@@ -46,18 +47,19 @@ signals. NeoDBS offers a variety of filters, and pipelines, that are customizabl
 
 .. warning::
     After applying any preprocessing method (filtering, segmentation or event-marking/epoch) you will not have access
-    to the raw original signals without losing your progress. If you want to restore the original signals, the user must
-    close and reopen the respective tab.
+    to the raw original signals without losing your progress, **as the main plot of the tab will be replaced with the preprocessed signals**. 
+    If you want to restore the original signals, the user must close and reopen the respective tab.
 
 Default Filter
 ^^^^^^^^^^^^^^
 
 For more non-experienced users, NeoDBS offers a **Default Filter** that removes cardiac component and 
 maintains only the desired frequencies, selected in the respective input spaces. This method was developed 
-from UF BRAVO's Platform (https://github.com/Fixel-Institute/BRAVO).
+from UF BRAVO's Platform (https://github.com/Fixel-Institute/BRAVO). This filter performs a 5th order Butterworth
+Bandpass filter with cardiac artifact removal.
 
-1. Select the interval of frequencies you want to keep in the signal.
-2. Press "Default Filtering".
+1. Select the **interval of frequencies** you want to keep in the signal.
+2. Press **"Default Filtering"**.
 3. The main plot will be updated with the filtered signals.
 
 .. image:: ../img/default_filter.png
@@ -68,10 +70,10 @@ Custom Filters
 For users that require specific filtering parameters, NeoDBS also presents 7 different infinite impulse response 
 (IIR) filters.
 
-1. Press "Custom Filtering" to show the available filters.
-2. Select the type of filter you want apply. The required parameters and the method documentation will appear to guide you in filling in the parameters. Parameters are set to default values, but can be adjusted. Parameters that are associated to signal acquiring configurations are hard-coded (ex.: sampling frequency, 250 Hz).
-3. After completing the parameters, press "Save Parameters".
-4. If you are sure you want to apply the filter, press "Plot filtered signal".
+1. Press **"Custom Filtering"** to show the available filters.
+2. Select the **type of filter** you want apply. The required parameters and the method documentation will appear to guide you in filling in the parameters. Parameters are set to default values, but can be adjusted. Parameters that are associated to signal acquiring configurations are hard-coded (ex.: sampling frequency, 250 Hz).
+3. After completing the parameters, press **"Save Parameters"**.
+4. If you are sure you want to apply the filter, press **"Plot filtered signal"**.
 5. The main plot will be updated with the filtered signals.
 
 .. image:: ../img/custom_filter.png
@@ -81,8 +83,8 @@ Segmentation
 
 Recordings can be segmented, with a minimum of 10 seconds of duration. 
 
-1. Select the start and end of the segment.
-2. Press "Segment Signal".
+1. Select the **start** and **end** of the segment.
+2. Press **"Segment Signal"**.
 3. The main plot will be updated with the segmented signals.
 
 .. image:: ../img/segmentation.png
@@ -98,11 +100,12 @@ The .txt file must be with the following structure: HH:MM:SS, name of event.
 If the user is working in an **Individual Window**, the user can only mark the event timestamp, which will 
 appear in the main plot and all time-spectral analysis that the user computes posteriorly. If the user is 
 working in a **Combined Window**, the recordings will be segmented with the event centered. The user can 
-select the duration of the epoch. 
+select the **duration of the epoch**, by defining the time **before and after the event**.
 
-1. Press "Insert Events", in the *Individual Window*, or "Analyze Streaming Events", in *Combined Window*, after selecting the interval prior and after the event.
-2. Select .txt file with the described events.
-3. The marked events or event-locked segments, will appear or replace, respectively, the main plot of the tab.
+1. Press **"Insert Events"**, in the *Individual Window*, or **"Analyze Streaming Events"**, in *Combined Window*, **after selecting the interval prior and after the event**.
+2. Select *.txt* file with the described events.
+3. The marked events or event-locked segments, will **appear or replace**, respectively, the **main plot** of the tab.
+4. The time axis will convert from seconds to datetime format. If the signals are not visible, click two times on the plot to recenter.
 
 .. image:: ../img/select_events.png
 
@@ -117,5 +120,20 @@ Signal Analysis
 Following the good practices of signal processing, only after properly preparing the signal of interest, the user can employ methods to perform
 spectral analysis. Tutorials to apply analysis methods can be found in the :doc:`Signal Analysis <features>` page.
 
+Impedance
+---------
+
+If during the recording session any impedance test was performed, either with *Setup* or *Survey* modes, the impedance values can be accessed in an independent tab.
+
+1. Press **"Impedance"** to open the impedance tab.
+2. The tab is organized by type of impedance tests: **Monopolar** or **Bipolar**, and hemispheres.
+
+.. image:: ../img/impedance_tab.png
+
+3. Click on each header to display the table with the imepdance values and the plot of the respective values.
+
+.. image:: ../img/impedance_values.png
+
+4. Both table and plot can easily be exported by the respective buttons.
 
 
