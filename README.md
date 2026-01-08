@@ -1,5 +1,22 @@
 # NeoDBS
 
+## 08.01.2025
+
+### New:
+- tags.xlsx: start organizing tags
+- colormap buttons, scale and reset --> in spectrogram and wavelet (individual and joined)
+
+### Debugs:
+- Mean spectrogram: 
+    - colormap atualiza --> estava a espera de uma lista de tags, mas só há 1 mean
+    - handling multiple presses
+- Joined spectrogram/wavelet: shows interval and events
+- Cross-correlation: 
+    - larger signals have cc values towards inf, before normalization --> crashing mean and max. Inf removed from normalization
+    - peak normalization --> L2-norm/energy normalizaton
+- Setup CT toggle —> “CT_A” : error was because all series had the word "artifaCT"
+
+
 ## 07.01.2025
 ### Documentation:
 - better explaining of recordings and types of windows
@@ -12,7 +29,6 @@
 - event toggling in timeline tabs
 - Timeline: "signal analysis" --> closable tabs and properly deleted/reopened
 - Survey combined working (psd wasnt opening because it wasnt with the right ident)
-
 
 ### GUI:
 - Individual and combined: modes alphabetically sorted

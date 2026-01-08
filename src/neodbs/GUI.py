@@ -808,10 +808,12 @@ def toggleType(signal_tags, parent, user_data):
 
         window_id = extract_window_id(tab_tag)
         key = 'Y'
+        toggle_label = dpg.get_item_label(sender)
         for series_tag in signal_tags:
             series_label = str(dpg.get_item_label(series_tag))
+            if toggle_label == 'CT': toggle_label = 'CT_A' 
 
-            if type_filter.lower() in series_label.lower():  # Check if the label contains the type
+            if toggle_label.lower() in series_label.lower():  # Check if the label contains the type
                 dpg.configure_item(series_tag, show=app_data)
                 if 'psd' in tab_tag:
                     key = 'LFPMagnitude'
@@ -825,7 +827,7 @@ def toggleType(signal_tags, parent, user_data):
 
             dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
                 
-    dpg.add_checkbox(label=f"{type_filter}", default_value=True, callback=toggle_filtered_series,tag = f"{tab_tag}_{type_filter}_checkbox", parent=parent)
+    dpg.add_checkbox(label=type_filter, default_value=True, callback=toggle_filtered_series,tag = f"{tab_tag}_{type_filter}_checkbox", parent=parent)
 
 def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None,tables=[],dates=None,colors=None):
 
@@ -2016,9 +2018,11 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
         if np.issubdtype(arr.dtype, np.number):
             valid = arr[~np.isnan(arr)]
             if len(valid) > 0:# and np.round(valid[0]) == 0:
-                # 'X' is in seconds
-                # signal['dX'] = [signal['Date'] + timedelta(seconds=val) for val in X]
-                signal['dX'] = [datetime.fromtimestamp(val) for val in X]
+                try:
+                    signal['dX'] = [signal['Date'] + timedelta(seconds=val) for val in X]
+                except Exception:
+                    signal['dX'] = [datetime.fromtimestamp(val) for val in X]
+                    
         else:
             # 'X' is in Unix timestamp
             signal['dX'] = [pre.get_date_from_ts(val) for val in X]
@@ -2076,7 +2080,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
     group_tag = f"{tab_label}_plot_group"
     with dpg.group(horizontal=True, parent=f"{tab_label}", tag=group_tag):
 
-        dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
+        dpg.add_colormap_scale(tag=f"{group_tag}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
                                             min_scale = global_min, max_scale=global_max, height=400*num_rows)
 
         with dpg.subplots(rows=num_rows, columns=num_cols, label="Spectrograms", width=800, height=400*num_rows, tag = f"{tab_label}_subplots"):
@@ -2103,7 +2107,6 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                         events = new_signal[channel]['Events']
                     except Exception as e: 
                         events = 'None'
-                        print(e)
 
                     parameter_values['x'] = np.array(y)
                     signal = pre.call_function(func, parameter_values)
@@ -2135,7 +2138,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                                 ev = dpg.add_inf_line_series(x=[stamp],label=f'{type}',parent=y_axis)
                                 dpg.bind_item_theme(ev,change_inf_line_color(event_names.index(type)))
 
-            dpg.configure_item(f"{tab_label}_colormap_scale", min_scale=global_min,max_scale=global_max)
+            dpg.configure_item(f"{group_tag}_colormap_scale", min_scale=global_min,max_scale=global_max)
         def link(sender, app_data):
             dpg.configure_item(f"{tab_label}_subplots", link_all_x=app_data, link_all_y=app_data)
 
@@ -2207,22 +2210,11 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                                         dpg.add_plot_legend()
                                         dpg.add_inf_line_series(x=stamp,label=f'{type}',parent=y_axis)
             
-        with dpg.group(horizontal=False):
+        with dpg.group(horizontal=False, tag = f"{group_tag}_buttons"):
             dpg.add_checkbox(label='Synchronize Axis', callback=link) 
             dpg.add_button(label='Band Power over Time', callback=spectrograms_power_over_time)
             dpg.add_separator()
-            dpg.add_text('Adjust Colormap Scale')
-            dpg.add_input_int(label='Min: ', tag=f"{tab_label}_emin", width=90, default_value=global_min,callback=enforce_range, 
-                                user_data=(tab_label,global_min,global_max), min_value=global_min,max_value=(global_max-5))
-            
-            dpg.add_input_int(label='Max: ', tag=f"{tab_label}_emax", width=90, default_value=global_max,callback=enforce_range, 
-                                user_data=(tab_label,global_min,global_max),min_value=(global_min+5),max_value=global_min)
-            
-            dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,spectrogram_tags,f"{tab_label}_colormap_scale")) 
-            dpg.add_separator(label='Export')
-            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('3D', group_tag, y_axis,'jet'))
-            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(f"{tab_label}_subplots",group_tag,'3D'))
-            add_exporting_tag(window_id,plot=b1,signal=b2)
+            colormap_buttons(group_tag, (global_min, global_max), subplot_tag, spectrogram_tags, group_tag=f"{group_tag}_buttons")
 
 def plot_df_coherence(parameter_values,tab_tag,tags):
     '''
@@ -2671,6 +2663,7 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
 
         if dpg.does_item_exist(f"{tab_label}_size_warning"): dpg.delete_item(f"{tab_label}_size_warning")
         # parameter_values['method'] = 'direct'
+        parameter_values['a'], parameter_values['v'] = np.array(parameter_values['a']).astype(np.float64), np.array(parameter_values['v']).astype(np.float64)
         s1, s2 = parameter_values['a'], parameter_values['v']
         if len(s1) == len(s2) and parameter_values['mode'] == 'valid':
             parameter_values['mode'] = 'full'
@@ -2691,6 +2684,10 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
             dpg.add_plot_legend()
             cross_x = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
             cross_y = dpg.add_plot_axis(dpg.mvYAxis, label="Cross-Correlation Ratio")
+            if dpg.does_item_exist(f"{tab_label}_cc_pb"):
+                dpg.set_value(f"{tab_label}_cc_pb", 0)
+            else:
+                dpg.add_progress_bar(parent=tab_label, overlay='Loading',width=-1, tag = f"{tab_label}_cc_pb")
 
         if plot_mode:
             bands = getBandsByTab(tab_tag)
@@ -2704,6 +2701,7 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
         normalize = parameter_values['normalization']
         if normalize == ' ' or normalize == '': normalize = 'False'
             
+        progress_value = 0
         for b, band in bands.items():
             for key in ['a','v']:
                 if not isinstance(band,str):
@@ -2721,10 +2719,11 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                 case 'valid': dislocation = np.arange(N-D+1) / 250
 
             if normalize == 'True':
-                correlation = correlation / np.max(np.abs(correlation))
+                norm = np.sqrt(np.sum(parameter_values['a']**2) * np.sum(parameter_values['v']**2))
+                correlation = correlation/norm
 
             if plot_mode: 
-                label = f"{b} Cross-Correlatation"
+                label = f"{b} Cross-Correlation"
                 info_mode = b
                 if not dpg.does_item_exist(f"{tab_label}_cc_buttons"):
                     dpg.add_group(tag=f"{tab_label}_cc_buttons", parent = f"{tab_label}_cc", horizontal=False)
@@ -2733,11 +2732,16 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                 label = "Cross-correlation"
                 info_mode = None
 
+            step = 1/(len(bands.keys())*2)
             dpg.add_line_series(dislocation.tolist(), correlation.tolist(),label=label, parent=cross_y,tag=f"{tab_label}_{label}")
+            progress_value = progress_value + step 
+            dpg.set_value(f"{tab_label}_cc_pb", progress_value)
             toggle_tags.append(f"{tab_label}_{label}")
 
             p = {'Y': correlation.tolist(),'X':dislocation.tolist()}
             info, line_tags = extract_cc_features(p,cross_y,tab_label,info_mode)
+            progress_value = progress_value + step 
+            dpg.set_value(f"{tab_label}_cc_pb", progress_value)
             label = f"{signal1['Channel']} - {signal2['Channel']}"
 
             toggle_tags = toggle_tags + line_tags
@@ -2800,6 +2804,43 @@ def set_colormap_range(sender,app_data,user_data):
     for spec in spec_tags:
         dpg.configure_item(spec,scale_max=max_value,scale_min=min_value)
 
+def reset_colormap(sender,app_data,user_data):
+    mother, spec_tags = user_data
+    e_min, e_max = f"{mother}_emin", f"{mother}_emax" 
+
+    mother, min_value, max_value = dpg.get_item_user_data(e_min)
+    dpg.set_value(e_min, min_value)
+    dpg.set_value(e_max, max_value)
+
+    dpg.configure_item(f"{mother}_colormap_scale",min_scale=min_value,max_scale=max_value)
+    for spec in spec_tags:
+        dpg.configure_item(spec,scale_max=max_value,scale_min=min_value)
+
+def colormap_buttons(mother, values, plot, spec_tags, group_tag = None):
+    #mother = group with the plots 
+    global_min, global_max = values
+    y_axis = dpg.get_item_children(plot)[1][1]
+
+    if group_tag is None:
+        group_tag=mother
+        colormap_parent = mother
+    else: 
+        colormap_parent = group_tag[:group_tag.find("_buttons")]
+
+    with dpg.group(horizontal=False, parent=group_tag):
+        dpg.add_text('Adjust Colormap Scale:')
+        dpg.add_input_int(label='Min: ', tag=f"{mother}_emin", width=90, default_value=global_min,callback=enforce_range, 
+                            user_data=(mother,global_min,global_max), min_value=global_min,max_value=(global_max-5))
+        dpg.add_input_int(label='Max: ', tag=f"{mother}_emax", width=90, default_value=global_max,callback=enforce_range, 
+                            user_data=(mother,global_min,global_max), min_value=global_min,max_value=(global_max-5))
+        with dpg.group(horizontal=True):
+            dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(mother,spec_tags,f"{colormap_parent}_colormap_scale"))
+            dpg.add_button(label='Reset Colormap', callback=reset_colormap, user_data = (mother, spec_tags))
+        dpg.add_separator(label='Export')
+        b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('3D', mother, y_axis,'jet'))
+        b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(plot,mother,'3D'))
+        add_exporting_tag(extract_window_id(mother),plot=b1,signal=b2)
+
 def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode = 'segment'):
     '''
     Computes and plots spectrograms individually, into subplots, under one colormap.
@@ -2834,9 +2875,9 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
         per_file[file] = []
 
     group_tag = f"{tab_label}_plot_group"
-    with dpg.group(horizontal=True, parent=f"{tab_label}", tag=group_tag):
+    with dpg.group(horizontal=True, parent=tab_label, tag=group_tag):
 
-        dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
+        dpg.add_colormap_scale(tag=f"{group_tag}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
                                             min_scale = global_min, max_scale=global_max, height=400*num_rows)
         
         subplot_tag = f"{tab_label}_subplots"
@@ -2902,7 +2943,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                                 color = change_inf_line_color(colorIdx)
                                 dpg.bind_item_theme(inf, color)
 
-        dpg.configure_item(item=f"{tab_label}_colormap_scale", min_scale=global_min, max_scale=global_max)
+        dpg.configure_item(item=f"{group_tag}_colormap_scale", min_scale=global_min, max_scale=global_max)
 
         def link(sender, app_data):
             dpg.configure_item(f"{tab_label}_subplots", link_all_x=app_data, link_all_y=app_data)
@@ -2961,6 +3002,9 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                         add_exporting_tag(window_id,plot=b1,signal=b2)
 
         def mean_spectrogram(sender,app_data,user_data):
+
+            if dpg.does_item_exist(f"{tab_label}_mean_spec"): dpg.delete_item(f"{tab_label}_mean_spec")
+
             all_Sxx = user_data
             all_Sxx = [s[2] for s in all_Sxx] 
             shapes = [s.shape for s in all_Sxx]
@@ -2979,7 +3023,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
             title = "Mean Spectrogram"
             subplot_tag = f"{tab_label}_mean"
             mother = f"{tab_label}_mean_group"
-            with dpg.collapsing_header(label='Mean Spectrogram', parent=tab_label):
+            with dpg.collapsing_header(label='Mean Spectrogram', parent=tab_label, tag = f"{tab_label}_mean_spec"):
 
                 with dpg.group(horizontal=True,tag=mother):
                     dpg.add_colormap_scale(tag=f"{mother}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
@@ -3001,34 +3045,14 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
                                             parent=y_axis, format="", bounds_min=[emin,0], bounds_max=[emax,125])
                         dpg.bind_colormap(subplot_tag, dpg.mvPlotColormap_Jet)
 
-                    with dpg.group(horizontal=False):
-                        dpg.add_text('Adjust Colormap Scale:')
-                        dpg.add_input_int(label='Min: ', tag=f"{mother}_emin", width=90, default_value=global_min,callback=enforce_range, 
-                                          user_data=(mother,global_min,global_max), min_value=global_min,max_value=(global_max-5))
-                        dpg.add_input_int(label='Max: ', tag=f"{mother}_emax", width=90, default_value=global_max,callback=enforce_range, 
-                                          user_data=(mother,global_min,global_max), min_value=global_min,max_value=(global_max-5))
-                        dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(mother,mean_s,f"{mother}_colormap_scale"))
-                        dpg.add_separator(label='Export')
-                        b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('3D', mother, y_axis,'jet'))
-                        b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(subplot_tag,mother,'3D'))
-                        add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
+                    colormap_buttons(mother,(global_min,global_max),subplot_tag, [mean_s])
        
-        with dpg.group(horizontal=False):
+        with dpg.group(horizontal=False, tag = f"{group_tag}_buttons"):
             dpg.add_checkbox(label='Synchronize Axis', callback=link)      
             dpg.add_button(label='Band Power over Time', callback=spectrograms_power_over_time,width=-1)
             dpg.add_button(label='Mean Spectrogram', callback=mean_spectrogram,width=-1, user_data=Merge)
-            dpg.add_separator(label ='Adjust Colormap Scale')
-            dpg.add_input_int(label='| Min', tag=f"{tab_label}_emin", width=90, default_value=global_min,callback=enforce_range, 
-                                user_data=(tab_label,global_min,global_max), min_value=global_min,max_value=(global_max-5))
-            
-            dpg.add_input_int(label='| Max', tag=f"{tab_label}_emax", width=90, default_value=global_max,callback=enforce_range, 
-                                user_data=(tab_label,global_min,global_max),min_value=(global_min+5),max_value=global_min)
-            
-            dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,spectrogram_tags,f"{tab_label}_colormap_scale"),width=-1)
-            dpg.add_separator(label='Export')
-            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('3D', group_tag, y_axis,'jet'))
-            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(subplot_tag,group_tag,'3D'))
-            add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
+
+            colormap_buttons(group_tag, (global_min, global_max), subplot_tag, spectrogram_tags, group_tag=f"{group_tag}_buttons")     
            
 def choose(sender,app_data,user_data):
     '''
@@ -3180,7 +3204,7 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
     group_tag = f"{tab_label}_plot_group"
     with dpg.group(horizontal=True, parent=tab_label, tag=group_tag):
 
-        dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
+        dpg.add_colormap_scale(tag=f"{group_tag}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
                                             min_scale = global_min, max_scale=global_max, height=400*num_rows)
         
 
@@ -3237,7 +3261,7 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
                                 ev = dpg.add_inf_line_series(x=[stamp],parent=y_axis,label = getUpdatedEventName(name))
                                 dpg.bind_item_theme(ev,change_inf_line_color(event_names.index(name)))
 
-            dpg.configure_item(f"{tab_label}_colormap_scale", min_scale = global_min, max_scale=global_max)
+            dpg.configure_item(f"{group_tag}_colormap_scale", min_scale = global_min, max_scale=global_max)
         def link(sender, app_data):
             dpg.configure_item(f"{tab_label}_subplots", link_all_x=app_data, link_all_y=app_data)
 
@@ -3321,23 +3345,12 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
                                                 ev = dpg.add_inf_line_series(x=[stamp],parent=y_axis,label = getUpdatedEventName(name))
                                                 dpg.bind_item_theme(ev,change_inf_line_color(event_names.index(name)))
 
-        with dpg.group(horizontal=False):
+        with dpg.group(horizontal=False, tag = f"{group_tag}_buttons"):
             dpg.add_checkbox(label='Synchronize Axis', callback=link) 
             dpg.add_button(label='Band Power over Time', callback=merge_wavelet)
             dpg.add_separator()
-            dpg.add_text('Adjust Colormap Scale')
-            dpg.add_input_int(label='Min: ', tag=f"{tab_label}_emin", width=90, default_value=global_min,callback=enforce_range, 
-                                user_data=(tab_label,global_min,global_max), min_value=global_min,max_value=(global_max-5))
-            
-            dpg.add_input_int(label='Max: ', tag=f"{tab_label}_emax", width=90, default_value=global_max,callback=enforce_range, 
-                                user_data=(tab_label,global_min,global_max),min_value=(global_min+5),max_value=global_min)
-            
-            dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,wavelet_tags,f"{tab_label}_colormap_scale"))
-            dpg.add_separator(label='Export')
-            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('3D', group_tag, y_axis,'jet'))
-            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(f"{tab_label}_subplots",group_tag,'3D'))
-            add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
-         
+            colormap_buttons(group_tag, (global_min, global_max), subplot_tag, wavelet_tags, group_tag=f"{group_tag}_buttons")
+                  
 def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
     '''
     Plots wavelet, computed for all recordings individually.
@@ -3362,7 +3375,7 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
     group_tag = f"{tab_label}_plot_group"
     with dpg.group(horizontal=True,tag = group_tag, parent=tab_label):
         
-        dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
+        dpg.add_colormap_scale(tag=f"{group_tag}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
                             min_scale=global_min, max_scale=global_max, height=400*num_rows)
 
         subplot_tag = f"{tab_label}_subplots"
@@ -3443,7 +3456,7 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
                                 dpg.bind_item_theme(ev,change_inf_line_color(event_names.index(name)))
 
 
-            dpg.configure_item(f"{tab_label}_colormap_scale",min_scale=global_min,max_scale=global_max)
+            dpg.configure_item(f"{group_tag}_colormap_scale",min_scale=global_min,max_scale=global_max)
         def link(sender, app_data):
             dpg.configure_item(f"{tab_label}_subplots", link_all_x=app_data, link_all_y=app_data)
         
@@ -3489,23 +3502,12 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
                                             # type = event['Type'] #--> for label
                                             if stamp <= emax: dpg.add_inf_line_series(x=[stamp],parent=y_axis)
 
-        with dpg.group(horizontal=False):
+        with dpg.group(horizontal=False,tag=f"{group_tag}_buttons"):
             dpg.add_checkbox(label='Synchronize Axis', callback=link) 
             dpg.add_button(label='Band Power over Time', callback=merge_wavelet)
             dpg.add_separator()
-            dpg.add_text('Adjust Colormap Scale')
-            dpg.add_input_int(label='Min: ', tag=f"{tab_label}_emin", width=90, default_value=global_min,callback=enforce_range, 
-                                user_data=(tab_label,global_min,global_max), min_value=global_min,max_value=(global_max-5))
-            
-            dpg.add_input_int(label='Max: ', tag=f"{tab_label}_emax", width=90, default_value=global_max,callback=enforce_range, 
-                                user_data=(tab_label,global_min,global_max),min_value=(global_min+5),max_value=global_min)
-            
-            dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(tab_label,wavelet_tags,f"{tab_label}_colormap_scale"))
-            dpg.add_separator(label='Export')
-            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('3D', group_tag, y_axis,'jet'))
-            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(subplot_tag,group_tag,'3D'))
-            add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)        
-               
+            colormap_buttons(group_tag, (global_min, global_max), subplot_tag, wavelet_tags, group_tag=f"{group_tag}_buttons")
+             
 def plot_pac(tags,tab_tag,parameter_values,mode=None):
     '''
     Computes and plots Phase-Amplitude Coupling, for the selected streams and bands. 
