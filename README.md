@@ -1,6 +1,29 @@
 # NeoDBS
 
-## 08.01.2025
+## 10.01.2026
+
+### New:
+- Menu for directories:
+    - select directories for recordings, events and save into --> easier and more organized workflow
+
+### Debugs:
+- Event-locked analysis: (Toggle display) events nome diferente stream 
+- Toggle display: tamanho janela 
+- toggle: mean handle for zero signals
+- save signals: save as the name indicated by the user
+- Analyze timeline events: 
+    - dont know why, but y is coming with []
+    - mean metrics were strange
+
+## 09.01.2026
+
+### Warnings:
+- warning mean spectrogram quando tem tamanhos diferentes: nao permite calcular mean
+
+### New:
+- file example json from dbscope (metadata reformatted as in medtronic)
+
+## 08.01.2026
 
 ### New:
 - tags.xlsx: start organizing tags
@@ -17,7 +40,7 @@
 - Setup CT toggle —> “CT_A” : error was because all series had the word "artifaCT"
 
 
-## 07.01.2025
+## 07.01.2026
 ### Documentation:
 - better explaining of recordings and types of windows
 - wavelet 
@@ -35,7 +58,7 @@
 - Custom parameters under tree node to hide
 - Coherence doesnt change places with export plot if multiple employments (welch and multitaper)
 
-## 06.01.2025
+## 06.01.2026
 - Dummy test Andreia --> big to do list
 - File example (DBScope)
 - License: Creative Commons

@@ -25,12 +25,16 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 
 '''
 
-u = 0
-step = 2
+ola = "09/11/2025"
+parts = ola.strip()
+slash = ''
+for p in parts:
+    try: 
+        int(p)
+    except Exception:
+        slash = p
 
-for i in range(4):
-    u = u+step
-    print(u)
+print(slash)
 
 # import dearpygui.dearpygui as dpg
 

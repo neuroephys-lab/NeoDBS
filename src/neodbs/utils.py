@@ -210,7 +210,8 @@ def read_event_file(filename):
 
     '''
     events = []
-    
+    day, month, year, hour, minute, second = 0,0,0,0,0,0
+
     with open(filename, 'r', encoding='utf-8') as file:
         for line in file:
             line = line.strip()
@@ -219,19 +220,35 @@ def read_event_file(filename):
             
             try:
                 time_part, event = line.split(", ")
+                date = time_part.find(" ")
+                if date != -1: #there's a date
+                    date, time_part = time_part.split(" ")
+                    slash = ''
+                    for p in date.split():
+                        try: 
+                            int(p)
+                        except Exception:
+                            slash = p
+
+                    print(date)
+                    day,month,year = date.split(slash)
+                
                 time_components = list(map(int, time_part.split(":")))
                 
                 if len(time_components) == 2:
                     hour, minute = time_components
-                    second = 0
+
                 elif len(time_components) == 3:
                     hour, minute, second = time_components
                 else:
                     raise ValueError("Invalid time format")
+                
+                dtt = datetime(day=day,month=month,year=year,hour=hour,minute=minute,second=second)
 
-                events.append((hour, minute, second, event))
-            except ValueError:
-                print(f"Skipping invalid line: {line}")
+                # events.append((hour, minute, second, event))
+                events.append((dtt, event))
+            except Exception as e:
+                print(f"{e}: {line}")
     
     return events
 

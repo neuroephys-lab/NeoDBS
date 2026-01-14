@@ -63,8 +63,15 @@ import csv
 global_bands = ft.bands
 electrodes_names, all_event_names = {}, {}
 exporting_tags = {'Plots': [], 'Signals': [], 'Tables': []}
-cwh = 90
+cwh, cww = 90, 140
 app_state = {"windows": {}}
+
+directories = {
+    'rec': "C:/Users/OCD/Desktop/DATA/RN",
+    'events': "C:/Users/OCD/Desktop/LRodrigues/NeoDBS",
+    'save': ""
+}
+
 colors = [
         (0, 0, 255, 255),      # blue
         (255, 0, 0, 255),      # red
@@ -217,7 +224,8 @@ def filename_window(sender,app_data,user_data):
             other, _ = final_userdata
             save_table_to_file(parent_sender,app_data,(other,plot_tag))
         else:
-            save_signals(parent_sender,app_data,final_userdata)
+            ud = final_userdata + (dpg.get_value(f"{plot_tag}_file_name"),)
+            save_signals(parent_sender,app_data,ud)
 
     if app_data and 'All' in app_data:
         handle_submit(None,app_data,None)
@@ -415,8 +423,7 @@ def save_signals(sender,app_data,user_data):
     parent, plot, plot_type = user_data
     '''
     
-    parent, plot, plot_type = user_data
-    file_name = dpg.get_item_label(plot)
+    parent, plot, plot_type, file_name = user_data
     children = dpg.get_item_children(parent)[1]
     tfd = False
     match plot_type:
@@ -561,10 +568,12 @@ def save_signals(sender,app_data,user_data):
             last = dpg.get_item_label(f"window_{last}")
             file_name = f"Window {last}//{file_name}"
 
+    if directories['save'] != '':
+        file_name = directories['save'] + '\\' + file_name
     ft.export_signals(info,file_name,tfd=tfd)
     if not dpg.does_item_exist(f"{sender}_toast"):
         with dpg.tooltip(parent=sender,tag=f"{sender}_toast"):
-            dpg.add_text(f"Saved file: {file_name}.txt!")
+            dpg.add_text(f"Saved file: {file_name}.csv!")
 
 def save_all(sender,app_data,user_data):
     key, window_id = user_data
@@ -579,6 +588,18 @@ def save_all(sender,app_data,user_data):
         if callback:
             ad = 'All ' + str(window_id)
             callback(button,ad,new_user_data)
+
+def set_directory(sender,app_data,user_data):
+    if isinstance(app_data['selections'], dict):  # Check if files were selected
+        try:
+            new = list(app_data['selections'].values())[0]
+        except Exception: return
+        repeated = str(new[::-1]).find("\\")
+        directories[user_data] = new[:-(repeated+1)]
+
+def change_directory(sender,app_data,user_data):
+    label = dpg.get_item_label(sender)
+    dpg.add_file_dialog(directory_selector=True, show=True, width=700, height=400,callback=set_directory,label=label,user_data=user_data)
 
 #--- Add common buttons
 def add_filters_buttons(tab_tag,signal_tags):
@@ -764,12 +785,20 @@ def toggleVisibility(signal_tags, parent, group, user_data):
 
         if mode == 'Events':
             mean_power, std_dev = getMeanActiveSeries(window_id,tab_tag,signal_tags)
-            current = dpg.get_value(f"{tab_tag}_mean")
-            minus,plus = mean_power-std_dev, mean_power+std_dev
-            dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
-            dpg.configure_item(f"{tab_tag}_std", y1=minus,y2=plus)
+            if isinstance(mean_power,(int,float,np.float64)): 
+                dpg.configure_item(f"{tab_tag}_mean",show=False)
+                dpg.configure_item(f"{tab_tag}_std",show=False)
+                return
+            else: 
+                dpg.configure_item(f"{tab_tag}_mean",show=True)
+                dpg.configure_item(f"{tab_tag}_std",show=True)
 
-    with dpg.group(parent=group):
+                current = dpg.get_value(f"{tab_tag}_mean")
+                minus,plus = mean_power-std_dev, mean_power+std_dev
+                dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
+                dpg.configure_item(f"{tab_tag}_std", y1=minus,y2=plus)
+
+    with dpg.group(parent=group, tag = f"{tab_tag}_tav"):
         dpg.add_text("Choose signals:")
         checkboxes = {}
             
@@ -821,11 +850,18 @@ def toggleType(signal_tags, parent, user_data):
                     
         if dpg.does_item_exist(f"{tab_tag}_mean"):
             mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags,key)
-            minus, plus = mean_power-std_power, mean_power+ std_power
-            current = dpg.get_value(f"{tab_tag}_mean")
-            dpg.configure_item(f"{tab_tag}_std", y1=minus,y2=plus)
+            if isinstance(mean_power,(int,float,np.float64)): 
+                dpg.configure_item(f"{tab_tag}_mean",show=False)
+                dpg.configure_item(f"{tab_tag}_std",show=False)
+                return
+            else: 
+                dpg.configure_item(f"{tab_tag}_mean",show=True)
+                dpg.configure_item(f"{tab_tag}_std",show=True)
 
-            dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
+                minus, plus = mean_power-std_power, mean_power+ std_power
+                current = dpg.get_value(f"{tab_tag}_mean")
+                dpg.configure_item(f"{tab_tag}_std", y1=minus,y2=plus)
+                dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
                 
     dpg.add_checkbox(label=type_filter, default_value=True, callback=toggle_filtered_series,tag = f"{tab_tag}_{type_filter}_checkbox", parent=parent)
 
@@ -875,7 +911,7 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None,tables=
         types = [hours,days,channels,sides]
         label_types=['By Recording:','By Day:','By Channel:','By Hemisphere:']
         if len(artifacts)>0: 
-            label_types.append('By Artifact')
+            label_types.append('By Artifact:')
             artifacts = np.unique(artifacts).tolist()
             types.append(artifacts)
     else:
@@ -898,19 +934,19 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None,tables=
 
     with dpg.group(label=f"{tab_tag}_buttons"):
         # Ensure toggleVisibility is inside a vertical group
-        with dpg.group(parent=f"{tab_tag}_buttons", tag = f"{tab_tag}_all_streams"):
-            toggleVisibility(signal_tags, tab_tag, group=f"{tab_tag}_buttons", user_data=window_id)
+        with dpg.group(tag = f"{tab_tag}_all_streams"):
+            toggleVisibility(signal_tags, tab_tag, group=f"{tab_tag}_all_streams", user_data=window_id)
 
         with dpg.group(horizontal=True, parent=f"{tab_tag}_buttons", tag=f"{tab_tag}_types"):
             no_groups = len(list(all_toggles.keys()))
             if no_groups<4:
                 for text, values in all_toggles.items():
-                    with dpg.child_window(tag=f"{tab_tag}_{text}_buttons", height=cwh):
+                    with dpg.child_window(tag=f"{tab_tag}_{text}_buttons",height=cwh,auto_resize_x=True):
                         dpg.add_text(text)
                         for v in values:
                             toggleType(signal_tags,parent=f"{tab_tag}_{text}_buttons", user_data=(v, window_id, tab_tag))
-
-                    dpg.configure_item(f"{tab_tag}_{text}_buttons",auto_resize_x=True)
+                        if ('channel' in text.lower()) or ('artifact' in text.lower()):
+                            dpg.configure_item(f"{tab_tag}_{text}_buttons",width=cww)
             
             else:
                 g1 = dpg.add_group(parent=f"{tab_tag}_buttons")
@@ -919,11 +955,12 @@ def toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag=None,tables=
                     if i<2: parent=g1
                     else: parent=g2
                     text, values = label_types[i], types[i]
-                    with dpg.child_window(tag=f"{tab_tag}_{text}_buttons", height=cwh,parent=parent):
+                    with dpg.child_window(tag=f"{tab_tag}_{text}_buttons", height=cwh,auto_resize_x=True,parent=parent):
                         dpg.add_text(text)
                         for v in values:
                             toggleType(signal_tags,parent=f"{tab_tag}_{text}_buttons", user_data=(v, window_id, tab_tag))
-                    dpg.configure_item(f"{tab_tag}_{text}_buttons",auto_resize_x=True)
+                    if ('channel' in text.lower()) or ('artifact' in text.lower()):
+                        dpg.configure_item(f"{tab_tag}_{text}_buttons",width=cww)
         
         if len(artifacts)==0 and normal:
             segment_signal(tab_tag, signal_tags,plot_tag)
@@ -1015,7 +1052,7 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None,plot_ta
 
             #check channels
             if len(events)>1:
-                with dpg.child_window(label = f"{tab_tag}_buttons_events",height=cwh,auto_resize_x=True):
+                with dpg.child_window(label = f"{tab_tag}_buttons_events",height=cwh,width=cww):
                     dpg.add_text('By events:')
                     for day in events:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons_events", user_data=(day, window_id, tab_tag)) 
@@ -1167,6 +1204,8 @@ def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False,
                 signal_tags[segment_tag] = True 
             else:
                 print(f"Skipping duplicate series: {combined_tag}")
+
+    return signal_tags
 
 def update_plot_td(tab_tag, signal_tags, title = None, signal_mode = None):
     '''
@@ -1735,6 +1774,11 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 if visibility==True:
                     power_temp.append(power[i])
 
+            if len(power_temp) == 0: 
+                dpg.configure_item(f"{tab_label}_mean",show=False)
+                dpg.configure_item(f"{tab_label}_std",show=False)
+                return
+
             mean_temp = np.mean([p['Y'] for p in power_temp], axis=0)
             std = np.std([p['Y'] for p in power_temp], axis=0)
             times = dpg.get_value(f"{tab_label}_deviation")
@@ -1744,8 +1788,8 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
 
             minus = mean_temp - times*std
             plus = mean_temp + times*std
-            dpg.configure_item(f"{tab_label}_mean",y=mean_temp)
-            dpg.configure_item(f"{tab_label}_std",y1=minus, y2=plus)
+            dpg.configure_item(f"{tab_label}_mean",y=mean_temp,show=True)
+            dpg.configure_item(f"{tab_label}_std",y1=minus, y2=plus,show=True)
    
         def toggle2(sender,app_data,user_data):
             if dpg.get_value(f"{tab_label}_hide") == True:
@@ -1763,6 +1807,11 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 if flag:
                     _.append(tag)
 
+            if len(_) == 0: 
+                dpg.configure_item(f"{tab_label}_mean",show=False)
+                dpg.configure_item(f"{tab_label}_std",show=False)
+                return
+            
             array = [dpg.get_value(t)[1] for t in _]
             mean = np.mean(array, axis=0)
             dpg.configure_item(f"{tab_label}_mean",y=mean)
@@ -1775,8 +1824,8 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
 
             minus = mean - times*std
             plus = mean + times*std
-            dpg.configure_item(f"{tab_label}_mean",y=mean)
-            dpg.configure_item(f"{tab_label}_std",y1=minus, y2=plus)
+            dpg.configure_item(f"{tab_label}_mean",y=mean,show=True)
+            dpg.configure_item(f"{tab_label}_std",y1=minus, y2=plus,show=True)
 
         def toggle_over_time(sender,app_data,user_data):
             y_axis = user_data
@@ -1831,9 +1880,13 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     with dpg.group(horizontal=True):
                         for i, array in enumerate([ch,bds]):
                             if len(array)>1:
-                                if i==0: title='By Channel:'
-                                else: title='By Band:'
-                                with dpg.child_window(height=cwh,auto_resize_x=True):
+                                if i==0: 
+                                    title='By Channel:'
+                                    width = cww
+                                else: 
+                                    title='By Band:'
+                                    width = 80
+                                with dpg.child_window(height=cwh,width=width):
                                     dpg.add_text(title)
                                     for c in array: dpg.add_checkbox(label=c,callback=toggle_over_time,user_data=yy,default_value=True)
                     dpg.add_separator()
@@ -1888,7 +1941,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     height=400,
                     modal=True, 
                     user_data=user_data,
-                    default_path="C:/Users/OCD/Desktop/LRodrigues/NeoDBS",
+                    default_path=directories['events'],
                 ) as dialog_id:
                     dpg.add_file_extension(".txt", color=(0, 255, 0, 255), custom_text="[TEXT File]")
 
@@ -1925,7 +1978,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
             days = np.unique(days)
             with dpg.group(parent=f"{tab_tag}_buttons", horizontal=True):  
                 if len(channels)>1: 
-                    with dpg.child_window(height=cwh,auto_resize_x=True): #channels
+                    with dpg.child_window(height=cwh,width=cww): #channels
                         dpg.add_text('Channels: ')
                         for ch in channels: 
                             c = dpg.add_checkbox(label=ch, callback=choose_toggle, default_value=True)
@@ -3010,8 +3063,9 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
             shapes = [s.shape for s in all_Sxx]
             if not all(shape == shapes[0] for shape in shapes):
                 e = "All spectrograms must have the same time length to compute the mean."
-                dpg.add_text(e, parent=group_tag)
-                raise ValueError(e)
+                t = dpg.add_text(e, parent=tab_label)
+                dpg.bind_item_theme(t,change_text_color(1))
+                return
 
             # Compute the mean spectrogram (linear scale)
             mean_Sxx = np.mean(np.stack(all_Sxx), axis=0)
@@ -3830,6 +3884,11 @@ def change_event_name(sender,app_data,user_data):
             dpg.add_input_text(tag=f"old_name_{this}_{row_id}",default_value='Old Name Event', width=120)
             dpg.add_input_text(tag=f"new_name_{this}_{row_id}",default_value='New Name Event', width=120)
     
+    def reset(sender,app_data,user_data):
+        oldies = list(all_event_names.keys())
+        for o in oldies: all_event_names[o] = o
+        dpg.delete_item(this)
+
     def handle_submit(sender,app_data,user_data):
         row_id=dpg.get_item_user_data(sender)
         for i in range(row_id+1):
@@ -3846,7 +3905,9 @@ def change_event_name(sender,app_data,user_data):
                 dpg.add_input_text(tag=f"old_name_{this}_{row_id}",default_value='Old Name Event', width=120)
                 dpg.add_input_text(tag=f"new_name_{this}_{row_id}",default_value='New Name Event', width=120)
         dpg.add_button(label = '+',small=True,callback=add,tag='add')
-        dpg.add_button(label='Submit',callback=handle_submit,user_data=row_id,tag='submit event name')
+        with dpg.group():
+            dpg.add_button(label='Submit',callback=handle_submit,user_data=row_id,tag='submit event name',small=True)
+            dpg.add_button(label='Reset',callback=reset)
 
 def change_inf_line_color(color_id):
     '''
@@ -3998,6 +4059,7 @@ def extract_idx_from_series_tag(series_tag: str) -> int:
     :param series_tag: str, series id
     :return: int, number of series (in app_state memory dictinary)
     '''
+    if isinstance(series_tag,int):return series_tag
     match = re.search(r'_series_(\d+)(?:_|$)', series_tag)  # Match _series_<number> with or without trailing underscore
     if match:
         return int(match.group(1))  # Extract and return the idx as an integer
@@ -4650,10 +4712,13 @@ def getMeanActiveSeries(window_id,tab_tag,signal_tags,key='Y'): #try to use it i
 
         active_signals.append(active)
 
-    mean_power = pre.MeanSignal(active_signals,key)
-    std_power = pre.StdDevSignal(active_signals,key)
-    dev = getDeviation(tab_tag)
-    std_power = dev*std_power
+    if len(active_signals)>0:
+        mean_power = pre.MeanSignal(active_signals,key)
+        std_power = pre.StdDevSignal(active_signals,key)
+        dev = getDeviation(tab_tag)
+        std_power = dev*std_power
+    else:
+        return 0,0
 
     return mean_power, std_power
 
@@ -5169,8 +5234,8 @@ def insert_events(sender, app_data, user_data):
                     app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Events'] = []
 
             date = signal['Date']
-
             channel = signal['Channel']
+
             if channel in electrodes_names.keys():
                 channel = electrodes_names[channel]
             else:
@@ -5190,11 +5255,14 @@ def insert_events(sender, app_data, user_data):
                 new_time = [pre.get_date_from_ts(val) for val in new_x]
                     
             for _, event in enumerate(events):
-                hour, minute, second, type = event
+                # hour, minute, second, type = event
+                dtt, type = event
+                if utl.extract_date(date) != utl.extract_date(dtt): continue
+
+                hour, minute, second = dtt.hour, dtt.minute, dtt.second
+
                 tidx = utl.find_closest_index(new_time,hour,minute, second)
-                flag = True
                 if tidx != None: 
-                    flag = False
                     tidx = int(tidx)
                     scatter.append([new_x[tidx], type, new_time[tidx]])
                     date_event = new_time[tidx]
@@ -5223,21 +5291,26 @@ def insert_events(sender, app_data, user_data):
                     else: app_state['windows'][window_id]['Data'][tab_tag]['Signals'][idx]['Events'].append(segment)
 
         if scatter: 
-            event_types = [s[1] for s in scatter]
-            event_types = np.unique(event_types).tolist()
-            for i, point in enumerate(scatter):
-                idx, etype, time = point
-                tag = f"{tab_tag}_{etype}_{time}"
-                if not dpg.does_item_exist(tag): 
-                    m = dpg.add_inf_line_series(parent=f"y_axis_{tab_tag}", x=[idx], label=f"{etype} - {time}", tag=tag)
-                    dpg.bind_item_theme(m, change_inf_line_color(event_types.index(etype)))
+            if window_type == 'Combined': 
+                align_events(sender,app_data,(tab_tag,signal_tags)) 
+            else:
+                event_types = [s[1] for s in scatter]
+                event_types = np.unique(event_types).tolist()
+                for i, point in enumerate(scatter):
+                    idx, etype, time = point
+                    tag = f"{tab_tag}_{etype}_{time}"
+                    if not dpg.does_item_exist(tag): 
+                        m = dpg.add_inf_line_series(parent=f"y_axis_{tab_tag}", x=[idx], label=f"{etype} - {time}", tag=tag)
+                        dpg.bind_item_theme(m, change_inf_line_color(event_types.index(etype)))
 
-                signal_tags[tag] = True
+                    signal_tags[tag] = True
 
             scatter = np.array(scatter, dtype=object)
-            types= np.unique(scatter[:,1]).tolist()
+            types = np.unique(scatter[:,1]).tolist()
+
             if len(types)>1:
-                if dpg.does_item_exist(f"{tab_tag}_buttons_hours"): dpg.delete_item(f"{tab_tag}_buttons_hours")
+                if dpg.does_item_exist(f"{tab_tag}_By Recording:_buttons"): 
+                    dpg.delete_item(f"{tab_tag}_By Recording:_buttons")
                 new_parent = f"{tab_tag}_types"
                 if dpg.does_item_exist(f"{new_parent}_events"): 
                     children = dpg.get_item_children(f"{new_parent}_events")
@@ -5246,11 +5319,12 @@ def insert_events(sender, app_data, user_data):
                             label = dpg.get_item_label(kid)
                             if label not in types and label != '': types.append(label)
                     dpg.delete_item(f"{new_parent}_events")
-                with dpg.group(parent=new_parent, tag = f"{new_parent}_events"):
+                with dpg.child_window(parent=new_parent, tag = f"{new_parent}_events",height=cwh):
                     dpg.add_text('By Event:')
                     for day in types:
                         toggleType(signal_tags,parent=f"{new_parent}_events",user_data=(day, window_id, tab_tag))  
-            if window_type == 'Combined': align_events(sender,app_data,(tab_tag,signal_tags))  
+                    dpg.configure_item(f"{new_parent}_events", auto_resize_x=True)
+            
         else: 
             dpg.add_text("No Events in the present recordings!", parent=f"{tab_tag}_add_events")
 
@@ -5262,7 +5336,7 @@ def insert_events(sender, app_data, user_data):
             width=700, 
             height=400,
             modal=True, 
-            default_path="C:/Users/OCD/Desktop/LRodrigues/NeoDBS",
+            default_path=directories['events'],
             user_data=(window_id,tab_tag, signal_tags)
         ) as dialog_id:
             dpg.add_file_extension(".txt", color=(0, 255, 0, 255), custom_text="[TEXT File]")
@@ -5294,11 +5368,13 @@ def align_events(sender,app_data, user_data):
         dpg.delete_item(parent,children_only=True)
         signal_tags.clear()
         dpg.configure_item(f"x_axis_{tab_tag}", scale=dpg.mvPlotScale_Linear)
-        plot_td(all_events,parent,tab_tag, signal_tags,files=fdx,events=True, count=edx)
+        signal_tags = plot_td(all_events,parent,tab_tag, signal_tags,files=fdx,events=True, count=edx)
                 # else: dpg.add_text('To compare events, needs at least 2 events', parent=parent)
 
         dpg.configure_item(f"{tab_tag}_add_events", show = False)
-        dpg.configure_item(f"{tab_tag}_all_streams", show = False)
+        # dpg.configure_item(f"{tab_tag}_all_streams", show = False)
+        dpg.delete_item(f"{tab_tag}_tav")
+        toggleVisibility(signal_tags, tab_tag, group=f"{tab_tag}_all_streams", user_data=window_id)
         dpg.configure_item(f"{tab_tag}_segmentation", show = False)
 
     else:
@@ -5629,6 +5705,9 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
         onex = segment_x[0]
         segment_x = [x - onex for x in segment_x]
 
+        if y == []:
+            return None
+
         return segment_x,segment_y
 
     for ex, event in enumerate(event_ids):
@@ -5641,6 +5720,8 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
                 continue
             
             segment = cut_segment(x,y,event)
+            if segment is None: continue
+
             segments.append([segment,label])
             event_names.append(label)
             date = utl.extract_date(pre.get_date_from_ts(event))
@@ -5720,9 +5801,6 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
             mean = dpg.add_line_series(segment[0],mean_value,label='Mean',parent=y_axis, tag = f"{tab_label}_mean")
             dpg.bind_item_theme(mean, change_line_thickness(5))
 
-            # mean_info = {'X': segment[0], 'Y':list(mean_value)}
-            # mean_info = ft.extract_timeline_features(mean_info)
-            # create_table(f"{tab_label}_header",f"{tab_label}_table", mean_info, trial_label='Mean')
 
     def bva(segments):
         bva_segments = []
@@ -5764,7 +5842,9 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
 
         mean_info = {'X': t[0], 'Y':new_mean}
         mean_info = ft.extract_timeline_features(mean_info)
-        create_table(f"{tab_label}_header",f"{tab_label}_table", mean_info, trial_label='New Mean')
+        if not dpg.does_item_exist(f"{tab_label}_header"):
+            dpg.add_collapsing_header(tag=f"{tab_label}_header",label='Mean',parent=tab_label)
+        create_table(f"{tab_label}_header",f"{tab_label}_table", mean_info, trial_label=f'New Mean ~({name})')
 
     if not dpg.does_item_exist(f"{tab_tag}_features_bar"):
         dpg.add_tab_bar(reorderable=True,parent=tab_tag, tag = f"{tab_tag}_features_bar")
@@ -7831,7 +7911,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                 dpg.add_text( 'Warning: There are missing points in Timeline', tag=f"{tab_tag}_wmp", parent=f"{tab_tag}_buttons")
                 dpg.add_checkbox(label='Show missing points',parent=f"{tab_tag}_buttons", default_value=False, callback=changeTimelinePlot, user_data=(signal_tags, temp_signals, datas, y_axis))
 
-            dpg.add_button(label = 'Analyze Events', callback=AnalyzeTimelineEvents, user_data=(tab_tag, events_tags, signal_tags),parent=f"{tab_tag}_buttons",width=-1)
+            dpg.add_button(label = 'Analyze Events', callback= AnalyzeTimelineEvents, user_data=(tab_tag, events_tags, signal_tags),parent=f"{tab_tag}_buttons",width=-1)
             
         add_timeline_features_buttons(tab_tag, signal_tags)
 
@@ -7906,6 +7986,9 @@ def create_multiple_window():
     def file_dialog_callback(sender, app_data, user_data):
         window_id = user_data  # Get window-specific ID
         files = app_data['selections']  # Dict { "full_path": "file_name" }
+        if len(list(files.values())) == 0:
+            dpg.bind_item_theme(f"file_list_{window_id}",change_text_color(1))
+
         for file in files:
             app_state["windows"][window_id]["Files"].append(
                 {"name": file, "path": files[file]})
@@ -7947,7 +8030,7 @@ def create_multiple_window():
             width=700, 
             height=400,
             modal=True, #only allows 1 file to be selected
-            default_path="C:/Users/OCD/Desktop/DATA/RN",
+            default_path=directories['rec'],
             user_data=window_id  # Pass window ID for tracking
         ):
             dpg.add_file_extension(".*")
@@ -8080,6 +8163,8 @@ def create_individual_window():
             
             if len(selected_files) > 1:
                 dpg.set_value(f"file_list_{window_id}","Only one file can be selected! Please try again.")
+            elif len(selected_files) == 0:
+                dpg.bind_item_theme(f"file_list_{window_id}",change_text_color(1))
             else:
                 print(f"Selected file: {selected_files[0]}")
                   # Get window-specific ID
@@ -8107,7 +8192,7 @@ def create_individual_window():
             width=700, 
             height=400,
             #modal=True, #if True: user must select a file before returning to main window - não vi diferença
-            default_path="C:/Users/OCD/Desktop/DATA/RN",
+            default_path=directories['rec'],
             user_data=window_id  # Pass window ID for tracking
         ):
             dpg.add_file_extension(".*")
@@ -8340,6 +8425,10 @@ if __name__ == "__main__":
                     dpg.add_menu_item(label="Classic", callback=switch_theme, user_data=default_classic_theme)
                     dpg.add_menu_item(label="Light", callback=switch_theme, user_data=light_theme)
                     dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
+                with dpg.menu(label="Directories"):
+                    dpg.add_menu_item(label="Recording Directory", callback=change_directory,user_data='rec')
+                    dpg.add_menu_item(label="Events Directory", callback=change_directory, user_data='events')
+                    dpg.add_menu_item(label="Save in... Directory", callback=change_directory,user_data='save')
 
             with dpg.theme() as button_theme:
                 with dpg.theme_component(dpg.mvButton):
