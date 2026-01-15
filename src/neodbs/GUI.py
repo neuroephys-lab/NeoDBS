@@ -5236,16 +5236,14 @@ def insert_events(sender, app_data, user_data):
             date = signal['Date']
             channel = signal['Channel']
 
-            if channel in electrodes_names.keys():
-                channel = electrodes_names[channel]
-            else:
-                electrodes_names[channel] = channel
+            channel = getUpdatedElectrodeName(channel)
 
             dates.append(f"{date.year}-{date.month}-{date.day}")
 
             if scale == 0: #in linear
+                offset = DH.extract_time_offset(getDatabyTag(tag)) #already in timedelta format
                 new_time = [date + timedelta(seconds=val) for val in signal['X'] if isinstance(val,(int,float))]
-                new_x = [d.timestamp() for d in new_time]
+                new_x = [(d+offset).timestamp() for d in new_time]
                 updateKeySignalbyIdx(new_x,tab_tag,series[i],'X')
                 dpg.configure_item(f"x_axis_{tab_tag}",scale=dpg.mvPlotScale_Time)
                 dpg.configure_item(f"x_axis_{tab_tag}",label='Time (UTC)')
@@ -5257,7 +5255,8 @@ def insert_events(sender, app_data, user_data):
             for _, event in enumerate(events):
                 # hour, minute, second, type = event
                 dtt, type = event
-                if utl.extract_date(date) != utl.extract_date(dtt): continue
+                if (dtt.year != 1970) and (utl.extract_date(date) != utl.extract_date(dtt)): #confirms that theres a real date, not buffer, and checks with the string to minimize verify idx if its not correspondant to the session
+                    continue
 
                 hour, minute, second = dtt.hour, dtt.minute, dtt.second
 
@@ -5464,7 +5463,6 @@ def circadian_rhythm(sender, app_data, user_data):
             old_x = [utl.get_timestamp_from_dt(utl.full_date2str(xx)) for xx in x]
 
         x,y = [], []
-
         
         for n in range(len(old_x)-1):
             x.append(old_x[n])
@@ -5473,7 +5471,6 @@ def circadian_rhythm(sender, app_data, user_data):
                 gap_times = np.arange(old_x[n]+600, old_x[n+1], 600)
                 x.extend(gap_times)
                 y.extend([np.nan]*len(gap_times))
-                complete = False
 
         x.append(old_x[-1])
         y.append(old_y[-1])
@@ -5481,7 +5478,6 @@ def circadian_rhythm(sender, app_data, user_data):
         last = utl.get_timestamp_from_dt("23:59:00")
 
         if x[0]>600:
-            complete = False
             if x[0]>last:
                 x[0] = x[0]-last
                
@@ -5490,7 +5486,6 @@ def circadian_rhythm(sender, app_data, user_data):
             y = nan_array + y
             x = list(np.arange(x[0]-(diff*600),x[0],600)) + x
         if x[-1]<last:
-            complete = False
             diff = int((last - x[-1])//600)
             nan_array = [np.nan]*diff
             y = y + nan_array
@@ -5963,6 +5958,7 @@ def recalculate_timeline(sender,app_data,user_data):
 
     mean = []
     for tag in tags:
+        if not isinstance(tag,str): continue #means its a marked event
         if not dpg.get_item_configuration(tag)['show']: continue
         info, _ = calculate_timeline_features(tab_tag,tag)
         mean.append(info)

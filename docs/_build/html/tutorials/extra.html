@@ -65,8 +65,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#tables">4.1.7. Tables</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#spectral-band-analysis">4.2. Spectral Band Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#export">4.3. Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#export">4.2. Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#directories">4.3. Directories</a></li>
 </ul>
 </li>
 </ul>
@@ -197,24 +197,8 @@ Additionally, the name of all rows can be customized.</p>
 <img alt="../_images/table.png" src="../_images/table.png" />
 </section>
 </section>
-<section id="spectral-band-analysis">
-<h2><span class="section-number">4.2. </span>Spectral Band Analysis<a class="headerlink" href="#spectral-band-analysis" title="Link to this heading">¶</a></h2>
-<p>Signal processing and analysis relies heavily on the study of the spectral component of the signal. Beyond the
-classic frequency bands of neural signals (Delta, Theta, Alpha, Beta and Gamma), researchers also have a need
-to study how specific and unique frequency bands behave. Therefore, in NeoDBS, the user can add more bands to
-be included in signal analysis and feature extraction.</p>
-<ol class="arabic simple">
-<li><p>In the respective recording mode tab, open the collapsing header named &quot;Signal Analysis&quot;.</p></li>
-<li><p>Fill in the respective input spaces for the bounding values of the new frequency band.</p></li>
-<li><p>Press &quot;Insert Band of Interest&quot;, to add the new band.</p></li>
-<li><p>The added band will be included in future spectral analysis inside the respective tab.</p></li>
-<li><p>The user can add multiple bands.</p></li>
-<li><p>To reset to the default bands, press &quot;Reset Bands&quot;.</p></li>
-</ol>
-<img alt="../_images/band.png" src="../_images/band.png" />
-</section>
 <section id="export">
-<h2><span class="section-number">4.3. </span>Export<a class="headerlink" href="#export" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">4.2. </span>Export<a class="headerlink" href="#export" title="Link to this heading">¶</a></h2>
 <p>As mentioned above, NeoDBS offers exportation functionalities for all created plots, tables and series.
 They can be <strong>individually</strong> exported, exported <strong>by window</strong> or <strong>export all</strong> created items in the platform.</p>
 <ol class="arabic simple">
@@ -229,6 +213,18 @@ They can be <strong>individually</strong> exported, exported <strong>by window</
 converted into MatplotLib plots and saved into png files. The conversion is made to replicate as close as possible
 the plot in NeoDBS.</p>
 </div>
+</section>
+<section id="directories">
+<h2><span class="section-number">4.3. </span>Directories<a class="headerlink" href="#directories" title="Link to this heading">¶</a></h2>
+<p>To optimize your work and organization, you can select the directories from which you want to upload or save data with NeoDBS. This will set the root directory in
+the platform, so it is easier and faster to access your recording sessions, input files and even where you want your exportations organized.</p>
+<img alt="../_images/directory.png" src="../_images/directory.png" />
+<ol class="arabic simple">
+<li><p>In the main window menu, click on <strong>&quot;Directories&quot;</strong>.</p></li>
+<li><p>To select the root directory of your recording session's files (JSON), press <strong>&quot;Recording Directory&quot;</strong>.</p></li>
+<li><p>In the file dialog, select the folder from which you access your data of interest. After you see the name of the folder in the <em>Directory Path</em>, press <strong>&quot;OK&quot;</strong>.</p></li>
+<li><p>You can do the same for other inputs (such as text files for events) in <strong>Events Directory</strong> or for your outputs saved from NeoDBS in <strong>&quot;Save into... Directory&quot;</strong>.</p></li>
+</ol>
 </section>
 </section>
 

@@ -54,7 +54,7 @@ Default Filter
 ^^^^^^^^^^^^^^
 
 For more non-experienced users, NeoDBS offers a **Default Filter** that removes cardiac component and 
-maintains only the desired frequencies, selected in the respective input spaces. This method was developed 
+maintains only the desired frequencies, selected in the respective input spaces. This method was adapted 
 from UF BRAVO's Platform (https://github.com/Fixel-Institute/BRAVO). This filter performs a 5th order Butterworth
 Bandpass filter with cardiac artifact removal.
 
@@ -92,15 +92,23 @@ Recordings can be segmented, with a minimum of 10 seconds of duration.
 .. _ela:
 Event-locked Analysis
 ---------------------
-NeoDBS offers two type of event-locked analysis. To load the platform with the events, the user must select a .txt file with the described events. 
-The .txt file must be with the following structure: HH:MM:SS, name of event.
+NeoDBS offers the possibility of analyzing in-clinic events that were recorded during the recording session. 
+The user can either **mark** or **segment** the in-clinic events by uploading a .txt file with the described in-clinic events. 
+This a functionality made to improve analyzing in-clinic tasks, such as protocols.
+
+If working with the **Individual** window, NeoDBS will **mark** the in-clinic events in the main plot of the recordings.
+If working with the **Combined** window, NeoDBS will **segment** the in-clinic events, replacing the raw signals. The user can 
+also select the duration of the segment.
+
+To load the platform with the events, the user must select a .txt file with the described in-clinic events. 
+The .txt file **must be with ONE of the following structures**: 
+
+* HH:MM:SS, name of event
+* HH:MM, name of event
+* DD/MM/YY HH:MM:SS, name of event
+* DD/MM/YY HH:MM, name of event
 
 .. image:: ../img/txtevent.png
-
-If the user is working in an **Individual Window**, the user can only mark the event timestamp, which will 
-appear in the main plot and all time-spectral analysis that the user computes posteriorly. If the user is 
-working in a **Combined Window**, the recordings will be segmented with the event centered. The user can 
-select the **duration of the epoch**, by defining the time **before and after the event**.
 
 1. Press **"Insert Events"**, in the *Individual Window*, or **"Analyze Streaming Events"**, in *Combined Window*, **after selecting the interval prior and after the event**.
 2. Select *.txt* file with the described events.
@@ -113,12 +121,6 @@ In the Individual Window, events can be inserted several times. In the Combined 
 has been emplyed, no more segmentation or events can be added.
 
 .. image:: ../img/marked_events.png
-
-Signal Analysis
----------------
-
-Following the good practices of signal processing, only after properly preparing the signal of interest, the user can employ methods to perform
-spectral analysis. Tutorials to apply analysis methods can be found in the :doc:`Signal Analysis <features>` page.
 
 Impedance
 ---------
@@ -135,5 +137,10 @@ If during the recording session any impedance test was performed, either with *S
 .. image:: ../img/impedance_values.png
 
 4. Both table and plot can easily be exported by the respective buttons.
+
+Signal Analysis
+---------------
+
+Tutorials to apply analysis methods can be found in the :doc:`Signal Analysis <features>` page.
 
 

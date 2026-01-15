@@ -97,8 +97,6 @@
 <a class="viewcode-back" href="../api/neodbs.html#DataHandling.info_electrodes">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">info_electrodes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">version</span><span class="o">=</span><span class="s1">&#39;Initial&#39;</span><span class="p">,</span><span class="n">side</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Inês Pereira - up202107421@edu.fe.up.pt</span>
-
 <span class="sd">    Return information of the active electrodes from TIMELINE mode</span>
 <span class="sd">    side 0 - Left</span>
 <span class="sd">    side 1 - Right</span>
@@ -866,8 +864,6 @@
 <a class="viewcode-back" href="../api/neodbs.html#DataHandling.MissingTimeline">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">MissingTimeline</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">side</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Inês Pereira (up202107421)</span>
-
 <span class="sd">    Checks missing points in timeline (missing point: when difference between points is &gt;= than 11 minutes) and returns a new corrected timeline dict, correcting missing LFP values through mean interpolation.</span>
 <span class="sd">    </span>
 <span class="sd">    new_dic = {</span>

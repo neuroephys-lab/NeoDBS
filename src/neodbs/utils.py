@@ -169,7 +169,9 @@ def find_closest_index(new_time, target_hour, target_minute, target_second = 0):
 
     '''
     target_time = datetime(new_time[0].year, new_time[0].month, new_time[0].day, target_hour, target_minute, target_second)
-    if target_time < new_time[0] or target_time > new_time[-1]:
+
+    big, small = max(new_time), min(new_time)
+    if target_time > big or target_time < small:
         return None  # Return None if the target time is out of range
 
     time_diffs = [abs((t - target_time).total_seconds()) for t in new_time]
@@ -210,7 +212,7 @@ def read_event_file(filename):
 
     '''
     events = []
-    day, month, year, hour, minute, second = 0,0,0,0,0,0
+    day, month, year, hour, minute, second = 1,1,1970,0,0,0
 
     with open(filename, 'r', encoding='utf-8') as file:
         for line in file:
@@ -220,18 +222,11 @@ def read_event_file(filename):
             
             try:
                 time_part, event = line.split(", ")
-                date = time_part.find(" ")
+                date = time_part.find(" ") #in here, date is the index, if -1 its because there is no space --> therefore no date part
                 if date != -1: #there's a date
                     date, time_part = time_part.split(" ")
-                    slash = ''
-                    for p in date.split():
-                        try: 
-                            int(p)
-                        except Exception:
-                            slash = p
-
-                    print(date)
-                    day,month,year = date.split(slash)
+                    slash = next(c for c in date if not c.isdigit())
+                    day,month,year = list(map(int, date.split(slash)))
                 
                 time_components = list(map(int, time_part.split(":")))
                 

@@ -26,15 +26,8 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 '''
 
 ola = "09/11/2025"
-parts = ola.strip()
-slash = ''
-for p in parts:
-    try: 
-        int(p)
-    except Exception:
-        slash = p
-
-print(slash)
+slash = next(c for c in ola if not c.isdigit())
+print(slash, ': ', ola.split(slash))
 
 # import dearpygui.dearpygui as dpg
 

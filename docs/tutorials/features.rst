@@ -22,31 +22,43 @@ access the customizable methods, access **"Customizable Signal Analysis"**, unde
 
 NeoDBS offers the following signal analysis tools for time-domain signals, both on the **default** and **customizable** pipelines:
 
-* Power Spectral Density (PSD) Estimation
+* **Power Spectral Density (PSD) Estimation**
     * Periodogram
     * Welch PSD
     * DPSS Multitaper
-* Coherence
+* **Coherence**
     * Welch Coherence
     * Multitaper Coherence
-* Cross-Correlation
-* Spectrogram
-* Wavelet
-* Coherogram 
-* Phase-Amplitude Coupling 
+* **Cross-Correlation**
+* **Spectrogram**
+* **Wavelet**
+* **Coherogram** 
+* **Phase-Amplitude Coupling**
 
-Additionally, to further enhance spectral analysis, the user can add more frequency bands to be included in the analysis.
-The minimum interval for the frequency band is 2 Hz and can be added using the following buttons:
+Spectral Band Analysis
+----------------------
 
-.. image:: ../img/bands.png 
+Signal processing and analysis relies heavily on the study of the spectral component of the signal. Beyond the 
+classic frequency bands of neural signals, researchers also have a need to study how specific and unique frequency bands behave. 
 
 The default bands are: Delta (0.1-4 Hz), Theta (4-8 Hz), Alpha (8-12 Hz), Beta (12-30 Hz) and Gamma (30-100 Hz).
 
+To further enhance spectral analysis, the user can add more frequency bands to be included in the analysis.
+The minimum interval for the frequency band is 2 Hz and can be added using the following buttons:
+
+1. In the respective recording mode tab, open the collapsing header named "Signal Analysis".
+2. Fill in the respective input spaces for the bounding values of the new frequency band.
+3. Press "Insert Band of Interest", to add the new band.
+4. The added band will be included in future spectral analysis inside the respective tab.
+5. The user can add multiple bands.
+6. To reset to the default bands, press "Reset Bands".
+
+.. image:: ../img/band.png
 
 PSD Estimation
 --------------
 
-Analyzing the frequency component of signals is a very important tool when researching brain activity and 
+Analyzing the frequency component of signals is a very important tool when researching brain activity for 
 biomarkers and neural signatures. Brain activity is characterized by rhythmic oscillations, whether in 
 several important processes, like sleep, or by communicating within different regions and neural populations. 
 It is crutial to look at how the energy of these oscillations changes in different moments.
@@ -73,8 +85,8 @@ be beneficial to different tasks or research goals. You can find a more detailed
 Band Power Over Time
 ^^^^^^^^^^^^^^^^^^^^
 
-When more than one recording from the same-channel is present when employing the PSD method, the user can see how the mean 
-power of each frequency band changes over time.
+When more than one recording from the same channel is present (when employing the PSD method), the user can see how the **mean 
+power of each frequency band changes over time**.
 
 .. image:: ../img/smpot.png 
 

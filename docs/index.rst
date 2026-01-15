@@ -72,6 +72,6 @@ Full documentation of all function's and modules.
 .. toctree::
    :maxdepth: 2
    :hidden:
-   :caption: Modules
+   :caption: Modules (Functions)
 
    api/neodbs   

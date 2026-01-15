@@ -53,28 +53,37 @@ configuration of each file selected, is organized under the correspondant header
 Outlier Removal
 ^^^^^^^^^^^^^^^
 
-Because this a signal acquired with a **very low resolution**, it is very important to be careful when 
-infering conclusions from this signals. NeoDBS offers an **outlier removal filter**, based on the root mean square (RMS)
+*Timeline* is a chronic recording mode that stores an averaged power of a 5 Hz band, every 10 minutes. Although these 
+are unique recording capacities, the system still presents some fragilities. It is very prone to missing points and to 
+**outlier values**. NeoDBS offers an **outlier removal filter**, based on the root mean square (RMS)
 of each signal (per channel-day) and also allows the user to see moments where there are **missing points**. **Extracted 
 features can be recalculated** as many times needed to allow the user to extract the metrics to the filtered signal.
 
-To apply the outlier removal, the user must select the factor value. This factor is multiplied to the computed RMS 
-to define the value of the threshold. If the LFP value is above the threshold it is considered an outlier and replaced
-by the RMS.
-
-.. image:: ../img/timeline_features.png
+The user selects a threshold factor to control outlier removal, that is calculated as: 
+*threshold = factor × RMS*
+Any LFP value above this threshold is treated as an outlier and replaced by the RMS value.
 
 1. Select the threshold value, by sliding the **"Remove Outlier"** item. User can readjust threshold as many times needed.
 2. The filtered signals will update the main plot.
 3. If the user wants to recalculate timeline metrics, press **"Recalculate Metrics"**.
-4. To see missing points from recordings, toggle checkbox **"Show missing points"**.
 
+.. image:: ../img/timeline_features.png
+
+Missing Points
+^^^^^^^^^^^^^^
+
+As mentioned previously, *Timeline* recording mode is very prone to have missing points, due to its continuous configuration and low resolution. 
+NeoDBS automatically identifies if there any missing points in the available signals and it is signaled in the respective tab (see image above).
+The missing points are computed as interpolation of the mean value between the bounding present points.
+
+1. To see missing points from recordings, toggle checkbox **"Show missing points"**.
+2. For future analyzis with the *Timeline* signals, the missing points are not considered.
 
 .. _elat:
 Event-locked Analysis
 ^^^^^^^^^^^^^^^^^^^^^
-When using the **Combined** window, the user has the possibility to epoch all the events marked by the user at-home,
-allowing an automatic event-locked analysis of the chronic recordings. The segments are centered around the marked event, with 1h-interval before and after the event.
+When using the **Combined** window, the user has the possibility to epoch all the events marked by the user at-home (**patient events**),
+allowing an automatic event-locked analysis of the chronic recordings. The segments are centered around the patient event, with 1h-interval before and after the event.
 
 1. Press **"Analyze Events"**.
 2. A new plot will appear, under a new child tab (*Timeline Events*), with the automatically segmented signals, centered around the marked event.
@@ -94,6 +103,7 @@ The respective mean and standard deviation are calculated and ploted, according 
 3. Mean circadian metrics are automatically extracted.  
 4. Mean, and standard deviation, are recalculated with signal toggling, reploted and metrics are recalculated. 
 5. To hide the individual signals, and only show mean and standard deviation, press *"Hide days"*.
+6. If any missing points are present in the signals, a *nan* interpolation will be conducted as not to interfere with feature extraction.
 
 .. image:: ../img/circadian.png
 
@@ -131,7 +141,7 @@ for 30s. The average PSD estimate is also internally computed by the DBS system 
 Event Summary
 ^^^^^^^^^^^^^
 
-**However**, if chronic sensing is disabled (no *Timeline* button, but *Events* button is available) the user is still able to mark the events through the Medtronics Patient App.
+**However**, if chronic sensing is disabled (no *Timeline* button, but *Events* button is available) the user is still able to mark the patient events through the Medtronic's™ Patient App.
 
 Through the same button, the timestamps of the marked events are displayed. 
 

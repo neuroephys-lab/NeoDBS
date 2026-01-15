@@ -55,9 +55,10 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">2. At-Home Data</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#timeline">2.1. Timeline</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#outlier-removal">2.1.1. Outlier Removal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#event-locked-analysis">2.1.2. Event-locked Analysis</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#circadian-rhythm">2.1.3. Circadian Rhythm</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#stimulation">2.1.4. Stimulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#missing-points">2.1.2. Missing Points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#event-locked-analysis">2.1.3. Event-locked Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#circadian-rhythm">2.1.4. Circadian Rhythm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stimulation">2.1.5. Stimulation</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#events">2.2. Events</a><ul>
@@ -161,25 +162,35 @@ configuration of each file selected, is organized under the correspondant header
 <img alt="../_images/timeline_comb.png" src="../_images/timeline_comb.png" />
 <section id="outlier-removal">
 <h3><span class="section-number">2.1.1. </span>Outlier Removal<a class="headerlink" href="#outlier-removal" title="Link to this heading">¶</a></h3>
-<p>Because this a signal acquired with a <strong>very low resolution</strong>, it is very important to be careful when
-infering conclusions from this signals. NeoDBS offers an <strong>outlier removal filter</strong>, based on the root mean square (RMS)
+<p><em>Timeline</em> is a chronic recording mode that stores an averaged power of a 5 Hz band, every 10 minutes. Although these
+are unique recording capacities, the system still presents some fragilities. It is very prone to missing points and to
+<strong>outlier values</strong>. NeoDBS offers an <strong>outlier removal filter</strong>, based on the root mean square (RMS)
 of each signal (per channel-day) and also allows the user to see moments where there are <strong>missing points</strong>. <strong>Extracted
 features can be recalculated</strong> as many times needed to allow the user to extract the metrics to the filtered signal.</p>
-<p>To apply the outlier removal, the user must select the factor value. This factor is multiplied to the computed RMS
-to define the value of the threshold. If the LFP value is above the threshold it is considered an outlier and replaced
-by the RMS.</p>
-<img alt="../_images/timeline_features.png" src="../_images/timeline_features.png" />
+<p>The user selects a threshold factor to control outlier removal, that is calculated as:
+<em>threshold = factor × RMS</em>
+Any LFP value above this threshold is treated as an outlier and replaced by the RMS value.</p>
 <ol class="arabic simple">
 <li><p>Select the threshold value, by sliding the <strong>&quot;Remove Outlier&quot;</strong> item. User can readjust threshold as many times needed.</p></li>
 <li><p>The filtered signals will update the main plot.</p></li>
 <li><p>If the user wants to recalculate timeline metrics, press <strong>&quot;Recalculate Metrics&quot;</strong>.</p></li>
+</ol>
+<img alt="../_images/timeline_features.png" src="../_images/timeline_features.png" />
+</section>
+<section id="missing-points">
+<h3><span class="section-number">2.1.2. </span>Missing Points<a class="headerlink" href="#missing-points" title="Link to this heading">¶</a></h3>
+<p>As mentioned previously, <em>Timeline</em> recording mode is very prone to have missing points, due to its continuous configuration and low resolution.
+NeoDBS automatically identifies if there any missing points in the available signals and it is signaled in the respective tab (see image above).
+The missing points are computed as interpolation of the mean value between the bounding present points.</p>
+<ol class="arabic simple">
 <li><p>To see missing points from recordings, toggle checkbox <strong>&quot;Show missing points&quot;</strong>.</p></li>
+<li><p>For future analyzis with the <em>Timeline</em> signals, the missing points are not considered.</p></li>
 </ol>
 </section>
 <section id="event-locked-analysis">
-<span id="elat"></span><h3><span class="section-number">2.1.2. </span>Event-locked Analysis<a class="headerlink" href="#event-locked-analysis" title="Link to this heading">¶</a></h3>
-<p>When using the <strong>Combined</strong> window, the user has the possibility to epoch all the events marked by the user at-home,
-allowing an automatic event-locked analysis of the chronic recordings. The segments are centered around the marked event, with 1h-interval before and after the event.</p>
+<span id="elat"></span><h3><span class="section-number">2.1.3. </span>Event-locked Analysis<a class="headerlink" href="#event-locked-analysis" title="Link to this heading">¶</a></h3>
+<p>When using the <strong>Combined</strong> window, the user has the possibility to epoch all the events marked by the user at-home (<strong>patient events</strong>),
+allowing an automatic event-locked analysis of the chronic recordings. The segments are centered around the patient event, with 1h-interval before and after the event.</p>
 <ol class="arabic simple">
 <li><p>Press <strong>&quot;Analyze Events&quot;</strong>.</p></li>
 <li><p>A new plot will appear, under a new child tab (<em>Timeline Events</em>), with the automatically segmented signals, centered around the marked event.</p></li>
@@ -189,7 +200,7 @@ allowing an automatic event-locked analysis of the chronic recordings. The segme
 <img alt="../_images/timeline_events.png" src="../_images/timeline_events.png" />
 </section>
 <section id="circadian-rhythm">
-<h3><span class="section-number">2.1.3. </span>Circadian Rhythm<a class="headerlink" href="#circadian-rhythm" title="Link to this heading">¶</a></h3>
+<h3><span class="section-number">2.1.4. </span>Circadian Rhythm<a class="headerlink" href="#circadian-rhythm" title="Link to this heading">¶</a></h3>
 <p>From the <em>Timeline</em> recordings, NeoDBS computes the <strong>circadian rhythm</strong> by aligning all recordings by their time component.
 The respective mean and standard deviation are calculated and ploted, according to the selected signals.</p>
 <ol class="arabic simple">
@@ -198,11 +209,12 @@ The respective mean and standard deviation are calculated and ploted, according 
 <li><p>Mean circadian metrics are automatically extracted.</p></li>
 <li><p>Mean, and standard deviation, are recalculated with signal toggling, reploted and metrics are recalculated.</p></li>
 <li><p>To hide the individual signals, and only show mean and standard deviation, press <em>&quot;Hide days&quot;</em>.</p></li>
+<li><p>If any missing points are present in the signals, a <em>nan</em> interpolation will be conducted as not to interfere with feature extraction.</p></li>
 </ol>
 <img alt="../_images/circadian.png" src="../_images/circadian.png" />
 </section>
 <section id="stimulation">
-<h3><span class="section-number">2.1.4. </span>Stimulation<a class="headerlink" href="#stimulation" title="Link to this heading">¶</a></h3>
+<h3><span class="section-number">2.1.5. </span>Stimulation<a class="headerlink" href="#stimulation" title="Link to this heading">¶</a></h3>
 <p>Stimulation current amplitude levels throughout the days can be accessed in the <em>Timeline</em> tab, under the header <em>Signal Analysis</em>.
 Information about the stimulation electrodes and current is tabled per day, and also presented in a graph. This information
 can be very helpful for adaptive stimulation cases or to check configuration changes made by user, such as turning off the stimulation due to discomfort/symptom worsening.</p>
@@ -231,7 +243,7 @@ for 30s. The average PSD estimate is also internally computed by the DBS system 
 </ol>
 <section id="event-summary">
 <h3><span class="section-number">2.2.1. </span>Event Summary<a class="headerlink" href="#event-summary" title="Link to this heading">¶</a></h3>
-<p><strong>However</strong>, if chronic sensing is disabled (no <em>Timeline</em> button, but <em>Events</em> button is available) the user is still able to mark the events through the Medtronics Patient App.</p>
+<p><strong>However</strong>, if chronic sensing is disabled (no <em>Timeline</em> button, but <em>Events</em> button is available) the user is still able to mark the patient events through the Medtronic's™ Patient App.</p>
 <p>Through the same button, the timestamps of the marked events are displayed.</p>
 <img alt="../_images/event_summary.png" src="../_images/event_summary.png" />
 <ol class="arabic simple">

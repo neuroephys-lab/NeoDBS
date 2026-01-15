@@ -54,21 +54,22 @@
 <li class="toctree-l1"><a class="reference internal" href="td.html">1. In-Clinic Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chronic.html">2. At-Home Data</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">3. Signal Analysis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#psd-estimation">3.1. PSD Estimation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#band-power-over-time">3.1.1. Band Power Over Time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#spectral-band-analysis">3.1. Spectral Band Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#psd-estimation">3.2. PSD Estimation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#band-power-over-time">3.2.1. Band Power Over Time</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#coherence">3.2. Coherence</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#time-frequency-domain-representation">3.3. Time-Frequency Domain Representation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#bpot">3.3.1. Band Power Over Time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coherence">3.3. Coherence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#time-frequency-domain-representation">3.4. Time-Frequency Domain Representation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bpot">3.4.1. Band Power Over Time</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#coherogram">3.4. Coherogram</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#band-coherence-over-time">3.4.1. Band Coherence Over Time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coherogram">3.5. Coherogram</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#band-coherence-over-time">3.5.1. Band Coherence Over Time</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#phase-amplitude-coupling">3.5. Phase-Amplitude Coupling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#cross-correlation">3.6. Cross-Correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#phase-amplitude-coupling">3.6. Phase-Amplitude Coupling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cross-correlation">3.7. Cross-Correlation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="extra.html">4. Extra Features</a></li>
@@ -124,7 +125,7 @@ access the customizable methods, access <strong>&quot;Customizable Signal Analys
 <p>NeoDBS offers the following signal analysis tools for time-domain signals, both on the <strong>default</strong> and <strong>customizable</strong> pipelines:</p>
 <ul class="simple">
 <li><dl class="simple">
-<dt>Power Spectral Density (PSD) Estimation</dt><dd><ul>
+<dt><strong>Power Spectral Density (PSD) Estimation</strong></dt><dd><ul>
 <li><p>Periodogram</p></li>
 <li><p>Welch PSD</p></li>
 <li><p>DPSS Multitaper</p></li>
@@ -133,26 +134,39 @@ access the customizable methods, access <strong>&quot;Customizable Signal Analys
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Coherence</dt><dd><ul>
+<dt><strong>Coherence</strong></dt><dd><ul>
 <li><p>Welch Coherence</p></li>
 <li><p>Multitaper Coherence</p></li>
 </ul>
 </dd>
 </dl>
 </li>
-<li><p>Cross-Correlation</p></li>
-<li><p>Spectrogram</p></li>
-<li><p>Wavelet</p></li>
-<li><p>Coherogram</p></li>
-<li><p>Phase-Amplitude Coupling</p></li>
+<li><p><strong>Cross-Correlation</strong></p></li>
+<li><p><strong>Spectrogram</strong></p></li>
+<li><p><strong>Wavelet</strong></p></li>
+<li><p><strong>Coherogram</strong></p></li>
+<li><p><strong>Phase-Amplitude Coupling</strong></p></li>
 </ul>
-<p>Additionally, to further enhance spectral analysis, the user can add more frequency bands to be included in the analysis.
-The minimum interval for the frequency band is 2 Hz and can be added using the following buttons:</p>
-<img alt="../_images/bands.png" src="../_images/bands.png" />
+<section id="spectral-band-analysis">
+<h2><span class="section-number">3.1. </span>Spectral Band Analysis<a class="headerlink" href="#spectral-band-analysis" title="Link to this heading">¶</a></h2>
+<p>Signal processing and analysis relies heavily on the study of the spectral component of the signal. Beyond the
+classic frequency bands of neural signals, researchers also have a need to study how specific and unique frequency bands behave.</p>
 <p>The default bands are: Delta (0.1-4 Hz), Theta (4-8 Hz), Alpha (8-12 Hz), Beta (12-30 Hz) and Gamma (30-100 Hz).</p>
+<p>To further enhance spectral analysis, the user can add more frequency bands to be included in the analysis.
+The minimum interval for the frequency band is 2 Hz and can be added using the following buttons:</p>
+<ol class="arabic simple">
+<li><p>In the respective recording mode tab, open the collapsing header named &quot;Signal Analysis&quot;.</p></li>
+<li><p>Fill in the respective input spaces for the bounding values of the new frequency band.</p></li>
+<li><p>Press &quot;Insert Band of Interest&quot;, to add the new band.</p></li>
+<li><p>The added band will be included in future spectral analysis inside the respective tab.</p></li>
+<li><p>The user can add multiple bands.</p></li>
+<li><p>To reset to the default bands, press &quot;Reset Bands&quot;.</p></li>
+</ol>
+<img alt="../_images/band.png" src="../_images/band.png" />
+</section>
 <section id="psd-estimation">
-<h2><span class="section-number">3.1. </span>PSD Estimation<a class="headerlink" href="#psd-estimation" title="Link to this heading">¶</a></h2>
-<p>Analyzing the frequency component of signals is a very important tool when researching brain activity and
+<h2><span class="section-number">3.2. </span>PSD Estimation<a class="headerlink" href="#psd-estimation" title="Link to this heading">¶</a></h2>
+<p>Analyzing the frequency component of signals is a very important tool when researching brain activity for
 biomarkers and neural signatures. Brain activity is characterized by rhythmic oscillations, whether in
 several important processes, like sleep, or by communicating within different regions and neural populations.
 It is crutial to look at how the energy of these oscillations changes in different moments.
@@ -175,9 +189,9 @@ be beneficial to different tasks or research goals. You can find a more detailed
 <li><p>Plots, signals and tables can be easily exported.</p></li>
 </ol>
 <section id="band-power-over-time">
-<h3><span class="section-number">3.1.1. </span>Band Power Over Time<a class="headerlink" href="#band-power-over-time" title="Link to this heading">¶</a></h3>
-<p>When more than one recording from the same-channel is present when employing the PSD method, the user can see how the mean
-power of each frequency band changes over time.</p>
+<h3><span class="section-number">3.2.1. </span>Band Power Over Time<a class="headerlink" href="#band-power-over-time" title="Link to this heading">¶</a></h3>
+<p>When more than one recording from the same channel is present (when employing the PSD method), the user can see how the <strong>mean
+power of each frequency band changes over time</strong>.</p>
 <img alt="../_images/smpot.png" src="../_images/smpot.png" />
 <ol class="arabic simple">
 <li><p>Press <strong>&quot;Show Mean Power Across Time&quot;</strong>.</p></li>
@@ -198,7 +212,7 @@ power of each frequency band changes over time.</p>
 </section>
 </section>
 <section id="coherence">
-<h2><span class="section-number">3.2. </span>Coherence<a class="headerlink" href="#coherence" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">3.3. </span>Coherence<a class="headerlink" href="#coherence" title="Link to this heading">¶</a></h2>
 <p>Coherence is a tool that analyzes the synchrony between two signals, serving tipically to study functional connectivity between regions and populations.
 Coherence values ranges from 0 to 1, with 0 meaning no linear relationship at the frequency and 1 representing
 perfect linear coupling.</p>
@@ -219,7 +233,7 @@ perfect linear coupling.</p>
 </ol>
 </section>
 <section id="time-frequency-domain-representation">
-<h2><span class="section-number">3.3. </span>Time-Frequency Domain Representation<a class="headerlink" href="#time-frequency-domain-representation" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">3.4. </span>Time-Frequency Domain Representation<a class="headerlink" href="#time-frequency-domain-representation" title="Link to this heading">¶</a></h2>
 <p>To compute Time-Frequency Domain (TFD) representation, NeoDBS is able to compute the <strong>Welch Spetrogram</strong> or <strong>Wavelet</strong>, available on both default and customizable pipelines.</p>
 <img alt="../_images/spec_wav.png" src="../_images/spec_wav.png" />
 <p>In the <strong>Individual</strong> window, it allows for spectrograms to be
@@ -253,27 +267,27 @@ figure below we can see the example of the spectrogram being computed on an Indi
 <li><p>Exportation is facilitated in the respective buttons.</p></li>
 </ol>
 <section id="bpot">
-<span id="id1"></span><h3><span class="section-number">3.3.1. </span>Band Power Over Time<a class="headerlink" href="#bpot" title="Link to this heading">¶</a></h3>
+<span id="id1"></span><h3><span class="section-number">3.4.1. </span>Band Power Over Time<a class="headerlink" href="#bpot" title="Link to this heading">¶</a></h3>
 <p>By pressing the <strong>&quot;Band Power Over Time&quot;</strong> button, the mean power of each frequency band will be extracted and plotted per recording.</p>
 <img alt="../_images/bpot.png" src="../_images/bpot.png" />
 </section>
 </section>
 <section id="coherogram">
-<span id="id2"></span><h2><span class="section-number">3.4. </span>Coherogram<a class="headerlink" href="#coherogram" title="Link to this heading">¶</a></h2>
+<span id="id2"></span><h2><span class="section-number">3.5. </span>Coherogram<a class="headerlink" href="#coherogram" title="Link to this heading">¶</a></h2>
 <p>When selecting the <strong>Multitaper Coherence</strong>, user may also compute the coherogram, by pressing <strong>&quot;Plot Coherogram&quot;</strong>.
 Exportation of all signals, plot and tables is facilitated by the respective buttons.</p>
 <p>This a very useful tool that allows to check how coherence between signals and frequencies change over time. However,
 coherogram does not mark inserted events as spectrogram does.</p>
 <img alt="../_images/coherogram.png" src="../_images/coherogram.png" />
 <section id="band-coherence-over-time">
-<h3><span class="section-number">3.4.1. </span>Band Coherence Over Time<a class="headerlink" href="#band-coherence-over-time" title="Link to this heading">¶</a></h3>
+<h3><span class="section-number">3.5.1. </span>Band Coherence Over Time<a class="headerlink" href="#band-coherence-over-time" title="Link to this heading">¶</a></h3>
 <p>Additionally, band coherence over time is also computed automatically, in simultaneous with the coherogram. It can be
 accessed under the collapsing header <strong>&quot;Coherence over time&quot;</strong>. Exportation is also facilitated.</p>
 <img alt="../_images/coh_ot.png" src="../_images/coh_ot.png" />
 </section>
 </section>
 <section id="phase-amplitude-coupling">
-<h2><span class="section-number">3.5. </span>Phase-Amplitude Coupling<a class="headerlink" href="#phase-amplitude-coupling" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">3.6. </span>Phase-Amplitude Coupling<a class="headerlink" href="#phase-amplitude-coupling" title="Link to this heading">¶</a></h2>
 <p>Phase-Amplitude Coupling (PAC) is a cross-frequency coupling that allows to observe modulations, or coordination, between the phase of a signal with the amplitude of the second signal.
 It is typically used to analyze the modulation between low-frequency phases and high-frequency amplitudes, reflecting interactions across different time scales (band frequencies) and spatial locations.
 To quantify the degree of coupling, the Modulation Index (MI) proposed by Tort et al. for PAC analysis of neuronal signals was calculated. MI is calculated as the normalized difference between the maximum possible entropy and the
@@ -298,7 +312,7 @@ observed entropy, with <strong>0</strong> corresponding to <strong>no coupling</
 </ol>
 </section>
 <section id="cross-correlation">
-<h2><span class="section-number">3.6. </span>Cross-Correlation<a class="headerlink" href="#cross-correlation" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">3.7. </span>Cross-Correlation<a class="headerlink" href="#cross-correlation" title="Link to this heading">¶</a></h2>
 <p>Cross-correlation (CC) is a powerful tool that can reveal synchrony or coupling between two different signals across time. It is typically used to study functional connectivity across different
 brain locations. It is a normalized dimensionless metric, with <strong>0</strong> corresponding to <strong>no correlation</strong> between signals and <strong>1</strong> representing <strong>maximum correlation</strong>.</p>
 <p>Half Max (HM) correlation and width (HMW) enables the investigation of the spread and periodicity of the correlation. HMW is calculated through

@@ -7,8 +7,6 @@ import re
 
 def info_electrodes(data,version='Initial',side=0):
     '''
-    Inês Pereira - up202107421@edu.fe.up.pt
-
     Return information of the active electrodes from TIMELINE mode
     side 0 - Left
     side 1 - Right
@@ -713,8 +711,6 @@ def getImpedance(Data):
 
 def MissingTimeline(data,side):
     '''
-    Inês Pereira (up202107421)
-
     Checks missing points in timeline (missing point: when difference between points is >= than 11 minutes) and returns a new corrected timeline dict, correcting missing LFP values through mean interpolation.
     
     new_dic = {

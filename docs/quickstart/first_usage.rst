@@ -6,6 +6,7 @@ First Usage
 
 NeoDBS is a platform designed for maximal user-experience, with every item and functionality optimized for 
 easy data analysis and natural workflow. *Even for unexperienced users in signal processing and analysis.*
+
 With this, NeoDBS was developed to allow **several workspaces open symultaneously**. For that, the user can 
 open multiple windows, each one corresponding to an independent workspace. Just like a browser.
 
@@ -41,17 +42,18 @@ Individual Window
 The **Individual** window goal is to analyze a single recording session, focusing on the evolution of signals and 
 events inside the same session. Therefore it includes functionalities like:
 
-* **Event marking** in time-domain signals, and their time-frequency domain methods, according to user input;
-* Compute **joined time-frequency domain** methods in same-channel recordings;
+* **In-clinic event marking** in time-domain signals, and their time-frequency domain methods, according to user input;
+* Compute **merged time-frequency domain** methods in same-channel recordings;
 
 These are exclusive to this workspace, in order to enhance computing power and hetereogeneity in workspaces.
 
 Combined Window
 ^^^^^^^^^^^^^^^
 Unlike the individual window, the **Combined** window allows the selection of multiple files, focusing therefore on 
-the evolution of the signals across different recording sessions. Additionally, it includes functionalities such as:
+the evolution of the signals across different recording sessions and to analyze the average features of all selected sessions. 
+Additionally, it includes functionalities such as:
 
-* **Event-locked segmentation**, automatically epoching recordings according to user input.
+* **In-clinic and Patient event-locked segmentation**, automatically epoching recordings according to available events.
 
 These functionalities are further explained in :ref:`here <ela>`.
 
@@ -60,7 +62,7 @@ If you're wondering what is the best window to use, here's a summary of the func
 +------------------------------------+---------------------+--------------------+
 | Feature                            | Individual Analysis | Combined Analysis  |
 +====================================+=====================+====================+
-| File Ingestion                     | Single file         | Multiple files     |
+| File Ingestion                     | **Single** file     | **Multiple** files |
 +------------------------------------+---------------------+--------------------+
 | Metadata display                   | |check|             | |check|            |
 +------------------------------------+---------------------+--------------------+
@@ -69,15 +71,15 @@ If you're wondering what is the best window to use, here's a summary of the func
 | Default/Customizable Spectral      | |check|             | |check|            |
 | Analysis                           |                     |                    |
 +------------------------------------+---------------------+--------------------+
-| Event Annotation                   | |check|             | X                  |
+| In-Clinic Event Annotation         | |check|             | |check|            |
 +------------------------------------+---------------------+--------------------+
-| Automatic Event-locked Segmentation| |check|             | |check|            |
+| Patient Event-locked Segmentation  | **X**               | |check|            |
 +------------------------------------+---------------------+--------------------+
-| Merged Same-Channel Recordings     | |check|             | X                  |
+| Merged Same-Channel Recordings     | |check|             | |check|            |
 +------------------------------------+---------------------+--------------------+
-| Manual Segmentation                | X                   | |check|            |
+| Manual Segmentation                | |check|             | |check|            |
 +------------------------------------+---------------------+--------------------+
-| Before/After Event Analysis        | X                   | |check|            |
+| Before/After Event Analysis        | |check|             | |check|            |
 +------------------------------------+---------------------+--------------------+
 
 .. |check| unicode:: U+2713 .. CHECK MARK
@@ -95,26 +97,25 @@ Two main types of recordings can be identified: recordings made **In-Clinic** or
 In-Clinic Data
 ^^^^^^^^^^^^^^
 
-**In-Clinic** recordings are acquired in the presence of the physician and are primarily used to configure electrodes, assess electrode integrity, identify artifacts, 
+**In-Clinic** (*BrainSense™ Streaming, Indefinite Streaming, Survey and Setup*) recordings are acquired in the presence of the physician and are primarily used to configure electrodes, assess electrode integrity, identify artifacts, 
 and analyze the patient's neural activity with or without active stimulation therapy. These recordings are stored in the session file in their **raw format as time-domain signals**.
 
 .. image:: ../img/in-clinic.png
 
 Because the underlying neural signals are preserved, both **time-domain and spectral analyses** can be applied to extract relevant metrics and features for therapy optimization.
 
-After reviewing how the :ref:`NeoDBS workflow <general>` operates, a simple :ref:`tutorial <ICD>` is available to guide the analysis of this type of recording.
+After reviewing how the :ref:`NeoDBS workflow <general>` operates, a simple :ref:`tutorial <ICD>` is available to guide the analysis of this type of recordings.
 
 At Home Data
 ^^^^^^^^^^^^
 
-**At-Home** recordings are available when chronic sensing has been enabled by the physician and allow long-term (24/7) monitoring of the patient's 
-neural activity under real-world conditions. These recordings follow specific constraints imposed by the device and are stored in the session file 
-in **derived formats** rather than as raw signals.
+**At-Home** (*BrainSense™ Timeline and Events*), recordings are available when chronic sensing has been enabled by the physician and allow long-term (24/7) monitoring of the patient's 
+neural activity under real-world conditions. These recordings are stored in the session file as **processed signals** rather than as raw signals.
 
 .. image:: ../img/at-home.png
 
-Specifically, at-home recordings are stored either as **frequency-domain representations** (BrainSense™ Events) or as 
-**band-power time-series signals** (BrainSense™ Timeline). Because the raw time-domain LFP is not available, **primary 
+Specifically, at-home recordings are stored either as **frequency-domain representations** (*BrainSense™ Events*) or as 
+**band-power time-series signals** (*BrainSense™ Timeline*). Because the raw time-domain LFP is not available, **primary 
 spectral analyses cannot be performed**. Instead, metrics are directly extracted using analysis methods appropriate 
 for frequency-domain data or for ultra-slow temporal modulation of band-limited power.
 

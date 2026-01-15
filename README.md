@@ -1,6 +1,17 @@
 # NeoDBS
 
-## 10.01.2026
+## 15.01.2026
+
+### New:
+- Insert/Align (external) events: txt file also accepts date
+    - confirms that theres a real date, not buffer, and checks with the string to minimize verify idx if its not correspondant to the session
+    - accepts both with or withou date (day/month/year)
+
+### Debug:
+- remove outlier timeline: was trying to extract features from marked events. tags are verified for being str (tag format of add line series)
+
+
+## 14.01.2026
 
 ### New:
 - Menu for directories:

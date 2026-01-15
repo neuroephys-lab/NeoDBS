@@ -70,7 +70,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/features.html">3. Signal Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/extra.html">4. Extra Features</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Modules (Functions)</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
@@ -105,8 +105,8 @@
   <section id="first-usage">
 <h1>First Usage<a class="headerlink" href="#first-usage" title="Link to this heading">¶</a></h1>
 <p>NeoDBS is a platform designed for maximal user-experience, with every item and functionality optimized for
-easy data analysis and natural workflow. <em>Even for unexperienced users in signal processing and analysis.</em>
-With this, NeoDBS was developed to allow <strong>several workspaces open symultaneously</strong>. For that, the user can
+easy data analysis and natural workflow. <em>Even for unexperienced users in signal processing and analysis.</em></p>
+<p>With this, NeoDBS was developed to allow <strong>several workspaces open symultaneously</strong>. For that, the user can
 open multiple windows, each one corresponding to an independent workspace. Just like a browser.</p>
 <p>Inside each window (or workspace), all the mentioned data is organized and accessed in a hierarchical order:</p>
 <ul class="simple">
@@ -130,17 +130,18 @@ Additionally, NeoDBS offers two different types of workspaces (windows). The <st
 <p>The <strong>Individual</strong> window goal is to analyze a single recording session, focusing on the evolution of signals and
 events inside the same session. Therefore it includes functionalities like:</p>
 <ul class="simple">
-<li><p><strong>Event marking</strong> in time-domain signals, and their time-frequency domain methods, according to user input;</p></li>
-<li><p>Compute <strong>joined time-frequency domain</strong> methods in same-channel recordings;</p></li>
+<li><p><strong>In-clinic event marking</strong> in time-domain signals, and their time-frequency domain methods, according to user input;</p></li>
+<li><p>Compute <strong>merged time-frequency domain</strong> methods in same-channel recordings;</p></li>
 </ul>
 <p>These are exclusive to this workspace, in order to enhance computing power and hetereogeneity in workspaces.</p>
 </section>
 <section id="combined-window">
 <h3>Combined Window<a class="headerlink" href="#combined-window" title="Link to this heading">¶</a></h3>
 <p>Unlike the individual window, the <strong>Combined</strong> window allows the selection of multiple files, focusing therefore on
-the evolution of the signals across different recording sessions. Additionally, it includes functionalities such as:</p>
+the evolution of the signals across different recording sessions and to analyze the average features of all selected sessions.
+Additionally, it includes functionalities such as:</p>
 <ul class="simple">
-<li><p><strong>Event-locked segmentation</strong>, automatically epoching recordings according to user input.</p></li>
+<li><p><strong>In-clinic and Patient event-locked segmentation</strong>, automatically epoching recordings according to available events.</p></li>
 </ul>
 <p>These functionalities are further explained in <a class="reference internal" href="../tutorials/td.html#ela"><span class="std std-ref">here</span></a>.</p>
 <p>If you're wondering what is the best window to use, here's a summary of the functionalities present in each type of window.</p>
@@ -153,8 +154,8 @@ the evolution of the signals across different recording sessions. Additionally, 
 </thead>
 <tbody>
 <tr class="row-even"><td><p>File Ingestion</p></td>
-<td><p>Single file</p></td>
-<td><p>Multiple files</p></td>
+<td><p><strong>Single</strong> file</p></td>
+<td><p><strong>Multiple</strong> files</p></td>
 </tr>
 <tr class="row-odd"><td><p>Metadata display</p></td>
 <td><p>✓</p></td>
@@ -169,24 +170,24 @@ Analysis</p></td>
 <td><p>✓</p></td>
 <td><p>✓</p></td>
 </tr>
-<tr class="row-even"><td><p>Event Annotation</p></td>
+<tr class="row-even"><td><p>In-Clinic Event Annotation</p></td>
 <td><p>✓</p></td>
-<td><p>X</p></td>
+<td><p>✓</p></td>
 </tr>
-<tr class="row-odd"><td><p>Automatic Event-locked Segmentation</p></td>
-<td><p>✓</p></td>
+<tr class="row-odd"><td><p>Patient Event-locked Segmentation</p></td>
+<td><p><strong>X</strong></p></td>
 <td><p>✓</p></td>
 </tr>
 <tr class="row-even"><td><p>Merged Same-Channel Recordings</p></td>
 <td><p>✓</p></td>
-<td><p>X</p></td>
+<td><p>✓</p></td>
 </tr>
 <tr class="row-odd"><td><p>Manual Segmentation</p></td>
-<td><p>X</p></td>
+<td><p>✓</p></td>
 <td><p>✓</p></td>
 </tr>
 <tr class="row-even"><td><p>Before/After Event Analysis</p></td>
-<td><p>X</p></td>
+<td><p>✓</p></td>
 <td><p>✓</p></td>
 </tr>
 </tbody>
@@ -202,20 +203,19 @@ see <a class="reference external" href="https://iopscience.iop.org/article/10.10
 Two main types of recordings can be identified: recordings made <strong>In-Clinic</strong> or <strong>At Home</strong>.</p>
 <section id="in-clinic-data">
 <h3>In-Clinic Data<a class="headerlink" href="#in-clinic-data" title="Link to this heading">¶</a></h3>
-<p><strong>In-Clinic</strong> recordings are acquired in the presence of the physician and are primarily used to configure electrodes, assess electrode integrity, identify artifacts,
+<p><strong>In-Clinic</strong> (<em>BrainSense™ Streaming, Indefinite Streaming, Survey and Setup</em>) recordings are acquired in the presence of the physician and are primarily used to configure electrodes, assess electrode integrity, identify artifacts,
 and analyze the patient's neural activity with or without active stimulation therapy. These recordings are stored in the session file in their <strong>raw format as time-domain signals</strong>.</p>
 <img alt="../_images/in-clinic.png" src="../_images/in-clinic.png" />
 <p>Because the underlying neural signals are preserved, both <strong>time-domain and spectral analyses</strong> can be applied to extract relevant metrics and features for therapy optimization.</p>
-<p>After reviewing how the <a class="reference internal" href="#general"><span class="std std-ref">NeoDBS workflow</span></a> operates, a simple <a class="reference internal" href="../tutorials/td.html#icd"><span class="std std-ref">tutorial</span></a> is available to guide the analysis of this type of recording.</p>
+<p>After reviewing how the <a class="reference internal" href="#general"><span class="std std-ref">NeoDBS workflow</span></a> operates, a simple <a class="reference internal" href="../tutorials/td.html#icd"><span class="std std-ref">tutorial</span></a> is available to guide the analysis of this type of recordings.</p>
 </section>
 <section id="at-home-data">
 <h3>At Home Data<a class="headerlink" href="#at-home-data" title="Link to this heading">¶</a></h3>
-<p><strong>At-Home</strong> recordings are available when chronic sensing has been enabled by the physician and allow long-term (24/7) monitoring of the patient's
-neural activity under real-world conditions. These recordings follow specific constraints imposed by the device and are stored in the session file
-in <strong>derived formats</strong> rather than as raw signals.</p>
+<p><strong>At-Home</strong> (<em>BrainSense™ Timeline and Events</em>), recordings are available when chronic sensing has been enabled by the physician and allow long-term (24/7) monitoring of the patient's
+neural activity under real-world conditions. These recordings are stored in the session file as <strong>processed signals</strong> rather than as raw signals.</p>
 <img alt="../_images/at-home.png" src="../_images/at-home.png" />
-<p>Specifically, at-home recordings are stored either as <strong>frequency-domain representations</strong> (BrainSense™ Events) or as
-<strong>band-power time-series signals</strong> (BrainSense™ Timeline). Because the raw time-domain LFP is not available, <strong>primary
+<p>Specifically, at-home recordings are stored either as <strong>frequency-domain representations</strong> (<em>BrainSense™ Events</em>) or as
+<strong>band-power time-series signals</strong> (<em>BrainSense™ Timeline</em>). Because the raw time-domain LFP is not available, <strong>primary
 spectral analyses cannot be performed</strong>. Instead, metrics are directly extracted using analysis methods appropriate
 for frequency-domain data or for ultra-slow temporal modulation of band-limited power.</p>
 <p>After reviewing how the <a class="reference internal" href="#general"><span class="std std-ref">NeoDBS workflow</span></a> operates, a simple <a class="reference internal" href="../tutorials/chronic.html#ahd"><span class="std std-ref">tutorial</span></a> is available to guide the analysis of this type of recording.</p>

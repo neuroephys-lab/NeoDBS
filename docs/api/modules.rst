@@ -4,4 +4,9 @@ neodbs
 .. toctree::
    :maxdepth: 4
 
-   neodbs
+   DataHandling
+   Features
+   GUI
+   Preprocessing
+   temp
+   utils

@@ -59,8 +59,8 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#segmentation">1.2. Segmentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#event-locked-analysis">1.3. Event-locked Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#signal-analysis">1.4. Signal Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#impedance">1.5. Impedance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#impedance">1.4. Impedance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#signal-analysis">1.5. Signal Analysis</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="chronic.html">2. At-Home Data</a></li>
@@ -170,7 +170,7 @@ If you want to restore the original signals, the user must close and reopen the 
 <section id="default-filter">
 <h3><span class="section-number">1.1.1. </span>Default Filter<a class="headerlink" href="#default-filter" title="Link to this heading">¶</a></h3>
 <p>For more non-experienced users, NeoDBS offers a <strong>Default Filter</strong> that removes cardiac component and
-maintains only the desired frequencies, selected in the respective input spaces. This method was developed
+maintains only the desired frequencies, selected in the respective input spaces. This method was adapted
 from UF BRAVO's Platform (<a class="reference external" href="https://github.com/Fixel-Institute/BRAVO">https://github.com/Fixel-Institute/BRAVO</a>). This filter performs a 5th order Butterworth
 Bandpass filter with cardiac artifact removal.</p>
 <ol class="arabic simple">
@@ -206,13 +206,21 @@ Bandpass filter with cardiac artifact removal.</p>
 </section>
 <section id="event-locked-analysis">
 <span id="ela"></span><h2><span class="section-number">1.3. </span>Event-locked Analysis<a class="headerlink" href="#event-locked-analysis" title="Link to this heading">¶</a></h2>
-<p>NeoDBS offers two type of event-locked analysis. To load the platform with the events, the user must select a .txt file with the described events.
-The .txt file must be with the following structure: HH:MM:SS, name of event.</p>
+<p>NeoDBS offers the possibility of analyzing in-clinic events that were recorded during the recording session.
+The user can either <strong>mark</strong> or <strong>segment</strong> the in-clinic events by uploading a .txt file with the described in-clinic events.
+This a functionality made to improve analyzing in-clinic tasks, such as protocols.</p>
+<p>If working with the <strong>Individual</strong> window, NeoDBS will <strong>mark</strong> the in-clinic events in the main plot of the recordings.
+If working with the <strong>Combined</strong> window, NeoDBS will <strong>segment</strong> the in-clinic events, replacing the raw signals. The user can
+also select the duration of the segment.</p>
+<p>To load the platform with the events, the user must select a .txt file with the described in-clinic events.
+The .txt file <strong>must be with ONE of the following structures</strong>:</p>
+<ul class="simple">
+<li><p>HH:MM:SS, name of event</p></li>
+<li><p>HH:MM, name of event</p></li>
+<li><p>DD/MM/YY HH:MM:SS, name of event</p></li>
+<li><p>DD/MM/YY HH:MM, name of event</p></li>
+</ul>
 <img alt="../_images/txtevent.png" src="../_images/txtevent.png" />
-<p>If the user is working in an <strong>Individual Window</strong>, the user can only mark the event timestamp, which will
-appear in the main plot and all time-spectral analysis that the user computes posteriorly. If the user is
-working in a <strong>Combined Window</strong>, the recordings will be segmented with the event centered. The user can
-select the <strong>duration of the epoch</strong>, by defining the time <strong>before and after the event</strong>.</p>
 <ol class="arabic simple">
 <li><p>Press <strong>&quot;Insert Events&quot;</strong>, in the <em>Individual Window</em>, or <strong>&quot;Analyze Streaming Events&quot;</strong>, in <em>Combined Window</em>, <strong>after selecting the interval prior and after the event</strong>.</p></li>
 <li><p>Select <em>.txt</em> file with the described events.</p></li>
@@ -224,13 +232,8 @@ select the <strong>duration of the epoch</strong>, by defining the time <strong>
 has been emplyed, no more segmentation or events can be added.</p>
 <img alt="../_images/marked_events.png" src="../_images/marked_events.png" />
 </section>
-<section id="signal-analysis">
-<h2><span class="section-number">1.4. </span>Signal Analysis<a class="headerlink" href="#signal-analysis" title="Link to this heading">¶</a></h2>
-<p>Following the good practices of signal processing, only after properly preparing the signal of interest, the user can employ methods to perform
-spectral analysis. Tutorials to apply analysis methods can be found in the <a class="reference internal" href="features.html"><span class="doc">Signal Analysis</span></a> page.</p>
-</section>
 <section id="impedance">
-<h2><span class="section-number">1.5. </span>Impedance<a class="headerlink" href="#impedance" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">1.4. </span>Impedance<a class="headerlink" href="#impedance" title="Link to this heading">¶</a></h2>
 <p>If during the recording session any impedance test was performed, either with <em>Setup</em> or <em>Survey</em> modes, the impedance values can be accessed in an independent tab.</p>
 <ol class="arabic simple">
 <li><p>Press <strong>&quot;Impedance&quot;</strong> to open the impedance tab.</p></li>
@@ -244,6 +247,10 @@ spectral analysis. Tutorials to apply analysis methods can be found in the <a cl
 <ol class="arabic simple" start="4">
 <li><p>Both table and plot can easily be exported by the respective buttons.</p></li>
 </ol>
+</section>
+<section id="signal-analysis">
+<h2><span class="section-number">1.5. </span>Signal Analysis<a class="headerlink" href="#signal-analysis" title="Link to this heading">¶</a></h2>
+<p>Tutorials to apply analysis methods can be found in the <a class="reference internal" href="features.html"><span class="doc">Signal Analysis</span></a> page.</p>
 </section>
 </section>
 

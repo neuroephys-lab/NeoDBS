@@ -105,23 +105,6 @@ Additionally, the name of all rows can be customized.
 
 .. image:: ../img/table.png
 
-Spectral Band Analysis
-----------------------
-
-Signal processing and analysis relies heavily on the study of the spectral component of the signal. Beyond the 
-classic frequency bands of neural signals (Delta, Theta, Alpha, Beta and Gamma), researchers also have a need 
-to study how specific and unique frequency bands behave. Therefore, in NeoDBS, the user can add more bands to 
-be included in signal analysis and feature extraction. 
-
-1. In the respective recording mode tab, open the collapsing header named "Signal Analysis".
-2. Fill in the respective input spaces for the bounding values of the new frequency band.
-3. Press "Insert Band of Interest", to add the new band.
-4. The added band will be included in future spectral analysis inside the respective tab.
-5. The user can add multiple bands.
-6. To reset to the default bands, press "Reset Bands".
-
-.. image:: ../img/band.png
-
 Export
 ------
 
@@ -137,3 +120,16 @@ They can be **individually** exported, exported **by window** or **export all** 
     Because the supporting GUI library (DearPyGui) has no functionality to export plots, these are properly 
     converted into MatplotLib plots and saved into png files. The conversion is made to replicate as close as possible 
     the plot in NeoDBS. 
+
+Directories
+-----------
+
+To optimize your work and organization, you can select the directories from which you want to upload or save data with NeoDBS. This will set the root directory in 
+the platform, so it is easier and faster to access your recording sessions, input files and even where you want your exportations organized.
+
+.. image:: ../img/directory.png
+
+1. In the main window menu, click on **"Directories"**.
+2. To select the root directory of your recording session's files (JSON), press **"Recording Directory"**. 
+3. In the file dialog, select the folder from which you access your data of interest. After you see the name of the folder in the *Directory Path*, press **"OK"**.
+4. You can do the same for other inputs (such as text files for events) in **Events Directory** or for your outputs saved from NeoDBS in **"Save into... Directory"**.
