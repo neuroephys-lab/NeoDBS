@@ -53,7 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/features.html">3. Signal Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/extra.html">4. Extra Features</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Modules (Functions)</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
@@ -91,7 +91,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
 <div class="viewcode-block" id="find_key_path">
-<a class="viewcode-back" href="../api/neodbs.html#utils.find_key_path">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.find_key_path">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_key_path</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">target_key</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Recursively finds and prints the path of a key in a nested dictionary (including lists).</span>
@@ -122,7 +122,7 @@
 
 
 <div class="viewcode-block" id="string2numbers">
-<a class="viewcode-back" href="../api/neodbs.html#utils.string2numbers">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.string2numbers">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">string2numbers</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Converts string with numbers separated by &#39;,&#39; (TicksInMs) into a np.array. Example: &#39;1,2,3,,4,6,7&#39; --&gt; np.array([1,2,3,4,6,7])</span>
@@ -136,7 +136,7 @@
 
 
 <div class="viewcode-block" id="parse_path">
-<a class="viewcode-back" href="../api/neodbs.html#utils.parse_path">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.parse_path">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">parse_path</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Convert the string path into a list of keys and indices. Example: &#39;[key1][key2]&#39; --&gt; [key1,key2]</span>
@@ -161,7 +161,7 @@
 
 
 <div class="viewcode-block" id="convert_to_timestamp">
-<a class="viewcode-back" href="../api/neodbs.html#utils.convert_to_timestamp">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.convert_to_timestamp">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">convert_to_timestamp</span><span class="p">(</span><span class="n">date_input</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Converts date_input into timestamp.</span>
@@ -187,7 +187,7 @@
 
 
 <div class="viewcode-block" id="access_by_path">
-<a class="viewcode-back" href="../api/neodbs.html#utils.access_by_path">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.access_by_path">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">access_by_path</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">path_parts</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Access the dictionary by the provided list of keys/indices.</span>
@@ -203,7 +203,7 @@
 
 
 <div class="viewcode-block" id="after_point">
-<a class="viewcode-back" href="../api/neodbs.html#utils.after_point">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.after_point">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">after_point</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Extracts string after finding &#39;.&#39;</span>
@@ -221,7 +221,7 @@
 
     
 <div class="viewcode-block" id="after_underscore">
-<a class="viewcode-back" href="../api/neodbs.html#utils.after_underscore">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.after_underscore">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">after_underscore</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Extracts string after finding &#39;_&#39;</span>
@@ -239,7 +239,7 @@
 
 
 <div class="viewcode-block" id="parse_datetime">
-<a class="viewcode-back" href="../api/neodbs.html#utils.parse_datetime">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.parse_datetime">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">parse_datetime</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Converts string into datetime.datetime object.</span>
@@ -258,7 +258,7 @@
 
 
 <div class="viewcode-block" id="parse_time">
-<a class="viewcode-back" href="../api/neodbs.html#utils.parse_time">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.parse_time">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">parse_time</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
 <span class="w">     </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">     Converts time string into datetime.datetime object.</span>
@@ -272,7 +272,7 @@
 
 
 <div class="viewcode-block" id="find_closest_index">
-<a class="viewcode-back" href="../api/neodbs.html#utils.find_closest_index">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.find_closest_index">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_closest_index</span><span class="p">(</span><span class="n">new_time</span><span class="p">,</span> <span class="n">target_hour</span><span class="p">,</span> <span class="n">target_minute</span><span class="p">,</span> <span class="n">target_second</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Finds the index of the sample in new_time closest to the given hour and minute.</span>
@@ -298,7 +298,7 @@
 
 
 <div class="viewcode-block" id="read_lines">
-<a class="viewcode-back" href="../api/neodbs.html#utils.read_lines">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.read_lines">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_lines</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Converts txt file into dictionary, with firts line being key.</span>
@@ -323,7 +323,7 @@
 
 
 <div class="viewcode-block" id="read_event_file">
-<a class="viewcode-back" href="../api/neodbs.html#utils.read_event_file">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.read_event_file">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_event_file</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Reads a text file and returns a list of (hour, minute, second, event) tuples.</span>
@@ -372,7 +372,7 @@
 
 
 <div class="viewcode-block" id="get_timestamp_from_dt">
-<a class="viewcode-back" href="../api/neodbs.html#utils.get_timestamp_from_dt">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.get_timestamp_from_dt">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_timestamp_from_dt</span><span class="p">(</span><span class="n">dt_string</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Parses a datetime string and returns a timestamp of the time portion.</span>
@@ -391,7 +391,7 @@
 
 
 <div class="viewcode-block" id="extract_date">
-<a class="viewcode-back" href="../api/neodbs.html#utils.extract_date">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.extract_date">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">extract_date</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns only date-part in string, from datetime object.</span>
@@ -405,7 +405,7 @@
 
 
 <div class="viewcode-block" id="extract_time">
-<a class="viewcode-back" href="../api/neodbs.html#utils.extract_time">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.extract_time">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">extract_time</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Extracts and returns the time portion from a datetime object as a string (HH:MM:SS).</span>
@@ -419,7 +419,7 @@
 
 
 <div class="viewcode-block" id="full_date2str">
-<a class="viewcode-back" href="../api/neodbs.html#utils.full_date2str">[docs]</a>
+<a class="viewcode-back" href="../api/utils.html#utils.full_date2str">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">full_date2str</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Converts datetime object to full date string</span>

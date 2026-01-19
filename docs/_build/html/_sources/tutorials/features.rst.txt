@@ -11,7 +11,7 @@ with precision and certainty. However, for users with no background or knowledge
 signal processing, this task can turn out to be very difficult. 
 
 Therefore, NeoDBS took an effort in creating robust pipelines that can be used by every user, researcher or 
-physician, without any in-depth knowledge. To access these prepared methods, access **"Defaul Signal Analysis"**,
+physician, without any in-depth knowledge. To access these prepared methods, access **"Default Signal Analysis"**,
 under the header "Signal Analysis". 
 
 Nonetheless, signal analysis parameters can be fully customized to the researcher's needs. When customizing the parameters, 
@@ -61,7 +61,7 @@ PSD Estimation
 Analyzing the frequency component of signals is a very important tool when researching brain activity for 
 biomarkers and neural signatures. Brain activity is characterized by rhythmic oscillations, whether in 
 several important processes, like sleep, or by communicating within different regions and neural populations. 
-It is crutial to look at how the energy of these oscillations changes in different moments.
+It is crucial to look at how the energy of these oscillations changes in different moments.
 Using PSD estimation we can see how the power of each frequency differs. 
 
 The available PSD estimation methods present all the same information, with different time and spectral resolutions, which can 
@@ -108,9 +108,15 @@ power of each frequency band changes over time**.
 Coherence
 ---------
 
-Coherence is a tool that analyzes the synchrony between two signals, serving tipically to study functional connectivity between regions and populations.
-Coherence values ranges from 0 to 1, with 0 meaning no linear relationship at the frequency and 1 representing
-perfect linear coupling. 
+**Coherence** is a frequency-domain measure that quantifies the degree of **linear synchrony** between two signals at a given frequency. It is commonly used to study 
+**functional connectivity** between brain regions or neural populations.
+
+Coherence values range from **0 to 1**, where 0 indicates no consistent linear relationship at that frequency, and 1 indicates perfect linear coupling between the 
+signals.
+
+In addition to standard coherence, **Imaginary Coherence** is often computed. This measure captures only the imaginary (phase-lagged) component of coherence, effectively 
+excluding zero-lag interactions. As a result, it is more robust to volume conduction and common source artifacts, and it better highlights genuine functional 
+connectivity between channels.
 
 1. Under the "Signal Analysis" header, choose between **default** or **custom** signal analysis. 
 2. Choose which coherence method you want to implement: **Coherence** (Welch) or **Multitaper Coherence**.
@@ -131,7 +137,7 @@ perfect linear coupling.
 Time-Frequency Domain Representation
 ------------------------------------
 
-To compute Time-Frequency Domain (TFD) representation, NeoDBS is able to compute the **Welch Spetrogram** or **Wavelet**, available on both default and customizable pipelines.
+To compute Time-Frequency Domain (TFD) representation, NeoDBS is able to compute the **Welch Spectrogram** or **Wavelet**, available on both default and customizable pipelines.
 
 .. image:: ../img/spec_wav.png
 
@@ -160,6 +166,9 @@ figure below we can see the example of the spectrogram being computed on an Indi
 4. To compute the mean spectrogram, press **Mean Spectrogram**. The mean spectrogram and respective buttons will appear under the collapsing header named "Mean Spectrogram".
 
 .. image:: ../img/mean_spec.png
+
+.. warning::
+    Mean spectrogram will only be computed if all signals have the same duration. Else, a warning will apear.
 
 5. To adjust the colormap scale of all the plotted spectrograms, define the minimum and maximum values of the scale. After defining, press **"Set Colormap Range"**.
 
@@ -201,10 +210,10 @@ Phase-Amplitude Coupling
 
 Phase-Amplitude Coupling (PAC) is a cross-frequency coupling that allows to observe modulations, or coordination, between the phase of a signal with the amplitude of the second signal.
 It is typically used to analyze the modulation between low-frequency phases and high-frequency amplitudes, reflecting interactions across different time scales (band frequencies) and spatial locations.
-To quantify the degree of coupling, the Modulation Index (MI) proposed by Tort et al. for PAC analysis of neuronal signals was calculated. MI is calculated as the normalized difference between the maximum possible entropy and the
+To quantify the degree of coupling, the Modulation Index (MI), proposed by Tort et al. 2010, for PAC analysis of neuronal signals was calculated. MI is calculated as the normalized difference between the maximum possible entropy and the
 observed entropy, with **0** corresponding to **no coupling** and **1** to **strong coupling**. 
 
-1. To compute the phase-amplitude coupling method, press **"PAC"**.
+1. Under the "Signal Analysis" header, choose between **default** or **custom** signal analysis. Then, select **"PAC"**.
 2. Select the signals to be analyzed, in **Signal 1** and **2**. 
 3. Select the frequency bands to be analyzed, respective to the signals. From signal/band 1, the phase will be extracted. From signal/band 2, the amplitude will be extracted.
 4. Once all parameters are filled, press **"Plot Phase-Amplitude Coupling"**. 
@@ -232,7 +241,7 @@ the intersection of the correlation signal and HM. **Narrow HMW** represent **ve
 For further offline feature analysis, the root mean square (RMS) correlation is extracted, to cancel out symmetric signals, while still representing the mean correlation across time. The maximum
 correlation, and respective lag, are also extracted.
 
-1. Press **"Cross-Correlation"**. 
+1. Under the "Signal Analysis" header, choose between **default** or **custom** signal analysis. Then, select **"Cross-Correlation"**. 
 2. If you want to compute CC per frequency band, toggle **"Band Cross-Correlation"**. Else it will compute CC for the entire spectrum.
 3. Select the signals and press **"Plot Cross-Correlation"**.
 4. The computed method and extracted features will be displayed.

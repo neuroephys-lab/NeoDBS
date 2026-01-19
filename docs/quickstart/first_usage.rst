@@ -7,7 +7,7 @@ First Usage
 NeoDBS is a platform designed for maximal user-experience, with every item and functionality optimized for 
 easy data analysis and natural workflow. *Even for unexperienced users in signal processing and analysis.*
 
-With this, NeoDBS was developed to allow **several workspaces open symultaneously**. For that, the user can 
+With this, NeoDBS was developed to allow **several workspaces open simultaneously**. For that, the user can 
 open multiple windows, each one corresponding to an independent workspace. Just like a browser.
 
 Inside each window (or workspace), all the mentioned data is organized and accessed in a hierarchical order:
@@ -18,6 +18,8 @@ Inside each window (or workspace), all the mentioned data is organized and acces
 * Child Tab |rarrow| Recording Analysis
 
 .. |rarrow| unicode:: U+2192 .. RIGHT ARROW
+
+.. image:: ../img/hierarchy2.png
 
 This workflow is explained more in depth :ref:`below <general>`. With this arrangement, the platform facilitates access to data, while ensuring multiple independent and simultaneous analysis pipelines for 
 each recording available. 
@@ -40,7 +42,7 @@ Individual Window
 ^^^^^^^^^^^^^^^^^
 
 The **Individual** window goal is to analyze a single recording session, focusing on the evolution of signals and 
-events inside the same session. Therefore it includes functionalities like:
+events inside the same recording session. Therefore, it includes functionalities like:
 
 * **In-clinic event marking** in time-domain signals, and their time-frequency domain methods, according to user input;
 * Compute **merged time-frequency domain** methods in same-channel recordings;
@@ -156,7 +158,7 @@ Here follows a simple summary of the recording modes, with their associated name
 +-------------------------------+---------------+-------------+-------------+--------------------------+
 | BrainSense™ *Events*          | *Events*      | At home     | On          | Event-marked recordings, |
 |                               |               |             |             | 30 s LFP saved into PSD, |
-|                               |               |             |             | time-stamped by patient  |
+|                               |               |             |             | time-stamped by patient's|
 |                               |               |             |             | manual input             |
 +-------------------------------+---------------+-------------+-------------+--------------------------+
 

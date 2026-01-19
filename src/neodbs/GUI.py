@@ -97,13 +97,26 @@ def add_band(sender, app_data, user_data):
     window_id = extract_window_id(tab_tag)
     app_state['windows'][window_id]['Bands'] = t_bands
 
+    b = f"{tab_tag}_add_band"
+    text = 'Current Bands (Hz): \n'
+    for name, value in t_bands.items():
+        text = text + f"- {name}: {value}\n"
+    dpg.delete_item(f"{b}_toast",children_only=True)
+    dpg.add_text(text, parent=f"{b}_toast")
+
 def reset_bands(sender,app_data,user_data):
     '''
     Internal: reset to default bands (D,T,A,B,G) to internal app_state memory dictinary
     '''
     tab_tag = user_data
     window_id = extract_window_id(tab_tag)
+    b = f"{tab_tag}_add_band"
     app_state['windows'][window_id]['Bands'] = ft.bands
+    text = 'Current Bands (Hz): \n'
+    for name, value in ft.bands.items():
+        text = text + f"- {name}: {value}\n"
+    dpg.delete_item(f"{b}_toast",children_only=True)
+    dpg.add_text(text, parent=f"{b}_toast")
     
 def sanitize_filename(filename):
     '''Internal: Removes or replaces invalid characters from filenames.'''
@@ -224,7 +237,10 @@ def filename_window(sender,app_data,user_data):
             other, _ = final_userdata
             save_table_to_file(parent_sender,app_data,(other,plot_tag))
         else:
-            ud = final_userdata + (dpg.get_value(f"{plot_tag}_file_name"),)
+            file_name = dpg.get_value(f"{plot_tag}_file_name")
+            if not isinstance(file_name,str):
+                file_name = dpg.get_item_label(plot_tag)
+            ud = final_userdata + (file_name,)
             save_signals(parent_sender,app_data,ud)
 
     if app_data and 'All' in app_data:
@@ -235,7 +251,7 @@ def filename_window(sender,app_data,user_data):
         dpg.add_text("Save file as: ")
         dpg.add_input_text(default_value=title, width=150,tag=f"{plot_tag}_file_name")
         if 'plot' in label.lower():
-            dpg.add_input_int(default_value=300,min_value=300,max_value=600,min_clamped=True,max_clamped=True,step=50,width=150,tag=f"{plot_tag}_dpi")
+            dpg.add_input_int(label='DPI', default_value=300,min_value=300,max_value=600,min_clamped=True,max_clamped=True,step=50,width=150,tag=f"{plot_tag}_dpi")
         dpg.add_button(label="Submit", callback=handle_submit)
 
 def save_plot(sender,app_data,user_data):
@@ -413,6 +429,7 @@ def save_plot(sender,app_data,user_data):
     if dpi is None:
         dpi = 600
     ft.export_plot(info,plot_type,size=size,line_types=line_type,dpi=dpi)
+    dpg.bind_item_theme(sender,change_button_color(-1))
     if not dpg.does_item_exist(f"{sender}_toast"): 
         with dpg.tooltip(parent=sender,tag=f"{sender}_toast"):
             dpg.add_text(f"Saved plot: {title}.png!")
@@ -422,7 +439,7 @@ def save_signals(sender,app_data,user_data):
     Internal:  Prepares data from selected plot to save signals into .csv file
     parent, plot, plot_type = user_data
     '''
-    
+    print(user_data)
     parent, plot, plot_type, file_name = user_data
     children = dpg.get_item_children(parent)[1]
     tfd = False
@@ -571,6 +588,7 @@ def save_signals(sender,app_data,user_data):
     if directories['save'] != '':
         file_name = directories['save'] + '\\' + file_name
     ft.export_signals(info,file_name,tfd=tfd)
+    dpg.bind_item_theme(sender,change_button_color(-1))
     if not dpg.does_item_exist(f"{sender}_toast"):
         with dpg.tooltip(parent=sender,tag=f"{sender}_toast"):
             dpg.add_text(f"Saved file: {file_name}.csv!")
@@ -634,14 +652,20 @@ def add_features_buttons(tab_tag, signal_tags):
 
     if dpg.does_item_exist(tab_tag):
         with dpg.group(parent=tab_tag, horizontal=True, width=600,tag=f"{tab_tag}_features_group"):
-            # "Features" menu simulation
+            b = f"{tab_tag}_add_band"
             with dpg.collapsing_header(label="Signal Analysis", default_open=False, parent=tab_tag,tag = f"{tab_tag}_features"):
                 add_combo_df_features(tab_tag,signal_tags)
                 add_combo_features(tab_tag,signal_tags)
                 with dpg.group(horizontal=True):
                     dpg.add_input_int(label='Hz', tag=f"{tab_tag}_band_min", width=90, default_value=0, min_value=0,max_value=98, callback=enforce_min_max, user_data=(f"{tab_tag}_band_min", f"{tab_tag}_band_max", 2))
                     dpg.add_input_int(label='Hz', tag=f"{tab_tag}_band_max", width=90, default_value=100, min_value=2,max_value=100, callback=enforce_min_max, user_data=(f"{tab_tag}_band_min", f"{tab_tag}_band_max", 2))
-                    dpg.add_button(label='Insert Band of Interest', show=True, callback=add_band,user_data=(tab_tag))
+                    dpg.add_button(label='Insert Band of Interest', show=True, callback=add_band,user_data=(tab_tag), tag = b)
+                    bands = getBandsByTab(tab_tag)
+                    text = 'Current Bands (Hz): \n'
+                    for name, value in bands.items():
+                        text = text + f"- {name}: {value}\n"
+                    with dpg.tooltip(parent=b,tag=f"{b}_toast"):
+                        dpg.add_text(text)
                     dpg.add_button(label='Reset Bands', show=True, callback=reset_bands,user_data=tab_tag)
     else:
         print(f"Tab {tab_tag} does not exist yet.")
@@ -1109,26 +1133,30 @@ def hide(sender,app_data,user_data):
     '''
     streams, checkboxes = user_data
     tab_tag = dpg.get_item_alias(sender)[:-5]
+    sender_name = dpg.get_item_label(sender)
+    
     if dpg.does_item_exist(f"{tab_tag}_mean_visibility") and not dpg.get_value(f"{tab_tag}_mean_visibility"):
         c = f"{tab_tag}_mean_visibility"
         dpg.set_value(c,True)
         callback = dpg.get_item_callback(c)
         if callback:
             callback(c, True, dpg.get_item_user_data(c))
-        
-
+    
     if checkboxes != [None]:
         if app_data == False:
             for c in checkboxes:
                 dpg.set_value(c,True)
                 callback = dpg.get_item_callback(c)
+                ud = dpg.get_item_user_data(c)
+                if sender_name == 'Hide Days':
+                    ud = 'dont'
                 if callback:
-                    callback(c, True, dpg.get_item_user_data(c))
+                    callback(c, True, ud)
    
     for s in streams:
         bol = not app_data
         dpg.configure_item(s, show=bol)
-        if 'psd' in tab_tag:
+        if 'psd' in tab_tag: #survey peaks
             if dpg.does_item_exist(f"{s}_peak"): dpg.configure_item(f"{s}_peak",show=bol)
 
 #--- Visualization functions
@@ -1280,9 +1308,12 @@ def create_table(tab_label,table_tag,features, trial_label = "New Trial"):
                     width =100
                     if band == 'Electrodes':
                         width = -1
-                    dpg.add_table_column(label=band, width=width)
-                    
-
+                    sender = dpg.add_table_column(label=band, width=width)
+                    if 'std. dev' in band:
+                        if not dpg.does_item_exist(f"{sender}_toast"):
+                            with dpg.tooltip(parent=sender,tag=f"{sender}_toast"):
+                                dpg.add_text(f"Standard Deviation negative values must be considered as positive. \nNegative values are maintained for convertional purpouses.")
+         
         add_row()
         if not dpg.does_item_exist(f"{table_tag}_save"):
             b1 = dpg.add_button(label='Save Table', tag = f"{table_tag}_save", callback=filename_window, user_data=(table_tag, 'csv'), parent=tab_label)
@@ -2369,12 +2400,10 @@ def plot_coherence(parameter_values, tab_label):
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Frequency (Hz)") #tag=f"{tab_label}_x_axis"
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Coherence", tag= f"{tab_label}_y_axis")
-        
-  
+         
     dpg.add_line_series(freq.tolist(), coh.tolist(), label=f"Coherence | {signal1['Channel']}-{signal2['Channel']}", parent=f"{tab_label}_y_axis")
     dpg.add_line_series(freq.tolist(), IMcoh.tolist(), label=f"Imaginary Coherence | {signal1['Channel']}-{signal2['Channel']}", parent=f"{tab_label}_y_axis")
     
-    dpg.set_axis_limits(f"{tab_label}_y_axis",ymin=0,ymax=1)
     bands = getBandsByTab(tab_label)
     if not dpg.does_item_exist(f"{tab_label}_header"):
         dpg.add_collapsing_header(tag=f"{tab_label}_header",parent=tab_label,label='Extracted Features',default_open=False)
@@ -2714,7 +2743,8 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                 if key == 'a': signal1 = signal
                 else: signal2 = signal
 
-        if dpg.does_item_exist(f"{tab_label}_size_warning"): dpg.delete_item(f"{tab_label}_size_warning")
+        if dpg.does_item_exist(f"{tab_label}_size_warning"): 
+            dpg.delete_item(f"{tab_label}_size_warning")
         # parameter_values['method'] = 'direct'
         parameter_values['a'], parameter_values['v'] = np.array(parameter_values['a']).astype(np.float64), np.array(parameter_values['v']).astype(np.float64)
         s1, s2 = parameter_values['a'], parameter_values['v']
@@ -2734,9 +2764,11 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
 
         plot_tag = f"{tab_label}_ccplot"
         with dpg.plot(label="Cross-correlation", height=300, width=800, tag = plot_tag, parent=f"{tab_label}_cc"):
+            dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend()
             cross_x = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
-            cross_y = dpg.add_plot_axis(dpg.mvYAxis, label="Cross-Correlation Ratio")
+            dpg.add_plot_axis(dpg.mvYAxis, label="Cross-Correlation Ratio", tag = f"{tab_label}_cc_y")
+            cross_y = f"{tab_label}_cc_y"
             if dpg.does_item_exist(f"{tab_label}_cc_pb"):
                 dpg.set_value(f"{tab_label}_cc_pb", 0)
             else:
@@ -2772,7 +2804,7 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                 case 'valid': dislocation = np.arange(N-D+1) / 250
 
             if normalize == 'True':
-                norm = np.sqrt(np.sum(parameter_values['a']**2) * np.sum(parameter_values['v']**2))
+                norm = np.linalg.norm(parameter_values['a']) * np.linalg.norm(parameter_values['v'])
                 correlation = correlation/norm
 
             if plot_mode: 
@@ -2813,7 +2845,7 @@ def plot_cross_correlation(parameter_values,tab_tag,tags, mode = None):
                 add_exporting_tag(extract_window_id(tab_tag),plot=b1,signal=b2)
 
     if not dpg.does_item_exist(f"{tab_label}_band"): 
-        dpg.add_checkbox(label='Band Cross-Correlation', parent=tab_label, tag = f"{tab_label}_band", callback=plot)
+        dpg.add_checkbox(label='Band Cross-Correlation', parent=tab_label, tag = f"{tab_label}_band") #, callback=plot)
 
     if mode==None:
         plot()
@@ -3737,6 +3769,7 @@ def update_table(table_tag, unit):
             else: db_value = pre.convert_from_db(value)
           
             if isinstance(db_value, list) and not flag:  # List case
+                # db_value = [db_value[0], abs(db_value[1])]
                 dpg.set_value(row_children[i], str(db_value))
 
             elif isinstance(db_value, tuple) or flag:  # Peak case (power, frequency)
@@ -4827,8 +4860,13 @@ def DefaultFilter(sender,app_data,user_data):
     
     band = dpg.get_value(item=f"{tab_tag}_default_wn")[:2]
     if band[0] == 0:
-        band = [0.5,band[1]]
-
+        band = [0.1,band[1]]
+        dpg.delete_item(f"{tab_tag}_default_filter",children_only=True)
+        dpg.add_text("3rd Order Butterworth Filter and Removal of Cardiac Component", parent=f"{tab_tag}_default_filter")
+    else: 
+        band = list(band)
+        dpg.delete_item(f"{tab_tag}_default_filter",children_only=True)
+        dpg.add_text("5th Order Butterworth Filter and Removal of Cardiac Component", parent=f"{tab_tag}_default_filter")
     for series in active_series:
         signal = {}
         signal=getSignalbyIdx(window_id,tab_tag,series,mode=signal_mode)
@@ -5246,7 +5284,7 @@ def insert_events(sender, app_data, user_data):
                 new_x = [(d+offset).timestamp() for d in new_time]
                 updateKeySignalbyIdx(new_x,tab_tag,series[i],'X')
                 dpg.configure_item(f"x_axis_{tab_tag}",scale=dpg.mvPlotScale_Time)
-                dpg.configure_item(f"x_axis_{tab_tag}",label='Time (UTC)')
+                dpg.configure_item(f"x_axis_{tab_tag}",label='Time (MM/DD/YYYY UTC)')
                 dpg.configure_item(series[i], x=new_x)
             else: 
                 new_x = signal['X']
@@ -5535,7 +5573,8 @@ def circadian_rhythm(sender, app_data, user_data):
         trial = 'Mean'
         if not app_data:
             trial = trial + ' wo/ ' + label
-        create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=trial)
+        if not isinstance(user_data,str):
+            create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=trial)
 
 
     with dpg.group(parent=tab_label, horizontal=True, tag=f"{tab_label}_CR"):
@@ -5609,21 +5648,8 @@ def stimulation_timeline(sender,app_data,user_data):
     dpg.add_tab(label=f"Stimulation", parent=f"{tab_tag}_features_bar", tag=tab_label,closable=True)
 
     if extract_type_window(window_id) == 'Combined': 
-        tag_date_pairs = []
-        
-        for tag in signal_tags:
-            data = getDatabyTag(tag)
-            date = data['Device']['SessionDate']
-            tag_date_pairs.append((tag, date))
-
-        tag_date_pairs.sort(key=lambda x: x[1])
-
-        signal_tags = [tag for tag, _ in tag_date_pairs]
-
-        # files = [extract_file_from_series_tag(tag) for tag in signal_tags]
-        
-        files = [i for i in range(len(app_state['windows'][window_id]))]
-        # files = np.unique(files)
+        files = [i for i in range(len(app_state['windows'][window_id]['Files']))]
+        files = sorted(files,key=lambda f: getDatabyFile(window_id, f)['Device']['SessionDate'])
     else: files = [None]
 
     stimulation = {'X': [], 'Y': [], 'Info':[]}
@@ -6267,6 +6293,7 @@ def show_event_summary(mode,tab_tag,plot_tag,files=None):
     with dpg.group(label = f"{tab_tag}_group", parent=tab_tag, horizontal=True ):
         with dpg.group(width=600):
             with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
+                dpg.bind_colormap(plot_tag, 0)
                 dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis,scale=dpg.mvPlotScale_Time,label='Days',tag=f"{tab_tag}_xaxis")
                 y_axis = dpg.add_plot_axis(dpg.mvYAxis,label='Number of Events',tag = f"{tab_tag}_yaxis")

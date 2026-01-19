@@ -70,7 +70,7 @@
 <li class="toctree-l1"><a class="reference internal" href="features.html">3. Signal Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="extra.html">4. Extra Features</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Modules (Functions)</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
@@ -107,7 +107,7 @@
 <p>Medtronic's Percept BrainSense™ technology allows at-home recordings to track the effects of symptoms,
 medication and routine outside of the clinic.</p>
 <p>There are two <strong>at-home recording modes: Timeline</strong> and <strong>Events</strong>.</p>
-<p><em>Timeline</em> records the long-term band power troughout all day and <em>Events</em> record a 30 second snapshot, manually
+<p><em>Timeline</em> records the long-term band power throughout all day and <em>Events</em> record a 30 second snapshot, manually
 triggered by the user to record important events such as symptoms, medication, etc.
 The chronic recordings are acquired from a pre-selected contact pairs, and are restricted to bipolar settings
 and the stimulation electrodes used.</p>
@@ -158,7 +158,7 @@ manual input</p></td>
 <img alt="../_images/timeline.png" src="../_images/timeline.png" />
 <p>The image above represent the <em>Timeline</em> tab in the <strong>Individual</strong> window. When in the <strong>Combined</strong> window, has access
 to event-locked analysis functionalities, described <a class="reference internal" href="#elat"><span class="std std-ref">below</span></a>. Additionally, the information correspondant to the sensing
-configuration of each file selected, is organized under the correspondant header.</p>
+configuration of each file selected, is organized under the correspondent header.</p>
 <img alt="../_images/timeline_comb.png" src="../_images/timeline_comb.png" />
 <section id="outlier-removal">
 <h3><span class="section-number">2.1.1. </span>Outlier Removal<a class="headerlink" href="#outlier-removal" title="Link to this heading">¶</a></h3>
@@ -171,7 +171,7 @@ features can be recalculated</strong> as many times needed to allow the user to 
 <em>threshold = factor × RMS</em>
 Any LFP value above this threshold is treated as an outlier and replaced by the RMS value.</p>
 <ol class="arabic simple">
-<li><p>Select the threshold value, by sliding the <strong>&quot;Remove Outlier&quot;</strong> item. User can readjust threshold as many times needed.</p></li>
+<li><p>Select the threshold value, by sliding the blue square on the <strong>&quot;Remove Outlier&quot;</strong> item. User can readjust threshold as many times needed.</p></li>
 <li><p>The filtered signals will update the main plot.</p></li>
 <li><p>If the user wants to recalculate timeline metrics, press <strong>&quot;Recalculate Metrics&quot;</strong>.</p></li>
 </ol>
@@ -184,7 +184,7 @@ NeoDBS automatically identifies if there any missing points in the available sig
 The missing points are computed as interpolation of the mean value between the bounding present points.</p>
 <ol class="arabic simple">
 <li><p>To see missing points from recordings, toggle checkbox <strong>&quot;Show missing points&quot;</strong>.</p></li>
-<li><p>For future analyzis with the <em>Timeline</em> signals, the missing points are not considered.</p></li>
+<li><p>For future analysis with the <em>Timeline</em> signals, the missing points are not considered.</p></li>
 </ol>
 </section>
 <section id="event-locked-analysis">
@@ -202,12 +202,12 @@ allowing an automatic event-locked analysis of the chronic recordings. The segme
 <section id="circadian-rhythm">
 <h3><span class="section-number">2.1.4. </span>Circadian Rhythm<a class="headerlink" href="#circadian-rhythm" title="Link to this heading">¶</a></h3>
 <p>From the <em>Timeline</em> recordings, NeoDBS computes the <strong>circadian rhythm</strong> by aligning all recordings by their time component.
-The respective mean and standard deviation are calculated and ploted, according to the selected signals.</p>
+The respective mean and standard deviation are calculated and plotted, according to the selected signals.</p>
 <ol class="arabic simple">
 <li><p>Under the collapsing header &quot;Signal Analysis&quot;, press <strong>&quot;Circadian Rhythm&quot;</strong>.</p></li>
 <li><p>The signals are plotted, aligned by hour. Mean and standard deviation are automatically computed.</p></li>
 <li><p>Mean circadian metrics are automatically extracted.</p></li>
-<li><p>Mean, and standard deviation, are recalculated with signal toggling, reploted and metrics are recalculated.</p></li>
+<li><p>Mean, and standard deviation, are recalculated with signal toggling, replotted and metrics are recalculated.</p></li>
 <li><p>To hide the individual signals, and only show mean and standard deviation, press <em>&quot;Hide days&quot;</em>.</p></li>
 <li><p>If any missing points are present in the signals, a <em>nan</em> interpolation will be conducted as not to interfere with feature extraction.</p></li>
 </ol>

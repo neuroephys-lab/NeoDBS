@@ -7,7 +7,7 @@ import utils as utl
 from pathlib import Path
 
 bands = {
-            'Delta': [0.01,4],
+            'Delta': [0.2,4],
             'Theta': [4,8],
             'Alpha': [8,12],
             'Beta': [12,30],

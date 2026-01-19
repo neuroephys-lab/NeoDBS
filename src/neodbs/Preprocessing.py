@@ -406,17 +406,16 @@ def removeCardiacComponent(raw, band, filterMethod="Fixed Peak Find"):
     '''
 
     a,b = band
-    if a == 0: a = 0.1
-    if b == 0: b = 100
+    n = 5
+    if int(a) == 0: 
+        a = 0.1
+        n = 3
+    if int(b) == 0: b = 100
 
     band = np.array([a,b])
-
     filtered = raw['Y']
     fs = 250
-
-    [p1,p2] = ss.butter(5, band, 'bp', output='ba',fs=fs)
-    
-
+    ba = ss.butter(n, band, 'bp', output='ba',fs=fs)
     PredictedSignal = ss.wiener(filtered, mysize=125)
     filtered -= PredictedSignal
 
@@ -462,8 +461,8 @@ def removeCardiacComponent(raw, band, filterMethod="Fixed Peak Find"):
                     ecg = EKGTemplateFunc(sliceSelection, *params)
 
         
-    filtered = ss.filtfilt(p1, p2, filtered)
-    buttered = ss.filtfilt(p1, p2, raw['Y'])
+    filtered = ss.filtfilt(*ba, filtered)
+    buttered = ss.filtfilt(*ba, raw['Y'])
     return filtered, buttered
     
 

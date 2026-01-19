@@ -36,13 +36,13 @@ to analyze, which will open a tab with the respective plotted signals and functi
 
 .. note::
     NeoDBS works with a visibility approach, meaning selected methods will only be applied to the 
-    signals visible/selected on the main plot of the respective tab. **If the signal is not visible,
+    signals selected on the main plot of the respective tab. **If the signal is not selected (represented on the main plot),
     the methods will NOT be applied.** This ensures full customization and independency of the data analysis.
 
 Preprocessing
 -------------
 
-Tipically, the first step in any data analysis pipeline is "cleaning" the data to remove undesired noise or 
+Typically, the first step in any data analysis pipeline is "cleaning" the data to remove undesired noise or 
 signals. NeoDBS offers a variety of filters, and pipelines, that are customizable to the user needs.
 
 .. warning::
@@ -105,15 +105,15 @@ The .txt file **must be with ONE of the following structures**:
 
 * HH:MM:SS, name of event
 * HH:MM, name of event
-* DD/MM/YY HH:MM:SS, name of event
-* DD/MM/YY HH:MM, name of event
+* DD/MM/YYYY HH:MM:SS, name of event
+* DD/MM/YYYY HH:MM, name of event
 
 .. image:: ../img/txtevent.png
 
-1. Press **"Insert Events"**, in the *Individual Window*, or **"Analyze Streaming Events"**, in *Combined Window*, **after selecting the interval prior and after the event**.
+1. Press **"Insert Streaming Events"**, in the *Individual Window*, or **"Analyze Streaming Events"**, in *Combined Window*, **after selecting the interval prior and after the event**.
 2. Select *.txt* file with the described events.
 3. The marked events or event-locked segments, will **appear or replace**, respectively, the **main plot** of the tab.
-4. The time axis will convert from seconds to datetime format. If the signals are not visible, click two times on the plot to recenter.
+4. The time axis will convert from seconds to datetime format. If the signals are not visible, click two times on the plot to re-center.
 
 .. image:: ../img/select_events.png
 
@@ -132,7 +132,7 @@ If during the recording session any impedance test was performed, either with *S
 
 .. image:: ../img/impedance_tab.png
 
-3. Click on each header to display the table with the imepdance values and the plot of the respective values.
+3. Click on each header to display the table with the impedance values and the plot of the respective values.
 
 .. image:: ../img/impedance_values.png
 

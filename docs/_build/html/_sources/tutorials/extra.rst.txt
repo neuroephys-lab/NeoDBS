@@ -4,7 +4,7 @@ Extra Features
 Beyond signal processing features, NeoDBS is a customizable platform at the user level. This includes 
 customizing the graphical user interface (GUI), workspaces, nomenclature of recordings, and others. 
 Since this platform is designed to foment research, NeoDBS development took in consideration researcher's 
-and clinician's needs when performing signal and data analysis. Therefore easy manipulation and exportation 
+and clinician's needs when performing signal and data analysis. Therefore, easy manipulation and exportation 
 of data are strong features of this platform.
 
 
@@ -39,7 +39,7 @@ Font can be easily resized for best readibility.
 Rename Window
 ^^^^^^^^^^^^^
 
-To optimize workspace organization and acessibility, windows can be renamed.
+To optimize workspace organization and accessibility, windows can be renamed.
 Individual window's name default to the selected JSON file name, while Combined window's name default to 
 "Combined #", with # being the number of the window.
 
@@ -93,7 +93,7 @@ activated (or deactivated). By default, windows have the horizontal scrollbar de
 
 .. note::
     If the user has a mousepad, the horizontal scrollbar it is not required to navigate horizontally. 
-    Due to the GUI library configuration, it is not very recommended to activate the scrollbar, eventhough it has a very 
+    Due to the GUI library configuration, it is not very recommended to activate the scrollbar, even though it has a very 
     useful functionality.
 
 
@@ -118,7 +118,7 @@ They can be **individually** exported, exported **by window** or **export all** 
 
 .. note::
     Because the supporting GUI library (DearPyGui) has no functionality to export plots, these are properly 
-    converted into MatplotLib plots and saved into png files. The conversion is made to replicate as close as possible 
+    converted into MatplotLib plots and saved into *.png* files. The conversion is made to replicate as close as possible 
     the plot in NeoDBS. 
 
 Directories

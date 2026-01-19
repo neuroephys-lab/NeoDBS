@@ -7,7 +7,7 @@ medication and routine outside of the clinic.
 
 There are two **at-home recording modes: Timeline** and **Events**.
 
-*Timeline* records the long-term band power troughout all day and *Events* record a 30 second snapshot, manually 
+*Timeline* records the long-term band power throughout all day and *Events* record a 30 second snapshot, manually 
 triggered by the user to record important events such as symptoms, medication, etc.
 The chronic recordings are acquired from a pre-selected contact pairs, and are restricted to bipolar settings 
 and the stimulation electrodes used. 
@@ -46,7 +46,7 @@ The BrainSense™ *Timeline* mode acquires the mean signal power of a pre-define
 
 The image above represent the *Timeline* tab in the **Individual** window. When in the **Combined** window, has access 
 to event-locked analysis functionalities, described :ref:`below <elat>`. Additionally, the information correspondant to the sensing
-configuration of each file selected, is organized under the correspondant header.
+configuration of each file selected, is organized under the correspondent header.
 
 .. image:: ../img/timeline_comb.png
 
@@ -63,7 +63,7 @@ The user selects a threshold factor to control outlier removal, that is calculat
 *threshold = factor × RMS*
 Any LFP value above this threshold is treated as an outlier and replaced by the RMS value.
 
-1. Select the threshold value, by sliding the **"Remove Outlier"** item. User can readjust threshold as many times needed.
+1. Select the threshold value, by sliding the blue square on the **"Remove Outlier"** item. User can readjust threshold as many times needed.
 2. The filtered signals will update the main plot.
 3. If the user wants to recalculate timeline metrics, press **"Recalculate Metrics"**.
 
@@ -77,7 +77,7 @@ NeoDBS automatically identifies if there any missing points in the available sig
 The missing points are computed as interpolation of the mean value between the bounding present points.
 
 1. To see missing points from recordings, toggle checkbox **"Show missing points"**.
-2. For future analyzis with the *Timeline* signals, the missing points are not considered.
+2. For future analysis with the *Timeline* signals, the missing points are not considered.
 
 .. _elat:
 Event-locked Analysis
@@ -96,12 +96,12 @@ Circadian Rhythm
 ^^^^^^^^^^^^^^^^
 
 From the *Timeline* recordings, NeoDBS computes the **circadian rhythm** by aligning all recordings by their time component.
-The respective mean and standard deviation are calculated and ploted, according to the selected signals.
+The respective mean and standard deviation are calculated and plotted, according to the selected signals.
 
 1. Under the collapsing header "Signal Analysis", press **"Circadian Rhythm"**.
 2. The signals are plotted, aligned by hour. Mean and standard deviation are automatically computed.
 3. Mean circadian metrics are automatically extracted.  
-4. Mean, and standard deviation, are recalculated with signal toggling, reploted and metrics are recalculated. 
+4. Mean, and standard deviation, are recalculated with signal toggling, replotted and metrics are recalculated. 
 5. To hide the individual signals, and only show mean and standard deviation, press *"Hide days"*.
 6. If any missing points are present in the signals, a *nan* interpolation will be conducted as not to interfere with feature extraction.
 

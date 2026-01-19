@@ -46,7 +46,7 @@ Tutorials
 ---------
 
 Several tutorials have been prepared to facilitate the use of NeoDBS. 
-Tutorials are recomended to grasp the workflow and functionalities available in NeoDBS, however they do not 
+Tutorials are recommended to grasp the workflow and functionalities available in NeoDBS, however they do not 
 explain in complete detail all possible pipelines.
 
 .. tip::

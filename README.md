@@ -1,5 +1,30 @@
 # NeoDBS
 
+## 19.01.2026
+### Documentation:
+- Correction of small things
+- Grammar and ortograph corrections
+
+### Debugs:
+- Combined stimulation
+- Reset bands its ok
+- date format present in x axis
+- CC: 
+    - After changing type of plot plot didnt save (y_axis was identified by internal_tag and y_axis is deleted when type of plot changes. Now tag is str hard coded - always goes back to same tag)
+    - Big signals crashed --> calculated norm (**2) with np.linalg cause it prevented overwflow
+    - Delta was too steep to filter with 5th order: changed to 3 if b1<1Hz 
+- Delta estava de 0.01 a 4
+- Hide days: calculates a mean per day into the table --> corrected by altering user_data when sended by 'Hide Days'. doesnt create table with user_data != None
+- Event summary + CC: colormap 0
+- DPI mentioned
+
+
+### New:
+- Toast: dizer que as metricas tambem sao convertidas em dB e apesar de teoricamente nao existir std. dev negativos, o sinal mantêm-se para a conversao para as unidades originais ser  correta
+- Toast: shows current bands and is updated with inserting and reset
+- When item is saved, button changes to green
+
+
 ## 15.01.2026
 
 ### New:

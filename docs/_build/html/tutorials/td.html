@@ -67,7 +67,7 @@
 <li class="toctree-l1"><a class="reference internal" href="features.html">3. Signal Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="extra.html">4. Extra Features</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Modules (Functions)</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
@@ -154,12 +154,12 @@ mulation.</p></td>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>NeoDBS works with a visibility approach, meaning selected methods will only be applied to the
-signals visible/selected on the main plot of the respective tab. <strong>If the signal is not visible,
+signals selected on the main plot of the respective tab. <strong>If the signal is not selected (represented on the main plot),
 the methods will NOT be applied.</strong> This ensures full customization and independency of the data analysis.</p>
 </div>
 <section id="preprocessing">
 <h2><span class="section-number">1.1. </span>Preprocessing<a class="headerlink" href="#preprocessing" title="Link to this heading">¶</a></h2>
-<p>Tipically, the first step in any data analysis pipeline is &quot;cleaning&quot; the data to remove undesired noise or
+<p>Typically, the first step in any data analysis pipeline is &quot;cleaning&quot; the data to remove undesired noise or
 signals. NeoDBS offers a variety of filters, and pipelines, that are customizable to the user needs.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -217,15 +217,15 @@ The .txt file <strong>must be with ONE of the following structures</strong>:</p>
 <ul class="simple">
 <li><p>HH:MM:SS, name of event</p></li>
 <li><p>HH:MM, name of event</p></li>
-<li><p>DD/MM/YY HH:MM:SS, name of event</p></li>
-<li><p>DD/MM/YY HH:MM, name of event</p></li>
+<li><p>DD/MM/YYYY HH:MM:SS, name of event</p></li>
+<li><p>DD/MM/YYYY HH:MM, name of event</p></li>
 </ul>
 <img alt="../_images/txtevent.png" src="../_images/txtevent.png" />
 <ol class="arabic simple">
-<li><p>Press <strong>&quot;Insert Events&quot;</strong>, in the <em>Individual Window</em>, or <strong>&quot;Analyze Streaming Events&quot;</strong>, in <em>Combined Window</em>, <strong>after selecting the interval prior and after the event</strong>.</p></li>
+<li><p>Press <strong>&quot;Insert Streaming Events&quot;</strong>, in the <em>Individual Window</em>, or <strong>&quot;Analyze Streaming Events&quot;</strong>, in <em>Combined Window</em>, <strong>after selecting the interval prior and after the event</strong>.</p></li>
 <li><p>Select <em>.txt</em> file with the described events.</p></li>
 <li><p>The marked events or event-locked segments, will <strong>appear or replace</strong>, respectively, the <strong>main plot</strong> of the tab.</p></li>
-<li><p>The time axis will convert from seconds to datetime format. If the signals are not visible, click two times on the plot to recenter.</p></li>
+<li><p>The time axis will convert from seconds to datetime format. If the signals are not visible, click two times on the plot to re-center.</p></li>
 </ol>
 <img alt="../_images/select_events.png" src="../_images/select_events.png" />
 <p>In the Individual Window, events can be inserted several times. In the Combined Window, after an event-locked segmentation
@@ -241,7 +241,7 @@ has been emplyed, no more segmentation or events can be added.</p>
 </ol>
 <img alt="../_images/impedance_tab.png" src="../_images/impedance_tab.png" />
 <ol class="arabic simple" start="3">
-<li><p>Click on each header to display the table with the imepdance values and the plot of the respective values.</p></li>
+<li><p>Click on each header to display the table with the impedance values and the plot of the respective values.</p></li>
 </ol>
 <img alt="../_images/impedance_values.png" src="../_images/impedance_values.png" />
 <ol class="arabic simple" start="4">

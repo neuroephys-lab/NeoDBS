@@ -25,20 +25,16 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 
 '''
 
-ola = "09/11/2025"
-slash = next(c for c in ola if not c.isdigit())
-print(slash, ': ', ola.split(slash))
+import dearpygui.dearpygui as dpg
 
-# import dearpygui.dearpygui as dpg
+dpg.create_context()
 
-# dpg.create_context()
-
-# dpg.show_imgui_demo()
-# dpg.create_viewport(title="Tooltip vs Popup", width=720, height=480)
-# dpg.setup_dearpygui()
-# dpg.show_viewport()
-# dpg.start_dearpygui()
-# dpg.destroy_context()
+dpg.show_imgui_demo()
+dpg.create_viewport(title="Tooltip vs Popup", width=720, height=480)
+dpg.setup_dearpygui()
+dpg.show_viewport()
+dpg.start_dearpygui()
+dpg.destroy_context()
 
 
 # dpg.create_context()
