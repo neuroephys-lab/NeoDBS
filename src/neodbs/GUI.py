@@ -3,6 +3,7 @@ import sys
 import importlib
 import os
 import re
+import utils as utl
 
 def is_package_installed(package_name):
     '''
@@ -22,6 +23,7 @@ def install_requirements_if_needed(requirements_file="requirements.txt"):
     
     :param requirements_file: .txt file, 
     '''
+    requirements_file=utl.resource_path("requirements.txt")
     if not os.path.exists(requirements_file):
         print(f"{requirements_file} not found.")
         return
@@ -53,7 +55,6 @@ import dearpygui.dearpygui as dpg
 from dearpygui_ext import themes as themes
 import numpy as np 
 import DataHandling as DH # type: ignore
-import utils as utl
 import Preprocessing as pre
 import Features as ft
 import time
@@ -98,7 +99,7 @@ def add_band(sender, app_data, user_data):
     app_state['windows'][window_id]['Bands'] = t_bands
 
     b = f"{tab_tag}_add_band"
-    text = 'Current Bands (Hz): \n'
+    text = 'Current Bands (Hz): \n ___________________\n\n'
     for name, value in t_bands.items():
         text = text + f"- {name}: {value}\n"
     dpg.delete_item(f"{b}_toast",children_only=True)
@@ -112,7 +113,7 @@ def reset_bands(sender,app_data,user_data):
     window_id = extract_window_id(tab_tag)
     b = f"{tab_tag}_add_band"
     app_state['windows'][window_id]['Bands'] = ft.bands
-    text = 'Current Bands (Hz): \n'
+    text = 'Current Bands (Hz): \n ___________________\n\n'
     for name, value in ft.bands.items():
         text = text + f"- {name}: {value}\n"
     dpg.delete_item(f"{b}_toast",children_only=True)
@@ -661,7 +662,7 @@ def add_features_buttons(tab_tag, signal_tags):
                     dpg.add_input_int(label='Hz', tag=f"{tab_tag}_band_max", width=90, default_value=100, min_value=2,max_value=100, callback=enforce_min_max, user_data=(f"{tab_tag}_band_min", f"{tab_tag}_band_max", 2))
                     dpg.add_button(label='Insert Band of Interest', show=True, callback=add_band,user_data=(tab_tag), tag = b)
                     bands = getBandsByTab(tab_tag)
-                    text = 'Current Bands (Hz): \n'
+                    text = 'Current Bands (Hz): \n ___________________\n\n'
                     for name, value in bands.items():
                         text = text + f"- {name}: {value}\n"
                     with dpg.tooltip(parent=b,tag=f"{b}_toast"):
@@ -1095,7 +1096,7 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None,plot_ta
         with dpg.group(horizontal=True):
             dpg.add_checkbox(label='Mean Visible', default_value=True, callback=show_mean, parent=f"{tab_tag}_buttons", tag=f"{tab_tag}_mean_visibility",user_data=tab_tag)
             dpg.add_checkbox(label='Mean Only', default_value=False,callback=hide,parent=f"{tab_tag}_buttons",user_data=(signal_tags,[None]), tag=f"{tab_tag}_hide")
-            dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(f"y_axis_{tab_tag}", tab_tag, signal_tags, tables),parent=f"{tab_tag}_buttons",default_value=False)
+            dpg.add_checkbox(label='Change to dB',callback=Volt2dB, user_data=(f"y_axis_{tab_tag}", tab_tag, signal_tags, tables),parent=f"{tab_tag}_buttons",default_value=False,tag=f"{tab_tag}_2db")
         
         dpg.add_separator(label='Export')
         b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",0))
@@ -1158,6 +1159,10 @@ def hide(sender,app_data,user_data):
         dpg.configure_item(s, show=bol)
         if 'psd' in tab_tag: #survey peaks
             if dpg.does_item_exist(f"{s}_peak"): dpg.configure_item(f"{s}_peak",show=bol)
+
+    if app_data:
+        dpg.configure_item(f"{tab_tag}_2db",enabled=False)
+    else: dpg.configure_item(f"{tab_tag}_2db",enabled=True)
 
 #--- Visualization functions
 def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False, count = []):
@@ -2904,7 +2909,11 @@ def reset_colormap(sender,app_data,user_data):
 def colormap_buttons(mother, values, plot, spec_tags, group_tag = None):
     #mother = group with the plots 
     global_min, global_max = values
-    y_axis = dpg.get_item_children(plot)[1][1]
+
+    if len(spec_tags)>1:
+        y_axis = dpg.get_item_children(plot)[1][1]
+    else:
+        y_axis = dpg.get_item_children(plot)[1][0]
 
     if group_tag is None:
         group_tag=mother
@@ -3459,6 +3468,7 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
     global_min,global_max = 0,1
 
     group_tag = f"{tab_label}_plot_group"
+    
     with dpg.group(horizontal=True,tag = group_tag, parent=tab_label):
         
         dpg.add_colormap_scale(tag=f"{group_tag}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Jet,
@@ -3476,21 +3486,13 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
                     except Exception as e: events = 'None'
                 
                 y = stream['Y']
-
-                ## maybe future: adaptive n cycles with length of signal - for graphical resolution of GUI
-                # length = len(y)
-                # n_cycles = parameter_values['n_cycles']
-                # wav_length = 10*250*(n_cycles/(2*np.pi*1))-1
-                # if length <wav_length: result =True
-                # else: result=False
-                # print(length, ' < ', wav_length, ' = ', result)
                 channel = stream['Channel']
                 
                 date = stream['Date']
                 signal = None
                 try:
                     signal = apply_feat(func,parameter_values,y)
-                except Exception as e: print(parameter_values['epoch_data'])
+                except Exception as e: print(e,': ',parameter_values['epoch_data'])
 
                 if mode and wt=='Combined': #Plotting the events
                     date = date + timedelta(seconds=int(stream['Idx']/250))
@@ -3515,7 +3517,8 @@ def plot_wavelet(tags, tab_label, func, tab_tag, parameter_values, mode = None):
                         emin = 0
                         emax = len(y)/250
 
-                    downsampled_tfr = tfr[:, ::2]
+                    downsample = 2*int(emax/13)
+                    downsampled_tfr = tfr[:, ::downsample]
                     per_tag[tag] = [downsampled_tfr,plot_tag, plot_label, events, (emin,emax)]
                     heatmap_data = downsampled_tfr.flatten().tolist()
 
@@ -4062,15 +4065,28 @@ def set_font(size=16):
     if dpg.does_item_exist("CURRENT_FONT"):
         dpg.delete_item("CURRENT_FONT")
 
+    # font_path = "src/fonts/SF-Pro-Display-Semibold.otf"
+    # exist = os.path.exists(font_path)
+    # print(f'{font_path}:', os.path.isfile(font_path))
+
+    font_path = utl.resource_path("fonts", "SF-Pro-Display-Semibold.otf")
+    exist = os.path.exists(font_path)
+    print(font_path,': ', exist)
+
+
+    if not exist: 
+        return
     # add new font to existing registry
     default_font = dpg.add_font(
-        "fonts\\SF-Pro-Display-Semibold.otf",
+        font_path,
         size,
         parent="FONT_REGISTRY",
         tag="CURRENT_FONT"
     )
-
-    dpg.bind_font(default_font)
+    print(default_font)
+    try:
+        dpg.bind_font(default_font)
+    except Exception as e: print(e)
 
 def horizontal_scroll(sender,app_data,user_data):
     wid = user_data
@@ -5582,7 +5598,7 @@ def circadian_rhythm(sender, app_data, user_data):
         with dpg.plot(label = "Circadian Rhythm", tag = plot_tag, width=800): 
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
-            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time", scale = dpg.mvPlotScale_Time) #tag=f"{tab_label}_x_axis"
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label='Time (MM/DD/YYYY UTC)', scale = dpg.mvPlotScale_Time) #tag=f"{tab_label}_x_axis"
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP Power (µVp)", tag= f"{tab_label}_y_axis")
             
             for tag, val in days.items():
@@ -5668,7 +5684,7 @@ def stimulation_timeline(sender,app_data,user_data):
         with dpg.plot(label = "Stimulation", tag = plot_tag, width=500, height=400): 
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
-            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time", scale = dpg.mvPlotScale_Time) #tag=f"{tab_label}_x_axis"
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label='Time (MM/DD/YYYY UTC)', scale = dpg.mvPlotScale_Time) #tag=f"{tab_label}_x_axis"
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Stimulation Amplitude (mA)", tag= f"{tab_label}_y_axis")
 
             x = [utl.parse_datetime(x).timestamp() for x in stimulation['X']]
@@ -6514,7 +6530,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         with dpg.plot(label=f"{mode} Signals", height=400, width=800, tag=plot_tag, parent=f"{tab_tag}_plot_group"):
             # dpg.bind_colormap(plot_tag, 0)
             legend = dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
-            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time", tag=f"x_axis_{tab_tag}", scale = dpg.mvPlotScale_Time)
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label='Time (MM/DD/YYYY UTC)', tag=f"x_axis_{tab_tag}", scale = dpg.mvPlotScale_Time)
             y_left = dpg.add_plot_axis(dpg.mvYAxis, label="Mean LFP Power (µVp)", tag=f"y_axis_{tab_tag}_left")
             #y_right = dpg.add_plot_axis(dpg.mvYAxis, label="Stimulation Amplitude (mA)", tag=f"y_axis_{tab_tag}_right")
 
@@ -8394,8 +8410,20 @@ def create_individual_window():
    
 #---------------------------------------MAIN WINDOW---------------------------------------
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
+def main():
     # rest of your runtime code
+    import sys
+    from pathlib import Path
+
+    if hasattr(sys, "_MEIPASS"):
+        base = Path(sys._MEIPASS)
+        with open("meipass_dump.txt", "w", encoding="utf-8") as f:
+            f.write(f"MEIPASS = {base}\n\n")
+            for p in base.rglob("*"):
+                f.write(str(p.relative_to(base)) + "\n")
+    
+    #-------------------------------------------------
 
     dpg.create_context()
 
@@ -8403,12 +8431,21 @@ if __name__ == "__main__":
     dpg.create_viewport(title="NeoDBS", width=500, height=500)
     dpg.set_viewport_large_icon('NeoDBS.ico')
     dpg.set_viewport_small_icon('NeoDBS.ico')
-    # dpg.configure_app(init_file="previous.ini")
     dpg.setup_dearpygui()
 
     with dpg.texture_registry(show=False):
-        width, height, channels, data = dpg.load_image("NeoDBS.png")
-        dpg.add_static_texture(width, height, data, tag="logo_tex")
+        image_path = utl.resource_path("NeoDBS.png")
+        print(image_path,': ', image_path.exists())
+        # image_path = "src/NeoDBS.png"
+        # image_path = "NeoDBS.png"
+        try:
+            width, height, channels, data = dpg.load_image(str(image_path))
+            dpg.add_static_texture(width, height, data, tag="logo_tex")
+            flag = True
+        except Exception as e: 
+            print(e)
+            width, height = 500, 500
+            flag = False
 
     # GLOBAL FONT REGISTRY
     with dpg.font_registry(tag="FONT_REGISTRY"):
@@ -8418,8 +8455,8 @@ if __name__ == "__main__":
     # Create window that matches image size exactly
     with dpg.window(label="", tag="Logo", no_title_bar=True, no_resize=True, no_close=True,
                     no_collapse=True, no_move=True, width=width, height=height):
-        dpg.add_image("logo_tex", width=width, height=height, pos=[0, 0])
-
+        if flag:
+            dpg.add_image("logo_tex", width=width, height=height, pos=[0, 0])
 
     def load_main_ui():
         dpg.delete_item("Logo")

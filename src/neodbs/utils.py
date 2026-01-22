@@ -1,6 +1,16 @@
 import numpy as np
 from datetime import datetime
 import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+# ROOT = Path(__file__).parent.resolve() 
+
+def resource_path(*parts):
+    if hasattr(sys, '_MEIPASS'):
+        return Path(sys._MEIPASS).joinpath(*parts)
+    return ROOT.joinpath(*parts)
 
 def find_key_path(dictionary, target_key, path=""):
     '''

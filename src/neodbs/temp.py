@@ -25,16 +25,25 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 
 '''
 
-import dearpygui.dearpygui as dpg
+title = 'output.png'
+n = title.find('.png')
+if n==-1:
+    title = title+'.png'
+else:
+    title = title[:title.find('.png')]
 
-dpg.create_context()
+print(title)
 
-dpg.show_imgui_demo()
-dpg.create_viewport(title="Tooltip vs Popup", width=720, height=480)
-dpg.setup_dearpygui()
-dpg.show_viewport()
-dpg.start_dearpygui()
-dpg.destroy_context()
+# import dearpygui.dearpygui as dpg
+
+# dpg.create_context()
+
+# dpg.show_imgui_demo()
+# dpg.create_viewport(title="Tooltip vs Popup", width=720, height=480)
+# dpg.setup_dearpygui()
+# dpg.show_viewport()
+# dpg.start_dearpygui()
+# dpg.destroy_context()
 
 
 # dpg.create_context()

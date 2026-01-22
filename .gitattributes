@@ -1,0 +1,6 @@
+*.exe filter=lfs diff=lfs merge=lfs -text
+*.psd filter=lfs diff=lfs merge=lfs -text
+dist/NeoDBS.exe filter=lfs diff=lfs merge=lfs -text
+build/NeoDBS/NeoDBS.pkg filter=lfs diff=lfs merge=lfs -text
+NeoDBS.exe filter=lfs diff=lfs merge=lfs -text
+NeoDBS.pkg filter=lfs diff=lfs merge=lfs -text

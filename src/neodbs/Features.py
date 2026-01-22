@@ -476,6 +476,9 @@ def export_plot(info, plot_type, size=None, line_types = None,dpi=600):
                 startangle=90)
         plt.title(title)
 
+    n = title.find('.png')
+    if n!=-1: title = title[:n]
+    
     output_path = Path(f"{title}.png")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(f'{title}.png', bbox_inches='tight',dpi=dpi) #

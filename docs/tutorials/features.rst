@@ -55,6 +55,10 @@ The minimum interval for the frequency band is 2 Hz and can be added using the f
 
 .. image:: ../img/band.png
 
+The current bands can be consulted by hovering the "Insert Band of Interest" button.
+
+.. image:: ../img/CurrentBands.png
+
 PSD Estimation
 --------------
 
@@ -80,6 +84,11 @@ be beneficial to different tasks or research goals. You can find a more detailed
 8. The standard deviation can be converted to the 95% Confidence Interval, by choosing in the radio button under **"Shaded Area"**.
 9. Automatically extracted features are organized into convenient groups, to facilitate visualization and exportation of features.
 10. Plots, signals and tables can be easily exported.
+
+.. note::
+    Changing units in the plot, will also convert the extracted features in the tables to the choosen units. Standard deviation may appear with negative values 
+    when converted to dB, but for statistical purposes must be considered as positive. The negative signal is kept for proper conversion to the original PSD units.
+    **Additionally**, when the plot only shows the mean series, conversion of units is disabled. To convert units, deselect "Show Mean Only" checkbox.
 
 
 Band Power Over Time
@@ -148,9 +157,11 @@ those will also be automatically included in the representation of the spectrogr
 In the **Combined** window, spectrogram is only available for event-locked segments (after inserting events). 
 
 .. warning::
-    Since computing spectrogram has a high computational cost, it is advised to perform this method on smaller segments, or 
-    to properly account for segment duration when customizing spectrogram parameters. Number of computed spectrograms 
-    also highly impacts the computational performance.
+    Since computing time-frequency domain representations has a high computational cost, it is advised to perform this method on smaller segments, or 
+    to properly account for segment duration when customizing spectrogram parameters. Number of computed time-frequency domain representations 
+    also highly impacts the computational performance. In **default wavelet**, due to its high time resolution characteristics, an adaptive downsample is applied considering
+    the length of the signal.
+
 
 1. After selecting the **"Spectrogram"** method, the plot and respective buttons will be displayed. In the 
 figure below we can see the example of the spectrogram being computed on an Individual window with marked events.
