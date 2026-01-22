@@ -1,5 +1,8 @@
 # NeoDBS
 
+## 22.01.2026
+- Git e Gitea finalmente organizados, neste momento syncd
+
 ## 21.01.2026
 
 - .exe creation (file and path organization)

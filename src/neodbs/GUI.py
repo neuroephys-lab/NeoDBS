@@ -4071,7 +4071,6 @@ def set_font(size=16):
 
     font_path = utl.resource_path("fonts", "SF-Pro-Display-Semibold.otf")
     exist = os.path.exists(font_path)
-    print(font_path,': ', exist)
 
 
     if not exist: 
@@ -4083,7 +4082,6 @@ def set_font(size=16):
         parent="FONT_REGISTRY",
         tag="CURRENT_FONT"
     )
-    print(default_font)
     try:
         dpg.bind_font(default_font)
     except Exception as e: print(e)
@@ -8413,15 +8411,12 @@ def create_individual_window():
 # if __name__ == "__main__":
 def main():
     # rest of your runtime code
-    import sys
-    from pathlib import Path
-
-    if hasattr(sys, "_MEIPASS"):
-        base = Path(sys._MEIPASS)
-        with open("meipass_dump.txt", "w", encoding="utf-8") as f:
-            f.write(f"MEIPASS = {base}\n\n")
-            for p in base.rglob("*"):
-                f.write(str(p.relative_to(base)) + "\n")
+    # if hasattr(sys, "_MEIPASS"):
+    #     base = Path(sys._MEIPASS)
+    #     with open("meipass_dump.txt", "w", encoding="utf-8") as f:
+    #         f.write(f"MEIPASS = {base}\n\n")
+    #         for p in base.rglob("*"):
+    #             f.write(str(p.relative_to(base)) + "\n")
     
     #-------------------------------------------------
 

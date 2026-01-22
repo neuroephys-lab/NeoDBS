@@ -68,7 +68,7 @@ exe = EXE(
     a.datas,
     [],
     name='NeoDBS',
-    debug=True,
+    debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
