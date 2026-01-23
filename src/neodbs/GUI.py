@@ -418,6 +418,9 @@ def save_plot(sender,app_data,user_data):
     new_title = dpg.get_value(f"{plot_tag}_file_name")
     if new_title is not None: title=new_title
 
+    if directories['save'] != "":
+        title = directories['save'] + f'\{title}'
+
     if isinstance(app_data,str):
         last = app_data[app_data.find(' ')+1:]
         if last != 'None': 
@@ -430,6 +433,8 @@ def save_plot(sender,app_data,user_data):
     dpi = dpg.get_value(f"{plot_tag}_dpi")
     if dpi is None:
         dpi = 600
+    
+    
     ft.export_plot(info,plot_type,size=size,line_types=line_type,dpi=dpi)
     dpg.bind_item_theme(sender,change_button_color(-1))
     if not dpg.does_item_exist(f"{sender}_toast"): 
@@ -8427,6 +8432,7 @@ def load_main_ui():
 
     # Main window
     with dpg.window(label="NeoDBS", width=1000, height=600, tag="Main"):
+        set_font()
         with dpg.menu_bar():
             with dpg.menu(label="New"):
                 dpg.add_menu_item(label="Individual Window", callback=create_individual_window, user_data=default_classic_theme)
@@ -8494,7 +8500,6 @@ def main():
             version = dpg.add_text('Beta Version')
             dpg.bind_item_font(version, set_font(just_theme=True))
             dpg.bind_item_theme(version,change_text_color(5))
-            # dpg.bind_item_theme(start,classic_button(colors[3]))
             dpg.set_viewport_resizable(False)
         
         

@@ -1,8 +1,13 @@
 # NeoDBS
 
+## 23.01.2026v1
+- Directories all corrected ('save' was not working)
+- Font corrected
+
 ## 23.01.2026
 
 ### New:
+
 - Start page
 - License md (CC BY-NC-SA)
 - Installation explained
@@ -10,6 +15,7 @@
 - .exe updated
 
 ## 22.01.2026
+
 - Git e Gitea finalmente organizados, neste momento syncd
 
 ## 21.01.2026
