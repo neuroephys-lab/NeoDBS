@@ -8,8 +8,8 @@ and clinician's needs when performing signal and data analysis. Therefore, easy 
 of data are strong features of this platform.
 
 
-GUI Customization
------------------
+User Experience
+---------------
 
 User experience is one big focus of the platform, by creating an easier environment to perform difficult tasks such as 
 signal processing. 

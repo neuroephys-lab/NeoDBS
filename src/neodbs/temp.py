@@ -25,14 +25,10 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 
 '''
 
-title = 'output.png'
-n = title.find('.png')
-if n==-1:
-    title = title+'.png'
-else:
-    title = title[:title.find('.png')]
-
-print(title)
+og = (40,120,160)
+diff = (20,20,20)
+new = tuple(np.array(og)-np.array(diff))
+print(new)
 
 # import dearpygui.dearpygui as dpg
 

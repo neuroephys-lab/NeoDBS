@@ -79,6 +79,7 @@ colors = [
         (0, 255, 0, 255),      # green
         (255, 165, 0, 255),    # orange
         (255, 255, 0, 255),    # yellow
+        (211, 211, 211, 204), #light grey
         (255, 51, 255, 255), #pink
         (102, 0, 204, 255), #purple
         (0, 255, 255, 255), #cian
@@ -3983,12 +3984,20 @@ def change_plot_color(color_id):
             dpg.add_theme_color(dpg.mvPlotCol_MarkerOutline, color, category=dpg.mvThemeCat_Plots)
     return theme_id
 
-def classic_button():
+def classic_button(og=None):
+    if og is None:
+        og = (40, 141, 184,255)
+
+    diff = (20,20,20,0)
+    hovered = tuple(np.array(og)+np.array(diff))
+    active = tuple(np.array(og)-np.array(diff))
+
     with dpg.theme() as button_theme:
         with dpg.theme_component(dpg.mvButton):
-            dpg.add_theme_color(dpg.mvThemeCol_Button, (40, 141, 184)) #(90, 110, 130)
-            dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (60, 161, 204))
-            dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (20, 121, 164))
+            dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 8)
+            dpg.add_theme_color(dpg.mvThemeCol_Button, og) #(90, 110, 130)
+            dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, hovered)
+            dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, active)
     return button_theme
 
 def change_line_thickness(thickness, component = dpg.mvLineSeries):
@@ -4002,7 +4011,7 @@ def change_line_thickness(thickness, component = dpg.mvLineSeries):
             dpg.add_theme_style(dpg.mvPlotStyleVar_LineWeight, thickness, category=dpg.mvThemeCat_Plots)
     return theme_id
 
-def change_text_color(color_id):
+def change_text_color(color_id=5):
     '''
     Theme for text color
     
@@ -4055,7 +4064,7 @@ def resize_font(sender,app_data,user_data):
             slider=dpg.add_slider_int(default_value=dv,min_value=8,max_value=25,callback=set_size,width=80)
             dpg.add_button(label='Reset',callback= reset,small=True,user_data=slider)
 
-def set_font(size=16):
+def set_font(size=16,just_theme=False):
     '''
     Redefines actual theme to support function resize_font
     
@@ -4065,14 +4074,8 @@ def set_font(size=16):
     if dpg.does_item_exist("CURRENT_FONT"):
         dpg.delete_item("CURRENT_FONT")
 
-    # font_path = "src/fonts/SF-Pro-Display-Semibold.otf"
-    # exist = os.path.exists(font_path)
-    # print(f'{font_path}:', os.path.isfile(font_path))
-
     font_path = utl.resource_path("fonts", "SF-Pro-Display-Semibold.otf")
     exist = os.path.exists(font_path)
-
-
     if not exist: 
         return
     # add new font to existing registry
@@ -4082,6 +4085,13 @@ def set_font(size=16):
         parent="FONT_REGISTRY",
         tag="CURRENT_FONT"
     )
+    if just_theme: 
+        default_font = dpg.add_font(
+            font_path,
+            size,
+            parent="FONT_REGISTRY",
+        )
+        return default_font
     try:
         dpg.bind_font(default_font)
     except Exception as e: print(e)
@@ -8408,21 +8418,50 @@ def create_individual_window():
    
 #---------------------------------------MAIN WINDOW---------------------------------------
 
-# if __name__ == "__main__":
+def load_main_ui():
+    dpg.delete_item("Logo")
+
+    light_theme = themes.create_theme_imgui_light()
+    dark_theme = themes.create_theme_imgui_dark()
+    default_classic_theme = dpg.add_theme()  # DPG default
+
+    # Main window
+    with dpg.window(label="NeoDBS", width=1000, height=600, tag="Main"):
+        with dpg.menu_bar():
+            with dpg.menu(label="New"):
+                dpg.add_menu_item(label="Individual Window", callback=create_individual_window, user_data=default_classic_theme)
+                dpg.add_menu_item(label="Combined Window", callback=create_multiple_window, user_data=light_theme)
+            with dpg.menu(label="Edit"):
+                dpg.add_menu_item(label='Resize Font',callback=resize_font)
+                dpg.add_menu_item(label="Rename Electrodes", callback=change_electrodes_names)
+                dpg.add_menu_item(label='Rename Event/Group',callback = change_event_name)
+            with dpg.menu(label="Save"):
+                dpg.add_menu_item(label="Save All Plots", callback=save_all, user_data = ('Plots',None))
+                dpg.add_menu_item(label="Save All Tables", callback=save_all, user_data = ('Tables', None))
+                dpg.add_menu_item(label="Save All Signals", callback=save_all, user_data = ('Signals', None))
+            with dpg.menu(label="Themes"):
+                dpg.add_menu_item(label="Classic", callback=switch_theme, user_data=default_classic_theme)
+                dpg.add_menu_item(label="Light", callback=switch_theme, user_data=light_theme)
+                dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
+            with dpg.menu(label="Directories"):
+                dpg.add_menu_item(label="Recording Directory", callback=change_directory,user_data='rec')
+                dpg.add_menu_item(label="Events Directory", callback=change_directory, user_data='events')
+                dpg.add_menu_item(label="Save in... Directory", callback=change_directory,user_data='save')
+
+        with dpg.group(horizontal=True, pos=[150, 250]):
+            dpg.add_button(label="Individual/Recording Analysis", callback=create_individual_window,height=40,width=350,tag="individual")
+            dpg.bind_item_theme("individual",classic_button())
+            dpg.add_spacer(indent=5)
+            dpg.add_button(label="Combined/Event Analysis", callback=create_multiple_window,height=40,width=350,tag="combined")
+            dpg.bind_item_theme("combined",classic_button())
+        dpg.set_viewport_width(1000)
+        dpg.set_viewport_height(600)
+        dpg.set_viewport_resizable(True)
+        dpg.set_primary_window("Main", True)
+
 def main():
-    # rest of your runtime code
-    # if hasattr(sys, "_MEIPASS"):
-    #     base = Path(sys._MEIPASS)
-    #     with open("meipass_dump.txt", "w", encoding="utf-8") as f:
-    #         f.write(f"MEIPASS = {base}\n\n")
-    #         for p in base.rglob("*"):
-    #             f.write(str(p.relative_to(base)) + "\n")
-    
-    #-------------------------------------------------
 
     dpg.create_context()
-
-
     dpg.create_viewport(title="NeoDBS", width=500, height=500)
     dpg.set_viewport_large_icon('NeoDBS.ico')
     dpg.set_viewport_small_icon('NeoDBS.ico')
@@ -8430,15 +8469,11 @@ def main():
 
     with dpg.texture_registry(show=False):
         image_path = utl.resource_path("NeoDBS.png")
-        print(image_path,': ', image_path.exists())
-        # image_path = "src/NeoDBS.png"
-        # image_path = "NeoDBS.png"
         try:
             width, height, channels, data = dpg.load_image(str(image_path))
             dpg.add_static_texture(width, height, data, tag="logo_tex")
             flag = True
         except Exception as e: 
-            print(e)
             width, height = 500, 500
             flag = False
 
@@ -8450,61 +8485,22 @@ def main():
     # Create window that matches image size exactly
     with dpg.window(label="", tag="Logo", no_title_bar=True, no_resize=True, no_close=True,
                     no_collapse=True, no_move=True, width=width, height=height):
+        dpg.bind_theme(design())
         if flag:
             dpg.add_image("logo_tex", width=width, height=height, pos=[0, 0])
-
-    def load_main_ui():
-        dpg.delete_item("Logo")
-
-        light_theme = themes.create_theme_imgui_light()
-        dark_theme = themes.create_theme_imgui_dark()
-        default_classic_theme = dpg.add_theme()  # DPG default
-
-        # Main window
-        with dpg.window(label="NeoDBS", width=1000, height=600, tag="Main"):
-            dpg.bind_theme(design())
-            set_font()
-            with dpg.menu_bar():
-                with dpg.menu(label="New"):
-                    dpg.add_menu_item(label="Individual Window", callback=create_individual_window, user_data=default_classic_theme)
-                    dpg.add_menu_item(label="Combined Window", callback=create_multiple_window, user_data=light_theme)
-                with dpg.menu(label="Edit"):
-                    dpg.add_menu_item(label='Resize Font',callback=resize_font)
-                    dpg.add_menu_item(label="Rename Electrodes", callback=change_electrodes_names)
-                    dpg.add_menu_item(label='Rename Event/Group',callback = change_event_name)
-                with dpg.menu(label="Save"):
-                    dpg.add_menu_item(label="Save All Plots", callback=save_all, user_data = ('Plots',None))
-                    dpg.add_menu_item(label="Save All Tables", callback=save_all, user_data = ('Tables', None))
-                    dpg.add_menu_item(label="Save All Signals", callback=save_all, user_data = ('Signals', None))
-                with dpg.menu(label="Themes"):
-                    dpg.add_menu_item(label="Classic", callback=switch_theme, user_data=default_classic_theme)
-                    dpg.add_menu_item(label="Light", callback=switch_theme, user_data=light_theme)
-                    dpg.add_menu_item(label="Dark", callback=switch_theme, user_data=dark_theme)
-                with dpg.menu(label="Directories"):
-                    dpg.add_menu_item(label="Recording Directory", callback=change_directory,user_data='rec')
-                    dpg.add_menu_item(label="Events Directory", callback=change_directory, user_data='events')
-                    dpg.add_menu_item(label="Save in... Directory", callback=change_directory,user_data='save')
-
-            with dpg.theme() as button_theme:
-                with dpg.theme_component(dpg.mvButton):
-                    dpg.add_theme_color(dpg.mvThemeCol_Button, (40, 141, 184)) #(90, 110, 130)
-                    dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (60, 161, 204))
-                    dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (20, 121, 164))
-
-            with dpg.group(horizontal=True, pos=[150, 250]):
-                dpg.add_button(label="Individual/Recording Analysis", callback=create_individual_window,height=40,width=350,tag="individual")
-                dpg.bind_item_theme("individual",button_theme)
-                dpg.add_spacer(indent=5)
-                dpg.add_button(label="Combined/Event Analysis", callback=create_multiple_window,height=40,width=350,tag="combined")
-                dpg.bind_item_theme("combined",button_theme)
-            dpg.set_viewport_width(1000)
-            dpg.set_viewport_height(600)
-
+            start = dpg.add_button(label='Start',height=40,width=200,pos=[150,70],callback=load_main_ui)
+            dpg.bind_item_theme(start,change_button_color(3))
+            dpg.bind_item_font(start,set_font(27,True))
+            version = dpg.add_text('Beta Version')
+            dpg.bind_item_font(version, set_font(just_theme=True))
+            dpg.bind_item_theme(version,change_text_color(5))
+            # dpg.bind_item_theme(start,classic_button(colors[3]))
+            dpg.set_viewport_resizable(False)
         
-        dpg.set_primary_window("Main", True)
+        
 
     dpg.show_viewport()
-    dpg.set_frame_callback(70, load_main_ui)  
+    # dpg.set_frame_callback(70, load_main_ui)  
 
     dpg.start_dearpygui()
     dpg.destroy_context()

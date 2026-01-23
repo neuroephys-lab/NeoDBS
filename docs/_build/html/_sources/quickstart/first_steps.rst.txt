@@ -1,18 +1,57 @@
 First Steps
 ===========
 
-.. meta::
-   :description lang=en: The starting point for the tutorial set.
+NeoDBS is an open-source Python platform made for researchers and clinicians. You can easily use NeoDBS by 
+downloading our platform in **here**. 
 
-Tutorials will give a broad overview and working knowledge of NeoDBS. Tutorials do not cover every detail
-so refer to the documentation on each topic to learn more.
+System Requirements
+-------------------
+
+Graphics card with OpenGL 3.3 support.  
+Minimum 4 GB RAM (8 GB recommended).  
+Minimum 500 MB free disk space (1 GB recommended).
+
+**Windows**
+
+* Windows 10 / 11 (64-bit)
+* Microsoft Visual C++ Redistributable 2015–2022 (x64)
+
+If the application does not start, install:
+
+👉 https://aka.ms/vc14/vc_redist.x64.exe
+
+
+**Linux**
+
+* Linux x86_64
+* glibc ≥ 2.31
+* OpenGL 3.3 compatible graphics
+
+
+**macOS**
+
+* macOS 11 (Big Sur) or newer
+* Intel **or** Apple Silicon (separate builds)
+
 
 Installing
 ----------
 
-Python 3.6 (64 bit) or above is required. Other requirements will be automatically installed, with requirements.txt.
+Download ``NeoDBS.exe`` and run it.  
+No Python installation is required.
 
-.. code-block::
+If the application does not start on Windows, ensure that the
+Microsoft Visual C++ Redistributable (x64) is installed.
 
-    pip install neodbs
+
+**Tutorials**
+
+Tutorials give a broad overview and working knowledge of NeoDBS.
+They do not cover every detail, so refer to the documentation
+for each topic to learn more.
+
+
+**GitHub**
+
+NeoDBS source code, modules, and documentation are available on GitHub.
 

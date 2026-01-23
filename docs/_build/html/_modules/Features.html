@@ -45,6 +45,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart/first_steps.html">First Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html">First Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html#general-workflow">General Workflow</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul>
@@ -590,6 +591,9 @@
                 <span class="n">startangle</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
 
+    <span class="n">n</span> <span class="o">=</span> <span class="n">title</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;.png&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span><span class="o">!=-</span><span class="mi">1</span><span class="p">:</span> <span class="n">title</span> <span class="o">=</span> <span class="n">title</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span>
+    
     <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">)</span>
     <span class="n">output_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s1">.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">,</span><span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">)</span> <span class="c1">#</span>

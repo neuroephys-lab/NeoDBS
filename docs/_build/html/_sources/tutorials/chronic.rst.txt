@@ -138,6 +138,12 @@ for 30s. The average PSD estimate is also internally computed by the DBS system 
 5. PSD's can be converted between dB or original power values, by toggling **"Change to dB"**.
 6. **Standard deviation** can also be converted into the **95% Confidence Interval**, by choosing between the radio button under *"Shaded Area"*.
 
+.. note::
+    Changing units in the plot, will also convert the extracted features in the tables to the choosen units. Standard deviation may appear with negative values 
+    when converted to dB, but for statistical purposes must be considered as positive. The negative signal is kept for proper conversion to the original PSD units.
+    **Additionally**, when the plot only shows the mean series, conversion of units is disabled. To convert units, deselect the "Mean Only" checkbox.
+
+
 Event Summary
 ^^^^^^^^^^^^^
 

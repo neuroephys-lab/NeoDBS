@@ -48,6 +48,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart/first_steps.html">First Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html">First Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html#general-workflow">General Workflow</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul class="current">
@@ -241,6 +242,12 @@ for 30s. The average PSD estimate is also internally computed by the DBS system 
 <li><p>PSD's can be converted between dB or original power values, by toggling <strong>&quot;Change to dB&quot;</strong>.</p></li>
 <li><p><strong>Standard deviation</strong> can also be converted into the <strong>95% Confidence Interval</strong>, by choosing between the radio button under <em>&quot;Shaded Area&quot;</em>.</p></li>
 </ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Changing units in the plot, will also convert the extracted features in the tables to the choosen units. Standard deviation may appear with negative values
+when converted to dB, but for statistical purposes must be considered as positive. The negative signal is kept for proper conversion to the original PSD units.
+<strong>Additionally</strong>, when the plot only shows the mean series, conversion of units is disabled. To convert units, deselect the &quot;Mean Only&quot; checkbox.</p>
+</div>
 <section id="event-summary">
 <h3><span class="section-number">2.2.1. </span>Event Summary<a class="headerlink" href="#event-summary" title="Link to this heading">¶</a></h3>
 <p><strong>However</strong>, if chronic sensing is disabled (no <em>Timeline</em> button, but <em>Events</em> button is available) the user is still able to mark the patient events through the Medtronic's™ Patient App.</p>

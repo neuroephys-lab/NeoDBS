@@ -48,6 +48,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart/first_steps.html">First Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html">First Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html#general-workflow">General Workflow</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
 <ul class="current">
@@ -163,6 +164,8 @@ The minimum interval for the frequency band is 2 Hz and can be added using the f
 <li><p>To reset to the default bands, press &quot;Reset Bands&quot;.</p></li>
 </ol>
 <img alt="../_images/band.png" src="../_images/band.png" />
+<p>The current bands can be consulted by hovering the &quot;Insert Band of Interest&quot; button.</p>
+<img alt="../_images/CurrentBands.png" src="../_images/CurrentBands.png" />
 </section>
 <section id="psd-estimation">
 <h2><span class="section-number">3.2. </span>PSD Estimation<a class="headerlink" href="#psd-estimation" title="Link to this heading">¶</a></h2>
@@ -188,6 +191,12 @@ be beneficial to different tasks or research goals. You can find a more detailed
 <li><p>Automatically extracted features are organized into convenient groups, to facilitate visualization and exportation of features.</p></li>
 <li><p>Plots, signals and tables can be easily exported.</p></li>
 </ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Changing units in the plot, will also convert the extracted features in the tables to the choosen units. Standard deviation may appear with negative values
+when converted to dB, but for statistical purposes must be considered as positive. The negative signal is kept for proper conversion to the original PSD units.
+<strong>Additionally</strong>, when the plot only shows the mean series, conversion of units is disabled. To convert units, deselect &quot;Show Mean Only&quot; checkbox.</p>
+</div>
 <section id="band-power-over-time">
 <h3><span class="section-number">3.2.1. </span>Band Power Over Time<a class="headerlink" href="#band-power-over-time" title="Link to this heading">¶</a></h3>
 <p>When more than one recording from the same channel is present (when employing the PSD method), the user can see how the <strong>mean
@@ -246,9 +255,10 @@ those will also be automatically included in the representation of the spectrogr
 <p>In the <strong>Combined</strong> window, spectrogram is only available for event-locked segments (after inserting events).</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Since computing spectrogram has a high computational cost, it is advised to perform this method on smaller segments, or
-to properly account for segment duration when customizing spectrogram parameters. Number of computed spectrograms
-also highly impacts the computational performance.</p>
+<p>Since computing time-frequency domain representations has a high computational cost, it is advised to perform this method on smaller segments, or
+to properly account for segment duration when customizing spectrogram parameters. Number of computed time-frequency domain representations
+also highly impacts the computational performance. In <strong>default wavelet</strong>, due to its high time resolution characteristics, an adaptive downsample is applied considering
+the length of the signal.</p>
 </div>
 <p>1. After selecting the <strong>&quot;Spectrogram&quot;</strong> method, the plot and respective buttons will be displayed. In the
 figure below we can see the example of the spectrogram being computed on an Individual window with marked events.</p>

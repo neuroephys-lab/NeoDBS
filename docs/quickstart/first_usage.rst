@@ -38,6 +38,7 @@ As mentioned above, the user has the possibility to work with several workspaces
 Additionally, NeoDBS offers two different types of workspaces (windows). The **Individual Window** and the
 **Combined Window**. While they share the majority of functionalities, their final goal differs.
 
+.. _ind:
 Individual Window
 ^^^^^^^^^^^^^^^^^
 
@@ -49,6 +50,7 @@ events inside the same recording session. Therefore, it includes functionalities
 
 These are exclusive to this workspace, in order to enhance computing power and hetereogeneity in workspaces.
 
+.. _comb:
 Combined Window
 ^^^^^^^^^^^^^^^
 Unlike the individual window, the **Combined** window allows the selection of multiple files, focusing therefore on 
@@ -164,11 +166,15 @@ Here follows a simple summary of the recording modes, with their associated name
 
 .. _general:
 General Workflow
-----------------
+================
 
 After understanding what workspaces exist, here is a simple workflow for analysis using NeoDBS.
 
-1. **Select type of analysis to be performed:** Individual Window or Combined Window.
+0. **Launch NeoDBS** by running NeoDBS.exe and press **"Start"**.
+
+.. image:: ../img/start.png
+
+1. **Select type of analysis to be performed:** :ref:`Individual Window <ind>` or :ref:`Combined Window <comb>`.
 
 .. image:: ../img/main.png
 

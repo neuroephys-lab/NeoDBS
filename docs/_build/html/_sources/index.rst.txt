@@ -75,3 +75,8 @@ Full documentation of all function's and modules.
    :caption: Modules (Functions)
 
    api/neodbs   
+
+Collaborators
+-------------
+
+NeoDBS was developed by *Larissa Rodrigues*, Andreia Ferreira, Inês Pereira and Luis Jacinto in the `Neurophysiology and Neuroenginnering Laboratory <https://www.neuro-ephys.org/>`_ (Porto, Portugal).

@@ -1,5 +1,14 @@
 # NeoDBS
 
+## 23.01.2026
+
+### New:
+- Start page
+- License md (CC BY-NC-SA)
+- Installation explained
+- Documentation ready + collaborators
+- .exe updated
+
 ## 22.01.2026
 - Git e Gitea finalmente organizados, neste momento syncd
 
