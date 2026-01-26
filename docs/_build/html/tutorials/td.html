@@ -1,22 +1,22 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="eng" data-content_root="../">
+<html class="writer-html5" lang="eng">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>1. In-Clinic Data &mdash; NeoDBS Beta documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
-      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
 
   
-      <script src="../_static/documentation_options.js?v=640d522d"></script>
-      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
-      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -101,7 +101,7 @@
            <div itemprop="articleBody">
              
   <section id="in-clinic-data">
-<span id="icd"></span><h1><span class="section-number">1. </span>In-Clinic Data<a class="headerlink" href="#in-clinic-data" title="Link to this heading">¶</a></h1>
+<span id="icd"></span><h1><span class="section-number">1. </span>In-Clinic Data<a class="headerlink" href="#in-clinic-data" title="Permalink to this heading">¶</a></h1>
 <p>In this tutorial, a simple workflow is given to perform the analysis of recordings saved in the time-domain
 <strong>(Streaming, Indefinite Streaming, Survey and Setup)</strong>.
 After selecting the type of window and file(s) to be analyzed, you must choose the type of recording you want
@@ -159,7 +159,7 @@ signals selected on the main plot of the respective tab. <strong>If the signal i
 the methods will NOT be applied.</strong> This ensures full customization and independency of the data analysis.</p>
 </div>
 <section id="preprocessing">
-<h2><span class="section-number">1.1. </span>Preprocessing<a class="headerlink" href="#preprocessing" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">1.1. </span>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this heading">¶</a></h2>
 <p>Typically, the first step in any data analysis pipeline is &quot;cleaning&quot; the data to remove undesired noise or
 signals. NeoDBS offers a variety of filters, and pipelines, that are customizable to the user needs.</p>
 <div class="admonition warning">
@@ -169,7 +169,7 @@ to the raw original signals without losing your progress, <strong>as the main pl
 If you want to restore the original signals, the user must close and reopen the respective tab.</p>
 </div>
 <section id="default-filter">
-<h3><span class="section-number">1.1.1. </span>Default Filter<a class="headerlink" href="#default-filter" title="Link to this heading">¶</a></h3>
+<h3><span class="section-number">1.1.1. </span>Default Filter<a class="headerlink" href="#default-filter" title="Permalink to this heading">¶</a></h3>
 <p>For more non-experienced users, NeoDBS offers a <strong>Default Filter</strong> that removes cardiac component and
 maintains only the desired frequencies, selected in the respective input spaces. This method was adapted
 from UF BRAVO's Platform (<a class="reference external" href="https://github.com/Fixel-Institute/BRAVO">https://github.com/Fixel-Institute/BRAVO</a>). This filter performs a 5th order Butterworth
@@ -180,13 +180,9 @@ Bandpass filter with cardiac artifact removal.</p>
 <li><p>The main plot will be updated with the filtered signals.</p></li>
 </ol>
 <img alt="../_images/default_filter.png" src="../_images/default_filter.png" />
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If the lower bound of the interval of frequencies is set to &lt;1 Hz, the order of the filter is set to 3rd order.</p>
-</div>
 </section>
 <section id="custom-filters">
-<h3><span class="section-number">1.1.2. </span>Custom Filters<a class="headerlink" href="#custom-filters" title="Link to this heading">¶</a></h3>
+<h3><span class="section-number">1.1.2. </span>Custom Filters<a class="headerlink" href="#custom-filters" title="Permalink to this heading">¶</a></h3>
 <p>For users that require specific filtering parameters, NeoDBS also presents 7 different infinite impulse response
 (IIR) filters.</p>
 <ol class="arabic simple">
@@ -200,7 +196,7 @@ Bandpass filter with cardiac artifact removal.</p>
 </section>
 </section>
 <section id="segmentation">
-<h2><span class="section-number">1.2. </span>Segmentation<a class="headerlink" href="#segmentation" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">1.2. </span>Segmentation<a class="headerlink" href="#segmentation" title="Permalink to this heading">¶</a></h2>
 <p>Recordings can be segmented, with a minimum of 10 seconds of duration.</p>
 <ol class="arabic simple">
 <li><p>Select the <strong>start</strong> and <strong>end</strong> of the segment.</p></li>
@@ -210,7 +206,7 @@ Bandpass filter with cardiac artifact removal.</p>
 <img alt="../_images/segmentation.png" src="../_images/segmentation.png" />
 </section>
 <section id="event-locked-analysis">
-<span id="ela"></span><h2><span class="section-number">1.3. </span>Event-locked Analysis<a class="headerlink" href="#event-locked-analysis" title="Link to this heading">¶</a></h2>
+<span id="ela"></span><h2><span class="section-number">1.3. </span>Event-locked Analysis<a class="headerlink" href="#event-locked-analysis" title="Permalink to this heading">¶</a></h2>
 <p>NeoDBS offers the possibility of analyzing in-clinic events that were recorded during the recording session.
 The user can either <strong>mark</strong> or <strong>segment</strong> the in-clinic events by uploading a .txt file with the described in-clinic events.
 This a functionality made to improve analyzing in-clinic tasks, such as protocols.</p>
@@ -238,7 +234,7 @@ has been emplyed, no more segmentation or events can be added.</p>
 <img alt="../_images/marked_events.png" src="../_images/marked_events.png" />
 </section>
 <section id="impedance">
-<h2><span class="section-number">1.4. </span>Impedance<a class="headerlink" href="#impedance" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">1.4. </span>Impedance<a class="headerlink" href="#impedance" title="Permalink to this heading">¶</a></h2>
 <p>If during the recording session any impedance test was performed, either with <em>Setup</em> or <em>Survey</em> modes, the impedance values can be accessed in an independent tab.</p>
 <ol class="arabic simple">
 <li><p>Press <strong>&quot;Impedance&quot;</strong> to open the impedance tab.</p></li>
@@ -254,7 +250,7 @@ has been emplyed, no more segmentation or events can be added.</p>
 </ol>
 </section>
 <section id="signal-analysis">
-<h2><span class="section-number">1.5. </span>Signal Analysis<a class="headerlink" href="#signal-analysis" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">1.5. </span>Signal Analysis<a class="headerlink" href="#signal-analysis" title="Permalink to this heading">¶</a></h2>
 <p>Tutorials to apply analysis methods can be found in the <a class="reference internal" href="features.html"><span class="doc">Signal Analysis</span></a> page.</p>
 </section>
 </section>

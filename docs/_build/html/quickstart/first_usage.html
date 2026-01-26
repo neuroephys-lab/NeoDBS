@@ -1,23 +1,23 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="eng" data-content_root="../">
+<html class="writer-html5" lang="eng">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <meta content="The starting point for the tutorial set." lang="en" name="description" xml:lang="en" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>First Usage &mdash; NeoDBS Beta documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
-      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
 
   
-      <script src="../_static/documentation_options.js?v=640d522d"></script>
-      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
-      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -103,7 +103,7 @@
            <div itemprop="articleBody">
              
   <section id="first-usage">
-<h1>First Usage<a class="headerlink" href="#first-usage" title="Link to this heading">¶</a></h1>
+<h1>First Usage<a class="headerlink" href="#first-usage" title="Permalink to this heading">¶</a></h1>
 <p>NeoDBS is a platform designed for maximal user-experience, with every item and functionality optimized for
 easy data analysis and natural workflow. <em>Even for unexperienced users in signal processing and analysis.</em></p>
 <p>With this, NeoDBS was developed to allow <strong>several workspaces open simultaneously</strong>. For that, the user can
@@ -122,12 +122,12 @@ signal <strong>filtering</strong> and <strong>spectral analysis</strong> pipelin
 like health professionals, or experienced users such as data analists and researchers.</p>
 <img alt="../_images/browser.png" src="../_images/browser.png" />
 <section id="types-of-workspaces">
-<h2>Types of Workspaces<a class="headerlink" href="#types-of-workspaces" title="Link to this heading">¶</a></h2>
+<h2>Types of Workspaces<a class="headerlink" href="#types-of-workspaces" title="Permalink to this heading">¶</a></h2>
 <p>As mentioned above, the user has the possibility to work with several workspaces simultaneously.
 Additionally, NeoDBS offers two different types of workspaces (windows). The <strong>Individual Window</strong> and the
 <strong>Combined Window</strong>. While they share the majority of functionalities, their final goal differs.</p>
 <section id="individual-window">
-<span id="ind"></span><h3>Individual Window<a class="headerlink" href="#individual-window" title="Link to this heading">¶</a></h3>
+<span id="ind"></span><h3>Individual Window<a class="headerlink" href="#individual-window" title="Permalink to this heading">¶</a></h3>
 <p>The <strong>Individual</strong> window goal is to analyze a single recording session, focusing on the evolution of signals and
 events inside the same recording session. Therefore, it includes functionalities like:</p>
 <ul class="simple">
@@ -137,7 +137,7 @@ events inside the same recording session. Therefore, it includes functionalities
 <p>These are exclusive to this workspace, in order to enhance computing power and hetereogeneity in workspaces.</p>
 </section>
 <section id="combined-window">
-<span id="comb"></span><h3>Combined Window<a class="headerlink" href="#combined-window" title="Link to this heading">¶</a></h3>
+<span id="comb"></span><h3>Combined Window<a class="headerlink" href="#combined-window" title="Permalink to this heading">¶</a></h3>
 <p>Unlike the individual window, the <strong>Combined</strong> window allows the selection of multiple files, focusing therefore on
 the evolution of the signals across different recording sessions and to analyze the average features of all selected sessions.
 Additionally, it includes functionalities such as:</p>
@@ -196,14 +196,14 @@ Analysis</p></td>
 </section>
 </section>
 <section id="types-of-recordings">
-<h2>Types of Recordings<a class="headerlink" href="#types-of-recordings" title="Link to this heading">¶</a></h2>
+<h2>Types of Recordings<a class="headerlink" href="#types-of-recordings" title="Permalink to this heading">¶</a></h2>
 <p>NeoDBS is adapted to ingest and analyze files from commercialy available DBS systems with sensing capacities (Medtronic Percept + BrainSense™ system).
 The system allows to record signals on different recording modes with different purposes and configurations. To know more about these recording modes
 see <a class="reference external" href="https://iopscience.iop.org/article/10.1088/1741-2552/ac1d5b">here</a> (table 1).</p>
 <p>Because of the differences in purpose and configuration across the recording modes, they are accessed and treated independently, in the respective tabs, as mentioned above.
 Two main types of recordings can be identified: recordings made <strong>In-Clinic</strong> or <strong>At Home</strong>.</p>
 <section id="in-clinic-data">
-<h3>In-Clinic Data<a class="headerlink" href="#in-clinic-data" title="Link to this heading">¶</a></h3>
+<h3>In-Clinic Data<a class="headerlink" href="#in-clinic-data" title="Permalink to this heading">¶</a></h3>
 <p><strong>In-Clinic</strong> (<em>BrainSense™ Streaming, Indefinite Streaming, Survey and Setup</em>) recordings are acquired in the presence of the physician and are primarily used to configure electrodes, assess electrode integrity, identify artifacts,
 and analyze the patient's neural activity with or without active stimulation therapy. These recordings are stored in the session file in their <strong>raw format as time-domain signals</strong>.</p>
 <img alt="../_images/in-clinic.png" src="../_images/in-clinic.png" />
@@ -211,7 +211,7 @@ and analyze the patient's neural activity with or without active stimulation the
 <p>After reviewing how the <a class="reference internal" href="#general"><span class="std std-ref">NeoDBS workflow</span></a> operates, a simple <a class="reference internal" href="../tutorials/td.html#icd"><span class="std std-ref">tutorial</span></a> is available to guide the analysis of this type of recordings.</p>
 </section>
 <section id="at-home-data">
-<h3>At Home Data<a class="headerlink" href="#at-home-data" title="Link to this heading">¶</a></h3>
+<h3>At Home Data<a class="headerlink" href="#at-home-data" title="Permalink to this heading">¶</a></h3>
 <p><strong>At-Home</strong> (<em>BrainSense™ Timeline and Events</em>), recordings are available when chronic sensing has been enabled by the physician and allow long-term (24/7) monitoring of the patient's
 neural activity under real-world conditions. These recordings are stored in the session file as <strong>processed signals</strong> rather than as raw signals.</p>
 <img alt="../_images/at-home.png" src="../_images/at-home.png" />
@@ -295,7 +295,7 @@ manual input</p></td>
 </section>
 </section>
 <section id="general-workflow">
-<span id="general"></span><h1>General Workflow<a class="headerlink" href="#general-workflow" title="Link to this heading">¶</a></h1>
+<span id="general"></span><h1>General Workflow<a class="headerlink" href="#general-workflow" title="Permalink to this heading">¶</a></h1>
 <p>After understanding what workspaces exist, here is a simple workflow for analysis using NeoDBS.</p>
 <ol class="arabic simple" start="0">
 <li><p><strong>Launch NeoDBS</strong> by running NeoDBS.exe and press <strong>&quot;Start&quot;</strong>.</p></li>

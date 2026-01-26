@@ -1,22 +1,22 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="eng" data-content_root="../">
+<html class="writer-html5" lang="eng">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DataHandling module &mdash; NeoDBS Beta documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
-      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
 
   
-      <script src="../_static/documentation_options.js?v=640d522d"></script>
-      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
-      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -88,10 +88,10 @@
            <div itemprop="articleBody">
              
   <section id="module-DataHandling">
-<span id="datahandling-module"></span><h1>DataHandling module<a class="headerlink" href="#module-DataHandling" title="Link to this heading">¶</a></h1>
+<span id="datahandling-module"></span><h1>DataHandling module<a class="headerlink" href="#module-DataHandling" title="Permalink to this heading">¶</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.MissingTimeline">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">MissingTimeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#MissingTimeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.MissingTimeline" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">MissingTimeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#MissingTimeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.MissingTimeline" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks missing points in timeline (missing point: when difference between points is &gt;= than 11 minutes) and returns a new corrected timeline dict, correcting missing LFP values through mean interpolation.</p>
 <dl class="simple">
 <dt>new_dic = {</dt><dd><p>'X': corrected timeline,
@@ -115,14 +115,14 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.add_utc_conversion_to_dates">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">add_utc_conversion_to_dates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#add_utc_conversion_to_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.add_utc_conversion_to_dates" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">add_utc_conversion_to_dates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#add_utc_conversion_to_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.add_utc_conversion_to_dates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Recursively convert all 'Date'-related fields to UTC with offset (time-shifted).
 Assumes naive datetimes are in the specified local timezone.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>Data</strong> -- dict, from DataHandling.getData(), from DataHandling.getData()</p></li>
-<li><p><strong>offset</strong></p></li>
+<li><p><strong>offset</strong> -- </p></li>
 </ul>
 </dd>
 </dl>
@@ -130,7 +130,7 @@ Assumes naive datetimes are in the specified local timezone.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.correctMissingTimeline">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">correctMissingTimeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Timeline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'X'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#correctMissingTimeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.correctMissingTimeline" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">correctMissingTimeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Timeline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'X'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#correctMissingTimeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.correctMissingTimeline" title="Permalink to this definition">¶</a></dt>
 <dd><p>Corrects timeline recordings for both hemispheres.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -148,7 +148,7 @@ Assumes naive datetimes are in the specified local timezone.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.extract_time_offset">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">extract_time_offset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#extract_time_offset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.extract_time_offset" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">extract_time_offset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#extract_time_offset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.extract_time_offset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get time offset, from organized Data dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -165,7 +165,7 @@ Assumes naive datetimes are in the specified local timezone.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getBatteryInfo">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getBatteryInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getBatteryInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getBatteryInfo" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getBatteryInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getBatteryInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getBatteryInfo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns battery information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -176,7 +176,7 @@ Assumes naive datetimes are in the specified local timezone.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getData">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getData" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getData" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates organized dictionary with information in JSON file. Dictionary has 7 main keys, organized by the recording modes and device information.
 Data = {</p>
 <blockquote>
@@ -201,7 +201,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getDeviceInfo">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getDeviceInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getDeviceInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getDeviceInfo" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getDeviceInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getDeviceInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getDeviceInfo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns device information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -212,7 +212,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getEventLog">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getEventLog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getEventLog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getEventLog" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getEventLog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getEventLog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getEventLog" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns log of marked events.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -223,7 +223,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getEventSummary">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getEventSummary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getEventSummary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getEventSummary" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getEventSummary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getEventSummary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getEventSummary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns event summary (number of occurences of each event).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -237,7 +237,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getEventsElectrodes">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getEventsElectrodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getEventsElectrodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getEventsElectrodes" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getEventsElectrodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getEventsElectrodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getEventsElectrodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns active electrodes at beginning and end, for at-home recordings.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -251,7 +251,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getImpedance">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getImpedance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getImpedance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getImpedance" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getImpedance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getImpedance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getImpedance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns monopolar and bipolar impedance test results, per hemisphere.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -265,7 +265,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getLastSessionDate">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getLastSessionDate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getLastSessionDate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getLastSessionDate" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getLastSessionDate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getLastSessionDate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getLastSessionDate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns date of previous session.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -276,7 +276,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getModeSignals">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getModeSignals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getModeSignals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getModeSignals" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getModeSignals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getModeSignals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getModeSignals" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns signals of respective mode, from Data dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -293,7 +293,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getModes">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getModes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getModes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getModes" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getModes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getModes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getModes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets recording modes present in Data dictionary. Verifies if Data is empty or damaged (with recordings available).</p>
 <dl class="simple">
 <dt>Modes:</dt><dd><ul class="simple">
@@ -318,7 +318,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getPatientInfo">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getPatientInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getPatientInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getPatientInfo" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getPatientInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getPatientInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getPatientInfo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns patient information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -329,7 +329,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getRecordingDuration">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getRecordingDuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recording</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getRecordingDuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getRecordingDuration" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getRecordingDuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recording</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getRecordingDuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getRecordingDuration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns recording duration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -346,7 +346,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getSessionDate">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getSessionDate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getSessionDate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getSessionDate" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getSessionDate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getSessionDate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getSessionDate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns string of session date.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -357,7 +357,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getSessionDuration">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getSessionDuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getSessionDuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getSessionDuration" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getSessionDuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getSessionDuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getSessionDuration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets session duration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -371,7 +371,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getSignals">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getSignals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getSignals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getSignals" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getSignals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getSignals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getSignals" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns signals in respective mode, properly handled into a clean dictionary.</p>
 <dl>
 <dt>dict = {</dt><dd><blockquote>
@@ -398,7 +398,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getStimStatus">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getStimStatus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getStimStatus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getStimStatus" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getStimStatus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getStimStatus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getStimStatus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets status (ON/OFF) of stimulation, from beginning and end of recording session.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -412,7 +412,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getStimulation">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getStimulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getStimulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getStimulation" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getStimulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getStimulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getStimulation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns at-home stimulation amplitude.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -426,7 +426,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getStreamingStimulation">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getStreamingStimulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getStreamingStimulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getStreamingStimulation" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getStreamingStimulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getStreamingStimulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getStreamingStimulation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns active stimulation group.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -443,7 +443,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.info_electrodes">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">info_electrodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Initial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#info_electrodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.info_electrodes" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">info_electrodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Initial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#info_electrodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.info_electrodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return information of the active electrodes from TIMELINE mode
 side 0 - Left
 side 1 - Right</p>

@@ -1,22 +1,22 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="eng" data-content_root="../">
+<html class="writer-html5" lang="eng">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>2. At-Home Data &mdash; NeoDBS Beta documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
-      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
 
   
-      <script src="../_static/documentation_options.js?v=640d522d"></script>
-      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
-      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -104,7 +104,7 @@
            <div itemprop="articleBody">
              
   <section id="at-home-data">
-<span id="ahd"></span><h1><span class="section-number">2. </span>At-Home Data<a class="headerlink" href="#at-home-data" title="Link to this heading">¶</a></h1>
+<span id="ahd"></span><h1><span class="section-number">2. </span>At-Home Data<a class="headerlink" href="#at-home-data" title="Permalink to this heading">¶</a></h1>
 <p>Medtronic's Percept BrainSense™ technology allows at-home recordings to track the effects of symptoms,
 medication and routine outside of the clinic.</p>
 <p>There are two <strong>at-home recording modes: Timeline</strong> and <strong>Events</strong>.</p>
@@ -145,7 +145,7 @@ manual input</p></td>
 </tbody>
 </table>
 <section id="timeline">
-<h2><span class="section-number">2.1. </span>Timeline<a class="headerlink" href="#timeline" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">2.1. </span>Timeline<a class="headerlink" href="#timeline" title="Permalink to this heading">¶</a></h2>
 <p>The BrainSense™ <em>Timeline</em> mode acquires the mean signal power of a pre-defined sensing band (5 Hz bandwidth) every
 10 minutes.</p>
 <ol class="arabic simple">
@@ -162,7 +162,7 @@ to event-locked analysis functionalities, described <a class="reference internal
 configuration of each file selected, is organized under the correspondent header.</p>
 <img alt="../_images/timeline_comb.png" src="../_images/timeline_comb.png" />
 <section id="outlier-removal">
-<h3><span class="section-number">2.1.1. </span>Outlier Removal<a class="headerlink" href="#outlier-removal" title="Link to this heading">¶</a></h3>
+<h3><span class="section-number">2.1.1. </span>Outlier Removal<a class="headerlink" href="#outlier-removal" title="Permalink to this heading">¶</a></h3>
 <p><em>Timeline</em> is a chronic recording mode that stores an averaged power of a 5 Hz band, every 10 minutes. Although these
 are unique recording capacities, the system still presents some fragilities. It is very prone to missing points and to
 <strong>outlier values</strong>. NeoDBS offers an <strong>outlier removal filter</strong>, based on the root mean square (RMS)
@@ -179,7 +179,7 @@ Any LFP value above this threshold is treated as an outlier and replaced by the 
 <img alt="../_images/timeline_features.png" src="../_images/timeline_features.png" />
 </section>
 <section id="missing-points">
-<h3><span class="section-number">2.1.2. </span>Missing Points<a class="headerlink" href="#missing-points" title="Link to this heading">¶</a></h3>
+<h3><span class="section-number">2.1.2. </span>Missing Points<a class="headerlink" href="#missing-points" title="Permalink to this heading">¶</a></h3>
 <p>As mentioned previously, <em>Timeline</em> recording mode is very prone to have missing points, due to its continuous configuration and low resolution.
 NeoDBS automatically identifies if there any missing points in the available signals and it is signaled in the respective tab (see image above).
 The missing points are computed as interpolation of the mean value between the bounding present points.</p>
@@ -189,7 +189,7 @@ The missing points are computed as interpolation of the mean value between the b
 </ol>
 </section>
 <section id="event-locked-analysis">
-<span id="elat"></span><h3><span class="section-number">2.1.3. </span>Event-locked Analysis<a class="headerlink" href="#event-locked-analysis" title="Link to this heading">¶</a></h3>
+<span id="elat"></span><h3><span class="section-number">2.1.3. </span>Event-locked Analysis<a class="headerlink" href="#event-locked-analysis" title="Permalink to this heading">¶</a></h3>
 <p>When using the <strong>Combined</strong> window, the user has the possibility to epoch all the events marked by the user at-home (<strong>patient events</strong>),
 allowing an automatic event-locked analysis of the chronic recordings. The segments are centered around the patient event, with 1h-interval before and after the event.</p>
 <ol class="arabic simple">
@@ -201,7 +201,7 @@ allowing an automatic event-locked analysis of the chronic recordings. The segme
 <img alt="../_images/timeline_events.png" src="../_images/timeline_events.png" />
 </section>
 <section id="circadian-rhythm">
-<h3><span class="section-number">2.1.4. </span>Circadian Rhythm<a class="headerlink" href="#circadian-rhythm" title="Link to this heading">¶</a></h3>
+<h3><span class="section-number">2.1.4. </span>Circadian Rhythm<a class="headerlink" href="#circadian-rhythm" title="Permalink to this heading">¶</a></h3>
 <p>From the <em>Timeline</em> recordings, NeoDBS computes the <strong>circadian rhythm</strong> by aligning all recordings by their time component.
 The respective mean and standard deviation are calculated and plotted, according to the selected signals.</p>
 <ol class="arabic simple">
@@ -215,7 +215,7 @@ The respective mean and standard deviation are calculated and plotted, according
 <img alt="../_images/circadian.png" src="../_images/circadian.png" />
 </section>
 <section id="stimulation">
-<h3><span class="section-number">2.1.5. </span>Stimulation<a class="headerlink" href="#stimulation" title="Link to this heading">¶</a></h3>
+<h3><span class="section-number">2.1.5. </span>Stimulation<a class="headerlink" href="#stimulation" title="Permalink to this heading">¶</a></h3>
 <p>Stimulation current amplitude levels throughout the days can be accessed in the <em>Timeline</em> tab, under the header <em>Signal Analysis</em>.
 Information about the stimulation electrodes and current is tabled per day, and also presented in a graph. This information
 can be very helpful for adaptive stimulation cases or to check configuration changes made by user, such as turning off the stimulation due to discomfort/symptom worsening.</p>
@@ -228,7 +228,7 @@ can be very helpful for adaptive stimulation cases or to check configuration cha
 </section>
 </section>
 <section id="events">
-<h2><span class="section-number">2.2. </span>Events<a class="headerlink" href="#events" title="Link to this heading">¶</a></h2>
+<h2><span class="section-number">2.2. </span>Events<a class="headerlink" href="#events" title="Permalink to this heading">¶</a></h2>
 <p>The BrainSense™ Events mode (LFP Snapshots) is for at home usage and <strong>is combined with
 the BrainSense™ Timeline mode</strong>. Patients manually mark events with a wireless device, time
 stamping events in the BrainSense™ timeline data and triggering recording of high definition LFP
@@ -249,7 +249,7 @@ when converted to dB, but for statistical purposes must be considered as positiv
 <strong>Additionally</strong>, when the plot only shows the mean series, conversion of units is disabled. To convert units, deselect the &quot;Mean Only&quot; checkbox.</p>
 </div>
 <section id="event-summary">
-<h3><span class="section-number">2.2.1. </span>Event Summary<a class="headerlink" href="#event-summary" title="Link to this heading">¶</a></h3>
+<h3><span class="section-number">2.2.1. </span>Event Summary<a class="headerlink" href="#event-summary" title="Permalink to this heading">¶</a></h3>
 <p><strong>However</strong>, if chronic sensing is disabled (no <em>Timeline</em> button, but <em>Events</em> button is available) the user is still able to mark the patient events through the Medtronic's™ Patient App.</p>
 <p>Through the same button, the timestamps of the marked events are displayed.</p>
 <img alt="../_images/event_summary.png" src="../_images/event_summary.png" />

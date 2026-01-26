@@ -1,6 +1,14 @@
 # NeoDBS
 
+## 26.01.2026
+
+- Git with version (tag @ v0.1.0)
+- Default filter: if 0 --> 0.5 (5th order)
+- Documentation: removed collaborators name and added version
+- tags in github (v0.1.0)
+
 ## 23.01.2026v1
+
 - Directories all corrected ('save' was not working)
 - Font corrected
 

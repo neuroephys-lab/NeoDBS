@@ -419,7 +419,7 @@ def save_plot(sender,app_data,user_data):
     if new_title is not None: title=new_title
 
     if directories['save'] != "":
-        title = directories['save'] + f'\{title}'
+        title = directories['save'] + f"\\{title}"
 
     if isinstance(app_data,str):
         last = app_data[app_data.find(' ')+1:]
@@ -8425,6 +8425,7 @@ def create_individual_window():
 
 def load_main_ui():
     dpg.delete_item("Logo")
+    set_font()
 
     light_theme = themes.create_theme_imgui_light()
     dark_theme = themes.create_theme_imgui_dark()
@@ -8432,7 +8433,6 @@ def load_main_ui():
 
     # Main window
     with dpg.window(label="NeoDBS", width=1000, height=600, tag="Main"):
-        set_font()
         with dpg.menu_bar():
             with dpg.menu(label="New"):
                 dpg.add_menu_item(label="Individual Window", callback=create_individual_window, user_data=default_classic_theme)
@@ -8465,6 +8465,8 @@ def load_main_ui():
         dpg.set_viewport_resizable(True)
         dpg.set_primary_window("Main", True)
 
+    # dpg.delete_item("Logo")
+
 def main():
 
     dpg.create_context()
@@ -8494,10 +8496,10 @@ def main():
         dpg.bind_theme(design())
         if flag:
             dpg.add_image("logo_tex", width=width, height=height, pos=[0, 0])
-            start = dpg.add_button(label='Start',height=40,width=200,pos=[150,70],callback=load_main_ui)
+            start = dpg.add_button(label='start',height=30,width=200,pos=[150,340],callback=load_main_ui)
             dpg.bind_item_theme(start,change_button_color(3))
-            dpg.bind_item_font(start,set_font(27,True))
-            version = dpg.add_text('Beta Version')
+            dpg.bind_item_font(start,set_font(24,True))
+            version = dpg.add_text('Version 0.1.0')
             dpg.bind_item_font(version, set_font(just_theme=True))
             dpg.bind_item_theme(version,change_text_color(5))
             dpg.set_viewport_resizable(False)
@@ -8505,8 +8507,6 @@ def main():
         
 
     dpg.show_viewport()
-    # dpg.set_frame_callback(70, load_main_ui)  
-
     dpg.start_dearpygui()
     dpg.destroy_context()
 

@@ -64,8 +64,6 @@ Bandpass filter with cardiac artifact removal.
 
 .. image:: ../img/default_filter.png
 
-.. note::
-    If the lower bound of the interval of frequencies is set to <1 Hz, the order of the filter is set to 3rd order.
 
 Custom Filters
 ^^^^^^^^^^^^^^

@@ -79,4 +79,4 @@ Full documentation of all function's and modules.
 Collaborators
 -------------
 
-NeoDBS was developed by *Larissa Rodrigues*, Andreia Ferreira, Inês Pereira and Luis Jacinto in the `Neurophysiology and Neuroenginnering Laboratory <https://www.neuro-ephys.org/>`_ (Porto, Portugal).
+NeoDBS was developed by the `Neurophysiology and Neuroenginnering Laboratory <https://www.neuro-ephys.org/>`_ (Porto, Portugal). Article coming soon.
