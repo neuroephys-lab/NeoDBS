@@ -208,9 +208,11 @@ After understanding what workspaces exist, here is a simple workflow for analysi
 
 9. **Filtering** methods will update the signals in the main plot. **Signal Analysis** methods create a new plot, under a **child tab** named after the applied method.
 
-10. **Signals, plots and tables can be easily exported** either individually, per window (workspace) or all windows at once.
+10. **Signals, plots and tables can be easily exported** either individually, per window (workspace) or all windows at once. 
 
 .. image:: ../img/save.png
+
+11. Plot **manipulation** is also facilitated. **Right click** on plot, or one of the axis, to see more tools to help you explore the plot.
 
 Here you can find a scheme that represents the possible workflow in NeoDBS.
 

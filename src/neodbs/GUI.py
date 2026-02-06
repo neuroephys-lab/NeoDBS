@@ -5281,9 +5281,10 @@ def insert_events(sender, app_data, user_data):
     window_type = extract_type_window(window_id)
 
     def read_txt(sender, app_data, user_data):
+        window_id, tab_tag, signal_tags = user_data
         if dpg.does_item_exist(f'{tab_tag}_events_present'):
             dpg.delete_item(f'{tab_tag}_events_present')
-        window_id, tab_tag, signal_tags = user_data
+        
         
         streaming_file = app_data['file_path_name']
         events = utl.read_event_file(streaming_file)
@@ -5373,10 +5374,10 @@ def insert_events(sender, app_data, user_data):
                         dpg.bind_item_theme(m, change_inf_line_color(event_types.index(etype)))
 
                     signal_tags[tag] = True
+                dpg.configure_item(f"x_axis_{tab_tag}",label='Time (MM/DD/YYYY UTC)')
 
             scatter = np.array(scatter, dtype=object)
             types = np.unique(scatter[:,1]).tolist()
-            dpg.configure_item(f"x_axis_{tab_tag}",label='Time (MM/DD/YYYY UTC)')
 
             if len(types)>1:
                 if dpg.does_item_exist(f"{tab_tag}_By Recording:_buttons"): 
@@ -5395,10 +5396,13 @@ def insert_events(sender, app_data, user_data):
                         toggleType(signal_tags,parent=f"{new_parent}_events",user_data=(day, window_id, tab_tag))  
                     dpg.configure_item(f"{new_parent}_events", auto_resize_x=True)
             
+                     
+
         else: 
             if not dpg.does_item_exist(f'{tab_tag}_events_present'):
                 dpg.add_text("No Events in the present recordings!", parent=f"{tab_tag}_add_events", tag=f'{tab_tag}_events_present')
                 dpg.bind_item_theme(f'{tab_tag}_events_present',change_text_color(1))
+        dpg.fit_axis_data(f"x_axis_{tab_tag}") 
 
     def create_file_dialog(window_id,tab_tag, signal_tags):
         with dpg.file_dialog(

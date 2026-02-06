@@ -3,11 +3,16 @@
 
 ## 05.02.2026
 
+### Documentation
+
+* added the explanation of right click plot tools
+
 ### Debug
 
 - event-locked segmentation time axis with correct label
 - indication of "no events present" correctly updated
 - custom filters parameters and documentation organized under tree node
+- after event-locked analysis --> x axis is set to the correct constraints
 
 ## 28.01.2026
 

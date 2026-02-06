@@ -119,7 +119,7 @@ They can be **individually** exported, exported **by window** or **export all** 
 .. note::
     Because the supporting GUI library (DearPyGui) has no functionality to export plots, these are properly 
     converted into MatplotLib plots and saved into *.png* files. The conversion is made to replicate as close as possible 
-    the plot in NeoDBS. 
+    the plot in NeoDBS, this includes zoom constraints and selected signals. 
 
 Directories
 -----------

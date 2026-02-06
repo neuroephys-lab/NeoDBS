@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GUI &mdash; NeoDBS Beta documentation</title>
+  <title>GUI &mdash; NeoDBS v0.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -5370,9 +5370,10 @@
     <span class="n">window_type</span> <span class="o">=</span> <span class="n">extract_type_window</span><span class="p">(</span><span class="n">window_id</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">read_txt</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">app_data</span><span class="p">,</span> <span class="n">user_data</span><span class="p">):</span>
+        <span class="n">window_id</span><span class="p">,</span> <span class="n">tab_tag</span><span class="p">,</span> <span class="n">signal_tags</span> <span class="o">=</span> <span class="n">user_data</span>
         <span class="k">if</span> <span class="n">dpg</span><span class="o">.</span><span class="n">does_item_exist</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">tab_tag</span><span class="si">}</span><span class="s1">_events_present&#39;</span><span class="p">):</span>
             <span class="n">dpg</span><span class="o">.</span><span class="n">delete_item</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">tab_tag</span><span class="si">}</span><span class="s1">_events_present&#39;</span><span class="p">)</span>
-        <span class="n">window_id</span><span class="p">,</span> <span class="n">tab_tag</span><span class="p">,</span> <span class="n">signal_tags</span> <span class="o">=</span> <span class="n">user_data</span>
+        
         
         <span class="n">streaming_file</span> <span class="o">=</span> <span class="n">app_data</span><span class="p">[</span><span class="s1">&#39;file_path_name&#39;</span><span class="p">]</span>
         <span class="n">events</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">read_event_file</span><span class="p">(</span><span class="n">streaming_file</span><span class="p">)</span>
@@ -5462,10 +5463,10 @@
                         <span class="n">dpg</span><span class="o">.</span><span class="n">bind_item_theme</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">change_inf_line_color</span><span class="p">(</span><span class="n">event_types</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">etype</span><span class="p">)))</span>
 
                     <span class="n">signal_tags</span><span class="p">[</span><span class="n">tag</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">dpg</span><span class="o">.</span><span class="n">configure_item</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x_axis_</span><span class="si">{</span><span class="n">tab_tag</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Time (MM/DD/YYYY UTC)&#39;</span><span class="p">)</span>
 
             <span class="n">scatter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scatter</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
             <span class="n">types</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">scatter</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-            <span class="n">dpg</span><span class="o">.</span><span class="n">configure_item</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x_axis_</span><span class="si">{</span><span class="n">tab_tag</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Time (MM/DD/YYYY UTC)&#39;</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">types</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">dpg</span><span class="o">.</span><span class="n">does_item_exist</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tab_tag</span><span class="si">}</span><span class="s2">_By Recording:_buttons&quot;</span><span class="p">):</span> 
@@ -5484,10 +5485,13 @@
                         <span class="n">toggleType</span><span class="p">(</span><span class="n">signal_tags</span><span class="p">,</span><span class="n">parent</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">new_parent</span><span class="si">}</span><span class="s2">_events&quot;</span><span class="p">,</span><span class="n">user_data</span><span class="o">=</span><span class="p">(</span><span class="n">day</span><span class="p">,</span> <span class="n">window_id</span><span class="p">,</span> <span class="n">tab_tag</span><span class="p">))</span>  
                     <span class="n">dpg</span><span class="o">.</span><span class="n">configure_item</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">new_parent</span><span class="si">}</span><span class="s2">_events&quot;</span><span class="p">,</span> <span class="n">auto_resize_x</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             
+                     
+
         <span class="k">else</span><span class="p">:</span> 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">dpg</span><span class="o">.</span><span class="n">does_item_exist</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">tab_tag</span><span class="si">}</span><span class="s1">_events_present&#39;</span><span class="p">):</span>
                 <span class="n">dpg</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="s2">&quot;No Events in the present recordings!&quot;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tab_tag</span><span class="si">}</span><span class="s2">_add_events&quot;</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">tab_tag</span><span class="si">}</span><span class="s1">_events_present&#39;</span><span class="p">)</span>
                 <span class="n">dpg</span><span class="o">.</span><span class="n">bind_item_theme</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">tab_tag</span><span class="si">}</span><span class="s1">_events_present&#39;</span><span class="p">,</span><span class="n">change_text_color</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">dpg</span><span class="o">.</span><span class="n">fit_axis_data</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;x_axis_</span><span class="si">{</span><span class="n">tab_tag</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">create_file_dialog</span><span class="p">(</span><span class="n">window_id</span><span class="p">,</span><span class="n">tab_tag</span><span class="p">,</span> <span class="n">signal_tags</span><span class="p">):</span>
         <span class="k">with</span> <span class="n">dpg</span><span class="o">.</span><span class="n">file_dialog</span><span class="p">(</span>
