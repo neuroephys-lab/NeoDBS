@@ -1,5 +1,18 @@
 # NeoDBS
 
+
+## 05.02.2026
+
+### Debug
+
+- event-locked segmentation time axis with correct label
+- indication of "no events present" correctly updated
+- custom filters parameters and documentation organized under tree node
+
+## 28.01.2026
+
+- Themes --> classic wasnt applying the correct FULL theme, because it was checkin internal tag instead of label of sender
+
 ## 26.01.2026
 
 - Git with version (tag @ v0.1.0)

@@ -1,0 +1,372 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="eng">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+<meta content="The starting point for the tutorial set." lang="en" name="description" xml:lang="en" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>First Usage &mdash; NeoDBS Beta documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+
+  
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="1. In-Clinic Data" href="../tutorials/td.html" />
+    <link rel="prev" title="First Steps" href="first_steps.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NeoDBS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="first_steps.html">First Steps</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">First Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#types-of-workspaces">Types of Workspaces</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#individual-window">Individual Window</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#combined-window">Combined Window</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#types-of-recordings">Types of Recordings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#in-clinic-data">In-Clinic Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#at-home-data">At Home Data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#general-workflow">General Workflow</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/td.html">1. In-Clinic Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/chronic.html">2. At-Home Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/features.html">3. Signal Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/extra.html">4. Extra Features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules (Functions)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Preprocessing">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-utils">Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NeoDBS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">First Usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/quickstart/first_usage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="first-usage">
+<h1>First Usage<a class="headerlink" href="#first-usage" title="Permalink to this heading">¶</a></h1>
+<p>NeoDBS is a platform designed for maximal user-experience, with every item and functionality optimized for
+easy data analysis and natural workflow. <em>Even for unexperienced users in signal processing and analysis.</em></p>
+<p>With this, NeoDBS was developed to allow <strong>several workspaces open simultaneously</strong>. For that, the user can
+open multiple windows, each one corresponding to an independent workspace. Just like a browser.</p>
+<p>Inside each window (or workspace), all the mentioned data is organized and accessed in a hierarchical order:</p>
+<ul class="simple">
+<li><p>Window → File(s)</p></li>
+<li><p>Tab → Recording(s)</p></li>
+<li><p>Child Tab → Recording Analysis</p></li>
+</ul>
+<img alt="../_images/hierarchy2.png" src="../_images/hierarchy2.png" />
+<p>This workflow is explained more in depth <a class="reference internal" href="#general"><span class="std std-ref">below</span></a>. With this arrangement, the platform facilitates access to data, while ensuring multiple independent and simultaneous analysis pipelines for
+each recording available.</p>
+<p>NeoDBS brings novelty in signal processing platforms by facilitating the user with
+signal <strong>filtering</strong> and <strong>spectral analysis</strong> pipelines with <strong>default</strong> or <strong>customizable</strong> parameters. Perfect for both unexperienced users
+like health professionals, or experienced users such as data analists and researchers.</p>
+<img alt="../_images/browser.png" src="../_images/browser.png" />
+<section id="types-of-workspaces">
+<h2>Types of Workspaces<a class="headerlink" href="#types-of-workspaces" title="Permalink to this heading">¶</a></h2>
+<p>As mentioned above, the user has the possibility to work with several workspaces simultaneously.
+Additionally, NeoDBS offers two different types of workspaces (windows). The <strong>Individual Window</strong> and the
+<strong>Combined Window</strong>. While they share the majority of functionalities, their final goal differs.</p>
+<section id="individual-window">
+<span id="ind"></span><h3>Individual Window<a class="headerlink" href="#individual-window" title="Permalink to this heading">¶</a></h3>
+<p>The <strong>Individual</strong> window goal is to analyze a single recording session, focusing on the evolution of signals and
+events inside the same recording session. Therefore, it includes functionalities like:</p>
+<ul class="simple">
+<li><p><strong>In-clinic event marking</strong> in time-domain signals, and their time-frequency domain methods, according to user input;</p></li>
+<li><p>Compute <strong>merged time-frequency domain</strong> methods in same-channel recordings;</p></li>
+</ul>
+<p>These are exclusive to this workspace, in order to enhance computing power and hetereogeneity in workspaces.</p>
+</section>
+<section id="combined-window">
+<span id="comb"></span><h3>Combined Window<a class="headerlink" href="#combined-window" title="Permalink to this heading">¶</a></h3>
+<p>Unlike the individual window, the <strong>Combined</strong> window allows the selection of multiple files, focusing therefore on
+the evolution of the signals across different recording sessions and to analyze the average features of all selected sessions.
+Additionally, it includes functionalities such as:</p>
+<ul class="simple">
+<li><p><strong>In-clinic and Patient event-locked segmentation</strong>, automatically epoching recordings according to available events.</p></li>
+</ul>
+<p>These functionalities are further explained in <a class="reference internal" href="../tutorials/td.html#ela"><span class="std std-ref">here</span></a>.</p>
+<p>If you're wondering what is the best window to use, here's a summary of the functionalities present in each type of window.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head"><p>Individual Analysis</p></th>
+<th class="head"><p>Combined Analysis</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>File Ingestion</p></td>
+<td><p><strong>Single</strong> file</p></td>
+<td><p><strong>Multiple</strong> files</p></td>
+</tr>
+<tr class="row-odd"><td><p>Metadata display</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-even"><td><p>Default/Customizable Filtering</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default/Customizable Spectral
+Analysis</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-even"><td><p>In-Clinic Event Annotation</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p>Patient Event-locked Segmentation</p></td>
+<td><p><strong>X</strong></p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-even"><td><p>Merged Same-Channel Recordings</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-odd"><td><p>Manual Segmentation</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+</tr>
+<tr class="row-even"><td><p>Before/After Event Analysis</p></td>
+<td><p>✓</p></td>
+<td><p>✓</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="types-of-recordings">
+<h2>Types of Recordings<a class="headerlink" href="#types-of-recordings" title="Permalink to this heading">¶</a></h2>
+<p>NeoDBS is adapted to ingest and analyze files from commercialy available DBS systems with sensing capacities (Medtronic Percept + BrainSense™ system).
+The system allows to record signals on different recording modes with different purposes and configurations. To know more about these recording modes
+see <a class="reference external" href="https://iopscience.iop.org/article/10.1088/1741-2552/ac1d5b">here</a> (table 1).</p>
+<p>Because of the differences in purpose and configuration across the recording modes, they are accessed and treated independently, in the respective tabs, as mentioned above.
+Two main types of recordings can be identified: recordings made <strong>In-Clinic</strong> or <strong>At Home</strong>.</p>
+<section id="in-clinic-data">
+<h3>In-Clinic Data<a class="headerlink" href="#in-clinic-data" title="Permalink to this heading">¶</a></h3>
+<p><strong>In-Clinic</strong> (<em>BrainSense™ Streaming, Indefinite Streaming, Survey and Setup</em>) recordings are acquired in the presence of the physician and are primarily used to configure electrodes, assess electrode integrity, identify artifacts,
+and analyze the patient's neural activity with or without active stimulation therapy. These recordings are stored in the session file in their <strong>raw format as time-domain signals</strong>.</p>
+<img alt="../_images/in-clinic.png" src="../_images/in-clinic.png" />
+<p>Because the underlying neural signals are preserved, both <strong>time-domain and spectral analyses</strong> can be applied to extract relevant metrics and features for therapy optimization.</p>
+<p>After reviewing how the <a class="reference internal" href="#general"><span class="std std-ref">NeoDBS workflow</span></a> operates, a simple <a class="reference internal" href="../tutorials/td.html#icd"><span class="std std-ref">tutorial</span></a> is available to guide the analysis of this type of recordings.</p>
+</section>
+<section id="at-home-data">
+<h3>At Home Data<a class="headerlink" href="#at-home-data" title="Permalink to this heading">¶</a></h3>
+<p><strong>At-Home</strong> (<em>BrainSense™ Timeline and Events</em>), recordings are available when chronic sensing has been enabled by the physician and allow long-term (24/7) monitoring of the patient's
+neural activity under real-world conditions. These recordings are stored in the session file as <strong>processed signals</strong> rather than as raw signals.</p>
+<img alt="../_images/at-home.png" src="../_images/at-home.png" />
+<p>Specifically, at-home recordings are stored either as <strong>frequency-domain representations</strong> (<em>BrainSense™ Events</em>) or as
+<strong>band-power time-series signals</strong> (<em>BrainSense™ Timeline</em>). Because the raw time-domain LFP is not available, <strong>primary
+spectral analyses cannot be performed</strong>. Instead, metrics are directly extracted using analysis methods appropriate
+for frequency-domain data or for ultra-slow temporal modulation of band-limited power.</p>
+<p>After reviewing how the <a class="reference internal" href="#general"><span class="std std-ref">NeoDBS workflow</span></a> operates, a simple <a class="reference internal" href="../tutorials/chronic.html#ahd"><span class="std std-ref">tutorial</span></a> is available to guide the analysis of this type of recording.</p>
+<p>Here follows a simple summary of the recording modes, with their associated name in system and NeoDBS:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>System Name</p></th>
+<th class="head"><p>NeoDBS Name</p></th>
+<th class="head"><p>Usage
+Context</p></th>
+<th class="head"><p>Stimulation
+Status</p></th>
+<th class="head"><p>Key Features</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BrainSense™ <em>Setup</em></p></td>
+<td><p><em>Setup</em></p></td>
+<td><p>In-clinic</p></td>
+<td><p>On or Off</p></td>
+<td><p>Required before other
+modes (except <em>Survey</em>);
+Records each segment for
+21s each (~90s duration)</p></td>
+</tr>
+<tr class="row-odd"><td><p>BrainSense™ <em>Survey</em></p></td>
+<td><p><em>Survey</em></p></td>
+<td><p>In-clinic</p></td>
+<td><p>Off</p></td>
+<td><p>Records each segment for
+21s each (~90s duration)</p></td>
+</tr>
+<tr class="row-even"><td><p>BrainSense™ <em>Survey Indefinite
+Streaming</em></p></td>
+<td><p><em>Indefinite</em></p></td>
+<td><p>In-clinic</p></td>
+<td><p>Off</p></td>
+<td><p>Long-duration LFP
+recording from contact
+pairs (0–2, 0–3, 1–3),
+full-bandwidth</p></td>
+</tr>
+<tr class="row-odd"><td><p>BrainSense™ <em>Streaming</em></p></td>
+<td><p><em>Streaming</em></p></td>
+<td><p>In-clinic</p></td>
+<td><p>On or Off</p></td>
+<td><p>Long-duration LFP
+recording from contact
+pairs compatible with
+stimulation</p></td>
+</tr>
+<tr class="row-even"><td><p>BrainSense™ <em>Timeline</em></p></td>
+<td><p><em>Timeline</em></p></td>
+<td><p>At home</p></td>
+<td><p>On</p></td>
+<td><p>Long-term monitoring
+from pre-selected
+bipolar pair; power of
+5 Hz band stored every
+10 min; contact pairs
+limited to stimulation-
+compatible</p></td>
+</tr>
+<tr class="row-odd"><td><p>BrainSense™ <em>Events</em></p></td>
+<td><p><em>Events</em></p></td>
+<td><p>At home</p></td>
+<td><p>On</p></td>
+<td><p>Event-marked recordings,
+30 s LFP saved into PSD,
+time-stamped by patient's
+manual input</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+</section>
+<section id="general-workflow">
+<span id="general"></span><h1>General Workflow<a class="headerlink" href="#general-workflow" title="Permalink to this heading">¶</a></h1>
+<p>After understanding what workspaces exist, here is a simple workflow for analysis using NeoDBS.</p>
+<ol class="arabic simple" start="0">
+<li><p><strong>Launch NeoDBS</strong> by running NeoDBS.exe and press <strong>&quot;Start&quot;</strong>.</p></li>
+</ol>
+<img alt="../_images/start.png" src="../_images/start.png" />
+<ol class="arabic simple">
+<li><p><strong>Select type of analysis to be performed:</strong> <a class="reference internal" href="#ind"><span class="std std-ref">Individual Window</span></a> or <a class="reference internal" href="#comb"><span class="std std-ref">Combined Window</span></a>.</p></li>
+</ol>
+<img alt="../_images/main.png" src="../_images/main.png" />
+<ol class="arabic simple" start="2">
+<li><p><strong>Select the recording session's file(s)</strong>, in JSON format, to be analyzed. JSON files are highlighted with green letters.</p></li>
+</ol>
+<img alt="../_images/select_file.png" src="../_images/select_file.png" />
+<ol class="arabic simple" start="3">
+<li><p>Once you have selected all the desired file(s), press <strong>&quot;Open File&quot;</strong>. You can change the desired files while the &quot;File Selector&quot; button is visible.</p></li>
+</ol>
+<img alt="../_images/open_file.png" src="../_images/open_file.png" />
+<ol class="arabic simple" start="4">
+<li><p>Window will present <strong>session, device and stimulation information</strong> for each recording session.</p></li>
+</ol>
+<img alt="../_images/window.png" src="../_images/window.png" />
+<ol class="arabic simple" start="5">
+<li><p>Recordings can be accessed by clicking on the <strong>respective recording mode button</strong>.</p></li>
+<li><p><strong>Each recording mode will have its respective tab</strong>, with the associated recordings and functionalities. Preprocessing and spectral analysis methods will only be applied to the selected signals (visible on the main plot of tab).</p></li>
+</ol>
+<img alt="../_images/tab.png" src="../_images/tab.png" />
+<ol class="arabic simple" start="7">
+<li><p>To access <strong>Filtering Methods</strong>, open the header named &quot;Filters&quot;. To access time and spectral analysis methods open the header named <strong>Signal Analysis</strong>.</p></li>
+</ol>
+<img alt="../_images/methods.png" src="../_images/methods.png" />
+<p>8. <strong>Default methods</strong> have the parameters predefined for an easier analysis, properly adapted for the recordings configuration.
+<strong>Custom methods</strong> allow the parameters to be adjusted according to the user needs. Documentation of the selected method and required parameters will appear to aid the user in selecting the best parameters.</p>
+<img alt="../_images/custom.png" src="../_images/custom.png" />
+<ol class="arabic simple" start="9">
+<li><p><strong>Filtering</strong> methods will update the signals in the main plot. <strong>Signal Analysis</strong> methods create a new plot, under a <strong>child tab</strong> named after the applied method.</p></li>
+<li><p><strong>Signals, plots and tables can be easily exported</strong> either individually, per window (workspace) or all windows at once.</p></li>
+</ol>
+<img alt="../_images/save.png" src="../_images/save.png" />
+<p>Here you can find a scheme that represents the possible workflow in NeoDBS.</p>
+<img alt="../_images/workflow.png" src="../_images/workflow.png" />
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="first_steps.html" class="btn btn-neutral float-left" title="First Steps" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../tutorials/td.html" class="btn btn-neutral float-right" title="1. In-Clinic Data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Larissa Rodrigues.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

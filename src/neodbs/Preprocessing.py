@@ -408,7 +408,7 @@ def removeCardiacComponent(raw, band, filterMethod="Fixed Peak Find"):
     a,b = band
     n = 5
     if int(a) == 0: 
-        a = 0.5
+        a = 1
         n = 5
     if int(b) == 0: b = 100
 

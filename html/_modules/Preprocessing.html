@@ -1,0 +1,587 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="eng">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preprocessing &mdash; NeoDBS Beta documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+
+  
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NeoDBS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_steps.html">First Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html">First Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html#general-workflow">General Workflow</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/td.html">1. In-Clinic Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/chronic.html">2. At-Home Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/features.html">3. Signal Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/extra.html">4. Extra Features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules (Functions)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Preprocessing">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-utils">Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NeoDBS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">Preprocessing</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for Preprocessing</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">DataHandling</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">DH</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">utl</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span><span class="n">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">optimize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">signal</span> <span class="k">as</span> <span class="n">ss</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.integrate</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">si</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.signal.windows</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ssw</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mne.time_frequency</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mtf</span>
+<span class="c1">#-----------------------------------------NeoDBS-------------------------------------------------</span>
+
+<span class="c1">#------------------ Easy Access to Scipy.signal---------------------</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Matlab-style IIR filter design</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="n">iir_filter_design_functions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;butter&#39;</span><span class="p">,</span><span class="s1">&#39;buttord&#39;</span><span class="p">,</span><span class="s1">&#39;cheby1&#39;</span><span class="p">,</span><span class="s1">&#39;cheb1ord&#39;</span><span class="p">,</span><span class="s1">&#39;cheby2&#39;</span><span class="p">,</span><span class="s1">&#39;cheb2ord&#39;</span><span class="p">,</span><span class="s1">&#39;ellip&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;ellipord&#39;</span><span class="p">,</span><span class="s1">&#39;bessel&#39;</span><span class="p">,</span><span class="s1">&#39;iirnotch&#39;</span><span class="p">,</span><span class="s1">&#39;iirpeak&#39;</span><span class="p">,</span> <span class="s1">&#39;iircomb&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="get_functions"><a class="viewcode-back" href="../api/neodbs.html#Preprocessing.get_functions">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_functions</span><span class="p">(</span><span class="n">module</span> <span class="o">=</span> <span class="s1">&#39;ss&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Retrieves and saves all functions names and callbacks into a dictionary</span>
+
+<span class="sd">    Modules:</span>
+<span class="sd">        - &#39;ss&#39;: scipy.signal</span>
+<span class="sd">        - &#39;mtf&#39;: mne.time_frequency</span>
+<span class="sd">        - &#39;si&#39;: scipy.integrate</span>
+<span class="sd">        - &#39;ssw&#39;: scipy.signal.windows</span>
+<span class="sd">        - &#39;np&#39;: numpy</span>
+<span class="sd">    </span>
+<span class="sd">    :param module: str</span>
+
+<span class="sd">    :return: dict, {func_naame: obj}</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">match</span> <span class="n">module</span><span class="p">:</span>
+        <span class="k">case</span> <span class="s1">&#39;ss&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">ss</span>
+        <span class="k">case</span> <span class="s1">&#39;mtf&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">mtf</span>
+        <span class="k">case</span> <span class="s1">&#39;si&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">si</span>
+        <span class="k">case</span> <span class="s1">&#39;ssw&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">ssw</span>
+        <span class="k">case</span> <span class="s1">&#39;np&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">np</span>
+
+    <span class="n">functions</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isroutine</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">functions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Skipping function </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> due to error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">functions</span></div>
+
+<div class="viewcode-block" id="extract_params_and_returns"><a class="viewcode-back" href="../api/neodbs.html#Preprocessing.extract_params_and_returns">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">extract_params_and_returns</span><span class="p">(</span><span class="n">docstring</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Extracts the &#39;Parameters&#39; and &#39;Returns&#39; sections from a Numpydoc-formatted</span>
+<span class="sd">    documentation string.</span>
+
+<span class="sd">    :param docstring: str, documentation string of a function.</span>
+
+<span class="sd">    :return: A string containing only the &#39;Parameters&#39; and &#39;Returns&#39; sections.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">docstring</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+
+    <span class="n">sections_to_extract</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Parameters&quot;</span><span class="p">,</span> <span class="s2">&quot;Returns&quot;</span><span class="p">}</span>
+    <span class="n">section_content</span> <span class="o">=</span> <span class="p">{</span><span class="n">section</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">sections_to_extract</span><span class="p">}</span>
+    
+    <span class="n">current_section</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">capture</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+        <span class="n">stripped</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="c1"># Start of a new section</span>
+        <span class="k">if</span> <span class="n">stripped</span> <span class="ow">in</span> <span class="n">sections_to_extract</span><span class="p">:</span>
+            <span class="n">current_section</span> <span class="o">=</span> <span class="n">stripped</span>
+            <span class="n">capture</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">section_content</span><span class="p">[</span><span class="n">current_section</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>  <span class="c1"># add header</span>
+            <span class="k">continue</span>
+        <span class="k">elif</span> <span class="n">stripped</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;See Also&quot;</span><span class="p">,</span> <span class="s2">&quot;Notes&quot;</span><span class="p">,</span> <span class="s2">&quot;Examples&quot;</span><span class="p">}:</span>
+            <span class="n">capture</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">current_section</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Capture content under current section</span>
+        <span class="k">if</span> <span class="n">capture</span> <span class="ow">and</span> <span class="n">current_section</span><span class="p">:</span>
+            <span class="c1"># Append blank lines and indented lines (part of parameter/return description)</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="p">(</span><span class="n">section_content</span><span class="p">[</span><span class="n">current_section</span><span class="p">]</span> <span class="ow">and</span> <span class="n">section_content</span><span class="p">[</span><span class="n">current_section</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()):</span>
+                <span class="n">section_content</span><span class="p">[</span><span class="n">current_section</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+    <span class="c1"># Combine captured sections into final output</span>
+    <span class="n">output_lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Parameters&quot;</span><span class="p">,</span> <span class="s2">&quot;Returns&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">section_content</span><span class="p">[</span><span class="n">section</span><span class="p">]:</span>
+            <span class="n">output_lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">section_content</span><span class="p">[</span><span class="n">section</span><span class="p">])</span>
+            <span class="n">output_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># spacing between sections</span>
+
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_lines</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="call_function2"><a class="viewcode-back" href="../api/neodbs.html#Preprocessing.call_function2">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">call_function2</span><span class="p">(</span><span class="n">func_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Call a function from scipy.signal by name, print its documentation, and handle exceptions.</span>
+<span class="sd">    If given arguments dont work, function retries with default arguments given by module.</span>
+
+<span class="sd">    :param func_name: str, function name</span>
+<span class="sd">    :param args: dict, required arguments</span>
+<span class="sd">    :param kwargs: dict, optional keyword arguments</span>
+
+<span class="sd">    :return: output of func(*args,**kwargs)</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">ss</span>
+    <span class="n">functions</span> <span class="o">=</span> <span class="n">get_functions</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">func_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">functions</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Function &#39;</span><span class="si">{</span><span class="n">func_name</span><span class="si">}</span><span class="s2">&#39; not found in </span><span class="si">{</span><span class="n">module</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">func</span> <span class="o">=</span> <span class="n">functions</span><span class="p">[</span><span class="n">func_name</span><span class="p">]</span>
+
+    
+    <span class="c1"># Get function signature</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    
+    <span class="c1"># Extract required parameters (no defaults)</span>
+    <span class="n">required_params</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">param</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="n">param</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_OR_KEYWORD</span><span class="p">,</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_ONLY</span><span class="p">)</span>
+    <span class="p">]</span>
+    
+    <span class="c1"># Extract keyword default parameters</span>
+    <span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="n">param</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_OR_KEYWORD</span><span class="p">,</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">KEYWORD_ONLY</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error calling </span><span class="si">{</span><span class="n">func_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error occurred even with provided arguments. Not retrying.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># If the user provided arguments, don&#39;t retry</span>
+
+        <span class="k">if</span> <span class="n">required_params</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot retry because required positional arguments are missing: </span><span class="si">{</span><span class="n">required_params</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># Can&#39;t call the function without required positional args</span>
+        
+        <span class="k">if</span> <span class="n">default_kwargs</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Retrying with default keyword arguments...&quot;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">**</span><span class="n">default_kwargs</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e2</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error with default parameters as well: </span><span class="si">{</span><span class="n">e2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No default parameters available.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="call_function"><a class="viewcode-back" href="../api/neodbs.html#Preprocessing.call_function">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">call_function</span><span class="p">(</span><span class="n">func_name</span><span class="p">,</span> <span class="n">param_dict</span><span class="p">,</span> <span class="n">module</span> <span class="o">=</span> <span class="s1">&#39;ss&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Call a function from module by name, print its documentation, and handle exceptions.</span>
+<span class="sd">    If given arguments dont work, function retries with default arguments given by module.</span>
+
+<span class="sd">    Modules:</span>
+<span class="sd">        - &#39;ss&#39;: scipy.signal</span>
+<span class="sd">        - &#39;mtf&#39;: mne.time_frequency</span>
+<span class="sd">        - &#39;si&#39;: scipy.integrate</span>
+<span class="sd">        - &#39;ssw&#39;: scipy.signal.windows</span>
+<span class="sd">        - &#39;np&#39;: numpy</span>
+
+<span class="sd">    :param func_name: str, function name</span>
+<span class="sd">    :param param_dict: dict, required and optional arguments</span>
+<span class="sd">    :param module: str, module name</span>
+
+<span class="sd">    :return: output of func(*args,**kwargs)</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">match</span> <span class="n">module</span><span class="p">:</span>
+        <span class="k">case</span> <span class="s1">&#39;ss&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">ss</span>
+        <span class="k">case</span> <span class="s1">&#39;mtf&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">mtf</span>
+        <span class="k">case</span> <span class="s1">&#39;si&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">si</span>
+        <span class="k">case</span> <span class="s1">&#39;ssw&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">ssw</span>
+        <span class="k">case</span> <span class="s1">&#39;np&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">np</span>
+
+    <span class="n">functions</span> <span class="o">=</span> <span class="n">get_functions</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">func_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">functions</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Function &#39;</span><span class="si">{</span><span class="n">func_name</span><span class="si">}</span><span class="s2">&#39; not found in </span><span class="si">{</span><span class="n">module</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">func</span> <span class="o">=</span> <span class="n">functions</span><span class="p">[</span><span class="n">func_name</span><span class="p">]</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="c1"># Extract required positional arguments</span>
+    <span class="n">required_params</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">param</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="n">param</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_OR_KEYWORD</span><span class="p">,</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_ONLY</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Extract keyword default parameters</span>
+    <span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="n">param</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_OR_KEYWORD</span><span class="p">,</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">KEYWORD_ONLY</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Convert saved parameters (strings) into appropriate types</span>
+    <span class="n">converted_params</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">required_params</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">default_kwargs</span><span class="p">:</span>  <span class="c1"># Ensure it&#39;s a valid argument</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Ensure empty strings become None, and evaluate only if value is not empty</span>
+                <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                    <span class="n">converted_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">elif</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+                    <span class="n">converted_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">elif</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;inf&quot;</span><span class="p">:</span>
+                    <span class="n">converted_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">converted_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># Convert numbers and lists</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">converted_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>  <span class="c1"># Keep as string if eval fails</span>
+
+    <span class="c1"># Split into positional and keyword arguments</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">converted_params</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">required_params</span> <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">converted_params</span><span class="p">]</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">converted_params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">required_params</span><span class="p">}</span>
+
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Error calling </span><span class="si">{</span><span class="n">func_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">error</span></div>
+
+<div class="viewcode-block" id="get_required_params"><a class="viewcode-back" href="../api/neodbs.html#Preprocessing.get_required_params">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_required_params</span><span class="p">(</span><span class="n">func_name</span><span class="p">,</span> <span class="n">module</span> <span class="o">=</span> <span class="s1">&#39;ss&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Retrieves required parameters, and default values, from func_name.</span>
+
+<span class="sd">    Modules:</span>
+<span class="sd">        - &#39;ss&#39;: scipy.signal</span>
+<span class="sd">        - &#39;mtf&#39;: mne.time_frequency</span>
+<span class="sd">        - &#39;si&#39;: scipy.integrate</span>
+<span class="sd">        - &#39;ssw&#39;: scipy.signal.windows</span>
+<span class="sd">        - &#39;np&#39;: numpy</span>
+<span class="sd">    </span>
+<span class="sd">    :param func_name: str, function name</span>
+<span class="sd">    :param module: str, module name. Defaults to ss</span>
+<span class="sd">    :return: dict</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">match</span> <span class="n">module</span><span class="p">:</span>
+        <span class="k">case</span> <span class="s1">&#39;ss&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">ss</span>
+        <span class="k">case</span> <span class="s1">&#39;mtf&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">mtf</span>
+        <span class="k">case</span> <span class="s1">&#39;si&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">si</span>
+        <span class="k">case</span> <span class="s1">&#39;ssw&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">ssw</span>
+        <span class="k">case</span> <span class="s1">&#39;np&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">np</span>
+    <span class="n">functions</span> <span class="o">=</span> <span class="n">get_functions</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">func_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">functions</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Function &#39;</span><span class="si">{</span><span class="n">func_name</span><span class="si">}</span><span class="s2">&#39; not found in </span><span class="si">{</span><span class="n">module</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">func</span> <span class="o">=</span> <span class="n">functions</span><span class="p">[</span><span class="n">func_name</span><span class="p">]</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+
+    <span class="n">required_params</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="n">required_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># No default value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">required_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span>  <span class="c1"># Default value exists</span>
+
+    <span class="k">return</span> <span class="n">required_params</span></div>
+
+<div class="viewcode-block" id="get_default_kwargs"><a class="viewcode-back" href="../api/neodbs.html#Preprocessing.get_default_kwargs">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_default_kwargs</span><span class="p">(</span><span class="n">func_name</span><span class="p">,</span><span class="n">module</span> <span class="o">=</span> <span class="s1">&#39;ss&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Retrieves optional keywords parameters, and default values, from func_name.</span>
+
+<span class="sd">    Modules:</span>
+<span class="sd">        - &#39;ss&#39;: scipy.signal</span>
+<span class="sd">        - &#39;mtf&#39;: mne.time_frequency</span>
+<span class="sd">        - &#39;si&#39;: scipy.integrate</span>
+<span class="sd">        - &#39;ssw&#39;: scipy.signal.windows</span>
+<span class="sd">        - &#39;np&#39;: numpy</span>
+<span class="sd">    </span>
+<span class="sd">    :param func_name: str, function name</span>
+<span class="sd">    :param module: str, module name. Defaults to ss</span>
+<span class="sd">    :return: dict</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">functions</span> <span class="o">=</span> <span class="n">get_functions</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+
+    <span class="k">match</span> <span class="n">module</span><span class="p">:</span>
+        <span class="k">case</span> <span class="s1">&#39;ss&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">ss</span>
+        <span class="k">case</span> <span class="s1">&#39;mtf&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">mtf</span>
+        <span class="k">case</span> <span class="s1">&#39;si&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">si</span>
+        <span class="k">case</span> <span class="s1">&#39;ssw&#39;</span><span class="p">:</span> <span class="n">module</span> <span class="o">=</span> <span class="n">ssw</span>
+    
+    <span class="k">if</span> <span class="n">func_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">functions</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Function &#39;</span><span class="si">{</span><span class="n">func_name</span><span class="si">}</span><span class="s2">&#39; not found in </span><span class="si">{</span><span class="n">module</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">func</span> <span class="o">=</span> <span class="n">functions</span><span class="p">[</span><span class="n">func_name</span><span class="p">]</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    
+    <span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">param</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="n">param</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_OR_KEYWORD</span><span class="p">,</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">KEYWORD_ONLY</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">default_kwargs</span></div>
+
+<div class="viewcode-block" id="get_date_from_ts"><a class="viewcode-back" href="../api/neodbs.html#Preprocessing.get_date_from_ts">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_date_from_ts</span><span class="p">(</span><span class="n">ts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Returns datetime object correspondant to the given timestamp ts</span>
+<span class="sd">    </span>
+<span class="sd">    :param ts: int/float</span>
+<span class="sd">    :return: datetime.datetime</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span></div>
+<span class="c1">#----------------------------- NeoDBS signal processing functions------------------</span>
+
+
+<div class="viewcode-block" id="MeanSignal"><a class="viewcode-back" href="../api/neodbs.html#Preprocessing.MeanSignal">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">MeanSignal</span><span class="p">(</span><span class="n">signals</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;Y&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculates and return mean from specific key in signal dictionary, item of signals list</span>
+<span class="sd">    </span>
+<span class="sd">    :param signals: list</span>
+<span class="sd">        list of dictionaries of signal data.</span>
+<span class="sd">    :param key: str/int, default to &#39;Y&#39;</span>
+<span class="sd">        key of dictionary</span>
+<span class="sd">    :return: np.array</span>
+<span class="sd">        computed mean</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">yy</span><span class="o">=</span><span class="p">[</span><span class="n">signal</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">signal</span> <span class="ow">in</span> <span class="n">signals</span><span class="p">]</span>
+    
+    <span class="n">mean_signal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">yy</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mean_signal</span></div>
+
+<div class="viewcode-block" id="StdDevSignal"><a class="viewcode-back" href="../api/neodbs.html#Preprocessing.StdDevSignal">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">StdDevSignal</span><span class="p">(</span><span class="n">signals</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculates and return standard deviation from specific key in signal dictionary, item of signals list</span>
+<span class="sd">    </span>
+<span class="sd">    :param signals: list, list of dictionaries of signal data.</span>
+<span class="sd">    :param key: str/int</span>
+<span class="sd">    :return: np.array</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span> <span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;Y&#39;</span>
+    
+    <span class="n">yy</span><span class="o">=</span><span class="p">[</span><span class="n">signal</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">signal</span> <span class="ow">in</span> <span class="n">signals</span><span class="p">]</span>
+    
+    <span class="n">mean_signal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">yy</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mean_signal</span></div>
+
+<span class="c1">#---Power Normalization</span>
+
+<div class="viewcode-block" id="convert_to_db"><a class="viewcode-back" href="../api/neodbs.html#Preprocessing.convert_to_db">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">convert_to_db</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Convert a value to dB scale using 10 * log10.</span>
+<span class="sd">    </span>
+<span class="sd">    :param value: int/float</span>
+<span class="sd">    :return: int/float</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span><span class="nb">tuple</span><span class="p">)):</span>  <span class="c1"># Handle peak values (power, frequency)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mf">1e-6</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span> 
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">)),</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">except</span> <span class="ne">Warning</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">value</span><span class="o">+</span><span class="mf">1e-6</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">except</span> <span class="ne">Warning</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>  <span class="c1"># Return unchanged if it&#39;s a string or invalid type</span></div>
+ 
+<div class="viewcode-block" id="convert_from_db"><a class="viewcode-back" href="../api/neodbs.html#Preprocessing.convert_from_db">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">convert_from_db</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Convert a dB value back to linear scale using 10^(dB/10).</span>
+<span class="sd">    </span>
+<span class="sd">    :param value: int/float</span>
+<span class="sd">    :return: int/float</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span><span class="nb">tuple</span><span class="p">)):</span>  <span class="c1"># Handle peak values (power, frequency)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;-inf&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="n">s</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1e-6</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="n">value</span> <span class="o">/</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="o">!=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;-inf&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">value</span>  <span class="c1"># Return unchanged if it&#39;s a string or invalid type</span></div>
+<span class="c1"># -------------------------------------- BRAVO -------------------------------------</span>
+
+<div class="viewcode-block" id="removeCardiacComponent"><a class="viewcode-back" href="../api/neodbs.html#Preprocessing.removeCardiacComponent">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">removeCardiacComponent</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">band</span><span class="p">,</span> <span class="n">filterMethod</span><span class="o">=</span><span class="s2">&quot;Fixed Peak Find&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Applies 5th order Butterworth bandpass filter with cardiac artifact removal. With Wiener Filter and scipy.find_peaks, an ECG template is created and subtracted to the filtered signal, removing the cardiac component.</span>
+<span class="sd">    Adapted from https://github.com/Fixel-Institute/BRAVO_SSR/blob/main/modules/LocalPerceptDatabase.py#L327</span>
+<span class="sd">    </span>
+<span class="sd">    :param raw: dict, {&#39;Y&#39;: signal values}</span>
+<span class="sd">    :param band: Description</span>
+<span class="sd">    :param filterMethod: Description</span>
+<span class="sd">    :return: filtered signal, signal with only bandpass</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="o">=</span> <span class="n">band</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> 
+        <span class="n">a</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">100</span>
+
+    <span class="n">band</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">])</span>
+    <span class="n">filtered</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>
+    <span class="n">fs</span> <span class="o">=</span> <span class="mi">250</span>
+    <span class="n">ba</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">butter</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">band</span><span class="p">,</span> <span class="s1">&#39;bp&#39;</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s1">&#39;ba&#39;</span><span class="p">,</span><span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span>
+    <span class="n">PredictedSignal</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">wiener</span><span class="p">(</span><span class="n">filtered</span><span class="p">,</span> <span class="n">mysize</span><span class="o">=</span><span class="mi">125</span><span class="p">)</span>
+    <span class="n">filtered</span> <span class="o">-=</span> <span class="n">PredictedSignal</span>
+
+    <span class="k">if</span> <span class="n">filterMethod</span> <span class="o">==</span> <span class="s2">&quot;Fixed Peak Find&quot;</span><span class="p">:</span>
+        <span class="c1"># Cardiac Filter</span>
+        <span class="n">peaks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">posPeaks</span><span class="p">,</span><span class="n">_</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">find_peaks</span><span class="p">(</span><span class="n">filtered</span><span class="p">,</span> <span class="n">prominence</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">200</span><span class="p">],</span> <span class="n">distance</span><span class="o">=</span><span class="n">fs</span><span class="o">*</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">PosCardiacVariability</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">posPeaks</span><span class="p">))</span>
+        <span class="n">negPeaks</span><span class="p">,</span><span class="n">_</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">find_peaks</span><span class="p">(</span><span class="o">-</span><span class="n">filtered</span><span class="p">,</span> <span class="n">prominence</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">200</span><span class="p">],</span> <span class="n">distance</span><span class="o">=</span><span class="n">fs</span><span class="o">*</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">NegCardiacVariability</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">negPeaks</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">PosCardiacVariability</span> <span class="o">&lt;</span> <span class="n">NegCardiacVariability</span><span class="p">:</span>
+            <span class="n">peaks</span> <span class="o">=</span> <span class="n">posPeaks</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">peaks</span> <span class="o">=</span> <span class="n">negPeaks</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">peaks</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;None&#39;</span><span class="p">)</span>
+            <span class="n">CardiacRate</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">peaks</span><span class="p">)))</span>
+
+            <span class="n">PrePeak</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">CardiacRate</span><span class="o">*</span><span class="mf">0.25</span><span class="p">)</span>
+            <span class="n">PostPeak</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">CardiacRate</span><span class="o">*</span><span class="mf">0.65</span><span class="p">)</span>
+            <span class="n">EKGMatrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="n">PrePeak</span><span class="o">+</span><span class="n">PostPeak</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">peaks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">+</span><span class="n">PostPeak</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">filtered</span><span class="p">)</span> <span class="ow">and</span> <span class="n">peaks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">PrePeak</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">EKGMatrix</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">filtered</span><span class="p">[</span><span class="n">peaks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">PrePeak</span><span class="p">:</span><span class="n">peaks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">+</span><span class="n">PostPeak</span><span class="p">]</span>
+
+            <span class="n">EKGTemplate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">EKGMatrix</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">EKGTemplate</span> <span class="o">=</span> <span class="n">EKGTemplate</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">EKGTemplate</span><span class="p">)</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">EKGTemplate</span><span class="p">))</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">EKGTemplateFunc</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">EKGTemplate</span> <span class="o">*</span> <span class="n">amplitude</span> <span class="o">+</span> <span class="n">offset</span>
+
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">peaks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">PrePeak</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">elif</span> <span class="n">peaks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">+</span><span class="n">PostPeak</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">filtered</span><span class="p">)</span> <span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">sliceSelection</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">peaks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">PrePeak</span><span class="p">,</span><span class="n">peaks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">+</span><span class="n">PostPeak</span><span class="p">)</span>
+                    <span class="n">params</span><span class="p">,</span> <span class="n">covmat</span> <span class="o">=</span> <span class="n">optimize</span><span class="o">.</span><span class="n">curve_fit</span><span class="p">(</span><span class="n">EKGTemplateFunc</span><span class="p">,</span> <span class="n">sliceSelection</span><span class="p">,</span> <span class="n">filtered</span><span class="p">[</span><span class="n">sliceSelection</span><span class="p">])</span>
+                    <span class="n">filtered</span><span class="p">[</span><span class="n">sliceSelection</span><span class="p">]</span> <span class="o">=</span> <span class="n">filtered</span><span class="p">[</span><span class="n">sliceSelection</span><span class="p">]</span> <span class="o">-</span> <span class="n">EKGTemplateFunc</span><span class="p">(</span><span class="n">sliceSelection</span><span class="p">,</span> <span class="o">*</span><span class="n">params</span><span class="p">)</span>
+                    <span class="n">ecg</span> <span class="o">=</span> <span class="n">EKGTemplateFunc</span><span class="p">(</span><span class="n">sliceSelection</span><span class="p">,</span> <span class="o">*</span><span class="n">params</span><span class="p">)</span>
+
+        
+    <span class="n">filtered</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">filtfilt</span><span class="p">(</span><span class="o">*</span><span class="n">ba</span><span class="p">,</span> <span class="n">filtered</span><span class="p">)</span>
+    <span class="n">buttered</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">filtfilt</span><span class="p">(</span><span class="o">*</span><span class="n">ba</span><span class="p">,</span> <span class="n">raw</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">filtered</span><span class="p">,</span> <span class="n">buttered</span></div>
+    
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Larissa Rodrigues.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

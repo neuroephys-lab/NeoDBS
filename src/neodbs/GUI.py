@@ -639,7 +639,7 @@ def add_filters_buttons(tab_tag,signal_tags):
         with dpg.group(parent=tab_tag, horizontal=True, width=600):
             with dpg.collapsing_header(label="Filters", default_open=False, parent=tab_tag, tag = f"{tab_tag}_filters"):
                 with dpg.group(horizontal=True):
-                    dpg.add_input_intx(label='Frequencies',size=2,min_value=0.1,max_value=100,default_value=[0,100], max_clamped=True, min_clamped=True, tag = f"{tab_tag}_default_wn")
+                    dpg.add_input_intx(label='Frequencies',size=2,min_value=1,max_value=100,default_value=[1,100], max_clamped=True, min_clamped=True, tag = f"{tab_tag}_default_wn")
                     dpg.add_button(label="Default Filtering",callback=DefaultFilter, user_data=(tab_tag,signal_tags), tag = f"{tab_tag}_default_filter")
 
                 with dpg.tooltip(f"{tab_tag}_default_filter"):
@@ -3841,7 +3841,8 @@ def switch_theme(sender, app_data, user_data):
 
     :param user_data: theme
     '''
-    if user_data==203:
+    label = dpg.get_item_label(sender)
+    if label=='Classic':
         dpg.bind_theme(design())
     else:
         dpg.bind_theme(user_data)
@@ -5280,6 +5281,8 @@ def insert_events(sender, app_data, user_data):
     window_type = extract_type_window(window_id)
 
     def read_txt(sender, app_data, user_data):
+        if dpg.does_item_exist(f'{tab_tag}_events_present'):
+            dpg.delete_item(f'{tab_tag}_events_present')
         window_id, tab_tag, signal_tags = user_data
         
         streaming_file = app_data['file_path_name']
@@ -5313,7 +5316,7 @@ def insert_events(sender, app_data, user_data):
                 new_x = [(d+offset).timestamp() for d in new_time]
                 updateKeySignalbyIdx(new_x,tab_tag,series[i],'X')
                 dpg.configure_item(f"x_axis_{tab_tag}",scale=dpg.mvPlotScale_Time)
-                dpg.configure_item(f"x_axis_{tab_tag}",label='Time (MM/DD/YYYY UTC)')
+                
                 dpg.configure_item(series[i], x=new_x)
             else: 
                 new_x = signal['X']
@@ -5373,6 +5376,7 @@ def insert_events(sender, app_data, user_data):
 
             scatter = np.array(scatter, dtype=object)
             types = np.unique(scatter[:,1]).tolist()
+            dpg.configure_item(f"x_axis_{tab_tag}",label='Time (MM/DD/YYYY UTC)')
 
             if len(types)>1:
                 if dpg.does_item_exist(f"{tab_tag}_By Recording:_buttons"): 
@@ -5392,7 +5396,9 @@ def insert_events(sender, app_data, user_data):
                     dpg.configure_item(f"{new_parent}_events", auto_resize_x=True)
             
         else: 
-            dpg.add_text("No Events in the present recordings!", parent=f"{tab_tag}_add_events")
+            if not dpg.does_item_exist(f'{tab_tag}_events_present'):
+                dpg.add_text("No Events in the present recordings!", parent=f"{tab_tag}_add_events", tag=f'{tab_tag}_events_present')
+                dpg.bind_item_theme(f'{tab_tag}_events_present',change_text_color(1))
 
     def create_file_dialog(window_id,tab_tag, signal_tags):
         with dpg.file_dialog(
@@ -5434,6 +5440,7 @@ def align_events(sender,app_data, user_data):
         dpg.delete_item(parent,children_only=True)
         signal_tags.clear()
         dpg.configure_item(f"x_axis_{tab_tag}", scale=dpg.mvPlotScale_Linear)
+
         signal_tags = plot_td(all_events,parent,tab_tag, signal_tags,files=fdx,events=True, count=edx)
                 # else: dpg.add_text('To compare events, needs at least 2 events', parent=parent)
 
@@ -8237,10 +8244,11 @@ def create_individual_window():
     def create_file_dialog(window_id):
         '''Creates a file dialog for a given window.'''
         with dpg.file_dialog(
+            tag = f"file_dialog_{window_id}",
             directory_selector=False, 
             show=False, 
             callback=file_dialog_callback, 
-            id=f"file_dialog_{window_id}", 
+            # id=f"file_dialog_{window_id}", 
             width=700, 
             height=400,
             #modal=True, #if True: user must select a file before returning to main window - não vi diferença
@@ -8249,6 +8257,7 @@ def create_individual_window():
         ):
             dpg.add_file_extension(".*")
             dpg.add_file_extension(".json", color=(0, 255, 0, 255), custom_text="[JSON File]")
+
 
     def open_tab_mode(sender, app_data, user_data): #create tab
         mode, window_id = user_data

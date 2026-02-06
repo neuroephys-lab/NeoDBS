@@ -1,0 +1,686 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="eng" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Features &mdash; NeoDBS Beta documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/documentation_options.js?v=640d522d"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NeoDBS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_steps.html">First Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html">First Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html#general-workflow">General Workflow</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/td.html">1. In-Clinic Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/chronic.html">2. At-Home Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/features.html">3. Signal Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/extra.html">4. Extra Features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules (Functions)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Preprocessing">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-utils">Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NeoDBS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">Features</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for Features</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;Agg&quot;</span><span class="p">)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">utl</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">bands</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;Delta&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span><span class="mi">4</span><span class="p">],</span>
+            <span class="s1">&#39;Theta&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">8</span><span class="p">],</span>
+            <span class="s1">&#39;Alpha&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">12</span><span class="p">],</span>
+            <span class="s1">&#39;Beta&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">12</span><span class="p">,</span><span class="mi">30</span><span class="p">],</span>
+            <span class="s1">&#39;Gamma&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span><span class="mi">100</span><span class="p">]</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="peak_power">
+<a class="viewcode-back" href="../api/neodbs.html#Features.peak_power">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">peak_power</span><span class="p">(</span><span class="n">stream</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    From stream dictionary, return tuple with peak value and peak position.</span>
+<span class="sd">    </span>
+<span class="sd">    :param stream: dict, signal information &#39;X&#39;/&#39;Frequency&#39; --&gt; x axis; &#39;Y&#39;/&#39;Power&#39; --&gt; y axis</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="s1">&#39;X&#39;</span> <span class="ow">in</span> <span class="n">stream</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="s1">&#39;X&#39;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="s1">&#39;Y&#39;</span>
+    <span class="k">elif</span> <span class="s1">&#39;Frequency&#39;</span><span class="ow">in</span> <span class="n">stream</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="s1">&#39;Frequency&#39;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="s1">&#39;Power&#39;</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stream</span><span class="p">[</span><span class="n">p</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">peak_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">stream</span><span class="p">[</span><span class="n">p</span><span class="p">])</span>
+        <span class="n">peak_f</span> <span class="o">=</span> <span class="n">stream</span><span class="p">[</span><span class="n">f</span><span class="p">][</span><span class="n">peak_idx</span><span class="p">]</span>
+        <span class="n">peak_power</span> <span class="o">=</span> <span class="n">stream</span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="n">peak_idx</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">peak_power</span><span class="p">,</span> <span class="n">peak_f</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="peak_per_band">
+<a class="viewcode-back" href="../api/neodbs.html#Features.peak_per_band">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">peak_per_band</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">bands</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Retrives all peak values and positions, in stream, for each band.</span>
+<span class="sd">    </span>
+<span class="sd">    :param stream: dict, signal information &#39;X&#39;/&#39;Frequency&#39; --&gt; x axis; &#39;Y&#39;/&#39;Power&#39; --&gt; y axis</span>
+<span class="sd">    :param bands: dict, &#39;band name&#39;: [f0,f1]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">peaks</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="s1">&#39;X&#39;</span> <span class="ow">in</span> <span class="n">stream</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="s1">&#39;X&#39;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="s1">&#39;Y&#39;</span>
+    <span class="k">elif</span> <span class="s1">&#39;Frequency&#39;</span><span class="ow">in</span> <span class="n">stream</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="s1">&#39;Frequency&#39;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="s1">&#39;Power&#39;</span>
+
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">band</span> <span class="ow">in</span> <span class="n">bands</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="o">=</span> <span class="n">band</span>
+        <span class="n">freq_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">stream</span><span class="p">[</span><span class="n">f</span><span class="p">])</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">freq_array</span> <span class="o">&gt;=</span> <span class="n">a</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">freq_array</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">)</span>
+        <span class="n">power</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">stream</span><span class="p">[</span><span class="n">p</span><span class="p">])[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="n">temp</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">power</span>
+        <span class="n">temp</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">=</span> <span class="n">freq_array</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        
+        <span class="n">peaks</span><span class="p">[</span><span class="n">_</span><span class="p">]</span> <span class="o">=</span> <span class="n">peak_power</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">peaks</span></div>
+
+   
+<div class="viewcode-block" id="std_dev_streams">
+<a class="viewcode-back" href="../api/neodbs.html#Features.std_dev_streams">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">std_dev_streams</span><span class="p">(</span><span class="n">streams</span><span class="p">,</span> <span class="n">bands</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculates and returns a dictionary of band-respective standard deviation</span>
+<span class="sd">    </span>
+<span class="sd">    :param stream: dict, signal information &#39;X&#39;/&#39;Frequency&#39; --&gt; x axis; &#39;Y&#39;/&#39;Power&#39; --&gt; y axis</span>
+<span class="sd">    :param bands: dict, &#39;band name&#39;: [f0,f1]</span>
+<span class="sd">    :return: dict, &#39;band name&#39;: float standard deviation</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">streams</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>  
+        <span class="n">streams</span> <span class="o">=</span> <span class="p">[</span><span class="n">streams</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="s1">&#39;X&#39;</span> <span class="ow">in</span> <span class="n">streams</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="s1">&#39;X&#39;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="s1">&#39;Y&#39;</span>
+    <span class="k">elif</span> <span class="s1">&#39;Frequency&#39;</span><span class="ow">in</span> <span class="n">streams</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="s1">&#39;Frequency&#39;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="s1">&#39;Power&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid stream format: Expected keys &#39;X&#39; or &#39;Frequency&#39;.&quot;</span><span class="p">)</span>
+    
+    <span class="n">band_powers</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">bands</span><span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">stream</span> <span class="ow">in</span> <span class="n">streams</span><span class="p">:</span>
+        <span class="n">freq_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">stream</span><span class="p">[</span><span class="n">f</span><span class="p">])</span>
+        <span class="n">power_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">stream</span><span class="p">[</span><span class="n">p</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="ow">in</span> <span class="n">bands</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">freq_array</span> <span class="o">&gt;=</span> <span class="n">a</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">freq_array</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">)</span>
+            <span class="n">band_powers</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">power_array</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span>
+
+    <span class="c1"># Calculate standard deviation for each band</span>
+    <span class="n">std_devs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">power_list</span> <span class="ow">in</span> <span class="n">band_powers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">power_list</span><span class="p">:</span>  
+            <span class="n">stacked_powers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">power_list</span><span class="p">)</span>
+            <span class="n">std_devs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">stacked_powers</span><span class="p">)</span>  
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">std_devs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># No data for this band</span>
+
+    <span class="k">return</span> <span class="n">std_devs</span>   </div>
+
+
+<div class="viewcode-block" id="mean_power_band">
+<a class="viewcode-back" href="../api/neodbs.html#Features.mean_power_band">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mean_power_band</span><span class="p">(</span><span class="n">log</span><span class="p">,</span><span class="n">band</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculates and returns a dictionary of band-respective mean</span>
+<span class="sd">    </span>
+<span class="sd">    :param stream: dict, signal information &#39;X&#39;/&#39;Frequency&#39; --&gt; x axis; &#39;Y&#39;/&#39;Power&#39; --&gt; y axis</span>
+<span class="sd">    :param bands: dict, &#39;band name&#39;: [f0,f1]</span>
+<span class="sd">    :return: np.array, mean power</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1">#events</span>
+    <span class="n">power</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="n">fi</span><span class="p">,</span><span class="n">ff</span> <span class="o">=</span> <span class="n">band</span>
+
+    <span class="n">temp</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s1">&#39;X&#39;</span> <span class="ow">in</span> <span class="n">log</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">]</span>
+        <span class="n">pwr</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s1">&#39;Frequency&#39;</span> <span class="ow">in</span> <span class="n">log</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s1">&#39;Frequency&#39;</span><span class="p">]</span>
+        <span class="n">pwr</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s1">&#39;Power&#39;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">freq</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">fi</span><span class="o">&lt;=</span><span class="n">f</span><span class="o">&lt;=</span><span class="n">ff</span><span class="p">:</span> <span class="n">temp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pwr</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">temp</span><span class="p">:</span>
+        <span class="n">power</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">temp</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">power</span><span class="p">)</span> <span class="k">if</span> <span class="n">power</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> </div>
+
+
+<div class="viewcode-block" id="get_sum_mean_power">
+<a class="viewcode-back" href="../api/neodbs.html#Features.get_sum_mean_power">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_sum_mean_power</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">band</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculates and returns the sum of all band&#39;s mean power</span>
+<span class="sd">    </span>
+<span class="sd">    :param p: dict, computed PSD (&#39;X&#39; = freqs, &#39;Y&#39; = psd values)</span>
+<span class="sd">    :param bands: dict, &#39;band name&#39;: [f0,f1]</span>
+<span class="sd">    :return: float</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">band</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span> 
+        <span class="n">band</span> <span class="o">=</span> <span class="n">bands</span>
+    <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">],</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>
+    <span class="nb">all</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">band</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;=</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="nb">all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">temp</span><span class="p">))</span>
+        
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="nb">all</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="extract_psd_features">
+<a class="viewcode-back" href="../api/neodbs.html#Features.extract_psd_features">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_psd_features</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">band</span><span class="p">,</span> <span class="n">bands</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Extracts features from spectral density, or coherence, methods. Returns dictionary. </span>
+
+<span class="sd">    Features: </span>
+<span class="sd">    - Mean Power (mean, std. dev)</span>
+<span class="sd">    - % Mean Power (mean, std. dev)</span>
+<span class="sd">    - Sum Power (AUC)</span>
+<span class="sd">    - % Sum Power (AUC)</span>
+<span class="sd">    - Peak Power (power, frequency)&#39;]</span>
+<span class="sd">    </span>
+<span class="sd">    :param p: dict, computed PSD (&#39;X&#39; = freqs, &#39;Y&#39; = psd values)</span>
+<span class="sd">    :param band: list, band[0] = str, band name; band[1] = list, [f0,f1]</span>
+<span class="sd">    :return: dict, {feature: value}</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">b</span><span class="p">,</span><span class="n">v</span> <span class="o">=</span> <span class="n">band</span>
+    <span class="n">band</span> <span class="o">=</span> <span class="p">{</span><span class="n">b</span><span class="p">:</span> <span class="n">v</span><span class="p">}</span>
+    <span class="n">full_power</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">])</span>
+    <span class="n">freqs</span><span class="p">,</span> <span class="n">psd</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>
+    
+    <span class="c1">#mean power per band</span>
+    <span class="n">pc</span> <span class="o">=</span> <span class="n">mean_power_all_bands</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">band</span><span class="p">)</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="n">std_dev_streams</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">band</span><span class="p">)</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Mean Power (mean, std. dev)&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">pc</span><span class="p">[</span><span class="n">b</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">std</span><span class="p">[</span><span class="n">b</span><span class="p">],</span><span class="mi">2</span><span class="p">)]}</span>
+
+    <span class="c1">#normalized mean power</span>
+    <span class="n">sum_mean_power</span> <span class="o">=</span> <span class="n">get_sum_mean_power</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">band</span><span class="o">=</span><span class="n">bands</span><span class="p">)</span>
+    <span class="c1"># norm_mean = {&#39;% Mean Power (mean, std. dev)&#39;: [np.round(pc[b]*100/full_power,2), np.round(std[b],2)]}</span>
+    <span class="n">norm_mean</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;% Mean Power (mean, std. dev)&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">pc</span><span class="p">[</span><span class="n">b</span><span class="p">]</span><span class="o">*</span><span class="mi">100</span><span class="o">/</span><span class="n">sum_mean_power</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">std</span><span class="p">[</span><span class="n">b</span><span class="p">],</span><span class="mi">2</span><span class="p">)]}</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">freqs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span> 
+        <span class="n">freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">freqs</span><span class="p">)</span>
+        <span class="n">psd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">psd</span><span class="p">)</span>
+
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">freqs</span> <span class="o">&gt;=</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">freqs</span> <span class="o">&lt;=</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">auc</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Sum Power (AUC)&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">psd</span><span class="p">[</span><span class="n">mask</span><span class="p">]),</span><span class="mi">2</span><span class="p">)}</span>
+
+    <span class="c1">#normalized auc</span>
+    <span class="n">norm_auc</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;% Sum Power (AUC)&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">psd</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span><span class="o">/</span><span class="n">full_power</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span>
+
+    <span class="c1">#peak power</span>
+    <span class="n">peak</span> <span class="o">=</span> <span class="n">peak_per_band</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">band</span><span class="p">)</span>
+    <span class="n">picos</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Peak Power (power, frequency)&#39;</span><span class="p">:</span> <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">peak</span><span class="o">.</span><span class="n">values</span><span class="p">()}</span>
+
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">|</span> <span class="n">norm_mean</span><span class="o">|</span> <span class="n">auc</span> <span class="o">|</span> <span class="n">norm_auc</span><span class="o">|</span> <span class="n">picos</span>
+
+    <span class="k">return</span> <span class="n">info</span></div>
+
+
+<div class="viewcode-block" id="extract_timeline_features">
+<a class="viewcode-back" href="../api/neodbs.html#Features.extract_timeline_features">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_timeline_features</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Extracts features from timeline recordings, returned into a dictionary. </span>
+
+<span class="sd">    Features:</span>
+<span class="sd">    - Mean Power (mean, std. dev)</span>
+<span class="sd">    - Peak Power</span>
+<span class="sd">    - Peak Time</span>
+<span class="sd">    - Sensing Freq. (Hz)</span>
+
+<span class="sd">    :param p: dict, computed PSD (&#39;X&#39; = time array, &#39;Y&#39; = lfp timeline values)</span>
+<span class="sd">    :return: dict, {feature: value}</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+
+    <span class="n">freqs</span><span class="p">,</span> <span class="n">psd</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">psd</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">psd</span> <span class="o">=</span> <span class="n">psd</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">psd</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="c1">#mean power per band</span>
+    <span class="n">pc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">psd</span><span class="p">)</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">psd</span><span class="p">)</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Mean Power (mean, std. dev)&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">std</span><span class="p">,</span><span class="mi">2</span><span class="p">)]}</span>
+ 
+    <span class="c1">#peak power</span>
+    <span class="n">peak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">psd</span><span class="p">)</span>
+    <span class="n">picos</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Peak Power&#39;</span><span class="p">:</span> <span class="n">peak</span><span class="p">}</span>
+
+    <span class="c1">#peak time</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">psd</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">peak</span><span class="p">)</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">freqs</span><span class="p">[</span><span class="n">time</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span> <span class="n">time</span> <span class="o">=</span> <span class="n">freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+    <span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;Peak Time&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+        <span class="n">peak</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">utl</span><span class="o">.</span><span class="n">parse_datetime</span><span class="p">(</span><span class="n">time</span><span class="p">)</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">time</span><span class="p">)):</span>
+            <span class="k">return</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time</span><span class="p">,</span><span class="nb">float</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="n">peak</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">time</span><span class="p">)</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1">#datetime.datetime object</span>
+        <span class="n">peak</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+
+    <span class="n">time</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">peak</span><span class="p">}</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">|</span> <span class="n">picos</span> <span class="o">|</span> <span class="n">time</span>
+    <span class="k">if</span> <span class="s1">&#39;Sense&#39;</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">sense</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Sensing Freq. (Hz)&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;Sense&#39;</span><span class="p">]</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;Sense&#39;</span><span class="p">]</span><span class="o">+</span><span class="mf">2.5</span><span class="p">,</span><span class="mi">2</span><span class="p">)]}</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">info</span><span class="o">|</span> <span class="n">sense</span>
+
+    <span class="k">return</span> <span class="n">info</span></div>
+
+
+<div class="viewcode-block" id="mean_power_all_bands">
+<a class="viewcode-back" href="../api/neodbs.html#Features.mean_power_all_bands">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mean_power_all_bands</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">bands</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Computes mean power for frequency bands over a stream of events.</span>
+
+<span class="sd">    </span>
+<span class="sd">    :param stream: Description</span>
+<span class="sd">    :param bands: Description</span>
+<span class="sd">    :return: dict, {band: mean}</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="c1"># Ensure stream is iterable</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>  
+        <span class="n">stream</span> <span class="o">=</span> <span class="p">[</span><span class="n">stream</span><span class="p">]</span>  <span class="c1"># Convert single event to a list</span>
+
+    <span class="n">power_values</span> <span class="o">=</span> <span class="p">{</span><span class="n">band</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">band</span> <span class="ow">in</span> <span class="n">bands</span><span class="p">}</span>
+
+    <span class="c1"># Process each event</span>
+    <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">stream</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">band</span><span class="p">,</span> <span class="n">freq_range</span> <span class="ow">in</span> <span class="n">bands</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">power_values</span><span class="p">[</span><span class="n">band</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mean_power_band</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">freq_range</span><span class="p">))</span>
+
+    <span class="c1"># Compute mean power for each band</span>
+    <span class="n">power</span> <span class="o">=</span> <span class="p">{</span><span class="n">band</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="k">if</span> <span class="n">values</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">band</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">power_values</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="k">return</span> <span class="n">power</span></div>
+
+
+<div class="viewcode-block" id="export_plot">
+<a class="viewcode-back" href="../api/neodbs.html#Features.export_plot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">export_plot</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">plot_type</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">line_types</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span><span class="n">dpi</span><span class="o">=</span><span class="mi">600</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Creates matplolib plot and exports it into png image, according to the prepared info in dearpygui.</span>
+<span class="sd">    </span>
+<span class="sd">    If plot_type is &#39;2D&#39; or &#39;CC&#39; (Timeline/normal PSD or cross-correlation): </span>
+<span class="sd">        - signals: list of dicts</span>
+<span class="sd">        - colors: list, rgba codes</span>
+
+<span class="sd">    If plot_type is &#39;3D&#39; or &#39;3DC&#39; (spectrogram or coherogram): </span>
+<span class="sd">        - signals: list of tuples.</span>
+<span class="sd">        - colors: str, name of colormap</span>
+
+<span class="sd">    If plot_type is &#39;Bar&#39; or &#39;Events&#39; (phase-amplitude coupling or event summary): </span>
+<span class="sd">        - signals: list of dicts.</span>
+<span class="sd">        - colors: list, rgba codes</span>
+
+<span class="sd">    If plot_type is &#39;SMP&#39; (Show Mean Power over time): </span>
+<span class="sd">        - signals: dict, &#39;Y1&#39;: signals plotted on left y axis, &#39;Y2&#39;: signals plotted on right y axis.</span>
+<span class="sd">        - colors: list, rgba codes</span>
+
+<span class="sd">    If plot_type is &#39;Pie&#39; (phase-amplitude coupling or event summary): </span>
+<span class="sd">        - signals: single list of values.</span>
+<span class="sd">        - colors: list, rgba codes</span>
+<span class="sd">    </span>
+<span class="sd">    :param info: signals (list), labels (list of signal&#39;s labels), colors (list), title (str, name of plot), axis (list, names of axis), limits (list, range of axis)</span>
+<span class="sd">    :param plot_type: str, type of plot: &#39;2D&#39; (Timeline/PSD), &#39;CC&#39; (cross-correlation), &#39;3D&#39; (spectrogram), &#39;3DC&#39; (coherogram), &#39;Bar&#39; (phase-amplitude coupling), &#39;Events&#39; (event summary), &#39;Pie&#39; (event summary count)</span>
+<span class="sd">    :param size: tuple, width and height of original plot. Optional, default to None, width and height are set to default fig sizes of matplotlib</span>
+<span class="sd">    :param line_types: list, type of line plotted in dpg. Optional, default to None.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">signals</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">limits</span>  <span class="o">=</span> <span class="n">info</span>
+    <span class="n">default_fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">width_default</span><span class="p">,</span> <span class="n">height_default</span> <span class="o">=</span> <span class="n">default_fig</span><span class="o">.</span><span class="n">get_size_inches</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">default_fig</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">size</span><span class="p">:</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="p">[(</span><span class="n">s</span><span class="o">/</span><span class="mi">100</span> <span class="k">if</span> <span class="p">(</span><span class="n">s</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">s</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">size</span><span class="p">]</span>
+
+        <span class="n">width</span>  <span class="o">=</span> <span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">width_default</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">height_default</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span><span class="n">height</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="n">width_default</span><span class="p">,</span><span class="n">height_default</span><span class="p">)</span>
+    
+
+    <span class="k">if</span> <span class="n">plot_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;2D&#39;</span><span class="p">,</span><span class="s1">&#39;CC&#39;</span><span class="p">]:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        
+        
+        <span class="k">if</span> <span class="s1">&#39;Timeline&#39;</span> <span class="ow">in</span> <span class="n">title</span><span class="p">:</span> 
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">signal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">signals</span><span class="p">):</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;Y1&#39;</span> <span class="ow">in</span> <span class="n">signal</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span> <span class="c1">#std.dev or shaded series</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span><span class="n">y2</span> <span class="o">=</span> <span class="n">signal</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">],</span> <span class="n">signal</span><span class="p">[</span><span class="s1">&#39;Y1&#39;</span><span class="p">],</span> <span class="n">signal</span><span class="p">[</span><span class="s1">&#39;Y2&#39;</span><span class="p">]</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y1</span><span class="p">,</span><span class="n">y2</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="mi">3</span><span class="p">],</span><span class="n">alpha</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1"># elif len(list(signal.keys()))==1: #infinte lines</span>
+            <span class="k">elif</span> <span class="s1">&#39;InfLine&#39;</span> <span class="ow">in</span> <span class="n">line_types</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Half Max&#39;</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="n">signal</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">],</span><span class="o">*</span><span class="n">limits</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span> <span class="n">ax</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="n">signal</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">],</span><span class="o">*</span><span class="n">limits</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">label</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="s1">&#39; &#39;</span><span class="p">])</span> <span class="ow">or</span> <span class="p">(</span><span class="s1">&#39;Scatter&#39;</span> <span class="ow">in</span> <span class="n">line_types</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">signal</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">],</span> <span class="n">signal</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">zorder</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">signals</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span> 
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">signal</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">],</span> <span class="n">signal</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>
+                <span class="n">thick</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">linewidth</span><span class="o">=</span><span class="n">thick</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s1">&#39;mean&#39;</span> <span class="ow">in</span> <span class="n">label</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="n">thick</span> <span class="o">=</span> <span class="mi">3</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">linewidth</span><span class="o">=</span><span class="n">thick</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">*</span><span class="n">limits</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">*</span><span class="n">limits</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="s1">&#39;Timeline&#39;</span> <span class="ow">in</span> <span class="n">title</span> <span class="ow">or</span> <span class="s1">&#39;Circadian&#39;</span> <span class="ow">in</span> <span class="n">title</span> <span class="ow">or</span> <span class="s1">&#39;Stimulation&#39;</span> <span class="ow">in</span> <span class="n">title</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">limits</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">autofmt_xdate</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">):</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper center&#39;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05</span><span class="p">),</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        
+        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="k">elif</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s1">&#39;SMP&#39;</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="n">axis</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">secay</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+            <span class="n">secay</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+            <span class="n">secay</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">*</span><span class="n">limits</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+            <span class="n">secax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">twiny</span><span class="p">()</span>
+            <span class="n">secax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">secax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">*</span><span class="n">limits</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">signal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">signals</span><span class="p">[</span><span class="s1">&#39;Y1&#39;</span><span class="p">]):</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;Y1&#39;</span>
+            <span class="k">if</span> <span class="s1">&#39;Scatter&#39;</span> <span class="ow">in</span> <span class="n">line_types</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">i</span><span class="p">]:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">signal</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">],</span><span class="n">signal</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">signal</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">],</span><span class="n">signal</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">i</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">signal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">signals</span><span class="p">[</span><span class="s1">&#39;Y2&#39;</span><span class="p">]):</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;Y2&#39;</span>
+            <span class="k">if</span> <span class="s1">&#39;Scatter&#39;</span> <span class="ow">in</span> <span class="n">line_types</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">i</span><span class="p">]:</span>
+                <span class="n">secay</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">signal</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">],</span><span class="n">signal</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">i</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">signals</span><span class="p">[</span><span class="s1">&#39;Y1&#39;</span><span class="p">])])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">secay</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">signal</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">],</span><span class="n">signal</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">i</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">signals</span><span class="p">[</span><span class="s1">&#39;Y1&#39;</span><span class="p">])],</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">*</span><span class="n">limits</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">*</span><span class="n">limits</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper center&#39;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05</span><span class="p">),</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">plot_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;3D&#39;</span><span class="p">,</span><span class="s1">&#39;3DC&#39;</span><span class="p">]:</span>
+        <span class="n">n_signals</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">signals</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_signals</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">n_signals</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">n_signals</span><span class="p">,</span> <span class="mi">1</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span>
+            <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">cols</span><span class="p">,</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">rows</span><span class="p">),</span>
+            <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_signals</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="n">axs</span> <span class="o">=</span> <span class="p">[</span><span class="n">axs</span><span class="p">]</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">signal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">signals</span><span class="p">):</span>
+            <span class="n">f</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">sxx</span> <span class="o">=</span> <span class="n">signal</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">axs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">pcm</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">sxx</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span><span class="n">vmin</span><span class="o">=</span><span class="n">limits</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">vmax</span><span class="o">=</span><span class="n">limits</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">pcm</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">axis</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">limits</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">limits</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">n_signals</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">axs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">elif</span> <span class="n">plot_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Bar&#39;</span><span class="p">,</span><span class="s1">&#39;Events&#39;</span><span class="p">]:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">plot_type</span><span class="o">==</span><span class="s1">&#39;Events&#39;</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">limits</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">autofmt_xdate</span><span class="p">()</span>
+            
+            <span class="n">width</span> <span class="o">=</span> <span class="mf">0.2</span>
+            <span class="k">if</span> <span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Hours&#39;</span><span class="p">:</span> 
+                <span class="n">width</span> <span class="o">=</span> <span class="mf">0.002</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">limits</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">width</span> <span class="o">=</span><span class="mi">1</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">signals</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">signal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">signals</span><span class="p">):</span>
+            <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">signal</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">],</span> <span class="n">signal</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">):</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper center&#39;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05</span><span class="p">),</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">limits</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">2</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="n">axis</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+    
+    <span class="k">elif</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s1">&#39;Pie&#39;</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">pie</span><span class="p">(</span><span class="n">signals</span><span class="p">,</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span>
+                <span class="n">autopct</span><span class="o">=</span><span class="k">lambda</span> <span class="n">pct</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">signals</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">pct</span><span class="o">/</span><span class="mi">100</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">signals</span><span class="p">))]</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> 
+                <span class="n">startangle</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">title</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;.png&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span><span class="o">!=-</span><span class="mi">1</span><span class="p">:</span> <span class="n">title</span> <span class="o">=</span> <span class="n">title</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span>
+    
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">)</span>
+    <span class="n">output_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s1">.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">,</span><span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">)</span> <span class="c1">#</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="export_signals">
+<a class="viewcode-back" href="../api/neodbs.html#Features.export_signals">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">export_signals</span><span class="p">(</span><span class="n">info</span><span class="p">,</span><span class="n">filename</span><span class="p">,</span> <span class="n">tfd</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Writes into &quot;Signals_{filename}.csv&quot; file, signals contained in info dictionary.</span>
+<span class="sd">    </span>
+<span class="sd">    :param info: dict, keys are columns</span>
+<span class="sd">    :param filename: str, name of file</span>
+<span class="sd">    :param tfd: Optional. Default to False, if True exports 3D signals (spectrogram/coherogram)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; - &#39;</span><span class="p">,</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span>
+    <span class="n">old_filename</span> <span class="o">=</span> <span class="n">filename</span>
+    <span class="k">if</span> <span class="n">tfd</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">info</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">plot_title</span><span class="p">,</span> <span class="n">value</span><span class="p">),</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">old_filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">plot_title</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; | &#39;</span><span class="p">,</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">,</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">frequencies</span><span class="p">,</span><span class="n">time</span><span class="p">,</span><span class="n">sxx</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Freq (Hz)/Time (s)&#39;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">tp</span> <span class="ow">in</span> <span class="n">time</span><span class="p">:</span> 
+                    <span class="n">t</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">tp</span><span class="p">))</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">plot_title</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">line</span><span class="p">,</span> <span class="n">freq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">frequencies</span><span class="p">):</span> 
+                    <span class="n">row</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">freq</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)):</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">sxx</span><span class="p">[</span><span class="n">line</span><span class="p">][</span><span class="n">col</span><span class="p">]))</span>
+                        <span class="k">except</span><span class="p">:</span>
+                            <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;--------------------------------</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,(</span><span class="nb">list</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="n">n_lines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="n">n_lines</span><span class="o">=</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_lines</span><span class="p">):</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="n">column</span><span class="p">][</span><span class="n">i</span><span class="p">]))</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Larissa Rodrigues.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

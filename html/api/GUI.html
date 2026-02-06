@@ -1,0 +1,1598 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="eng">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GUI module &mdash; NeoDBS Beta documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+
+  
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NeoDBS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_steps.html">First Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html">First Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html#general-workflow">General Workflow</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/td.html">1. In-Clinic Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/chronic.html">2. At-Home Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/features.html">3. Signal Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/extra.html">4. Extra Features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules (Functions)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="neodbs.html">Data Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neodbs.html#module-Features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neodbs.html#module-Preprocessing">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neodbs.html#module-utils">Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NeoDBS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">GUI module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/GUI.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-GUI">
+<span id="gui-module"></span><h1>GUI module<a class="headerlink" href="#module-GUI" title="Permalink to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.AnalyzeTimelineEvents">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">AnalyzeTimelineEvents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#AnalyzeTimelineEvents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.AnalyzeTimelineEvents" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.CustomFeatures">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">CustomFeatures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#CustomFeatures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.CustomFeatures" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.CustomFilter">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">CustomFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#CustomFilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.CustomFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that handles all the process from button/input creation to filter application on the signals.</p>
+<p>tab_tag: Description
+signal_tags: Description</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> -- Description</p></li>
+<li><p><strong>app_data</strong> -- Description</p></li>
+<li><p><strong>user_data</strong> -- tab_tag, signal_tags</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.DefaultFeatures">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">DefaultFeatures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#DefaultFeatures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.DefaultFeatures" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.DefaultFilter">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">DefaultFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#DefaultFilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.DefaultFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Standard filtration = 5th order Butterworth bandpass filter 1-100 Hz + Removal of cardiac component
+Remove cardiac component - Fixed peak finder method - BRAVO adapted</p>
+<p>tab_tag, signal_tags = user_data</p>
+<p>tab_tag: Description
+signal_tags: Description</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.RemoveTimelineOutliers">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">RemoveTimelineOutliers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#RemoveTimelineOutliers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.RemoveTimelineOutliers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.Volt2dB">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">Volt2dB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#Volt2dB"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Volt2dB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback of checkbox - changes PSD plot between original units to dB.</p>
+<p>y_axis: str/id, parent of plots (axis y)
+plot_tag: str/id, parent of axis
+signal_tags: list, list of tags to be converted, if they're shown
+tables: list, list of tags of tables to be converted</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> -- Description</p></li>
+<li><p><strong>app_data</strong> -- boolean, type of units (original/dB)</p></li>
+<li><p><strong>user_data</strong> -- y_axis, plot_tag, signal_tags, tables</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.add_band">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">add_band</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#add_band"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.add_band" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: Add user-defined band to internal app_state memory dictinary</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.add_combo_df_features">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">add_combo_df_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#add_combo_df_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.add_combo_df_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: adds default features option to tab</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tab_tag</strong> -- (int or str) alias of tab</p></li>
+<li><p><strong>signal_tags</strong> -- list of signals ploted in main plot of tab</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.add_combo_features">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">add_combo_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#add_combo_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.add_combo_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: adds custom features option to tab</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tab_tag</strong> -- (int or str) alias of tab</p></li>
+<li><p><strong>signal_tags</strong> -- list of signals ploted in main plot of tab</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.add_combo_filters">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">add_combo_filters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#add_combo_filters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.add_combo_filters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: Callback to show custom filters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> -- sender id/alias</p></li>
+<li><p><strong>app_data</strong> -- value of sender in moment of callback</p></li>
+<li><p><strong>user_data</strong> -- data saved to callback</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.add_exporting_tag">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">add_exporting_tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#add_exporting_tag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.add_exporting_tag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.add_features_buttons">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">add_features_buttons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#add_features_buttons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.add_features_buttons" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: adds features-related buttons to tab</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tab_tag</strong> -- (int or str) alias of tab</p></li>
+<li><p><strong>signal_tags</strong> -- list of signals ploted in main plot of tab</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.add_filters_buttons">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">add_filters_buttons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#add_filters_buttons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.add_filters_buttons" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: adds filter-related buttons to tab</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tab_tag</strong> -- (int or str) alias of tab</p></li>
+<li><p><strong>signal_tags</strong> -- list of signals ploted in main plot of tab</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.add_timeline_features_buttons">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">add_timeline_features_buttons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#add_timeline_features_buttons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.add_timeline_features_buttons" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: adds timeline specific features-related buttons to tab</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tab_tag</strong> -- (int or str) alias of tab</p></li>
+<li><p><strong>signal_tags</strong> -- list of signals ploted in main plot of tab</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.align_events">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">align_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#align_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.align_events" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.apply_feat">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">apply_feat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#apply_feat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.apply_feat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies function (func), with defined parameter_values, to raw signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> -- str, function name</p></li>
+<li><p><strong>parameter_values</strong> -- dict, previously filled with default and user-defined</p></li>
+<li><p><strong>raw</strong> -- list, signal to be aplied feature</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.before_vs_after">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">before_vs_after</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#before_vs_after"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.before_vs_after" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback plot_featured_signal, for previosly segmented recordings</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.calculate_timeline_features">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">calculate_timeline_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">series_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#calculate_timeline_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.calculate_timeline_features" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.changeTimelinePlot">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">changeTimelinePlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#changeTimelinePlot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.changeTimelinePlot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.change_button_color">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">change_button_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#change_button_color"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.change_button_color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and returns theme to be binded to button</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>color_id</strong> -- int/float, index of list colors</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.change_directory">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">change_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#change_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.change_directory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.change_electrodes_names">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">change_electrodes_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#change_electrodes_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.change_electrodes_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds user-defined name into dictionary, so its used without app_state memory dictinary loss.
+Channels are to be renamed are hardcoded.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.change_event_name">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">change_event_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#change_event_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.change_event_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renames events. User must know the original events names. Only replaced in future created items.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.change_inf_line_color">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">change_inf_line_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#change_inf_line_color"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.change_inf_line_color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Theme for mvInfLine</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>color_id</strong> -- int, index of color</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.change_line_color">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">change_line_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#change_line_color"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.change_line_color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Theme for mvLineSeries</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>color_id</strong> -- int, index of color</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.change_line_thickness">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">change_line_thickness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thickness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">76</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#change_line_thickness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.change_line_thickness" title="Permalink to this definition">¶</a></dt>
+<dd><p>Theme for mvLineSeries thickness</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>thickness</strong> -- int, width of line</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.change_plot_color">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">change_plot_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#change_plot_color"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.change_plot_color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Theme for mvScatterSeries</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>color_id</strong> -- int, index of color</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.change_text_color">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">change_text_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#change_text_color"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.change_text_color" title="Permalink to this definition">¶</a></dt>
+<dd><p>Theme for text color</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>color_id</strong> -- int, index of color</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.change_window_name">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">change_window_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#change_window_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.change_window_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renames window.
+window_id = user_data</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.choose">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">choose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#choose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.choose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Buttons to choose between individual or joined spectrogram, or wavelet.
+Only appears in the case of there being more than 1 recording from the same channel</p>
+<p>tags: list, signals' id
+tab_label: str/id, tab id
+func: str, function name
+tab_tab: str/id, tab parent id
+parameter_values: dict, key: name of parameter, item: value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> -- Description</p></li>
+<li><p><strong>app_data</strong> -- Description</p></li>
+<li><p><strong>user_data</strong> -- tags, tab_label, func, tab_tag, parameter_values, mode</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.circadian_rhythm">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">circadian_rhythm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#circadian_rhythm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.circadian_rhythm" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.classic_button">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">classic_button</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">og</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#classic_button"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.classic_button" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.colormap_buttons">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">colormap_buttons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mother</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec_tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#colormap_buttons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.colormap_buttons" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.comb_event_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">comb_event_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#comb_event_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.comb_event_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.comb_impedance_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">comb_impedance_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#comb_impedance_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.comb_impedance_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.comb_indefinite_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">comb_indefinite_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#comb_indefinite_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.comb_indefinite_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.comb_setup_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">comb_setup_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#comb_setup_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.comb_setup_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.comb_streaming_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">comb_streaming_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#comb_streaming_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.comb_streaming_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.comb_survey_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">comb_survey_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#comb_survey_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.comb_survey_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.comb_timeline_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">comb_timeline_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#comb_timeline_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.comb_timeline_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.create_alpha_theme">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">create_alpha_theme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#create_alpha_theme"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.create_alpha_theme" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create and return a DearPyGui plot alpha theme, to be binded to line series.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>(</strong><strong>float</strong><strong>)</strong> (<em>alpha</em>) -- Opacity value between 0.0 and 1.0</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The theme ID</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.create_individual_window">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">create_individual_window</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#create_individual_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.create_individual_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dynamically creates a new independent window.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.create_multiple_window">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">create_multiple_window</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#create_multiple_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.create_multiple_window" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.create_table">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">create_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trial_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'New</span> <span class="pre">Trial'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#create_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.create_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates table, if it already existis adds row.
+Adds only one row per use, so it need to be inside for-cycle to add several rows.
+Includes 'Save Table' button.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tab_label</strong> -- str/int, tab id</p></li>
+<li><p><strong>table_tag</strong> -- table id</p></li>
+<li><p><strong>features</strong> -- dictionary of information. Keys will be columns, features[key] will be cell</p></li>
+<li><p><strong>trial_label</strong> -- Name of row, editable by user.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.cut_signals">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">cut_signals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#cut_signals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.cut_signals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cuts and saves time-domain signals.</p>
+<p>tab_tag: Description
+signal_tags: Description</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> -- Description</p></li>
+<li><p><strong>app_data</strong> -- Description</p></li>
+<li><p><strong>user_data</strong> -- tab_tag, signal_tags</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.design">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">design</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#design"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.design" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines theme of GUI</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.deviation">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">deviation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#deviation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.deviation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: Recalculates and plots user-defined data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> -- sender id/alias</p></li>
+<li><p><strong>app_data</strong> -- choosen deviation, via radio button</p></li>
+<li><p><strong>user_data</strong> -- before, tab_label (objects)</p></li>
+</ul>
+</dd>
+</dl>
+<p>before: value of sender, before. if equals: just return
+tab_label: id/alias of tab</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.device_window">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">device_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#device_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.device_window" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.different_combo">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">different_combo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#different_combo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.different_combo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if selected recordings are different</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.display_error">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">display_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#display_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.display_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Displays error e in doc container of tab_tag</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tab_tag</strong> -- str/int, tab parent id</p></li>
+<li><p><strong>e</strong> -- str, exception thrown</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.electrode_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">electrode_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#electrode_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.electrode_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.enforce_min_max">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">enforce_min_max</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#enforce_min_max"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.enforce_min_max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure max is always at least diff units greater than min, and min is never below 0.</p>
+<p>sender: min_tag or max_tag
+min_tag, max_tag, diff = user_data</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.enforce_range">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">enforce_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#enforce_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.enforce_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enforces range of colormap, diff of 5 units.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> -- Description</p></li>
+<li><p><strong>app_data</strong> -- Description</p></li>
+<li><p><strong>user_data</strong> -- tab_label (parent of sender), absolute_min (int/float), absolute_max (int/float)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.event_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">event_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#event_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.event_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.extract_artifact_type">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">extract_artifact_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#extract_artifact_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.extract_artifact_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts type of artifact from string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>s</strong> (<em>str</em>) -- str, ex.: CT_ARTIFACT_PRESENT</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.extract_cc_features">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">extract_cc_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#extract_cc_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.extract_cc_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts features of computed cross-correlation, plots respective features and returns features in a dictionary: info.</p>
+<dl class="simple">
+<dt>info = {</dt><dd><p>'RMS Correlation': rms,
+'Max Correlation': max_value,
+'Lag til Max (s)': lag,
+'Half Max Width (s)': width,
+'Peak Frequency (mean, std)': [freq_mean,freq_std]</p>
+</dd>
+</dl>
+<p>}</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p</strong> -- dict, computed signal dictionary</p></li>
+<li><p><strong>y_axis</strong> -- str/id, parent for plot</p></li>
+<li><p><strong>tab_label</strong> -- str/id, parent of plot, adding table of features</p></li>
+<li><p><strong>mode</strong> -- srt, default to None --&gt; performs general cc; band name str --&gt; performs band-specific cc</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>[info, tags], info --&gt; features dictionary; tags --&gt; list of id's of added feature plots</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict, list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.extract_channel_from_series_tag">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">extract_channel_from_series_tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#extract_channel_from_series_tag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.extract_channel_from_series_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets channel, without hemisphere, of series/recording, from channel (ex.: 'ONE_THREE_LEFT' --&gt; 'ONE_THREE').</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>series_tag</strong> (<em>str</em>) -- str, series id</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>str, channel name</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.extract_channel_hemisphere">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">extract_channel_hemisphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#extract_channel_hemisphere"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.extract_channel_hemisphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses a label like 'ZERO_THREE_LEFT' into channel and hemisphere.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The channel with underscores (e.g. 'zero_three')
+hemisphere (str): The hemisphere (e.g. 'left')</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>channel (str)</p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>label</strong> -- str, channel_hemisphere = 'ZERO_THREE_LEFT'</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.extract_edx_from_series_tag">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">extract_edx_from_series_tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#extract_edx_from_series_tag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.extract_edx_from_series_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets id of event, from tag of series plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>series_tag</strong> (<em>str</em>) -- str, series id</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>int, event id (in app_state memory dictinary)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.extract_event_from_series_tag">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">extract_event_from_series_tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_string</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#extract_event_from_series_tag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.extract_event_from_series_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets name of event, from tag of series plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>series_tag</strong> -- str, series id (ex.: tab_Streaming_0_series_0)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>str, event name (ex.: series_0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.extract_file_from_series_tag">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">extract_file_from_series_tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#extract_file_from_series_tag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.extract_file_from_series_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets file of series/recording, from tag of series plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>series_tag</strong> (<em>str</em>) -- str, series id</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>int, file id (in app_state memory dictinary)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.extract_idx_from_series_tag">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">extract_idx_from_series_tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#extract_idx_from_series_tag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.extract_idx_from_series_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets id of series/recording, from tag of series plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>series_tag</strong> (<em>str</em>) -- str, series id</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>int, number of series (in app_state memory dictinary)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.extract_mode">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">extract_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#extract_mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.extract_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts the mode from a tab_tag formatted as 'tab_{mode}_{window_id}'
+or 'tab_{mode}_{window_id}_{suffix}'.</p>
+<p>Return str</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tab_tag</strong> (<em>str</em>) -- Description</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.extract_side_from_series_tag">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">extract_side_from_series_tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#extract_side_from_series_tag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.extract_side_from_series_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets hemisphere of series/recording, from tag of series plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>series_tag</strong> (<em>str</em>) -- str, series id</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>int, left=0, right=1</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.extract_type_window">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">extract_type_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#extract_type_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.extract_type_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets type of window: 'Individual' or 'Combined'
+return str</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>window_id</strong> -- Description</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.extract_window_id">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">extract_window_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#extract_window_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.extract_window_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts window_id as an integer from a tab_tag formatted as 'tab_{mode}_{window_id}'
+or 'tab_{mode}_{window_id}_{suffix}'.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tab_tag</strong> (<em>str</em>) -- Description</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.filename_window">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">filename_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#filename_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.filename_window" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.fill_params_features">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">fill_params_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#fill_params_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.fill_params_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns app_data function parameters, and respective default values, and documentation.
+:param app_data: name of function</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.getActiveSeries">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">getActiveSeries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#getActiveSeries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.getActiveSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>From signal's id, returns only a list of the visible tags.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>signal_tags</strong> -- dict/list, if dict the tags are keys</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.getActiveSignals">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">getActiveSignals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#getActiveSignals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.getActiveSignals" title="Permalink to this definition">¶</a></dt>
+<dd><p>From Active Series, returns the data of the series in app_state memory dictinary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>signal_tags</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.getBandsByTab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">getBandsByTab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#getBandsByTab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.getBandsByTab" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets frequency bands (used for spectral analysis), associated to window or tab.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tab_tag</strong> -- Description</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.getDatabyFile">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">getDatabyFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#getDatabyFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.getDatabyFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return Data dicitionary (from json file), from file id in app_state memory dictinary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>window_id</strong> -- Description</p></li>
+<li><p><strong>file</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.getDatabyTag">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">getDatabyTag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#getDatabyTag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.getDatabyTag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return Data dicitionary (from json file), from series tag</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>series_tag</strong> -- Description</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.getDeviation">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">getDeviation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#getDeviation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.getDeviation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.getEventsbyIdx">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">getEventsbyIdx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#getEventsbyIdx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.getEventsbyIdx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets Events in signal idx, by id of signal</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>idx</strong> -- int, signal id in app_state memory dictinary</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.getEventsbyTag">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">getEventsbyTag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">series_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#getEventsbyTag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.getEventsbyTag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets Events in signal idx, by series tag</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>series_tag</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.getMeanActiveSeries">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">getMeanActiveSeries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Y'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#getMeanActiveSeries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.getMeanActiveSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates mean and standard deviation from the active signals in plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>window_id</strong> -- str/id</p></li>
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>signal_tags</strong> -- Description</p></li>
+<li><p><strong>dev</strong> -- default to None, standar deviation*1, else gets value of radio button to get type of standard deviation</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.getSignalbyIdx">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">getSignalbyIdx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">series_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#getSignalbyIdx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.getSignalbyIdx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets signal data, from app_state memory dictinary, from series_tag</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>window_id</strong> -- Description</p></li>
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>series_tag</strong> -- Description</p></li>
+<li><p><strong>mode</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.getSignalbyIdxSide">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">getSignalbyIdxSide</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">series_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#getSignalbyIdxSide"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.getSignalbyIdxSide" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets signal data, for Events, from series_tag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>window_id</strong> -- Description</p></li>
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>series_tag</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.getUpdatedElectrodeName">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">getUpdatedElectrodeName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">electrode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#getUpdatedElectrodeName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.getUpdatedElectrodeName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets user-defined electrode name, from original electrode name defined in json file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>electrode</strong> -- str, original name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.getUpdatedEventName">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">getUpdatedEventName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#getUpdatedEventName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.getUpdatedEventName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets user-defined event name, from original name defined in json file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong> -- str, original name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.get_limits">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">get_limits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">children</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#get_limits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.get_limits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns absolute axis limits, and indexes to create mask on signals and return only the visible parts of the signals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>children</strong> -- list, signals tags id (children of y axis)</p></li>
+<li><p><strong>plot_tag</strong> -- str/id, plot id (parent of axis)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.hide">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">hide</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#hide"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.hide" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hides streams in plot, except mean and standard deviation and updates checkbox calue</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> -- button id</p></li>
+<li><p><strong>app_data</strong> -- value of checkbox</p></li>
+<li><p><strong>user_data</strong> -- streams, checkboxes</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.horizontal_scroll">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">horizontal_scroll</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#horizontal_scroll"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.horizontal_scroll" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.impedance_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">impedance_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#impedance_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.impedance_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.indefinite_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">indefinite_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#indefinite_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.indefinite_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.insert_events">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">insert_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#insert_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.insert_events" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.install_requirements_if_needed">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">install_requirements_if_needed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requirements_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'requirements.txt'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#install_requirements_if_needed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.install_requirements_if_needed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks requirements, installs packages missing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>requirements_file</strong> -- .txt file,</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.interval_events">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">interval_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mini</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#interval_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.interval_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds buttons to get event-locked segmentation interval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>label1</strong> -- str, label of input 1</p></li>
+<li><p><strong>label2</strong> -- str, label of input 2</p></li>
+<li><p><strong>mini</strong> -- default to 15s, value of before interval (s)</p></li>
+<li><p><strong>maxi</strong> -- default to 15s, value of after interval (s)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.is_package_installed">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">is_package_installed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#is_package_installed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.is_package_installed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if package installed: tries to import package, if exception thrown return False (signalizes for package to be installed)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>package_name</strong> -- str, package name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.load_main_ui">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">load_main_ui</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#load_main_ui"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.load_main_ui" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.main">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.plot_coherence">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">plot_coherence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_label</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#plot_coherence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.plot_coherence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes default coherence (welch)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameter_values</strong> -- Description</p></li>
+<li><p><strong>tab_label</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.plot_cross_correlation">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">plot_cross_correlation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#plot_cross_correlation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.plot_cross_correlation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots and computes cross-correlation between two signals, user-choosen, saved into keys 'a' and 'v' in parameter values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameter_values</strong> -- Description</p></li>
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>tags</strong> -- Description</p></li>
+<li><p><strong>mode</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.plot_df_coherence">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">plot_df_coherence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#plot_df_coherence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.plot_df_coherence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots default coherence (welch method), computed in plot_coherence</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameter_values</strong> -- Description</p></li>
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>tags</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.plot_featured_signal">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">plot_featured_signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#plot_featured_signal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.plot_featured_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes and plots method func (with parameter_values that are user-defined),
+to signals identified by signal_tags, to be ploted in tab_label, child of tab_tag.</p>
+<p>Resulting func must be 2D.</p>
+<p>May be applied to epoch segments, or raw signals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal_tags</strong> -- list, of signals' id</p></li>
+<li><p><strong>tab_label</strong> -- str/int, tab id</p></li>
+<li><p><strong>func</strong> -- str, function name</p></li>
+<li><p><strong>tab_tag</strong> -- str/int, tab parent id</p></li>
+<li><p><strong>parameter_values</strong> -- dict, keys: parameter names, items: values</p></li>
+<li><p><strong>mode</strong> -- default None, if 'segment' gets signal data accordingly</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.plot_multitaper_coherence">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">plot_multitaper_coherence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#plot_multitaper_coherence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.plot_multitaper_coherence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes and Plots multitaper coherence</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameter_values</strong> -- Description</p></li>
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>tags</strong> -- Description</p></li>
+<li><p><strong>flag</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.plot_pac">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">plot_pac</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#plot_pac"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.plot_pac" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes and plots Phase-Amplitude Coupling, for the selected streams and bands.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tags</strong> -- Description</p></li>
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>parameter_values</strong> -- Description</p></li>
+<li><p><strong>mode</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.plot_spectrogram_joined">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">plot_spectrogram_joined</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#plot_spectrogram_joined"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.plot_spectrogram_joined" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes and plots spectrogram of joined recordings, per channel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tags</strong> -- list, signals' id</p></li>
+<li><p><strong>tab_label</strong> -- str/id, tab id</p></li>
+<li><p><strong>func</strong> -- str, function name</p></li>
+<li><p><strong>tab_tag</strong> -- str/id, parent tab id</p></li>
+<li><p><strong>parameter_values</strong> -- dict,</p></li>
+<li><p><strong>mode</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.plot_spectrogram_og">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">plot_spectrogram_og</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'segment'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#plot_spectrogram_og"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.plot_spectrogram_og" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes and plots spectrograms individually, into subplots, under one colormap.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tags</strong> -- Description</p></li>
+<li><p><strong>tab_label</strong> -- Description</p></li>
+<li><p><strong>func</strong> -- Description</p></li>
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>parameter_values</strong> -- Description</p></li>
+<li><p><strong>mode</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.plot_td">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">plot_td</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">events</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#plot_td"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.plot_td" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot Time Domain signals (Streaming, Indefinite, Setup, Survey)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signals</strong> -- array of signals dictionaries</p></li>
+<li><p><strong>parent</strong> -- y axis, parent of streams</p></li>
+<li><p><strong>tab_tag</strong> -- tab id</p></li>
+<li><p><strong>signal_tags</strong> -- tags of signals</p></li>
+<li><p><strong>files</strong> -- files id, for Combined window</p></li>
+<li><p><strong>events</strong> -- events data</p></li>
+<li><p><strong>count</strong> -- aiding object --&gt; plots events according to their file</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.plot_wavelet">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">plot_wavelet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#plot_wavelet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.plot_wavelet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots wavelet, computed for all recordings individually.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tags</strong> -- Description</p></li>
+<li><p><strong>tab_label</strong> -- Description</p></li>
+<li><p><strong>func</strong> -- Description</p></li>
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>parameter_values</strong> -- Description</p></li>
+<li><p><strong>mode</strong> -- default to None</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.plot_wavelet_joined">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">plot_wavelet_joined</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#plot_wavelet_joined"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.plot_wavelet_joined" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots wavelet, computed for all recordings joined by channel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tags</strong> -- Description</p></li>
+<li><p><strong>tab_label</strong> -- Description</p></li>
+<li><p><strong>func</strong> -- Description</p></li>
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>parameter_values</strong> -- Description</p></li>
+<li><p><strong>mode</strong> -- default to None</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.recalculateMeanMetrics">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">recalculateMeanMetrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#recalculateMeanMetrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.recalculateMeanMetrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: recaulculates mean metrics of Events</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> -- button id</p></li>
+<li><p><strong>app_data</strong> -- <ul>
+<li></li>
+</ul>
+</p></li>
+<li><p><strong>user_data</strong> -- tab_tag</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.recalculate_timeline">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">recalculate_timeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#recalculate_timeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.recalculate_timeline" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.reset_bands">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">reset_bands</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#reset_bands"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.reset_bands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: reset to default bands (D,T,A,B,G) to internal app_state memory dictinary</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.reset_colormap">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">reset_colormap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#reset_colormap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.reset_colormap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.resize_font">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">resize_font</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#resize_font"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.resize_font" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resizes font of all items</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.sanitize_filename">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">sanitize_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#sanitize_filename"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.sanitize_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: Removes or replaces invalid characters from filenames.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.save_all">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">save_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#save_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.save_all" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.save_band_powers_to_txt">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">save_band_powers_to_txt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#save_band_powers_to_txt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.save_band_powers_to_txt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: saves band mean power over day signals
+info[channel][band] = {</p>
+<blockquote>
+<div><p>timestamp: [mean, std],</p>
+</div></blockquote>
+<p>}</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.save_plot">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">save_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#save_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.save_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares data from selected plot to be exported into png file.
+plot_type, plot_tag, y_axis, colormap_int = user_data
+colomap_int:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>int: for regular plots</p></li>
+<li><p>rgba array: timeline (specific colors)</p></li>
+<li><p>string: 3D (name of colormap)</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.save_signals">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">save_signals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#save_signals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.save_signals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal:  Prepares data from selected plot to save signals into .csv file
+parent, plot, plot_type = user_data</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.save_table_to_file">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">save_table_to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#save_table_to_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.save_table_to_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: Saves DPG table data to a .csv or .txt file</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.segment_signal">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">segment_signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#segment_signal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.segment_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds buttons to perform segmentation of time-domain signals</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>signal_tags</strong> -- Description</p></li>
+<li><p><strong>plot_tag</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.session_window">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">session_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#session_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.session_window" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.set_colormap_range">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">set_colormap_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#set_colormap_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.set_colormap_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets colormap range of spectrogram, of colormap and reconfigures spectrograms to same interval.</p>
+<p>tab_label: str/int, tab id
+spec_tags: list, spectrogram's series' id
+colormap_tag: str/int, colormap id</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> -- Description</p></li>
+<li><p><strong>app_data</strong> -- Description</p></li>
+<li><p><strong>user_data</strong> -- tab_label, spec_tags, colormap_tag</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.set_directory">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">set_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#set_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.set_directory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.set_font">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">set_font</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">just_theme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#set_font"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.set_font" title="Permalink to this definition">¶</a></dt>
+<dd><p>Redefines actual theme to support function resize_font</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>size</strong> -- int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.setup_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">setup_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#setup_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.setup_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.show_event_summary">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">show_event_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#show_event_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.show_event_summary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.show_mean">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">show_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#show_mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.show_mean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.stimulation_timeline">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">stimulation_timeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#stimulation_timeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.stimulation_timeline" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.stimulation_window">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">stimulation_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#stimulation_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.stimulation_window" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.streaming_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">streaming_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#streaming_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.streaming_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.survey_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">survey_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#survey_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.survey_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.switch_theme">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">switch_theme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#switch_theme"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.switch_theme" title="Permalink to this definition">¶</a></dt>
+<dd><p>Binds selected theme to GUI</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>user_data</strong> -- theme</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.timeline_tab">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">timeline_tab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#timeline_tab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.timeline_tab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.toggle">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">toggle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_parent</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#toggle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.toggle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.toggleDisplay">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">toggleDisplay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#toggleDisplay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.toggleDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Documentation</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.toggleDisplay2">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">toggleDisplay2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#toggleDisplay2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.toggleDisplay2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.toggleType">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">toggleType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#toggleType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.toggleType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: toggles visibility according to the</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal_tags</strong> -- Description</p></li>
+<li><p><strong>parent</strong> -- Description</p></li>
+<li><p><strong>user_data</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.toggleVisibility">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">toggleVisibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#toggleVisibility"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.toggleVisibility" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal: creates checkbox for each plotted tag (in signal_tags). Callback defines tag/plot visibility.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal_tags</strong> -- list of tags, identifiers of each added plot series</p></li>
+<li><p><strong>parent</strong> -- parent of tags (y axis)</p></li>
+<li><p><strong>group</strong> -- group that encapsulates plot</p></li>
+<li><p><strong>user_data</strong> -- window_id</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.updateKeySignalbyIdx">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">updateKeySignalbyIdx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">series_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#updateKeySignalbyIdx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.updateKeySignalbyIdx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates app_state memory dictionary with processed signal (cut or new events)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> -- list, new signal</p></li>
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>series_tag</strong> -- Description</p></li>
+<li><p><strong>key</strong> -- str, key onto the value will be updated, must exist</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.updateSignalbyIdx">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">updateSignalbyIdx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">series_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_tab_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#updateSignalbyIdx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.updateSignalbyIdx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates signal after filtering and saves wavelet into app_state memory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> -- list, new signal</p></li>
+<li><p><strong>tab_tag</strong> -- Description</p></li>
+<li><p><strong>series_tag</strong> -- Description</p></li>
+<li><p><strong>func</strong> -- Description</p></li>
+<li><p><strong>mode</strong> -- Description</p></li>
+<li><p><strong>new_tab_tag</strong> -- Description</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.update_plot_td">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">update_plot_td</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#update_plot_td"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.update_plot_td" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates tab plot, after filtering and segmentation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tab_tag</strong> -- tab id</p></li>
+<li><p><strong>signal_tags</strong> -- array of plotted signals' id</p></li>
+<li><p><strong>title</strong> -- updates title after performed task</p></li>
+<li><p><strong>signal_mode</strong> -- default to None (normal), else considered segments (epoch)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.update_table">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">update_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#update_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.update_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the table by replacing values with their dB equivalents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>table_tag</strong> -- </p></li>
+<li><p><strong>type</strong> -- str, 'dB' or else</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="GUI.window_menu">
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">window_menu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#window_menu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.window_menu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Larissa Rodrigues.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

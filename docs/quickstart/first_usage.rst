@@ -72,10 +72,12 @@ If you're wondering what is the best window to use, here's a summary of the func
 +------------------------------------+---------------------+--------------------+
 | Default/Customizable Filtering     | |check|             | |check|            |
 +------------------------------------+---------------------+--------------------+
-| Default/Customizable Spectral      | |check|             | |check|            |
+| Default/Customizable Signal        | |check|             | |check|            |
 | Analysis                           |                     |                    |
 +------------------------------------+---------------------+--------------------+
-| In-Clinic Event Annotation         | |check|             | |check|            |
+| In-Clinic Event Annotation         | |check|             | **X**              |
++------------------------------------+---------------------+--------------------+
+| In-Clinic Event-locked Segmentation| **X**               | |check|            |
 +------------------------------------+---------------------+--------------------+
 | Patient Event-locked Segmentation  | **X**               | |check|            |
 +------------------------------------+---------------------+--------------------+
@@ -83,7 +85,7 @@ If you're wondering what is the best window to use, here's a summary of the func
 +------------------------------------+---------------------+--------------------+
 | Manual Segmentation                | |check|             | |check|            |
 +------------------------------------+---------------------+--------------------+
-| Before/After Event Analysis        | |check|             | |check|            |
+| Before/After Event Analysis        | **X**               | |check|            |
 +------------------------------------+---------------------+--------------------+
 
 .. |check| unicode:: U+2713 .. CHECK MARK
@@ -174,7 +176,7 @@ After understanding what workspaces exist, here is a simple workflow for analysi
 
 .. image:: ../img/start.png
 
-1. **Select type of analysis to be performed:** :ref:`Individual Window <ind>` or :ref:`Combined Window <comb>`.
+1. **Select type of analysis to be performed:** :ref:`Individual Window <ind>` or :ref:`Combined Window <comb>`. A *movable* and *resizable* window will open, a new workspace.
 
 .. image:: ../img/main.png
 

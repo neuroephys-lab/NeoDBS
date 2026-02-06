@@ -1,0 +1,263 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="eng">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>4. Extra Features &mdash; NeoDBS Beta documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+
+  
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Data Handling" href="../api/neodbs.html" />
+    <link rel="prev" title="3. Signal Analysis" href="features.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NeoDBS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_steps.html">First Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html">First Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html#general-workflow">General Workflow</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="td.html">1. In-Clinic Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chronic.html">2. At-Home Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">3. Signal Analysis</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">4. Extra Features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#user-experience">4.1. User Experience</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#themes">4.1.1. Themes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#font-size">4.1.2. Font Size</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rename-window">4.1.3. Rename Window</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rename-channels">4.1.4. Rename Channels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rename-events">4.1.5. Rename Events</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#horizontal-scrollbar">4.1.6. Horizontal Scrollbar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tables">4.1.7. Tables</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#export">4.2. Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#directories">4.3. Directories</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules (Functions)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Preprocessing">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-utils">Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NeoDBS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">4. </span>Extra Features</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/extra.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="extra-features">
+<h1><span class="section-number">4. </span>Extra Features<a class="headerlink" href="#extra-features" title="Permalink to this heading">¶</a></h1>
+<p>Beyond signal processing features, NeoDBS is a customizable platform at the user level. This includes
+customizing the graphical user interface (GUI), workspaces, nomenclature of recordings, and others.
+Since this platform is designed to foment research, NeoDBS development took in consideration researcher's
+and clinician's needs when performing signal and data analysis. Therefore, easy manipulation and exportation
+of data are strong features of this platform.</p>
+<section id="user-experience">
+<h2><span class="section-number">4.1. </span>User Experience<a class="headerlink" href="#user-experience" title="Permalink to this heading">¶</a></h2>
+<p>User experience is one big focus of the platform, by creating an easier environment to perform difficult tasks such as
+signal processing.</p>
+<section id="themes">
+<h3><span class="section-number">4.1.1. </span>Themes<a class="headerlink" href="#themes" title="Permalink to this heading">¶</a></h3>
+<p>The user has available three different themes. <strong>Classic, Light</strong> and <strong>Dark</strong>. Default theme is Classic.</p>
+<ol class="arabic simple">
+<li><p>On the main window menu, select &quot;Themes&quot;.</p></li>
+<li><p>Select the theme to be applied.</p></li>
+</ol>
+<img alt="../_images/Themes.png" src="../_images/Themes.png" />
+</section>
+<section id="font-size">
+<h3><span class="section-number">4.1.2. </span>Font Size<a class="headerlink" href="#font-size" title="Permalink to this heading">¶</a></h3>
+<p>Font can be easily resized for best readibility.</p>
+<ol class="arabic simple">
+<li><p>On the main window menu, select &quot;Edit&quot;.</p></li>
+<li><p>Press &quot;Resize Font&quot;.</p></li>
+<li><p>Select the font size, by sliding the button. Font will be instantly updated.</p></li>
+<li><p>To go back to default font size (16), press &quot;Reset&quot;.</p></li>
+</ol>
+<img alt="../_images/font.png" src="../_images/font.png" />
+</section>
+<section id="rename-window">
+<h3><span class="section-number">4.1.3. </span>Rename Window<a class="headerlink" href="#rename-window" title="Permalink to this heading">¶</a></h3>
+<p>To optimize workspace organization and accessibility, windows can be renamed.
+Individual window's name default to the selected JSON file name, while Combined window's name default to
+&quot;Combined #&quot;, with # being the number of the window.</p>
+<ol class="arabic simple">
+<li><p>On the respective window menu, select &quot;Edit&quot;.</p></li>
+<li><p>Press &quot;Edit Window Name&quot;.</p></li>
+<li><p>Write the new name and press &quot;Submit&quot;.</p></li>
+</ol>
+<img alt="../_images/window_name.png" src="../_images/window_name.png" />
+</section>
+<section id="rename-channels">
+<h3><span class="section-number">4.1.4. </span>Rename Channels<a class="headerlink" href="#rename-channels" title="Permalink to this heading">¶</a></h3>
+<p>Recording channels (ZERO_THREE, ONE_THREE, ZERO_TWO) can also be renamed, to facilitate interpretation of analysis.
+The updated names on new instances of the recording channels. If an item with mention of the recording channels is
+already created prior to the renaming, it will <strong>not</strong> be updated. Only future instances.</p>
+<ol class="arabic simple">
+<li><p>On the main window menu, select &quot;Edit&quot;.</p></li>
+<li><p>Press &quot;Rename Electrodes&quot;.</p></li>
+<li><p>Write the new name(s). Press &quot;submit&quot; to apply changes.</p></li>
+<li><p>Future instances will appear with the updated names, on <strong>all</strong> workspaces.</p></li>
+</ol>
+<img alt="../_images/rename_channel.png" src="../_images/rename_channel.png" />
+</section>
+<section id="rename-events">
+<h3><span class="section-number">4.1.5. </span>Rename Events<a class="headerlink" href="#rename-events" title="Permalink to this heading">¶</a></h3>
+<p>At-home marked events are saved into the respective group event. These groups are defined by the clinician, when
+programming the DBS system for at-home chronic recordings. If an item with mention of the event/group name is
+already created prior to the renaming, it will <strong>not</strong> be updated. Only future instances.</p>
+<ol class="arabic simple">
+<li><p>On the main window menu, select &quot;Edit&quot;.</p></li>
+<li><p>Press &quot;Rename Events/Groups&quot;.</p></li>
+<li><p>Write the old event/group name and the new name.</p></li>
+<li><p>To add more alterations, press &quot;+&quot;.</p></li>
+</ol>
+<p>5. Press &quot;Submit&quot; to apply changes.
+4. Future instances will appear with the updated names, on <strong>all</strong> workspaces.</p>
+<img alt="../_images/rename_event.png" src="../_images/rename_event.png" />
+</section>
+<section id="horizontal-scrollbar">
+<h3><span class="section-number">4.1.6. </span>Horizontal Scrollbar<a class="headerlink" href="#horizontal-scrollbar" title="Permalink to this heading">¶</a></h3>
+<p>To allow windows to have customizable sizes, while accessing all information, horizontal scrollbar can be
+activated (or deactivated). By default, windows have the horizontal scrollbar deactivated.</p>
+<ol class="arabic simple">
+<li><p>On the respective window menu, select &quot;Edit&quot;.</p></li>
+<li><p>Press &quot;Activate Horizontal Scrollbar&quot;.</p></li>
+<li><p>To deactivate, press the same button.</p></li>
+</ol>
+<img alt="../_images/scrollbar.png" src="../_images/scrollbar.png" />
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the user has a mousepad, the horizontal scrollbar it is not required to navigate horizontally.
+Due to the GUI library configuration, it is not very recommended to activate the scrollbar, even though it has a very
+useful functionality.</p>
+</div>
+</section>
+<section id="tables">
+<h3><span class="section-number">4.1.7. </span>Tables<a class="headerlink" href="#tables" title="Permalink to this heading">¶</a></h3>
+<p>In signal analysis, extracted features are organized into tables for easy visualization and exportation.
+Additionally, the name of all rows can be customized.</p>
+<img alt="../_images/table.png" src="../_images/table.png" />
+</section>
+</section>
+<section id="export">
+<h2><span class="section-number">4.2. </span>Export<a class="headerlink" href="#export" title="Permalink to this heading">¶</a></h2>
+<p>As mentioned above, NeoDBS offers exportation functionalities for all created plots, tables and series.
+They can be <strong>individually</strong> exported, exported <strong>by window</strong> or <strong>export all</strong> created items in the platform.</p>
+<ol class="arabic simple">
+<li><p>To save individually the created item, press &quot;Export Plot/Signals&quot; or &quot;Save Table&quot;, according to the item of interest.</p></li>
+<li><p>To save all the chosen items per window, press &quot;Save...&quot; in the window menu bar. Items are saved into a folder with the window name.</p></li>
+<li><p>To save all chosen items in the platform, press &quot;Save&quot; in the main window menu bar.</p></li>
+<li><p>Select the type of exportation.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Because the supporting GUI library (DearPyGui) has no functionality to export plots, these are properly
+converted into MatplotLib plots and saved into <em>.png</em> files. The conversion is made to replicate as close as possible
+the plot in NeoDBS.</p>
+</div>
+</section>
+<section id="directories">
+<h2><span class="section-number">4.3. </span>Directories<a class="headerlink" href="#directories" title="Permalink to this heading">¶</a></h2>
+<p>To optimize your work and organization, you can select the directories from which you want to upload or save data with NeoDBS. This will set the root directory in
+the platform, so it is easier and faster to access your recording sessions, input files and even where you want your exportations organized.</p>
+<img alt="../_images/directory.png" src="../_images/directory.png" />
+<ol class="arabic simple">
+<li><p>In the main window menu, click on <strong>&quot;Directories&quot;</strong>.</p></li>
+<li><p>To select the root directory of your recording session's files (JSON), press <strong>&quot;Recording Directory&quot;</strong>.</p></li>
+<li><p>In the file dialog, select the folder from which you access your data of interest. After you see the name of the folder in the <em>Directory Path</em>, press <strong>&quot;OK&quot;</strong>.</p></li>
+<li><p>You can do the same for other inputs (such as text files for events) in <strong>Events Directory</strong> or for your outputs saved from NeoDBS in <strong>&quot;Save into... Directory&quot;</strong>.</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="features.html" class="btn btn-neutral float-left" title="3. Signal Analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../api/neodbs.html" class="btn btn-neutral float-right" title="Data Handling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Larissa Rodrigues.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,364 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="eng">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preprocessing module &mdash; NeoDBS Beta documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+
+  
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NeoDBS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_steps.html">First Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html">First Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html#general-workflow">General Workflow</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/td.html">1. In-Clinic Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/chronic.html">2. At-Home Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/features.html">3. Signal Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/extra.html">4. Extra Features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules (Functions)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="neodbs.html">Data Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neodbs.html#module-Features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neodbs.html#module-Preprocessing">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neodbs.html#module-utils">Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NeoDBS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Preprocessing module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/Preprocessing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-Preprocessing">
+<span id="preprocessing-module"></span><h1>Preprocessing module<a class="headerlink" href="#module-Preprocessing" title="Permalink to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="Preprocessing.MeanSignal">
+<span class="sig-prename descclassname"><span class="pre">Preprocessing.</span></span><span class="sig-name descname"><span class="pre">MeanSignal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Y'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Preprocessing.html#MeanSignal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Preprocessing.MeanSignal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates and return mean from specific key in signal dictionary, item of signals list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signals</strong> -- list
+list of dictionaries of signal data.</p></li>
+<li><p><strong>key</strong> -- str/int, default to 'Y'
+key of dictionary</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.array
+computed mean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Preprocessing.StdDevSignal">
+<span class="sig-prename descclassname"><span class="pre">Preprocessing.</span></span><span class="sig-name descname"><span class="pre">StdDevSignal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Preprocessing.html#StdDevSignal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Preprocessing.StdDevSignal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates and return standard deviation from specific key in signal dictionary, item of signals list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signals</strong> -- list, list of dictionaries of signal data.</p></li>
+<li><p><strong>key</strong> -- str/int</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Preprocessing.call_function">
+<span class="sig-prename descclassname"><span class="pre">Preprocessing.</span></span><span class="sig-name descname"><span class="pre">call_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ss'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Preprocessing.html#call_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Preprocessing.call_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function from module by name, print its documentation, and handle exceptions.
+If given arguments dont work, function retries with default arguments given by module.</p>
+<dl class="simple">
+<dt>Modules:</dt><dd><ul class="simple">
+<li><p>'ss': scipy.signal</p></li>
+<li><p>'mtf': mne.time_frequency</p></li>
+<li><p>'si': scipy.integrate</p></li>
+<li><p>'ssw': scipy.signal.windows</p></li>
+<li><p>'np': numpy</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func_name</strong> -- str, function name</p></li>
+<li><p><strong>param_dict</strong> -- dict, required and optional arguments</p></li>
+<li><p><strong>module</strong> -- str, module name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>output of func(<a href="#id1"><span class="problematic" id="id2">*</span></a>args,**kwargs)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Preprocessing.call_function2">
+<span class="sig-prename descclassname"><span class="pre">Preprocessing.</span></span><span class="sig-name descname"><span class="pre">call_function2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Preprocessing.html#call_function2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Preprocessing.call_function2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call a function from scipy.signal by name, print its documentation, and handle exceptions.
+If given arguments dont work, function retries with default arguments given by module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func_name</strong> -- str, function name</p></li>
+<li><p><strong>args</strong> -- dict, required arguments</p></li>
+<li><p><strong>kwargs</strong> -- dict, optional keyword arguments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>output of func(<a href="#id3"><span class="problematic" id="id4">*</span></a>args,**kwargs)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Preprocessing.convert_from_db">
+<span class="sig-prename descclassname"><span class="pre">Preprocessing.</span></span><span class="sig-name descname"><span class="pre">convert_from_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Preprocessing.html#convert_from_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Preprocessing.convert_from_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a dB value back to linear scale using 10^(dB/10).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> -- int/float</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>int/float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Preprocessing.convert_to_db">
+<span class="sig-prename descclassname"><span class="pre">Preprocessing.</span></span><span class="sig-name descname"><span class="pre">convert_to_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Preprocessing.html#convert_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Preprocessing.convert_to_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a value to dB scale using 10 * log10.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> -- int/float</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>int/float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Preprocessing.extract_params_and_returns">
+<span class="sig-prename descclassname"><span class="pre">Preprocessing.</span></span><span class="sig-name descname"><span class="pre">extract_params_and_returns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">docstring</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Preprocessing.html#extract_params_and_returns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Preprocessing.extract_params_and_returns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts the 'Parameters' and 'Returns' sections from a Numpydoc-formatted
+documentation string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>docstring</strong> (<em>str</em>) -- str, documentation string of a function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A string containing only the 'Parameters' and 'Returns' sections.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Preprocessing.get_date_from_ts">
+<span class="sig-prename descclassname"><span class="pre">Preprocessing.</span></span><span class="sig-name descname"><span class="pre">get_date_from_ts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Preprocessing.html#get_date_from_ts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Preprocessing.get_date_from_ts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns datetime object correspondant to the given timestamp ts</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ts</strong> -- int/float</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>datetime.datetime</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Preprocessing.get_default_kwargs">
+<span class="sig-prename descclassname"><span class="pre">Preprocessing.</span></span><span class="sig-name descname"><span class="pre">get_default_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ss'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Preprocessing.html#get_default_kwargs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Preprocessing.get_default_kwargs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves optional keywords parameters, and default values, from func_name.</p>
+<dl class="simple">
+<dt>Modules:</dt><dd><ul class="simple">
+<li><p>'ss': scipy.signal</p></li>
+<li><p>'mtf': mne.time_frequency</p></li>
+<li><p>'si': scipy.integrate</p></li>
+<li><p>'ssw': scipy.signal.windows</p></li>
+<li><p>'np': numpy</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func_name</strong> -- str, function name</p></li>
+<li><p><strong>module</strong> -- str, module name. Defaults to ss</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Preprocessing.get_functions">
+<span class="sig-prename descclassname"><span class="pre">Preprocessing.</span></span><span class="sig-name descname"><span class="pre">get_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ss'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Preprocessing.html#get_functions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Preprocessing.get_functions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves and saves all functions names and callbacks into a dictionary</p>
+<dl class="simple">
+<dt>Modules:</dt><dd><ul class="simple">
+<li><p>'ss': scipy.signal</p></li>
+<li><p>'mtf': mne.time_frequency</p></li>
+<li><p>'si': scipy.integrate</p></li>
+<li><p>'ssw': scipy.signal.windows</p></li>
+<li><p>'np': numpy</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>module</strong> -- str</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict, {func_naame: obj}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Preprocessing.get_required_params">
+<span class="sig-prename descclassname"><span class="pre">Preprocessing.</span></span><span class="sig-name descname"><span class="pre">get_required_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ss'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Preprocessing.html#get_required_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Preprocessing.get_required_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves required parameters, and default values, from func_name.</p>
+<dl class="simple">
+<dt>Modules:</dt><dd><ul class="simple">
+<li><p>'ss': scipy.signal</p></li>
+<li><p>'mtf': mne.time_frequency</p></li>
+<li><p>'si': scipy.integrate</p></li>
+<li><p>'ssw': scipy.signal.windows</p></li>
+<li><p>'np': numpy</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func_name</strong> -- str, function name</p></li>
+<li><p><strong>module</strong> -- str, module name. Defaults to ss</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Preprocessing.removeCardiacComponent">
+<span class="sig-prename descclassname"><span class="pre">Preprocessing.</span></span><span class="sig-name descname"><span class="pre">removeCardiacComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filterMethod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Fixed</span> <span class="pre">Peak</span> <span class="pre">Find'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Preprocessing.html#removeCardiacComponent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Preprocessing.removeCardiacComponent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies 5th order Butterworth bandpass filter with cardiac artifact removal. With Wiener Filter and scipy.find_peaks, an ECG template is created and subtracted to the filtered signal, removing the cardiac component.
+Adapted from <a class="reference external" href="https://github.com/Fixel-Institute/BRAVO_SSR/blob/main/modules/LocalPerceptDatabase.py#L327">https://github.com/Fixel-Institute/BRAVO_SSR/blob/main/modules/LocalPerceptDatabase.py#L327</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>raw</strong> -- dict, {'Y': signal values}</p></li>
+<li><p><strong>band</strong> -- Description</p></li>
+<li><p><strong>filterMethod</strong> -- Description</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>filtered signal, signal with only bandpass</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Larissa Rodrigues.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

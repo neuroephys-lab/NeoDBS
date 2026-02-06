@@ -1,0 +1,315 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="eng">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Features module &mdash; NeoDBS Beta documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+
+  
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NeoDBS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_steps.html">First Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html">First Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html#general-workflow">General Workflow</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/td.html">1. In-Clinic Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/chronic.html">2. At-Home Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/features.html">3. Signal Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/extra.html">4. Extra Features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules (Functions)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="neodbs.html">Data Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neodbs.html#module-Features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neodbs.html#module-Preprocessing">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neodbs.html#module-utils">Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NeoDBS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Features module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/Features.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-Features">
+<span id="features-module"></span><h1>Features module<a class="headerlink" href="#module-Features" title="Permalink to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="Features.export_plot">
+<span class="sig-prename descclassname"><span class="pre">Features.</span></span><span class="sig-name descname"><span class="pre">export_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Features.html#export_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Features.export_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates matplolib plot and exports it into png image, according to the prepared info in dearpygui.</p>
+<dl class="simple">
+<dt>If plot_type is '2D' or 'CC' (Timeline/normal PSD or cross-correlation):</dt><dd><ul class="simple">
+<li><p>signals: list of dicts</p></li>
+<li><p>colors: list, rgba codes</p></li>
+</ul>
+</dd>
+<dt>If plot_type is '3D' or '3DC' (spectrogram or coherogram):</dt><dd><ul class="simple">
+<li><p>signals: list of tuples.</p></li>
+<li><p>colors: str, name of colormap</p></li>
+</ul>
+</dd>
+<dt>If plot_type is 'Bar' or 'Events' (phase-amplitude coupling or event summary):</dt><dd><ul class="simple">
+<li><p>signals: list of dicts.</p></li>
+<li><p>colors: list, rgba codes</p></li>
+</ul>
+</dd>
+<dt>If plot_type is 'SMP' (Show Mean Power over time):</dt><dd><ul class="simple">
+<li><p>signals: dict, 'Y1': signals plotted on left y axis, 'Y2': signals plotted on right y axis.</p></li>
+<li><p>colors: list, rgba codes</p></li>
+</ul>
+</dd>
+<dt>If plot_type is 'Pie' (phase-amplitude coupling or event summary):</dt><dd><ul class="simple">
+<li><p>signals: single list of values.</p></li>
+<li><p>colors: list, rgba codes</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>info</strong> -- signals (list), labels (list of signal's labels), colors (list), title (str, name of plot), axis (list, names of axis), limits (list, range of axis)</p></li>
+<li><p><strong>plot_type</strong> -- str, type of plot: '2D' (Timeline/PSD), 'CC' (cross-correlation), '3D' (spectrogram), '3DC' (coherogram), 'Bar' (phase-amplitude coupling), 'Events' (event summary), 'Pie' (event summary count)</p></li>
+<li><p><strong>size</strong> -- tuple, width and height of original plot. Optional, default to None, width and height are set to default fig sizes of matplotlib</p></li>
+<li><p><strong>line_types</strong> -- list, type of line plotted in dpg. Optional, default to None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Features.export_signals">
+<span class="sig-prename descclassname"><span class="pre">Features.</span></span><span class="sig-name descname"><span class="pre">export_signals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tfd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Features.html#export_signals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Features.export_signals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes into &quot;Signals_{filename}.csv&quot; file, signals contained in info dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>info</strong> -- dict, keys are columns</p></li>
+<li><p><strong>filename</strong> -- str, name of file</p></li>
+<li><p><strong>tfd</strong> -- Optional. Default to False, if True exports 3D signals (spectrogram/coherogram)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Features.extract_psd_features">
+<span class="sig-prename descclassname"><span class="pre">Features.</span></span><span class="sig-name descname"><span class="pre">extract_psd_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bands</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Features.html#extract_psd_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Features.extract_psd_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts features from spectral density, or coherence, methods. Returns dictionary.</p>
+<p>Features:
+- Mean Power (mean, std. dev)
+- % Mean Power (mean, std. dev)
+- Sum Power (AUC)
+- % Sum Power (AUC)
+- Peak Power (power, frequency)']</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p</strong> -- dict, computed PSD ('X' = freqs, 'Y' = psd values)</p></li>
+<li><p><strong>band</strong> -- list, band[0] = str, band name; band[1] = list, [f0,f1]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict, {feature: value}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Features.extract_timeline_features">
+<span class="sig-prename descclassname"><span class="pre">Features.</span></span><span class="sig-name descname"><span class="pre">extract_timeline_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Features.html#extract_timeline_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Features.extract_timeline_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts features from timeline recordings, returned into a dictionary.</p>
+<p>Features:
+- Mean Power (mean, std. dev)
+- Peak Power
+- Peak Time
+- Sensing Freq. (Hz)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>p</strong> -- dict, computed PSD ('X' = time array, 'Y' = lfp timeline values)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict, {feature: value}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Features.get_sum_mean_power">
+<span class="sig-prename descclassname"><span class="pre">Features.</span></span><span class="sig-name descname"><span class="pre">get_sum_mean_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Features.html#get_sum_mean_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Features.get_sum_mean_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates and returns the sum of all band's mean power</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p</strong> -- dict, computed PSD ('X' = freqs, 'Y' = psd values)</p></li>
+<li><p><strong>bands</strong> -- dict, 'band name': [f0,f1]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Features.mean_power_all_bands">
+<span class="sig-prename descclassname"><span class="pre">Features.</span></span><span class="sig-name descname"><span class="pre">mean_power_all_bands</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bands</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Features.html#mean_power_all_bands"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Features.mean_power_all_bands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes mean power for frequency bands over a stream of events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stream</strong> -- Description</p></li>
+<li><p><strong>bands</strong> -- Description</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict, {band: mean}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Features.mean_power_band">
+<span class="sig-prename descclassname"><span class="pre">Features.</span></span><span class="sig-name descname"><span class="pre">mean_power_band</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Features.html#mean_power_band"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Features.mean_power_band" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates and returns a dictionary of band-respective mean</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stream</strong> -- dict, signal information 'X'/'Frequency' --&gt; x axis; 'Y'/'Power' --&gt; y axis</p></li>
+<li><p><strong>bands</strong> -- dict, 'band name': [f0,f1]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.array, mean power</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Features.peak_per_band">
+<span class="sig-prename descclassname"><span class="pre">Features.</span></span><span class="sig-name descname"><span class="pre">peak_per_band</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bands</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Features.html#peak_per_band"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Features.peak_per_band" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrives all peak values and positions, in stream, for each band.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stream</strong> -- dict, signal information 'X'/'Frequency' --&gt; x axis; 'Y'/'Power' --&gt; y axis</p></li>
+<li><p><strong>bands</strong> -- dict, 'band name': [f0,f1]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Features.peak_power">
+<span class="sig-prename descclassname"><span class="pre">Features.</span></span><span class="sig-name descname"><span class="pre">peak_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Features.html#peak_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Features.peak_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>From stream dictionary, return tuple with peak value and peak position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>stream</strong> -- dict, signal information 'X'/'Frequency' --&gt; x axis; 'Y'/'Power' --&gt; y axis</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Features.std_dev_streams">
+<span class="sig-prename descclassname"><span class="pre">Features.</span></span><span class="sig-name descname"><span class="pre">std_dev_streams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">streams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bands</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Features.html#std_dev_streams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Features.std_dev_streams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates and returns a dictionary of band-respective standard deviation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stream</strong> -- dict, signal information 'X'/'Frequency' --&gt; x axis; 'Y'/'Power' --&gt; y axis</p></li>
+<li><p><strong>bands</strong> -- dict, 'band name': [f0,f1]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict, 'band name': float standard deviation</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Larissa Rodrigues.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
