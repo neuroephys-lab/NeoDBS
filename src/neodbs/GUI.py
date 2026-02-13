@@ -795,8 +795,7 @@ def toggleVisibility(signal_tags, parent, group, user_data):
                 dpg.configure_item(f"{tab_tag}_mean", show=app_data)
 
         if dpg.does_item_exist(f"{tab_tag}_mean") and app_data: #only in events for now
-            mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
-            minus, plus = mean_power-std_power, mean_power+std_power
+            mean_power, minus, plus = getMeanActiveSeries(window_id,tab_tag,signal_tags)
             dpg.configure_item(f"{tab_tag}_std", y1=minus,y2=plus)
             current = dpg.get_value(f"{tab_tag}_mean")
             dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
@@ -815,7 +814,7 @@ def toggleVisibility(signal_tags, parent, group, user_data):
         mode = extract_mode(tab_tag)
 
         if mode == 'Events':
-            mean_power, std_dev = getMeanActiveSeries(window_id,tab_tag,signal_tags)
+            mean_power, minus, plus = getMeanActiveSeries(window_id,tab_tag,signal_tags)
             if isinstance(mean_power,(int,float,np.float64)): 
                 dpg.configure_item(f"{tab_tag}_mean",show=False)
                 dpg.configure_item(f"{tab_tag}_std",show=False)
@@ -825,7 +824,6 @@ def toggleVisibility(signal_tags, parent, group, user_data):
                 dpg.configure_item(f"{tab_tag}_std",show=True)
 
                 current = dpg.get_value(f"{tab_tag}_mean")
-                minus,plus = mean_power-std_dev, mean_power+std_dev
                 dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
                 dpg.configure_item(f"{tab_tag}_std", y1=minus,y2=plus)
 
@@ -880,7 +878,7 @@ def toggleType(signal_tags, parent, user_data):
                     if dpg.does_item_exist(f"{series_tag}_peak"): dpg.configure_item(f"{series_tag}_peak", show=app_data)
                     
         if dpg.does_item_exist(f"{tab_tag}_mean"):
-            mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags,key)
+            mean_power, minus, plus = getMeanActiveSeries(window_id,tab_tag,signal_tags,key)
             if isinstance(mean_power,(int,float,np.float64)): 
                 dpg.configure_item(f"{tab_tag}_mean",show=False)
                 dpg.configure_item(f"{tab_tag}_std",show=False)
@@ -889,8 +887,8 @@ def toggleType(signal_tags, parent, user_data):
                 dpg.configure_item(f"{tab_tag}_mean",show=True)
                 dpg.configure_item(f"{tab_tag}_std",show=True)
 
-                minus, plus = mean_power-std_power, mean_power+ std_power
                 current = dpg.get_value(f"{tab_tag}_mean")
+                
                 dpg.configure_item(f"{tab_tag}_std", y1=minus,y2=plus)
                 dpg.set_value(f"{tab_tag}_mean", [current[0], mean_power])
                 
@@ -1166,9 +1164,10 @@ def hide(sender,app_data,user_data):
         if 'psd' in tab_tag: #survey peaks
             if dpg.does_item_exist(f"{s}_peak"): dpg.configure_item(f"{s}_peak",show=bol)
 
-    if app_data:
-        dpg.configure_item(f"{tab_tag}_2db",enabled=False)
-    else: dpg.configure_item(f"{tab_tag}_2db",enabled=True)
+    if dpg.does_item_exist(f"{tab_tag}_2db"):
+        if app_data:
+            dpg.configure_item(f"{tab_tag}_2db",enabled=False)
+        else: dpg.configure_item(f"{tab_tag}_2db",enabled=True)
 
 #--- Visualization functions
 def plot_td(signals, parent, tab_tag, signal_tags, files = None, events = False, count = []):
@@ -2237,7 +2236,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
         def link(sender, app_data):
             dpg.configure_item(f"{tab_label}_subplots", link_all_x=app_data, link_all_y=app_data)
 
-        def mean(sender,app_data):
+        '''def mean(sender,app_data):
             mean_Sxx = np.mean(np.stack(channels), axis=0)
             with dpg.plot(label='Mean Spectrogram', width=-1, height=400, tag=f"{tab_label}_join_mean", parent=f"{tab_label}_merged"):
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
@@ -2260,7 +2259,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
                         type = event['Type']
                         dpg.add_plot_legend()
                         dpg.add_inf_line_series(x=[stamp],label=f'{type}',parent=y_axis)
-    
+    '''
         def spectrograms_power_over_time(sender,app_data,user_data):
             bands = getBandsByTab(tab_tag)
             if dpg.does_item_exist(f"{tab_label}_merged"): dpg.delete_item(f"{tab_label}_merged")
@@ -2567,7 +2566,6 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
             # freq, coh = freq.tolist(), coh.tolist()
             dpg.add_line_series(freq.tolist(), coh.tolist(), label=f'Multitaper Coherence | {label}', parent=y_axis)
             dpg.add_line_series(freq.tolist(), imcoh.tolist(), label=f'Imaginary Multitaper Coherence | {label}', parent=y_axis)
-            dpg.set_axis_limits(y_axis,ymin=0,ymax=1)
 
             if not dpg.does_item_exist(f"{tab_label}_header"):
                 dpg.add_collapsing_header(tag=f"{tab_label}_header",label='Extracted Feautres',parent=f"{tab_label}_plot_group",default_open=False)
@@ -2636,17 +2634,20 @@ def plot_multitaper_coherence(parameter_values,tab_tag,tags,flag=None):
             dpg.add_colormap_scale(tag=f"{tab_label}_colormap_scale", label="Density (dB)", colormap=dpg.mvPlotColormap_Viridis,
                                             min_scale = np.min(matrix), max_scale=np.max(matrix), height=400)
             subplot_tag = f"{tab_label}_spec"
-            with dpg.plot(label='Coherogram', width=-1, height=400, tag=f"{tab_label}_spec"):
+            with dpg.plot(label='Coherogram', width=600, height=400, tag=subplot_tag):
                 x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)")
                 y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Frequency (Hz)")
 
-                dpg.add_heat_series(matrix.flatten(), rows=len(freqs), cols=len(times),
+                heat = dpg.add_heat_series(matrix.flatten(), rows=len(freqs), cols=len(times),
                                             scale_min=np.min(matrix), scale_max=np.max(matrix), 
                                             parent=y_axis, format="",bounds_min=[0,0], bounds_max=[int(len(signal1['Y'])/250),100])
                                             
                 dpg.bind_colormap(subplot_tag, dpg.mvPlotColormap_Viridis)
 
             if dpg.does_item_exist(header_tag): dpg.delete_item(header_tag, children_only=True)
+
+            
+            colormap_buttons(group_tag, (np.min(matrix), np.max(matrix)), subplot_tag, [heat], not_coherogram=False, group_tag=tab_label)
 
             dpg.add_separator(label='Export',parent=tab_label)
             b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,parent=tab_label,callback = filename_window,user_data =('3DC', group_tag, y_axis,'viridis'))
@@ -2901,18 +2902,18 @@ def set_colormap_range(sender,app_data,user_data):
         dpg.configure_item(spec,scale_max=max_value,scale_min=min_value)
 
 def reset_colormap(sender,app_data,user_data):
-    mother, spec_tags = user_data
+    mother, spec_tags, colormap_scale = user_data
     e_min, e_max = f"{mother}_emin", f"{mother}_emax" 
 
     mother, min_value, max_value = dpg.get_item_user_data(e_min)
     dpg.set_value(e_min, min_value)
     dpg.set_value(e_max, max_value)
 
-    dpg.configure_item(f"{mother}_colormap_scale",min_scale=min_value,max_scale=max_value)
+    dpg.configure_item(colormap_scale,min_scale=min_value,max_scale=max_value)
     for spec in spec_tags:
         dpg.configure_item(spec,scale_max=max_value,scale_min=min_value)
 
-def colormap_buttons(mother, values, plot, spec_tags, group_tag = None):
+def colormap_buttons(mother, values, plot, spec_tags, group_tag = None, not_coherogram=True):
     #mother = group with the plots 
     global_min, global_max = values
 
@@ -2926,20 +2927,32 @@ def colormap_buttons(mother, values, plot, spec_tags, group_tag = None):
         colormap_parent = mother
     else: 
         colormap_parent = group_tag[:group_tag.find("_buttons")]
+        if not not_coherogram:
+            colormap_parent = group_tag
+            group_tag = mother
 
-    with dpg.group(horizontal=False, parent=group_tag):
-        dpg.add_text('Adjust Colormap Scale:')
-        dpg.add_input_int(label='Min: ', tag=f"{mother}_emin", width=90, default_value=global_min,callback=enforce_range, 
-                            user_data=(mother,global_min,global_max), min_value=global_min,max_value=(global_max-5))
-        dpg.add_input_int(label='Max: ', tag=f"{mother}_emax", width=90, default_value=global_max,callback=enforce_range, 
-                            user_data=(mother,global_min,global_max), min_value=global_min,max_value=(global_max-5))
-        with dpg.group(horizontal=True):
-            dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(mother,spec_tags,f"{colormap_parent}_colormap_scale"))
-            dpg.add_button(label='Reset Colormap', callback=reset_colormap, user_data = (mother, spec_tags))
-        dpg.add_separator(label='Export')
-        b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('3D', mother, y_axis,'jet'))
-        b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(plot,mother,'3D'))
-        add_exporting_tag(extract_window_id(mother),plot=b1,signal=b2)
+    if not_coherogram:
+        with dpg.group(horizontal=False, parent=group_tag):
+            dpg.add_text('Adjust Colormap Scale:')
+            dpg.add_input_int(label='Min: ', tag=f"{mother}_emin", width=90, default_value=global_min,callback=enforce_range, 
+                                user_data=(mother,global_min,global_max), min_value=global_min,max_value=(global_max-5))
+            dpg.add_input_int(label='Max: ', tag=f"{mother}_emax", width=90, default_value=global_max,callback=enforce_range, 
+                                user_data=(mother,global_min,global_max), min_value=global_min,max_value=(global_max-5))
+            dpg.add_separator(label='Export')
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('3D', mother, y_axis,'jet'))
+            b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(plot,mother,'3D'))
+            add_exporting_tag(extract_window_id(mother),plot=b1,signal=b2)
+    else: 
+        with dpg.group(horizontal=False, parent=group_tag):
+            dpg.add_text('Adjust Colormap Scale:')
+            dpg.add_input_float(label='Min: ', tag=f"{mother}_emin", width=110, default_value=global_min, 
+                                user_data=(mother,global_min,global_max))#, min_value=global_min,max_value=(global_max-5)),callback=enforce_range,
+            dpg.add_input_float(label='Max: ', tag=f"{mother}_emax", width=110, default_value=global_max, 
+                                user_data=(mother,global_min,global_max))#, min_value=global_min,max_value=(global_max-5)),callback=enforce_range
+    with dpg.group(horizontal=True):
+        dpg.add_button(label='Set Colormap Range',callback=set_colormap_range,user_data=(mother,spec_tags,f"{colormap_parent}_colormap_scale"))
+        dpg.add_button(label='Reset Colormap', callback=reset_colormap, user_data = (mother, spec_tags,f"{colormap_parent}_colormap_scale"))
+            
 
 def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode = 'segment'):
     '''
@@ -3820,19 +3833,27 @@ def change_button_color(color_id=4):
             dpg.add_theme_color(dpg.mvThemeCol_Button, colors[color_id]) 
     return theme
 
-def create_alpha_theme(alpha=0.5):
+def create_alpha_theme(alpha=0.5,color=None):
     '''
     Create and return a DearPyGui plot alpha theme, to be binded to line series.
     
     
     :param alpha (float): Opacity value between 0.0 and 1.0
+    :param color (list): rbga values of line (for cases of dpg.add_line_series, that are not filled)
     
     Returns:
         int: The theme ID
     '''
+    if color:
+        color[-1] = alpha
+        color = [int(c*255) for c in color]
+        
     with dpg.theme() as alpha_theme:
         with dpg.theme_component(dpg.mvAll):
-            dpg.add_theme_style(dpg.mvPlotStyleVar_FillAlpha, alpha, category=dpg.mvThemeCat_Plots)
+            if color:
+                dpg.add_theme_color(dpg.mvPlotCol_Line,color,category=dpg.mvThemeCat_Plots )
+            else: dpg.add_theme_style(dpg.mvPlotStyleVar_FillAlpha, alpha, category=dpg.mvThemeCat_Plots)
+            
     return alpha_theme
 
 def switch_theme(sender, app_data, user_data):
@@ -3963,15 +3984,21 @@ def change_inf_line_color(color_id):
             dpg.add_theme_color(dpg.mvPlotCol_Line, colors[color_id], category=dpg.mvThemeCat_Plots)
     return theme_id
 
-def change_line_color(color_id):
+def change_line_color(color):
     '''
     Theme for mvLineSeries
     
-    :param color_id: int, index of color
+    :param color_id: int or list, index of color or rgba code
     '''
+    if isinstance(color,int):
+        color = colors[color]
+    elif isinstance(color, list):
+        if sum(color)<3:
+            color = [int(c*255) for c in color]
+
     with dpg.theme() as theme_id:
         with dpg.theme_component(dpg.mvLineSeries):
-            dpg.add_theme_color(dpg.mvPlotCol_Line, colors[color_id], category=dpg.mvThemeCat_Plots)
+            dpg.add_theme_color(dpg.mvPlotCol_Line, color, category=dpg.mvThemeCat_Plots)
     return theme_id
 
 def change_plot_color(color_id):
@@ -4780,10 +4807,18 @@ def getMeanActiveSeries(window_id,tab_tag,signal_tags,key='Y'): #try to use it i
         std_power = pre.StdDevSignal(active_signals,key)
         dev = getDeviation(tab_tag)
         std_power = dev*std_power
+        minus, plus = mean_power-std_power, mean_power+std_power
+
+        if dpg.does_item_exist(f"{tab_tag}_2db") and dpg.get_value(f"{tab_tag}_2db"):
+            mean_power = np.array([pre.convert_to_db(m) for m in mean_power])
+            minus = np.array([pre.convert_to_db(m) for m in minus])
+            plus = np.array([pre.convert_to_db(m) for m in plus])
     else:
         return 0,0
+    
+    
 
-    return mean_power, std_power
+    return mean_power, minus, plus
 
 def segment_signal(tab_tag, signal_tags,plot_tag):
     '''
@@ -5530,8 +5565,9 @@ def circadian_rhythm(sender, app_data, user_data):
         dates.append(label[-10:])
         x = sorted(old_x)
 
-        if x[0] != old_x[0]:
+        if x[0] > old_x[0]:
             old_y = list(reversed(old_y))
+            old_x = list(reversed(old_x))
 
         if isinstance(old_x[0],(int,float)):
             old_x = [utl.get_timestamp_from_dt(str(pre.get_date_from_ts(xx).time())) for xx in x]
@@ -5555,7 +5591,7 @@ def circadian_rhythm(sender, app_data, user_data):
         
         last = utl.get_timestamp_from_dt("23:59:00")
 
-        if x[0]>600:
+        if x[0]>600: #day starts after theoric first point (00h10)
             if x[0]>last:
                 x[0] = x[0]-last
                
@@ -5563,15 +5599,14 @@ def circadian_rhythm(sender, app_data, user_data):
             nan_array = [np.nan]*diff
             y = nan_array + y
             x = list(np.arange(x[0]-(diff*600),x[0],600)) + x
-        if x[-1]<last:
-            diff = int((last - x[-1])//600)
+        if x[-1]<last: #day ends before theoric first point (23h50)
+            diff = int((last - x[-1])//600)+1
             nan_array = [np.nan]*diff
             y = y + nan_array
             x = x + list(np.arange(x[-1],last,600))
-
-        x=x[:144]
+        
+        x=x[:144] #6timestamps every 24hours
         y=y[:144]
-
         days[tag] = [x,y,stim_info]
         
         mean.append(y)
@@ -5600,6 +5635,14 @@ def circadian_rhythm(sender, app_data, user_data):
             if show: 
                 new_mean.append(dpg.get_value(t)[1])
 
+        if len(toggle_tags)<1:
+            length = len(dpg.get_value(f"{tab_label}_mean")[0])
+            new_mean = np.zeros(length)
+            dpg.configure_item(f"{tab_label}_mean",y=new_mean)
+            dpg.configure_item(f"{tab_label}_std",y1=new_mean,y2=new_mean)
+            return
+
+
         new_std = np.nanstd(new_mean,axis=0)
         new_mean = np.nanmean(new_mean,axis=0)
         new_minus = new_mean - new_std
@@ -5616,7 +5659,6 @@ def circadian_rhythm(sender, app_data, user_data):
         if not isinstance(user_data,str):
             create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=trial)
 
-
     with dpg.group(parent=tab_label, horizontal=True, tag=f"{tab_label}_CR"):
         plot_tag = f"{tab_label}_plot"
         with dpg.plot(label = "Circadian Rhythm", tag = plot_tag, width=800): 
@@ -5629,6 +5671,8 @@ def circadian_rhythm(sender, app_data, user_data):
                 label = dpg.get_item_label(tag)
                 circadian_tags.append(f"{tag}_{tab_label}")
                 dpg.add_line_series(val[0],val[1],label=label,parent=y_axis, tag = f"{tag}_{tab_label}",skip_nan=False)
+                rgba = dpg.get_colormap_color(0,list(days.keys()).index(tag))
+                dpg.bind_item_theme(f"{tag}_{tab_label}",create_alpha_theme(alpha=0.8,color=rgba))
 
                 new_x = [pre.get_date_from_ts(xx) for xx in val[0]]
 
@@ -5636,9 +5680,6 @@ def circadian_rhythm(sender, app_data, user_data):
 
                 if not dpg.does_item_exist(f"{tab_label}_header"):
                     dpg.add_collapsing_header(tag=f"{tab_label}_header", parent=tab_label, label = 'Circadian Metrics')
-
-                # info = ft.extract_timeline_features(sign)
-                # create_table(f"{tab_label}_header",f"{tab_label}_table", info, trial_label=label)
 
 
             s = dpg.add_shade_series(val[0],y1=minus,y2=plus,parent=y_axis,label='Std. Dev',tag=f"{tab_label}_std")
@@ -5692,16 +5733,19 @@ def stimulation_timeline(sender,app_data,user_data):
         files = sorted(files,key=lambda f: getDatabyFile(window_id, f)['Device']['SessionDate'])
     else: files = [None]
 
-    stimulation = {'X': [], 'Y': [], 'Info':[]}
-    for file in files: 
-        stimus = DH.getStimulation(getDatabyFile(window_id,file))
-        for x in stimus['X']: stimulation['X'].append(x)
-        for x in stimus['Y']: stimulation['Y'].append(x)
-        for x in stimus['Info']: 
-            if stimulation['Info']!= [] and x['Date'] == stimulation['Info'][-1]['Date']: 
-                stimulation['Info'][-1] = x
-                continue
-            stimulation['Info'].append(x)
+    copy = {'X': [], 'Y': [], 'Info':[]}
+    stimulation = {side: {'X': [], 'Y': [], 'Info':[]} for side in ['Left','Right']}
+    for side in ['Left','Right']:
+        temp = stimulation[side]
+        for file in files: 
+            stimus = DH.getStimulation(getDatabyFile(window_id,file),side=side)
+            for x in stimus['X']: temp['X'].append(x)
+            for x in stimus['Y']: temp['Y'].append(x)
+            for x in stimus['Info']: 
+                if temp['Info']!= [] and x['Date'] == temp['Info'][-1]['Date']: 
+                    temp['Info'][-1] = x
+                    continue
+                temp['Info'].append(x)
 
     with dpg.group(parent=tab_label, horizontal=True):
         plot_tag = f"{tab_label}_plot"
@@ -5711,19 +5755,21 @@ def stimulation_timeline(sender,app_data,user_data):
             x_axis = dpg.add_plot_axis(dpg.mvXAxis, label='Time (MM/DD/YYYY UTC)', scale = dpg.mvPlotScale_Time) #tag=f"{tab_label}_x_axis"
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Stimulation Amplitude (mA)", tag= f"{tab_label}_y_axis")
 
-            x = [utl.parse_datetime(x).timestamp() for x in stimulation['X']]
-            y = stimulation['Y']
-            l = dpg.add_line_series(x,y,parent=y_axis)
-            dpg.bind_item_theme(l,change_line_thickness(4))
+            for side in ['Left','Right']:
+                temp = stimulation[side]
+                x = [utl.parse_datetime(x).timestamp() for x in temp['X']]
+                y = temp['Y']
+                l = dpg.add_line_series(x,y,parent=y_axis,label=f'{side} Hemisphere')
+                dpg.bind_item_theme(l,change_line_thickness(4))
         with dpg.group():
-            dpg.add_text('Information')
-            with dpg.child_window(height=300,tag=f"{tab_label}_information"):
-                for info in stimulation['Info']:
-                    trial = info['Date']
-                    info.pop('Date')
-                    create_table(f"{tab_label}_information",f"{tab_label}_information_table",info,trial_label=trial)
-    
-    
+            dpg.add_text('Stimulation Information')
+            for side in ['Left','Right']:
+                with dpg.collapsing_header(tag=f"{tab_label}_{side}_information", label=f'{side} Hemisphere'):
+                    for info in stimulation[side]['Info']:
+                        trial = info['Date']
+                        info.pop('Date')
+                        create_table(f"{tab_label}_{side}_information",f"{tab_label}_{side}_information_table",info,trial_label=trial)
+        
     dpg.add_separator(label='Export',parent=tab_label)
     b1 = dpg.add_button(label = 'Export Plot Figure',parent=tab_label,width=-1,callback = filename_window,user_data =('2D', plot_tag, y_axis,0))
     b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,parent=tab_label,user_data=(y_axis,plot_tag,'Stimulation'))
@@ -5862,7 +5908,6 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
             mean = dpg.add_line_series(segment[0],mean_value,label='Mean',parent=y_axis, tag = f"{tab_label}_mean")
             dpg.bind_item_theme(mean, change_line_thickness(5))
 
-
     def bva(segments):
         bva_segments = []
         for segment, label in segments:
@@ -5893,6 +5938,13 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
             if show:
                 mean_temp.append(t[1])
             
+        if len(segments)<1:
+            length = len(dpg.get_value(f"{tab_label}_mean")[0])
+            new_mean = np.zeros(length)
+            dpg.configure_item(f"{tab_label}_mean",y=new_mean)
+            dpg.configure_item(f"{tab_label}_std",y1=new_mean,y2=new_mean)
+            return
+        
         new_mean = np.nanmean(mean_temp,axis=0)
         new_std = np.nanstd(mean_temp,axis=0)
         minus = new_mean - new_std
@@ -5920,7 +5972,7 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
         with dpg.plot(label = 'Event-locked Segments',tag = plot_tag,  width=600, height=400):
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast)
-            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{plot_tag}", scale=dpg.mvPlotScale_Time)
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (MM/DD/YYYY UTC)", tag=f"x_axis_{plot_tag}", scale=dpg.mvPlotScale_Time)
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="LFP (µVP)", tag=f"y_axis_{plot_tag}")
 
             max_timestamp = 2*60*60
@@ -6485,8 +6537,7 @@ def event_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             else:
                 dpg.delete_item(f"{tab_label}_mean_metric", children_only=True)
 
-            mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
-            minus, plus = mean_power-std_power, mean_power+std_power
+            mean_power, minus, plus = getMeanActiveSeries(window_id,tab_tag,signal_tags)
             s = dpg.add_shade_series(x,y1=minus,y2=plus,label = 'Std. Dev', parent=f"y_axis_{tab_tag}",tag=f"{tab_tag}_std")
             dpg.bind_item_theme(s,create_alpha_theme())
 
@@ -6539,10 +6590,26 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
         dpg.bind_item_theme(right, ri)
 
     initial, _ = DH.getEventsElectrodes(data)
+    left, right = DH.info_electrodes(data,version='Initial'), DH.info_electrodes(data,version='Initial',side=1)
     
     if not isinstance(initial, str): 
         e1,e2 = getUpdatedElectrodeName(initial[0]), getUpdatedElectrodeName(initial[1])
         dpg.add_text(f"Sensing Electrodes | Left: {e1} | Right: {e2}", parent=tab_tag)
+        if 'PSD' in left.keys():
+            f = []
+            for stim in [left,right]:
+                freq = stim['Sense_frequency']
+                f1, f2 = float(np.round(freq-2.5,2)),float(np.round(freq+2.5,2))
+                f.append([f1,f2])
+            dpg.add_separator(parent=tab_tag)
+            with dpg.group(horizontal=True, parent=tab_tag):
+                l = dpg.add_text("Left")
+                dpg.bind_item_theme(l, change_text_color(-1))
+                dpg.add_text(f"Sensing Band: {f[0]} Hz |")
+                l = dpg.add_text("Right")
+                dpg.bind_item_theme(l, change_text_color(-3))
+                dpg.add_text(f"Sensing Band: {f[1]} Hz")
+
     else: 
         e = getUpdatedElectrodeName(initial)
         dpg.add_text(f'{e}', parent=tab_tag)
@@ -6564,17 +6631,17 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                 app_state['windows'][window_id]['Data'][tab_tag]['Signals'].append(signal)
                 stim_info = DH.info_electrodes(app_state['windows'][window_id]['Data'])['Sense_frequency']
 
-                date = utl.parse_datetime(signal['Date'])
+                # date = utl.parse_datetime(signal['Date'])
+                date = signal['Date']
                 extra = DH.correctMissingTimeline(data, signal,'X_missing')[0]
                 if extra['Right']['X_missing'] != [] and flag == False: 
                     flag = True
                 
                 for side in ['Left','Right']:   
                     sign = signal[side] | {'Sense': stim_info}
-                    date = utl.parse_datetime(signal['Date'])
-                    days.append(utl.extract_date(date))
-                    datestr = f"{date.year}-{date.month:02d}-{date.day:02d}"
-                    label_left = f"{side} - day {datestr}"
+                    date = signal['Date']
+                    days.append(date)
+                    label_left = f"{side} - day {date}"
                 
                     try:
                         x = [utl.convert_to_timestamp(val) for val in sign['X']]
@@ -6939,12 +7006,17 @@ def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
     Channel = signals[0]['Channel']
     stimulation = DH.getStreamingStimulation(getDatabyTag(tab_tag),signals[0]['Date'])
+    right, left = [], []
+    stim_text = ''
+    if len(stimulation)>1:
+        stimulation, right, left, time = stimulation
+    else: 
+        stim_text=stimulation[0]
     
     Channel = getUpdatedElectrodeName(Channel)
 
-
     dpg.add_text(f"Channel: {extract_channel_from_series_tag(Channel).upper()}", parent=tab_tag)
-    dpg.add_text(f"{stimulation}", parent=tab_tag)
+    dpg.add_text(stim_text, parent=tab_tag)
 
     with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
 
@@ -6956,6 +7028,18 @@ def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
             
             parent = f"y_axis_{tab_tag}"
             plot_td(signals,parent,tab_tag,signal_tags)
+
+            #plot stimulation values
+            '''if right!=[]: #there is stimulation values!
+                stim_axis = dpg.add_plot_axis(dpg.mvYAxis2,label='Stimulation Amplitude (mA)', tag = f"y_axis_stim_{tab_tag}",opposite=True)
+                for r, stim in right.items():
+                    left_stim = left[r]
+                    s1 = dpg.add_line_series(time[r],stim,parent=stim_axis,tag=f"right_stimulation_{r}_{tab_tag}")
+                    s2 = dpg.add_line_series(time[r],left_stim,parent=stim_axis,tag=f"left_stimulation_{r}_{tab_tag}")
+                    dpg.bind_item_theme(s1,change_line_color(-1))
+                    dpg.bind_item_theme(s2,change_line_color(-2))
+                    # dpg.bind_item_theme(s1,change_line_thickness(3))
+                    # dpg.bind_item_theme(s2,change_line_thickness(3))'''
 
         toggleDisplay(signals, signal_tags, window_id, tab_tag,plot_tag)
     
@@ -7298,7 +7382,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                             sign = signal[side]
                             channel = getUpdatedElectrodeName(utl.after_point(sign['Channel']))
                             channels.append(channel)
-                            name = signal['EventName']
+                            name = getUpdatedEventName(signal['EventName'])
                             label = f"day {date.day:02d}/{date.month:02d}/{date.year} | {date.hour:02d}:{date.minute} | {side} | {name}"
                             x = sign['X']
                             y = sign['Y']
@@ -7374,8 +7458,7 @@ def comb_event_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                 dpg.delete_item(f"{tab_label}_mean_metric", children_only=True)
 
 
-            mean_power, std_power = getMeanActiveSeries(window_id,tab_tag,signal_tags)
-            minus, plus = mean_power-std_power, mean_power+std_power
+            mean_power, minus, plus = getMeanActiveSeries(window_id,tab_tag,signal_tags)
             s = dpg.add_shade_series(x,y1=minus,y2=plus, parent=f"y_axis_{tab_tag}",tag=f"{tab_tag}_std", label='Std. Dev')
             dpg.bind_item_theme(s,create_alpha_theme())
 
@@ -7747,11 +7830,20 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         if not isinstance(initial, str): 
             left,right = getUpdatedElectrodeName(initial[0]),getUpdatedElectrodeName(initial[1])
             dpg.add_text(f"Sensing Electrodes until {DH.getSessionDate(data)} | Left: {left} | Right: {right}", parent=header)
-            f = DH.info_electrodes(data)['Sense_frequency']
-            if f != '': 
-                f1, f2 = np.round(f-2.5,2),np.round(f+2.5,2)
-                dpg.add_text(f"Sensing Band: [{f1}, {f2}] Hz", parent=header)
-                sense.append(f)
+            f = []
+            for stim in [left,right]:
+                freq = stim['Sense_frequency']
+                f1, f2 = float(np.round(freq-2.5,2)),float(np.round(freq+2.5,2))
+                f.append([f1,f2])
+            dpg.add_separator(parent=header)
+            with dpg.group(horizontal=True, parent=header):
+                l = dpg.add_text("Left")
+                dpg.bind_item_theme(l, change_text_color(-1))
+                dpg.add_text(f"Sensing Band: {f[0]} Hz |")
+                l = dpg.add_text("Right")
+                dpg.bind_item_theme(l, change_text_color(-3))
+                dpg.add_text(f"Sensing Band: {f[1]} Hz")
+
     
         else: 
             ch = getUpdatedElectrodeName(initial)
@@ -7799,7 +7891,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
         with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag, parent=f"{tab_tag}_plot_group"):
             dpg.bind_colormap(plot_tag, 0)
             # legend = dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
-            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}", scale=dpg.mvPlotScale_Time)
+            x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (MM/DD/YYYY UTC)", tag=f"x_axis_{tab_tag}", scale=dpg.mvPlotScale_Time)
             y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Mean LFP Power (µVp)", tag=f"y_axis_{tab_tag}")
            
             for idx, file in enumerate(files):

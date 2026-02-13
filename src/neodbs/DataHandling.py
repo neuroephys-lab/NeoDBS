@@ -8,7 +8,7 @@ import re
 def info_electrodes(data,version='Initial',side=0):
     '''
     Return information of the active electrodes from TIMELINE mode
-    side 0 - Left
+    side 0 - Left;
     side 1 - Right
 
     :param Data: dict, from DataHandling.getData(), reorganized using DataHandling.getData()
@@ -400,7 +400,7 @@ def getRecordingDuration(mode, recording):
                     Ticks = (Ticks - Ticks[0])/1000
                     temp_time = Ticks[-1]
 
-    return np.abs(np.round(temp_time,1))
+    return np.abs(np.round(temp_time,4))
 
 def getEventsElectrodes(data):
     '''
@@ -454,6 +454,7 @@ def getModeSignals(Data, mode):
     match mode:
         case 'Streaming': #✅
             recs  = Data[mode]['BrainSenseTimeDomain']
+            stim = Data[mode]['BrainSenseLfp']
 
         case 'Timeline': #✅dont need to check date, only hemisphere
             recs = Data[mode]['LFPTrendLogs']
@@ -505,7 +506,6 @@ def getSignals(Data, mode):
     :return: list, list of signal's dictionaries.
     '''
     recs = getModeSignals(Data, mode)
-    previous = utl.parse_datetime(getLastSessionDate(Data)).date()
     signals = []
 
     def get(rec):
@@ -591,29 +591,56 @@ def getSignals(Data, mode):
         signal = {}
         for side in recs:
             for day, logs in recs[side].items():
-                if previous>utl.parse_datetime(day).date(): 
-                    continue
+                day = str(utl.parse_datetime(day).date())
+
                 if day not in signal:
                     signal[day] = {'Left': {'X': [], 'Y': [], 'Stim': []}, 'Right': {'X': [], 'Y': [], 'Stim': []}}
 
-                LFP = [log['LFP'] for log in logs]
+                LFP = [log['LFP'] for log in logs[::-1]]
                 #time = [utl.convert_to_timestamp(log['DateTime']) for log in logs]
-                time = [log['DateTime'] for log in logs]
-                stim = [log['AmplitudeInMilliAmps'] for log in logs]
+                time = [log['DateTime'] for log in logs[::-1]]
+                stim = [log['AmplitudeInMilliAmps'] for log in logs[::-1]]
 
                 hemisphere = 'Left' if utl.after_point(side) == 'Left' else 'Right'
-                signal[day][hemisphere]['X'].extend(time)
-                signal[day][hemisphere]['Y'].extend(LFP)
-                signal[day][hemisphere]['Stim'].extend(stim)
-
-            signal[day][hemisphere]['X'] = np.flip(np.array(signal[day][hemisphere]['X'])).tolist()
-            signal[day][hemisphere]['Y'] = np.flip(np.array(signal[day][hemisphere]['Y'])).tolist()
-            signal[day][hemisphere]['Stim'] = np.flip(np.array(signal[day][hemisphere]['Stim'])).tolist()
+                for idx,t in enumerate(time):
+                    current_day = str(utl.parse_datetime(t).date())
+                    if current_day not in signal:
+                        signal[current_day] = {'Left': {'X': [], 'Y': [], 'Stim': []}, 'Right': {'X': [], 'Y': [], 'Stim': []}}
+                    signal[current_day][hemisphere]['X'].append(t)
+                    signal[current_day][hemisphere]['Y'].append(LFP[idx])
+                    signal[current_day][hemisphere]['Stim'].append(stim[idx])
 
         signals = [{'Date': day, 'Left': data['Left'], 'Right': data['Right']} for day, data in signal.items()]
 
 
     return signals
+
+def getStreamingStimulationValues(data):
+    '''
+    Returns streaming stimulation amplitude.
+    
+    :param Data: dict, from DataHandling.getData()
+
+    :return: str (status), dict (right amplitude), dict (left amplitude)
+    '''
+    if 'Streaming' not in data.keys():
+        return
+    
+    stimulation = data['Streaming']['BrainSenseLfp']
+    right, left, time = {}, {}, {}
+    for s in stimulation:
+        date = str(utl.parse_datetime(s['FirstPacketDateTime']))
+        right[date], left[date], time[date] = [], [], []
+        for side in s['LfpData']:
+            time[date].append(side['TicksInMs'])
+            right[date].append(side['Right']['mA'])
+            left[date].append(side['Left']['mA'])
+
+    for date, timeline in time.items():
+        new_timeline = [(t - timeline[0])/1000 for t in timeline]#from ms to s, starting at 0
+        time[date] = new_timeline
+
+    return right, left, time
 
 def getStreamingStimulation(Data,date):
     '''
@@ -623,20 +650,22 @@ def getStreamingStimulation(Data,date):
     :param date: str
 
     :return: str
-
     '''
     dictionary = Data['Streaming']['BrainSenseLfp']
     group = None
+    date = utl.extract_date(date)
     for rec in dictionary:
-        if utl.parse_datetime(rec['FirstPacketDateTime']) == date: 
+        rec_date = utl.extract_date(utl.parse_datetime(rec['FirstPacketDateTime']))
+        if rec_date == date: 
             group = rec['TherapySnapshot']['ActiveGroup']
             group = utl.after_underscore(utl.after_point(group))
-            return f'Stimulation ON: Group {group}'
-            # stimulation = getStimulationParameters(Data,group)
-            # return stimulation
-    if group == None: return 'Stimulation OFF'
+    
+    if group == None: return ['Stimulation OFF']
+    else: 
+        right, left, time = getStreamingStimulationValues(Data)
+        return [f'Stimulation ON: Group {group}',right,left, time]
 
-def getStimulation(Data):
+def getStimulation(Data,side='Right'):
     '''
     Returns at-home stimulation amplitude.
 
@@ -645,7 +674,7 @@ def getStimulation(Data):
     :return: dict
 
     '''
-    timeline = getModeSignals(Data,'Timeline')['HemisphereLocationDef.Right']
+    timeline = getModeSignals(Data,'Timeline')[f'HemisphereLocationDef.{side}']
     info = info_electrodes(Data,version='Final')
     electrodes = info['Stim_electrodes']
     stimulation = {'X': [], 'Y': [], 'Info': []}
@@ -663,7 +692,6 @@ def getStimulation(Data):
         new = new.replace('-Negative','(-)')
         text = {'Date': _[:10], 'Initial (mA)': y[0], 'Final (mA)':y[-1], 'Electrodes': new}
         stimulation['Info'].append(text)
-    
     
     if final_date.date() > utl.parse_datetime(x[-1]).date():
         if getStimStatus(Data)[1] == 'ON':

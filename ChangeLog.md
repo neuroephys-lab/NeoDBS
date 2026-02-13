@@ -1,5 +1,27 @@
 # NeoDBS
 
+## 13.02.2026
+
+### Debug
+
+* Circadian rhythm was getting confused
+* getSignals on Timeline, sets the timestamp to the correct day
+* added scale colormap in coherogram
+* Timeline added sensing band
+* Timeline stimulation: both hemispheres
+* Streaming ready to plot stimulation, still to decide best option (maybe when click show stimulation change from time(s) to time(utc))
+
+## 10.02.2026
+
+### Debug
+
+* Correction of timeline time axis
+* correction of empty mean in toggling buttons (circaidan rhythm, analyze timeline events and hide)
+* update of event name and electrodes in combined tabs
+
+### Documentation
+
+* Explanation of multiple tabs in survey and setup
 
 ## 05.02.2026
 

@@ -1,0 +1,416 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="eng">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>temp &mdash; NeoDBS v0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+
+  
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NeoDBS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Quick Start</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_steps.html">First Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html">First Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart/first_usage.html#general-workflow">General Workflow</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/td.html">1. In-Clinic Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/chronic.html">2. At-Home Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/features.html">3. Signal Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/extra.html">4. Extra Features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules (Functions)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html">Data Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-Preprocessing">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/neodbs.html#module-utils">Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NeoDBS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">temp</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for temp</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">DataHandling</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">DH</span>
+<span class="c1"># import dearpygui.dearpygui as dpg</span>
+<span class="c1"># import Features as ft</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="c1"># from scipy.signal import spectrogram</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span> <span class="k">as</span> <span class="n">dt</span>
+<span class="c1"># import Preprocessing as pre</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">utl</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">BASE</span>
+
+<span class="sd">dpg.create_context()</span>
+<span class="sd">with dpg.window():</span>
+
+<span class="sd">dpg.create_viewport(title=&#39;Temporario&#39;, width=800, height=600)</span>
+<span class="sd">dpg.setup_dearpygui()</span>
+<span class="sd">dpg.show_viewport()</span>
+<span class="sd">dpg.start_dearpygui()</span>
+<span class="sd">dpg.destroy_context()</span>
+
+<span class="sd"># # file = &quot;C:\\Users\\Patricia\\Desktop\\FEUP\\Tese\\Recordings\\2025-01-23\\Report_Json_Session_Report_20250212T122746.json&quot;</span>
+<span class="sd">file = &quot;C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Report_20241125T163059.json&quot;</span>
+<span class="sd"># # file = &quot;C:\\Users\\OCD\\Desktop\\DATA\\RN\\2025-01-23\\Report_Json_Session_Report_20250212T122746.json&quot;</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="c1">#file = &quot;C:\\Users\\OCD\\Desktop\\DATA\\RN\\File_example.json&quot;</span>
+<span class="n">file</span> <span class="o">=</span> <span class="s2">&quot;C:</span><span class="se">\\</span><span class="s2">Users</span><span class="se">\\</span><span class="s2">OCD</span><span class="se">\\</span><span class="s2">Desktop</span><span class="se">\\</span><span class="s2">DATA</span><span class="se">\\</span><span class="s2">RN</span><span class="se">\\</span><span class="s2">2024-11-11</span><span class="se">\\</span><span class="s2">Report_Json_Session_Report_20241125T163059.json&quot;</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">DH</span><span class="o">.</span><span class="n">getData</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="mf">1622172706.0</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="deduplicate_packets"><a class="viewcode-back" href="../api/temp.html#temp.deduplicate_packets">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">deduplicate_packets</span><span class="p">(</span><span class="n">raw_ticks</span><span class="p">,</span> <span class="n">raw_sizes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Merges packets that share the same tick (stim OFF behaviour).</span>
+<span class="sd">    Returns two aligned arrays:</span>
+<span class="sd">        ticks[i]  -&gt; timestamp in ms</span>
+<span class="sd">        sizes[i]  -&gt; total bytes received at that tick (sum of all packets sharing it)</span>
+<span class="sd">    Indices are coherent: ticks[i] always corresponds to sizes[i].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ticks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">sizes</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">tick</span><span class="p">,</span> <span class="n">size</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">raw_ticks</span><span class="p">,</span> <span class="n">raw_sizes</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ticks</span> <span class="ow">and</span> <span class="n">ticks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">tick</span><span class="p">:</span>
+            <span class="c1"># Same tick as previous → merge (sum sizes)</span>
+            <span class="n">sizes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># New tick → append</span>
+            <span class="n">ticks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tick</span><span class="p">)</span>
+            <span class="n">sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ticks</span><span class="p">,</span> <span class="n">sizes</span></div>
+
+<div class="viewcode-block" id="detect_gaps"><a class="viewcode-back" href="../api/temp.html#temp.detect_gaps">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">detect_gaps</span><span class="p">(</span><span class="n">ticks</span><span class="p">,</span> <span class="n">expected_interval</span><span class="o">=</span><span class="mi">250</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks for missing samples between consecutive ticks.</span>
+<span class="sd">    Returns a list of dicts describing each gap found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gaps</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ticks</span><span class="p">)):</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">ticks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">ticks</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">diff</span> <span class="o">!=</span> <span class="n">expected_interval</span><span class="p">:</span>
+            <span class="n">missed</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">diff</span> <span class="o">/</span> <span class="n">expected_interval</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">gaps</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>
+                <span class="s2">&quot;from_tick&quot;</span><span class="p">:</span> <span class="n">ticks</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="s2">&quot;to_tick&quot;</span><span class="p">:</span> <span class="n">ticks</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="s2">&quot;diff_ms&quot;</span><span class="p">:</span> <span class="n">diff</span><span class="p">,</span>
+                <span class="s2">&quot;missed_samples&quot;</span><span class="p">:</span> <span class="n">missed</span><span class="p">,</span>
+            <span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">gaps</span></div>
+
+<div class="viewcode-block" id="CheckMissingPacketsTD"><a class="viewcode-back" href="../api/temp.html#temp.CheckMissingPacketsTD">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">CheckMissingPacketsTD</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">mode</span><span class="o">==</span><span class="s1">&#39;Streaming&#39;</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">mode</span><span class="p">][</span><span class="s1">&#39;BrainSenseTimeDomain&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">td</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">seqs</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">string2numbers</span><span class="p">(</span><span class="n">td</span><span class="p">[</span><span class="s1">&#39;GlobalSequences&#39;</span><span class="p">])</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">string2numbers</span><span class="p">(</span><span class="n">td</span><span class="p">[</span><span class="s1">&#39;GlobalPacketSizes&#39;</span><span class="p">])</span>
+        <span class="n">seqs_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">seqs</span><span class="p">))</span>
+
+        <span class="n">missing_packets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">seqs_diff</span><span class="o">!=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">theoric_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span><span class="o">/</span><span class="n">td</span><span class="p">[</span><span class="s1">&#39;SampleRateInHz&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">theoric_time</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">td</span><span class="p">[</span><span class="s1">&#39;TimeDomainData&#39;</span><span class="p">]):</span>
+            <span class="n">first</span><span class="p">,</span> <span class="n">second</span> <span class="o">=</span> <span class="n">sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sizes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">s</span> <span class="o">!=</span> <span class="p">[</span><span class="n">first</span><span class="p">,</span><span class="n">second</span><span class="p">]:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ghi&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="correct4MissingSamples"><a class="viewcode-back" href="../api/temp.html#temp.correct4MissingSamples">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">correct4MissingSamples</span><span class="p">(</span><span class="n">LFP</span><span class="p">,</span> <span class="n">TicksInS</span><span class="p">,</span> <span class="n">GlobalPacketSizes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Replace missing samples with NaNs in LFP data based on received packets and their timestamps.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        LFP: dict with &#39;Fs&#39; (sampling rate in Hz) and &#39;data&#39; (numpy array of shape [nChannels, nSamples])</span>
+<span class="sd">        TicksInS: numpy array of packet timestamps in seconds</span>
+<span class="sd">        GlobalPacketSizes: list or array of packet sizes (number of samples per packet)</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Updated LFP with missing samples replaced by NaNs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+
+    <span class="n">Fs</span> <span class="o">=</span> <span class="mi">250</span>  <span class="c1"># sampling frequency</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">LFP</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>  <span class="c1"># shape: (nChannels, nSamples)</span>
+
+    <span class="c1"># Create time vector of all samples that should have been received theoretically</span>
+    <span class="n">total_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">GlobalPacketSizes</span><span class="p">))</span>
+    <span class="n">last_tick</span> <span class="o">=</span> <span class="n">TicksInS</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">GlobalPacketSizes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">Fs</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">TicksInS</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">last_tick</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="n">Fs</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">Fs</span><span class="p">)</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>  <span class="c1"># round to ms</span>
+
+    <span class="c1"># Create logical vector indicating which samples have been received</span>
+    <span class="n">isReceived</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">))</span>
+    <span class="n">nPackets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">GlobalPacketSizes</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">packetId</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nPackets</span><span class="p">):</span>
+        <span class="c1"># Find closest index in the time vector</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;hi&#39;</span><span class="p">)</span>
+        <span class="n">timeTicksDistance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">time</span> <span class="o">-</span> <span class="n">TicksInS</span><span class="p">[</span><span class="n">packetId</span><span class="p">])</span>
+        <span class="n">packetIdx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">timeTicksDistance</span><span class="p">)</span>
+
+        <span class="c1"># If this index is already received, shift forward</span>
+        <span class="k">if</span> <span class="n">isReceived</span><span class="p">[</span><span class="n">packetIdx</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">packetIdx</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># Mark the samples of this packet as received</span>
+        <span class="n">endIdx</span> <span class="o">=</span> <span class="n">packetIdx</span> <span class="o">+</span> <span class="n">GlobalPacketSizes</span><span class="p">[</span><span class="n">packetId</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">endIdx</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">isReceived</span><span class="p">):</span>
+            <span class="n">endIdx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">isReceived</span><span class="p">)</span>
+        <span class="n">isReceived</span><span class="p">[</span><span class="n">packetIdx</span><span class="p">:</span><span class="n">endIdx</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># Create corrected data array with NaNs for missing samples</span>
+    <span class="n">nChannels</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">corrected_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">nChannels</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+    <span class="c1"># Fill in received samples</span>
+    <span class="n">sample_counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">packetId</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nPackets</span><span class="p">):</span>
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="n">GlobalPacketSizes</span><span class="p">[</span><span class="n">packetId</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nChannels</span><span class="p">):</span>
+            <span class="n">corrected_data</span><span class="p">[</span><span class="n">ch</span><span class="p">,</span> <span class="n">sample_counter</span><span class="p">:</span><span class="n">sample_counter</span><span class="o">+</span><span class="n">n_samples</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">ch</span><span class="p">,</span> <span class="n">sample_counter</span><span class="p">:</span><span class="n">sample_counter</span><span class="o">+</span><span class="n">n_samples</span><span class="p">]</span>
+        <span class="n">sample_counter</span> <span class="o">+=</span> <span class="n">n_samples</span>
+
+    <span class="c1"># Update LFP structure</span>
+    <span class="n">LFP_corrected</span> <span class="o">=</span> <span class="n">LFP</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">LFP_corrected</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">corrected_data</span>
+    <span class="n">LFP_corrected</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;bye&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">LFP_corrected</span></div>
+
+<div class="viewcode-block" id="follows_pattern"><a class="viewcode-back" href="../api/temp.html#temp.follows_pattern">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">follows_pattern</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="p">[</span><span class="mi">38</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">38</span><span class="p">,</span> <span class="mi">25</span><span class="p">]):</span>
+    <span class="n">pattern_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+    <span class="n">deviations</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="k">if</span> <span class="n">val</span> <span class="o">!=</span> <span class="n">pattern</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="n">pattern_len</span><span class="p">]]</span>
+    <span class="k">return</span> <span class="n">deviations</span></div>
+
+<div class="viewcode-block" id="check_stream_data"><a class="viewcode-back" href="../api/temp.html#temp.check_stream_data">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">check_stream_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">signal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">expected_tick_step</span><span class="o">=</span><span class="mi">250</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks a data stream for missing sequences, length mismatches, and irregular tick intervals.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        data (dict): Dictionary containing &#39;GlobalSequences&#39;, &#39;GlobalPacketSizes&#39;, &#39;TicksInMses&#39;</span>
+<span class="sd">        expected_tick_step (int): Expected difference between consecutive ticks in milliseconds</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Report containing missing sequences, length mismatches, and irregular tick indices</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Convert strings to lists</span>
+    <span class="n">sequences</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">string2numbers</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;GlobalSequences&#39;</span><span class="p">])</span>
+    <span class="n">packet_sizes</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">string2numbers</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;GlobalPacketSizes&#39;</span><span class="p">])</span> 
+    <span class="n">ticks</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">string2numbers</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;TicksInMses&#39;</span><span class="p">])</span>  
+
+    <span class="c1"># ticks, packet_sizes = deduplicate_packets(ticks, packet_sizes)</span>
+
+    <span class="n">new_ticks</span> <span class="o">=</span> <span class="p">[(</span><span class="n">t</span> <span class="o">-</span> <span class="n">ticks</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">1000</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">ticks</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_ticks</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="n">new_ticks</span><span class="p">)</span><span class="o">&gt;=</span><span class="nb">sum</span><span class="p">(</span><span class="n">packet_sizes</span><span class="p">)</span><span class="o">/</span><span class="mi">250</span><span class="p">:</span> 
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Missing samples: &#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">new_ticks</span><span class="p">)</span><span class="o">*</span><span class="mi">250</span><span class="o">-</span><span class="nb">sum</span><span class="p">(</span><span class="n">packet_sizes</span><span class="p">)))</span>
+        <span class="n">deviations</span> <span class="o">=</span> <span class="n">follows_pattern</span><span class="p">(</span><span class="n">packet_sizes</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">deviations</span><span class="p">)</span></div>
+        
+
+<span class="c1"># # Example usage</span>
+<span class="c1"># streaming = data[&#39;Indefinite&#39;][&#39;IndefiniteStreaming&#39;] #[&#39;BrainSenseTimeDomain&#39;]</span>
+
+<span class="c1"># indefinite = DH.getSignals(data,&#39;Indefinite&#39;)</span>
+
+<span class="c1"># for idx, s in enumerate(streaming):</span>
+<span class="c1">#     result = check_stream_data(s, indefinite[idx])</span>
+
+
+<span class="c1"># import dearpygui.dearpygui as dpg</span>
+
+<span class="c1"># dpg.create_context()</span>
+
+<span class="c1"># dpg.show_imgui_demo()</span>
+<span class="c1"># dpg.create_viewport(title=&quot;Tooltip vs Popup&quot;, width=720, height=480)</span>
+<span class="c1"># dpg.setup_dearpygui()</span>
+<span class="c1"># dpg.show_viewport()</span>
+<span class="c1"># dpg.start_dearpygui()</span>
+<span class="c1"># dpg.destroy_context()</span>
+
+
+<span class="c1"># dpg.create_context()</span>
+
+<span class="c1"># tab_label = &quot;this&quot;</span>
+
+<span class="c1"># signals,labels,colors = [],[],[]</span>
+
+<span class="c1"># # Generate a test signal: sum of two sine waves</span>
+<span class="c1"># fs = 250  # sampling frequency (Hz)</span>
+<span class="c1"># # t = np.linspace(0, 15, 2 * fs, endpoint=False)</span>
+<span class="c1"># # signal = np.sin(2 * np.pi * 100 * t) + 0.5 * np.sin(2 * np.pi * 102 * t)</span>
+<span class="c1"># # signal = 0.5 * np.sin(2 * np.pi * 101 * t)</span>
+
+
+<span class="c1"># signal_info = DH.getSignals(Data,&#39;Streaming&#39;)[:1]</span>
+
+<span class="c1"># for stream in signal_info:</span>
+
+<span class="c1">#     signal = np.array(stream[&#39;Y&#39;])</span>
+<span class="c1">#     # Compute spectrogram</span>
+<span class="c1">#     t = np.array(stream[&#39;X&#39;])</span>
+<span class="c1">#     f, t_spec, Sxx = spectrogram(signal, fs=fs)</span>
+
+<span class="c1">#     signals.append([f, t_spec, Sxx])</span>
+
+<span class="c1"># num_plots = len(signals)</span>
+<span class="c1"># num_cols = 2</span>
+<span class="c1"># num_rows = (num_plots + 1) // num_cols </span>
+<span class="c1"># limits = []</span>
+<span class="c1"># ploted_signals, labels = [],  []</span>
+
+<span class="c1"># def exp(sender,app_data,user_data):</span>
+<span class="c1">#     info,type = user_data</span>
+<span class="c1">#     ft.export_plot(info,type)</span>
+    
+
+<span class="c1"># with dpg.window():</span>
+<span class="c1">#     with dpg.group(horizontal=True, parent=f&quot;{tab_label}&quot;, tag=f&quot;{tab_label}_plot_group&quot;):</span>
+
+<span class="c1">#         dpg.add_colormap_scale(tag=f&quot;{tab_label}_colormap_scale&quot;, label=&quot;Density&quot;, colormap=dpg.mvPlotColormap_Jet,</span>
+<span class="c1">#                                             height=400*num_rows)</span>
+        
+<span class="c1">#         with dpg.subplots(rows=num_rows, columns=num_cols, label=&quot;Spectrograms&quot;, width=800, height=400*num_rows, tag=f&quot;{tab_label}_subplots&quot;):</span>
+<span class="c1">#             for _,signal in enumerate(signals):</span>
+<span class="c1">#                 frequencies, times, Sxx = signal</span>
+<span class="c1">#                 Sxx_log = 10 * np.log10(Sxx + 1e-10)  # Convert to dB scale</span>
+<span class="c1">#                 ploted_signals.append([frequencies, times,Sxx_log])</span>
+<span class="c1">#                 plot_tag = f&quot;{tab_label}_{_}&quot;</span>
+<span class="c1">#                 with dpg.plot(label=&#39;Spectrogram&#39;, width=-1, height=-1, tag = plot_tag):</span>
+<span class="c1">#                     dpg.add_plot_legend()</span>
+<span class="c1">#                     x_axis = dpg.add_plot_axis(dpg.mvXAxis, label=&quot;Time (s)&quot;)</span>
+<span class="c1">#                     y_axis = dpg.add_plot_axis(dpg.mvYAxis, label=&quot;Frequency (Hz)&quot;)</span>
+<span class="c1">#                     Sxx_log = np.flipud(Sxx_log)</span>
+<span class="c1">#                     t = dpg.add_heat_series(Sxx_log.flatten(), rows=Sxx.shape[0], cols=Sxx.shape[1],</span>
+<span class="c1">#                                             scale_min=np.min(Sxx_log), scale_max=np.max(Sxx_log), </span>
+<span class="c1">#                                             parent=y_axis, format=&quot;&quot;, bounds_min=[0,0], bounds_max=[times[-1],125])</span>
+                                         
+<span class="c1">#                     dpg.bind_colormap(plot_tag, dpg.mvPlotColormap_Jet)</span>
+<span class="c1">#                     config = dpg.get_item_configuration(t)</span>
+<span class="c1">#                     mins = config.get(&#39;bounds_min&#39;)</span>
+<span class="c1">#                     maxs = config.get(&#39;bounds_max&#39;)</span>
+<span class="c1">#                     xlim = [mins[0],maxs[0]]</span>
+<span class="c1">#                     ylim = [mins[1],maxs[1]]</span>
+<span class="c1">#                     density = [config.get(&#39;scale_min&#39;),config.get(&#39;scale_max&#39;)]</span>
+<span class="c1">#                     limits.append([xlim,ylim,density])</span>
+<span class="c1">#                     labels.append(&#39;Spectrogram&#39;)</span>
+<span class="c1">#                     # plot_limits = [dpg.get_axis_limits(t) for t in [x_axis,y_axis]]</span>
+<span class="c1">#                     # plot_limits.append([np.min(Sxx_log),np.max(Sxx_log)])</span>
+<span class="c1">#                     # limits.append(plot_limits)</span>
+<span class="c1">#                     # print(dpg.get_item_configuration(t))</span>
+
+            
+
+<span class="c1">#             title = dpg.get_item_label(plot_tag)</span>
+<span class="c1">#             axis_labels = [dpg.get_item_label(x_axis),dpg.get_item_label(y_axis), dpg.get_item_label(f&quot;{tab_label}_colormap_scale&quot;)]</span>
+<span class="c1">#             colors = []</span>
+
+<span class="c1">#             info = ploted_signals,labels,colors,title,axis_labels, limits</span>
+<span class="c1">#     dpg.add_button(label=&#39;Save&#39;,callback=exp,user_data=(info,&#39;3D&#39;),parent=tab_label)</span>
+            
+
+<span class="c1"># dpg.create_viewport(title=&#39;Temporario&#39;, width=800, height=600)</span>
+<span class="c1"># dpg.setup_dearpygui()</span>
+<span class="c1"># dpg.show_viewport()</span>
+<span class="c1"># dpg.start_dearpygui()</span>
+<span class="c1"># dpg.destroy_context()</span>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Larissa Rodrigues.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

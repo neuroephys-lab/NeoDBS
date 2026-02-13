@@ -412,7 +412,7 @@ Data = {</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.getStimulation">
-<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getStimulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getStimulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getStimulation" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getStimulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Right'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getStimulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getStimulation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns at-home stimulation amplitude.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -442,10 +442,24 @@ Data = {</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="DataHandling.getStreamingStimulationValues">
+<span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">getStreamingStimulationValues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#getStreamingStimulationValues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.getStreamingStimulationValues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns streaming stimulation amplitude.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>Data</strong> -- dict, from DataHandling.getData()</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>str (status), dict (right amplitude), dict (left amplitude)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="DataHandling.info_electrodes">
 <span class="sig-prename descclassname"><span class="pre">DataHandling.</span></span><span class="sig-name descname"><span class="pre">info_electrodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Initial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DataHandling.html#info_electrodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#DataHandling.info_electrodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return information of the active electrodes from TIMELINE mode
-side 0 - Left
+side 0 - Left;
 side 1 - Right</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

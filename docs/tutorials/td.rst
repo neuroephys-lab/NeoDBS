@@ -7,16 +7,28 @@ In this tutorial, a simple workflow is given to perform the analysis of recordin
 After selecting the type of window and file(s) to be analyzed, you must choose the type of recording you want 
 to analyze, which will open a tab with the respective plotted signals and functionalities, as described in :doc:`First Usage <../quickstart/first_usage>`.
 
+In the case of *Setup* and *Survey* modes, more than one tab will open since different
+types of acquisitions and data are stored in those modes. 
+* *Setup* mode tabs:
+    * *Setup ON*: 21s of raw signals of segments/channels with stimulation **On**;
+    * *Setup OFF*: 21s of raw signals of segments/channels with stimulation **Off**;
+    * *Setup ARTIFACTS*: Medtronic's PSD estimation with **artifact check**; 
+* *Survey* mode tabs:
+    * *Survey*: 21s of raw signals of segments/channels with stimulation **Off**
+    * *Survey PSD*: Medtronic's PSD estimation and peak frequencies.
+
 +--------------------+---------------+-------------+--------------------------+
 | Mode               | Usage Context | Stimulation | Key Features             | 
 |                    |               | Status      |                          |                          
 +====================+===============+=============+==========================+
-| *Setup*            | In-clinic     | On or Off   | Required before other    |
-|                    |               |             | modes (except *Survey*); |
+| *Setup*            | In-clinic     | On or Off   | Artifact and Impedance   |
+|                    |               |             | check: stimulation ON/OFF|
 |                    |               |             | Records each segment for |
 |                    |               |             | 21s each (~90s duration) |
 +--------------------+---------------+-------------+--------------------------+
-| *Survey*           | In-clinic     | Off         | Records each segment for |
+| *Survey*           | In-clinic     | Off         | Artifact and Impedance   |
+|                    |               |             | check;                   |
+|                    |               |             | Records each segment for |
 |                    |               |             | 21s each (~90s duration) |
 |                    |               |             |                          |
 +--------------------+---------------+-------------+--------------------------+
@@ -26,8 +38,8 @@ to analyze, which will open a tab with the respective plotted signals and functi
 |                    |               |             | full-bandwidth (up to 125|                          
 |                    |               |             | Hz)                      |                           
 +--------------------+---------------+-------------+--------------------------+
-| *Indefinite*       | In-clinic     | On or Off   | Long-duration LFP        | 
-| *Streaming*        |               |             | recording from contact   | 
+| *Streaming*        | In-clinic     | On or Off   | Long-duration LFP        | 
+|                    |               |             | recording from contact   | 
 |                    |               |             | pairs compatible with sti|                          
 |                    |               |             | mulation.                |                          
 |                    |               |             |                          |

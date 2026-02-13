@@ -1,21 +1,21 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="eng" data-content_root="../">
+<html class="writer-html5" lang="eng">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DataHandling &mdash; NeoDBS Beta documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
-      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+  <title>DataHandling &mdash; NeoDBS v0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
 
   
-      <script src="../_static/documentation_options.js?v=640d522d"></script>
-      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
-      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -94,12 +94,10 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
 
-<div class="viewcode-block" id="info_electrodes">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.info_electrodes">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">info_electrodes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">version</span><span class="o">=</span><span class="s1">&#39;Initial&#39;</span><span class="p">,</span><span class="n">side</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="info_electrodes"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.info_electrodes">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">info_electrodes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">version</span><span class="o">=</span><span class="s1">&#39;Initial&#39;</span><span class="p">,</span><span class="n">side</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Return information of the active electrodes from TIMELINE mode</span>
-<span class="sd">    side 0 - Left</span>
+<span class="sd">    side 0 - Left;</span>
 <span class="sd">    side 1 - Right</span>
 
 <span class="sd">    :param Data: dict, from DataHandling.getData(), reorganized using DataHandling.getData()</span>
@@ -187,10 +185,7 @@
 
     <span class="k">return</span> <span class="n">a</span></div>
 
-
-<div class="viewcode-block" id="add_utc_conversion_to_dates">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.add_utc_conversion_to_dates">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">add_utc_conversion_to_dates</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+<div class="viewcode-block" id="add_utc_conversion_to_dates"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.add_utc_conversion_to_dates">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">add_utc_conversion_to_dates</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Recursively convert all &#39;Date&#39;-related fields to UTC with offset (time-shifted).</span>
 <span class="sd">    Assumes naive datetimes are in the specified local timezone.</span>
@@ -215,10 +210,7 @@
 
     <span class="k">return</span> <span class="n">data</span></div>
 
-
-<div class="viewcode-block" id="extract_time_offset">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.extract_time_offset">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">extract_time_offset</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span><span class="n">string</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="extract_time_offset"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.extract_time_offset">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">extract_time_offset</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span><span class="n">string</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Get time offset, from organized Data dictionary.</span>
 
@@ -240,10 +232,7 @@
     <span class="k">if</span> <span class="n">string</span><span class="p">:</span> <span class="k">return</span> <span class="n">offset</span>
     <span class="k">return</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">hours</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="getData">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getData">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getData</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<div class="viewcode-block" id="getData"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getData">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getData</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Creates organized dictionary with information in JSON file. Dictionary has 7 main keys, organized by the recording modes and device information.</span>
 <span class="sd">    Data = {</span>
@@ -327,10 +316,7 @@
 
     <span class="k">return</span> <span class="n">Data</span></div>
 
-
-<div class="viewcode-block" id="getModes">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getModes">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getModes</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
+<div class="viewcode-block" id="getModes"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getModes">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getModes</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Gets recording modes present in Data dictionary. Verifies if Data is empty or damaged (with recordings available).</span>
 
@@ -385,10 +371,7 @@
     <span class="n">modes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">modes</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">modes</span></div>
 
-
-<div class="viewcode-block" id="getStimStatus">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getStimStatus">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getStimStatus</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
+<div class="viewcode-block" id="getStimStatus"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getStimStatus">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getStimStatus</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Gets status (ON/OFF) of stimulation, from beginning and end of recording session. </span>
 
@@ -401,10 +384,7 @@
     <span class="n">final</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">after_point</span><span class="p">(</span><span class="n">Data</span><span class="p">[</span><span class="s1">&#39;Device&#39;</span><span class="p">][</span><span class="s1">&#39;Stimulation&#39;</span><span class="p">][</span><span class="s1">&#39;FinalStimStatus&#39;</span><span class="p">])</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">initial</span><span class="p">,</span><span class="n">final</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="getSessionDate">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getSessionDate">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getSessionDate</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span> 
+<div class="viewcode-block" id="getSessionDate"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getSessionDate">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getSessionDate</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span> 
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns string of session date.</span>
 
@@ -414,10 +394,7 @@
         <span class="k">return</span> <span class="n">utl</span><span class="o">.</span><span class="n">parse_datetime</span><span class="p">(</span><span class="n">Data</span><span class="p">[</span><span class="s1">&#39;Device&#39;</span><span class="p">][</span><span class="s1">&#39;SessionDate&#39;</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="s2">&quot;No date stored!&quot;</span></div>
 
-
-<div class="viewcode-block" id="getSessionDuration">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getSessionDuration">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getSessionDuration</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
+<div class="viewcode-block" id="getSessionDuration"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getSessionDuration">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getSessionDuration</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Gets session duration.</span>
 
@@ -433,10 +410,7 @@
         <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">beginning</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="s2">&quot;No dates stored!&quot;</span></div>
 
-
-<div class="viewcode-block" id="getPatientInfo">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getPatientInfo">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getPatientInfo</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
+<div class="viewcode-block" id="getPatientInfo"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getPatientInfo">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getPatientInfo</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns patient information.</span>
 
@@ -444,10 +418,7 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">return</span> <span class="n">Data</span><span class="p">[</span><span class="s1">&#39;Device&#39;</span><span class="p">][</span><span class="s1">&#39;PatientInformation&#39;</span><span class="p">][</span><span class="s1">&#39;Initial&#39;</span><span class="p">]</span></div>
 
-
-<div class="viewcode-block" id="getDeviceInfo">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getDeviceInfo">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getDeviceInfo</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
+<div class="viewcode-block" id="getDeviceInfo"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getDeviceInfo">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getDeviceInfo</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns device information.</span>
 
@@ -455,10 +426,7 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">return</span> <span class="n">Data</span><span class="p">[</span><span class="s1">&#39;Device&#39;</span><span class="p">][</span><span class="s1">&#39;DeviceInformation&#39;</span><span class="p">][</span><span class="s1">&#39;Final&#39;</span><span class="p">]</span></div>
 
-
-<div class="viewcode-block" id="getLastSessionDate">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getLastSessionDate">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getLastSessionDate</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
+<div class="viewcode-block" id="getLastSessionDate"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getLastSessionDate">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getLastSessionDate</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns date of previous session.</span>
 
@@ -468,10 +436,7 @@
         <span class="k">return</span> <span class="s1">&#39;This is First Session.&#39;</span>
     <span class="k">return</span> <span class="n">Data</span><span class="p">[</span><span class="s1">&#39;Device&#39;</span><span class="p">][</span><span class="s1">&#39;GroupHistory&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;SessionDate&#39;</span><span class="p">]</span></div>
 
-
-<div class="viewcode-block" id="getBatteryInfo">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getBatteryInfo">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getBatteryInfo</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
+<div class="viewcode-block" id="getBatteryInfo"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getBatteryInfo">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getBatteryInfo</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns battery information.</span>
 
@@ -479,10 +444,7 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">return</span> <span class="n">Data</span><span class="p">[</span><span class="s1">&#39;Device&#39;</span><span class="p">][</span><span class="s1">&#39;BatteryInformation&#39;</span><span class="p">]</span></div>
 
-
-<div class="viewcode-block" id="getRecordingDuration">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getRecordingDuration">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getRecordingDuration</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">recording</span><span class="p">):</span>
+<div class="viewcode-block" id="getRecordingDuration"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getRecordingDuration">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getRecordingDuration</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">recording</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns recording duration.</span>
 
@@ -527,12 +489,9 @@
                     <span class="n">Ticks</span> <span class="o">=</span> <span class="p">(</span><span class="n">Ticks</span> <span class="o">-</span> <span class="n">Ticks</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">1000</span>
                     <span class="n">temp_time</span> <span class="o">=</span> <span class="n">Ticks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">temp_time</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">temp_time</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span></div>
 
-
-<div class="viewcode-block" id="getEventsElectrodes">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getEventsElectrodes">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getEventsElectrodes</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<div class="viewcode-block" id="getEventsElectrodes"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getEventsElectrodes">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getEventsElectrodes</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns active electrodes at beginning and end, for at-home recordings.</span>
 
@@ -561,10 +520,7 @@
 
     <span class="k">return</span> <span class="n">initial</span><span class="p">,</span> <span class="n">final</span></div>
 
-
-<div class="viewcode-block" id="getEventLog">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getEventLog">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getEventLog</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
+<div class="viewcode-block" id="getEventLog"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getEventLog">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getEventLog</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns log of marked events.</span>
 
@@ -572,11 +528,8 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">[</span><span class="s1">&#39;Events&#39;</span><span class="p">][</span><span class="s1">&#39;LfpFrequencySnapshotEvents&#39;</span><span class="p">]</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">event</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">data</span> <span class="k">if</span> <span class="s1">&#39;LfpFrequencySnapshotEvents&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span></div>
-
     
-<div class="viewcode-block" id="getModeSignals">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getModeSignals">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getModeSignals</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+<div class="viewcode-block" id="getModeSignals"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getModeSignals">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getModeSignals</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns signals of respective mode, from Data dictionary.</span>
 
@@ -590,6 +543,7 @@
     <span class="k">match</span> <span class="n">mode</span><span class="p">:</span>
         <span class="k">case</span> <span class="s1">&#39;Streaming&#39;</span><span class="p">:</span> <span class="c1">#✅</span>
             <span class="n">recs</span>  <span class="o">=</span> <span class="n">Data</span><span class="p">[</span><span class="n">mode</span><span class="p">][</span><span class="s1">&#39;BrainSenseTimeDomain&#39;</span><span class="p">]</span>
+            <span class="n">stim</span> <span class="o">=</span> <span class="n">Data</span><span class="p">[</span><span class="n">mode</span><span class="p">][</span><span class="s1">&#39;BrainSenseLfp&#39;</span><span class="p">]</span>
 
         <span class="k">case</span> <span class="s1">&#39;Timeline&#39;</span><span class="p">:</span> <span class="c1">#✅dont need to check date, only hemisphere</span>
             <span class="n">recs</span> <span class="o">=</span> <span class="n">Data</span><span class="p">[</span><span class="n">mode</span><span class="p">][</span><span class="s1">&#39;LFPTrendLogs&#39;</span><span class="p">]</span>
@@ -623,10 +577,7 @@
 
     <span class="k">return</span> <span class="n">recs</span></div>
 
-
-<div class="viewcode-block" id="getSignals">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getSignals">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getSignals</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+<div class="viewcode-block" id="getSignals"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getSignals">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getSignals</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns signals in respective mode, properly handled into a clean dictionary.</span>
 
@@ -644,7 +595,6 @@
 <span class="sd">    :return: list, list of signal&#39;s dictionaries.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">recs</span> <span class="o">=</span> <span class="n">getModeSignals</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
-    <span class="n">previous</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">parse_datetime</span><span class="p">(</span><span class="n">getLastSessionDate</span><span class="p">(</span><span class="n">Data</span><span class="p">))</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
     <span class="n">signals</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="n">rec</span><span class="p">):</span>
@@ -730,34 +680,58 @@
         <span class="n">signal</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">side</span> <span class="ow">in</span> <span class="n">recs</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">day</span><span class="p">,</span> <span class="n">logs</span> <span class="ow">in</span> <span class="n">recs</span><span class="p">[</span><span class="n">side</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">previous</span><span class="o">&gt;</span><span class="n">utl</span><span class="o">.</span><span class="n">parse_datetime</span><span class="p">(</span><span class="n">day</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">():</span> 
-                    <span class="k">continue</span>
+                <span class="n">day</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">utl</span><span class="o">.</span><span class="n">parse_datetime</span><span class="p">(</span><span class="n">day</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">())</span>
+
                 <span class="k">if</span> <span class="n">day</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">signal</span><span class="p">:</span>
                     <span class="n">signal</span><span class="p">[</span><span class="n">day</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Left&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;X&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;Y&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;Stim&#39;</span><span class="p">:</span> <span class="p">[]},</span> <span class="s1">&#39;Right&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;X&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;Y&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;Stim&#39;</span><span class="p">:</span> <span class="p">[]}}</span>
 
-                <span class="n">LFP</span> <span class="o">=</span> <span class="p">[</span><span class="n">log</span><span class="p">[</span><span class="s1">&#39;LFP&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="n">logs</span><span class="p">]</span>
+                <span class="n">LFP</span> <span class="o">=</span> <span class="p">[</span><span class="n">log</span><span class="p">[</span><span class="s1">&#39;LFP&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="n">logs</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
                 <span class="c1">#time = [utl.convert_to_timestamp(log[&#39;DateTime&#39;]) for log in logs]</span>
-                <span class="n">time</span> <span class="o">=</span> <span class="p">[</span><span class="n">log</span><span class="p">[</span><span class="s1">&#39;DateTime&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="n">logs</span><span class="p">]</span>
-                <span class="n">stim</span> <span class="o">=</span> <span class="p">[</span><span class="n">log</span><span class="p">[</span><span class="s1">&#39;AmplitudeInMilliAmps&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="n">logs</span><span class="p">]</span>
+                <span class="n">time</span> <span class="o">=</span> <span class="p">[</span><span class="n">log</span><span class="p">[</span><span class="s1">&#39;DateTime&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="n">logs</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+                <span class="n">stim</span> <span class="o">=</span> <span class="p">[</span><span class="n">log</span><span class="p">[</span><span class="s1">&#39;AmplitudeInMilliAmps&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="n">logs</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
 
                 <span class="n">hemisphere</span> <span class="o">=</span> <span class="s1">&#39;Left&#39;</span> <span class="k">if</span> <span class="n">utl</span><span class="o">.</span><span class="n">after_point</span><span class="p">(</span><span class="n">side</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;Left&#39;</span> <span class="k">else</span> <span class="s1">&#39;Right&#39;</span>
-                <span class="n">signal</span><span class="p">[</span><span class="n">day</span><span class="p">][</span><span class="n">hemisphere</span><span class="p">][</span><span class="s1">&#39;X&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
-                <span class="n">signal</span><span class="p">[</span><span class="n">day</span><span class="p">][</span><span class="n">hemisphere</span><span class="p">][</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">LFP</span><span class="p">)</span>
-                <span class="n">signal</span><span class="p">[</span><span class="n">day</span><span class="p">][</span><span class="n">hemisphere</span><span class="p">][</span><span class="s1">&#39;Stim&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">stim</span><span class="p">)</span>
-
-            <span class="n">signal</span><span class="p">[</span><span class="n">day</span><span class="p">][</span><span class="n">hemisphere</span><span class="p">][</span><span class="s1">&#39;X&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">signal</span><span class="p">[</span><span class="n">day</span><span class="p">][</span><span class="n">hemisphere</span><span class="p">][</span><span class="s1">&#39;X&#39;</span><span class="p">]))</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-            <span class="n">signal</span><span class="p">[</span><span class="n">day</span><span class="p">][</span><span class="n">hemisphere</span><span class="p">][</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">signal</span><span class="p">[</span><span class="n">day</span><span class="p">][</span><span class="n">hemisphere</span><span class="p">][</span><span class="s1">&#39;Y&#39;</span><span class="p">]))</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-            <span class="n">signal</span><span class="p">[</span><span class="n">day</span><span class="p">][</span><span class="n">hemisphere</span><span class="p">][</span><span class="s1">&#39;Stim&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">signal</span><span class="p">[</span><span class="n">day</span><span class="p">][</span><span class="n">hemisphere</span><span class="p">][</span><span class="s1">&#39;Stim&#39;</span><span class="p">]))</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
+                    <span class="n">current_day</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">utl</span><span class="o">.</span><span class="n">parse_datetime</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">())</span>
+                    <span class="k">if</span> <span class="n">current_day</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">signal</span><span class="p">:</span>
+                        <span class="n">signal</span><span class="p">[</span><span class="n">current_day</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Left&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;X&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;Y&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;Stim&#39;</span><span class="p">:</span> <span class="p">[]},</span> <span class="s1">&#39;Right&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;X&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;Y&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;Stim&#39;</span><span class="p">:</span> <span class="p">[]}}</span>
+                    <span class="n">signal</span><span class="p">[</span><span class="n">current_day</span><span class="p">][</span><span class="n">hemisphere</span><span class="p">][</span><span class="s1">&#39;X&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                    <span class="n">signal</span><span class="p">[</span><span class="n">current_day</span><span class="p">][</span><span class="n">hemisphere</span><span class="p">][</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LFP</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+                    <span class="n">signal</span><span class="p">[</span><span class="n">current_day</span><span class="p">][</span><span class="n">hemisphere</span><span class="p">][</span><span class="s1">&#39;Stim&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stim</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
 
         <span class="n">signals</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;Date&#39;</span><span class="p">:</span> <span class="n">day</span><span class="p">,</span> <span class="s1">&#39;Left&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Left&#39;</span><span class="p">],</span> <span class="s1">&#39;Right&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Right&#39;</span><span class="p">]}</span> <span class="k">for</span> <span class="n">day</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">signal</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
 
 
     <span class="k">return</span> <span class="n">signals</span></div>
 
+<div class="viewcode-block" id="getStreamingStimulationValues"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getStreamingStimulationValues">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getStreamingStimulationValues</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Returns streaming stimulation amplitude.</span>
+<span class="sd">    </span>
+<span class="sd">    :param Data: dict, from DataHandling.getData()</span>
 
-<div class="viewcode-block" id="getStreamingStimulation">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getStreamingStimulation">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getStreamingStimulation</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span><span class="n">date</span><span class="p">):</span>
+<span class="sd">    :return: str (status), dict (right amplitude), dict (left amplitude)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="s1">&#39;Streaming&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">return</span>
+    
+    <span class="n">stimulation</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Streaming&#39;</span><span class="p">][</span><span class="s1">&#39;BrainSenseLfp&#39;</span><span class="p">]</span>
+    <span class="n">right</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">time</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">stimulation</span><span class="p">:</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">utl</span><span class="o">.</span><span class="n">parse_datetime</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;FirstPacketDateTime&#39;</span><span class="p">]))</span>
+        <span class="n">right</span><span class="p">[</span><span class="n">date</span><span class="p">],</span> <span class="n">left</span><span class="p">[</span><span class="n">date</span><span class="p">],</span> <span class="n">time</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">side</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;LfpData&#39;</span><span class="p">]:</span>
+            <span class="n">time</span><span class="p">[</span><span class="n">date</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">side</span><span class="p">[</span><span class="s1">&#39;TicksInMs&#39;</span><span class="p">])</span>
+            <span class="n">right</span><span class="p">[</span><span class="n">date</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">side</span><span class="p">[</span><span class="s1">&#39;Right&#39;</span><span class="p">][</span><span class="s1">&#39;mA&#39;</span><span class="p">])</span>
+            <span class="n">left</span><span class="p">[</span><span class="n">date</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">side</span><span class="p">[</span><span class="s1">&#39;Left&#39;</span><span class="p">][</span><span class="s1">&#39;mA&#39;</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">date</span><span class="p">,</span> <span class="n">timeline</span> <span class="ow">in</span> <span class="n">time</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">new_timeline</span> <span class="o">=</span> <span class="p">[(</span><span class="n">t</span> <span class="o">-</span> <span class="n">timeline</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">1000</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">timeline</span><span class="p">]</span><span class="c1">#from ms to s, starting at 0</span>
+        <span class="n">time</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_timeline</span>
+
+    <span class="k">return</span> <span class="n">right</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">time</span></div>
+
+<div class="viewcode-block" id="getStreamingStimulation"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getStreamingStimulation">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getStreamingStimulation</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span><span class="n">date</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns active stimulation group.</span>
 <span class="sd">    </span>
@@ -765,23 +739,22 @@
 <span class="sd">    :param date: str</span>
 
 <span class="sd">    :return: str</span>
-
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">dictionary</span> <span class="o">=</span> <span class="n">Data</span><span class="p">[</span><span class="s1">&#39;Streaming&#39;</span><span class="p">][</span><span class="s1">&#39;BrainSenseLfp&#39;</span><span class="p">]</span>
     <span class="n">group</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">date</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">extract_date</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">utl</span><span class="o">.</span><span class="n">parse_datetime</span><span class="p">(</span><span class="n">rec</span><span class="p">[</span><span class="s1">&#39;FirstPacketDateTime&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="n">date</span><span class="p">:</span> 
+        <span class="n">rec_date</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">extract_date</span><span class="p">(</span><span class="n">utl</span><span class="o">.</span><span class="n">parse_datetime</span><span class="p">(</span><span class="n">rec</span><span class="p">[</span><span class="s1">&#39;FirstPacketDateTime&#39;</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">rec_date</span> <span class="o">==</span> <span class="n">date</span><span class="p">:</span> 
             <span class="n">group</span> <span class="o">=</span> <span class="n">rec</span><span class="p">[</span><span class="s1">&#39;TherapySnapshot&#39;</span><span class="p">][</span><span class="s1">&#39;ActiveGroup&#39;</span><span class="p">]</span>
             <span class="n">group</span> <span class="o">=</span> <span class="n">utl</span><span class="o">.</span><span class="n">after_underscore</span><span class="p">(</span><span class="n">utl</span><span class="o">.</span><span class="n">after_point</span><span class="p">(</span><span class="n">group</span><span class="p">))</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;Stimulation ON: Group </span><span class="si">{</span><span class="n">group</span><span class="si">}</span><span class="s1">&#39;</span>
-            <span class="c1"># stimulation = getStimulationParameters(Data,group)</span>
-            <span class="c1"># return stimulation</span>
-    <span class="k">if</span> <span class="n">group</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span> <span class="k">return</span> <span class="s1">&#39;Stimulation OFF&#39;</span></div>
+    
+    <span class="k">if</span> <span class="n">group</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span> <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;Stimulation OFF&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span> 
+        <span class="n">right</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">time</span> <span class="o">=</span> <span class="n">getStreamingStimulationValues</span><span class="p">(</span><span class="n">Data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;Stimulation ON: Group </span><span class="si">{</span><span class="n">group</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">right</span><span class="p">,</span><span class="n">left</span><span class="p">,</span> <span class="n">time</span><span class="p">]</span></div>
 
-
-<div class="viewcode-block" id="getStimulation">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getStimulation">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getStimulation</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
+<div class="viewcode-block" id="getStimulation"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getStimulation">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getStimulation</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span><span class="n">side</span><span class="o">=</span><span class="s1">&#39;Right&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns at-home stimulation amplitude.</span>
 
@@ -790,7 +763,7 @@
 <span class="sd">    :return: dict</span>
 
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">timeline</span> <span class="o">=</span> <span class="n">getModeSignals</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span><span class="s1">&#39;Timeline&#39;</span><span class="p">)[</span><span class="s1">&#39;HemisphereLocationDef.Right&#39;</span><span class="p">]</span>
+    <span class="n">timeline</span> <span class="o">=</span> <span class="n">getModeSignals</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span><span class="s1">&#39;Timeline&#39;</span><span class="p">)[</span><span class="sa">f</span><span class="s1">&#39;HemisphereLocationDef.</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">info_electrodes</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span><span class="n">version</span><span class="o">=</span><span class="s1">&#39;Final&#39;</span><span class="p">)</span>
     <span class="n">electrodes</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;Stim_electrodes&#39;</span><span class="p">]</span>
     <span class="n">stimulation</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;X&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;Y&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;Info&#39;</span><span class="p">:</span> <span class="p">[]}</span>
@@ -809,7 +782,6 @@
         <span class="n">text</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Date&#39;</span><span class="p">:</span> <span class="n">_</span><span class="p">[:</span><span class="mi">10</span><span class="p">],</span> <span class="s1">&#39;Initial (mA)&#39;</span><span class="p">:</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;Final (mA)&#39;</span><span class="p">:</span><span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;Electrodes&#39;</span><span class="p">:</span> <span class="n">new</span><span class="p">}</span>
         <span class="n">stimulation</span><span class="p">[</span><span class="s1">&#39;Info&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
     
-    
     <span class="k">if</span> <span class="n">final_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">utl</span><span class="o">.</span><span class="n">parse_datetime</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">date</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">getStimStatus</span><span class="p">(</span><span class="n">Data</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ON&#39;</span><span class="p">:</span>
             <span class="n">stimulation</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">utl</span><span class="o">.</span><span class="n">full_date2str</span><span class="p">(</span><span class="n">final_date</span><span class="p">))</span>
@@ -820,10 +792,7 @@
 
     <span class="k">return</span> <span class="n">stimulation</span></div>
 
-
-<div class="viewcode-block" id="getEventSummary">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getEventSummary">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getEventSummary</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
+<div class="viewcode-block" id="getEventSummary"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getEventSummary">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getEventSummary</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns event summary (number of occurences of each event).</span>
 <span class="sd">    </span>
@@ -836,10 +805,7 @@
         <span class="k">return</span> <span class="n">Data</span><span class="p">[</span><span class="s1">&#39;Events&#39;</span><span class="p">][</span><span class="s1">&#39;EventSummary&#39;</span><span class="p">]</span> 
     <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="p">{}</span></div>
 
-
-<div class="viewcode-block" id="getImpedance">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.getImpedance">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">getImpedance</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span> 
+<div class="viewcode-block" id="getImpedance"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.getImpedance">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">getImpedance</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span> 
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Returns monopolar and bipolar impedance test results, per hemisphere.</span>
 <span class="sd">    </span>
@@ -860,10 +826,7 @@
             <span class="n">Right</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;Hemisphere&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;SessionImpedance&#39;</span><span class="p">][</span><span class="nb">type</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">status</span><span class="p">,</span> <span class="n">Left</span><span class="p">,</span> <span class="n">Right</span></div>
 
-
-<div class="viewcode-block" id="MissingTimeline">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.MissingTimeline">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">MissingTimeline</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">side</span><span class="p">):</span>
+<div class="viewcode-block" id="MissingTimeline"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.MissingTimeline">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">MissingTimeline</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">side</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Checks missing points in timeline (missing point: when difference between points is &gt;= than 11 minutes) and returns a new corrected timeline dict, correcting missing LFP values through mean interpolation.</span>
 <span class="sd">    </span>
@@ -950,10 +913,7 @@
             
     <span class="k">return</span> <span class="n">new_dic</span></div>
 
-
-<div class="viewcode-block" id="correctMissingTimeline">
-<a class="viewcode-back" href="../api/neodbs.html#DataHandling.correctMissingTimeline">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">correctMissingTimeline</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span> <span class="n">Timeline</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;X&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="correctMissingTimeline"><a class="viewcode-back" href="../api/neodbs.html#DataHandling.correctMissingTimeline">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">correctMissingTimeline</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span> <span class="n">Timeline</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;X&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Corrects timeline recordings for both hemispheres.</span>
 <span class="sd">    </span>
@@ -1007,7 +967,6 @@
                 <span class="n">Timeline</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">side</span><span class="p">][</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_timeline</span><span class="p">[</span><span class="n">date</span><span class="p">]</span>
                 <span class="n">Timeline</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">side</span><span class="p">][</span><span class="n">other_axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_lfp</span><span class="p">[</span><span class="n">date</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">Timeline</span></div>
-
 </pre></div>
 
            </div>

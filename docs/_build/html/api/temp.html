@@ -89,6 +89,76 @@
              
   <section id="module-temp">
 <span id="temp-module"></span><h1>temp module<a class="headerlink" href="#module-temp" title="Permalink to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="temp.CheckMissingPacketsTD">
+<span class="sig-prename descclassname"><span class="pre">temp.</span></span><span class="sig-name descname"><span class="pre">CheckMissingPacketsTD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/temp.html#CheckMissingPacketsTD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#temp.CheckMissingPacketsTD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="temp.check_stream_data">
+<span class="sig-prename descclassname"><span class="pre">temp.</span></span><span class="sig-name descname"><span class="pre">check_stream_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_tick_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/temp.html#check_stream_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#temp.check_stream_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks a data stream for missing sequences, length mismatches, and irregular tick intervals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>dict</em>) -- Dictionary containing 'GlobalSequences', 'GlobalPacketSizes', 'TicksInMses'</p></li>
+<li><p><strong>expected_tick_step</strong> (<em>int</em>) -- Expected difference between consecutive ticks in milliseconds</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Report containing missing sequences, length mismatches, and irregular tick indices</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="temp.correct4MissingSamples">
+<span class="sig-prename descclassname"><span class="pre">temp.</span></span><span class="sig-name descname"><span class="pre">correct4MissingSamples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LFP</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TicksInS</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GlobalPacketSizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/temp.html#correct4MissingSamples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#temp.correct4MissingSamples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace missing samples with NaNs in LFP data based on received packets and their timestamps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>LFP</strong> -- dict with 'Fs' (sampling rate in Hz) and 'data' (numpy array of shape [nChannels, nSamples])</p></li>
+<li><p><strong>TicksInS</strong> -- numpy array of packet timestamps in seconds</p></li>
+<li><p><strong>GlobalPacketSizes</strong> -- list or array of packet sizes (number of samples per packet)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Updated LFP with missing samples replaced by NaNs</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="temp.deduplicate_packets">
+<span class="sig-prename descclassname"><span class="pre">temp.</span></span><span class="sig-name descname"><span class="pre">deduplicate_packets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_ticks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/temp.html#deduplicate_packets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#temp.deduplicate_packets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merges packets that share the same tick (stim OFF behaviour).
+Returns two aligned arrays:</p>
+<blockquote>
+<div><p>ticks[i]  -&gt; timestamp in ms
+sizes[i]  -&gt; total bytes received at that tick (sum of all packets sharing it)</p>
+</div></blockquote>
+<p>Indices are coherent: ticks[i] always corresponds to sizes[i].</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="temp.detect_gaps">
+<span class="sig-prename descclassname"><span class="pre">temp.</span></span><span class="sig-name descname"><span class="pre">detect_gaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ticks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/temp.html#detect_gaps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#temp.detect_gaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks for missing samples between consecutive ticks.
+Returns a list of dicts describing each gap found.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="temp.follows_pattern">
+<span class="sig-prename descclassname"><span class="pre">temp.</span></span><span class="sig-name descname"><span class="pre">follows_pattern</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[38,</span> <span class="pre">24,</span> <span class="pre">38,</span> <span class="pre">25]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/temp.html#follows_pattern"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#temp.follows_pattern" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </section>
 
 

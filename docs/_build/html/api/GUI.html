@@ -329,11 +329,11 @@ Channels are to be renamed are hardcoded.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="GUI.change_line_color">
-<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">change_line_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#change_line_color"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.change_line_color" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">change_line_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#change_line_color"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.change_line_color" title="Permalink to this definition">¶</a></dt>
 <dd><p>Theme for mvLineSeries</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>color_id</strong> -- int, index of color</p>
+<dd class="field-odd"><p><strong>color_id</strong> -- int or list, index of color or rgba code</p>
 </dd>
 </dl>
 </dd></dl>
@@ -411,7 +411,7 @@ parameter_values: dict, key: name of parameter, item: value</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="GUI.colormap_buttons">
-<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">colormap_buttons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mother</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec_tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#colormap_buttons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.colormap_buttons" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">colormap_buttons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mother</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec_tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">not_coherogram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#colormap_buttons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.colormap_buttons" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -451,11 +451,14 @@ parameter_values: dict, key: name of parameter, item: value</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="GUI.create_alpha_theme">
-<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">create_alpha_theme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#create_alpha_theme"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.create_alpha_theme" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">create_alpha_theme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#create_alpha_theme"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.create_alpha_theme" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create and return a DearPyGui plot alpha theme, to be binded to line series.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>(</strong><strong>float</strong><strong>)</strong> (<em>alpha</em>) -- Opacity value between 0.0 and 1.0</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>(</strong><strong>float</strong><strong>)</strong> (<em>alpha</em>) -- Opacity value between 0.0 and 1.0</p></li>
+<li><p><strong>(</strong><strong>list</strong><strong>)</strong> (<em>color</em>) -- rbga values of line (for cases of dpg.add_line_series, that are not filled)</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The theme ID</p>
