@@ -6,11 +6,19 @@ from PyInstaller.utils.hooks import (
 )
 
 from pathlib import Path
+import sys
 
 ROOT = Path(SPECPATH).resolve()
 
 
 datas = [(str(ROOT / 'src' / 'NeoDBS.png'), '.')]
+
+if sys.platform == "win32":
+    icon_file = str(ROOT / "NeoDBS.ico")
+elif sys.platform == "darwin":
+    icon_file = str(ROOT / "NeoDBS.icns")
+else:
+    icon_file = None  # Linux
 
 binaries = []
 hiddenimports = []
@@ -46,7 +54,7 @@ excludes = [
 
 # --- Analysis ---
 a = Analysis(
-    ['src\\neodbs\\__main__.py'],
+    [str(ROOT / 'src' / 'neodbs' / '__main__.py')],
     pathex=[str(ROOT / 'src')],
     binaries=binaries,
     datas=datas,
@@ -71,7 +79,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,
@@ -80,5 +88,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['NeoDBS.ico'],
+    icon=icon_file,
 )
