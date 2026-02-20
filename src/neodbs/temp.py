@@ -1,5 +1,5 @@
 import DataHandling as DH
-# import dearpygui.dearpygui as dpg
+import dearpygui.dearpygui as dpg
 # import Features as ft
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,6 +31,8 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 data = DH.getData(file)
 
 print(dt.fromtimestamp(1622172706.0))
+
+
 
 
 def deduplicate_packets(raw_ticks, raw_sizes):

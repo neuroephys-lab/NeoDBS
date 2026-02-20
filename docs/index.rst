@@ -64,8 +64,8 @@ explain in complete detail all possible pipelines.
    tutorials/extra
    
 
-API Documentation
------------------
+Modules (Functions)
+-------------------
 
 Full documentation of all function's and modules.
 

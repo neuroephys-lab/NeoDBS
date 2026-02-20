@@ -212,7 +212,7 @@ After understanding what workspaces exist, here is a simple workflow for analysi
 
 .. image:: ../img/save.png
 
-11. Plot **manipulation** is also facilitated. **Right click** on plot, or one of the axis, to see more tools to help you explore the plot.
+11. Plot **manipulation** is also facilitated. **Right click** on plot, or one of the axis, to see more tools to help you explore the plot. For example, double click on the plot will recenter your plot based on the available series.
 
 Here you can find a scheme that represents the possible workflow in NeoDBS.
 

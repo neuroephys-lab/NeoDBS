@@ -7,18 +7,15 @@ downloading our platform in **here**.
 System Requirements
 -------------------
 
-Graphics card with OpenGL 3.3 support.  
-Minimum 4 GB RAM (8 GB recommended).  
-Minimum 500 MB free disk space (1 GB recommended).
+* Graphics card with OpenGL 3.3 support.  
+* Minimum 4 GB RAM (8 GB recommended).  
+* Minimum 500 MB free disk space (1 GB recommended).
+* Python 3.13.2 installed: https://www.python.org/downloads/
 
 **Windows**
 
 * Windows 10 / 11 (64-bit)
 * Microsoft Visual C++ Redistributable 2015–2022 (x64)
-
-If the application does not start, install:
-
-👉 https://aka.ms/vc14/vc_redist.x64.exe
 
 
 **Linux**

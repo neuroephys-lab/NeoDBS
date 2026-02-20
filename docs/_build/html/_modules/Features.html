@@ -1,21 +1,21 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="eng" data-content_root="../">
+<html class="writer-html5" lang="eng">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Features &mdash; NeoDBS Beta documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
-      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+  <title>Features &mdash; NeoDBS v0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
 
   
-      <script src="../_static/documentation_options.js?v=640d522d"></script>
-      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
-      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/clipboard.min.js"></script>
+      <script src="../_static/copybutton.js"></script>
       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -103,9 +103,7 @@
             <span class="s1">&#39;Gamma&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span><span class="mi">100</span><span class="p">]</span>
         <span class="p">}</span>
 
-<div class="viewcode-block" id="peak_power">
-<a class="viewcode-back" href="../api/neodbs.html#Features.peak_power">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">peak_power</span><span class="p">(</span><span class="n">stream</span><span class="p">):</span>
+<div class="viewcode-block" id="peak_power"><a class="viewcode-back" href="../api/neodbs.html#Features.peak_power">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">peak_power</span><span class="p">(</span><span class="n">stream</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    From stream dictionary, return tuple with peak value and peak position.</span>
 <span class="sd">    </span>
@@ -126,10 +124,7 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">peak_power</span><span class="p">,</span> <span class="n">peak_f</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="peak_per_band">
-<a class="viewcode-back" href="../api/neodbs.html#Features.peak_per_band">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">peak_per_band</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">bands</span><span class="p">):</span>
+<div class="viewcode-block" id="peak_per_band"><a class="viewcode-back" href="../api/neodbs.html#Features.peak_per_band">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">peak_per_band</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">bands</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Retrives all peak values and positions, in stream, for each band.</span>
 <span class="sd">    </span>
@@ -156,11 +151,8 @@
         <span class="n">peaks</span><span class="p">[</span><span class="n">_</span><span class="p">]</span> <span class="o">=</span> <span class="n">peak_power</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">peaks</span></div>
-
    
-<div class="viewcode-block" id="std_dev_streams">
-<a class="viewcode-back" href="../api/neodbs.html#Features.std_dev_streams">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">std_dev_streams</span><span class="p">(</span><span class="n">streams</span><span class="p">,</span> <span class="n">bands</span><span class="p">):</span>
+<div class="viewcode-block" id="std_dev_streams"><a class="viewcode-back" href="../api/neodbs.html#Features.std_dev_streams">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">std_dev_streams</span><span class="p">(</span><span class="n">streams</span><span class="p">,</span> <span class="n">bands</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Calculates and returns a dictionary of band-respective standard deviation</span>
 <span class="sd">    </span>
@@ -202,10 +194,7 @@
 
     <span class="k">return</span> <span class="n">std_devs</span>   </div>
 
-
-<div class="viewcode-block" id="mean_power_band">
-<a class="viewcode-back" href="../api/neodbs.html#Features.mean_power_band">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">mean_power_band</span><span class="p">(</span><span class="n">log</span><span class="p">,</span><span class="n">band</span><span class="p">):</span>
+<div class="viewcode-block" id="mean_power_band"><a class="viewcode-back" href="../api/neodbs.html#Features.mean_power_band">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">mean_power_band</span><span class="p">(</span><span class="n">log</span><span class="p">,</span><span class="n">band</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Calculates and returns a dictionary of band-respective mean</span>
 <span class="sd">    </span>
@@ -233,10 +222,7 @@
 
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">power</span><span class="p">)</span> <span class="k">if</span> <span class="n">power</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> </div>
 
-
-<div class="viewcode-block" id="get_sum_mean_power">
-<a class="viewcode-back" href="../api/neodbs.html#Features.get_sum_mean_power">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_sum_mean_power</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">band</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="get_sum_mean_power"><a class="viewcode-back" href="../api/neodbs.html#Features.get_sum_mean_power">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_sum_mean_power</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">band</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Calculates and returns the sum of all band&#39;s mean power</span>
 <span class="sd">    </span>
@@ -259,10 +245,7 @@
         
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="nb">all</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="extract_psd_features">
-<a class="viewcode-back" href="../api/neodbs.html#Features.extract_psd_features">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">extract_psd_features</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">band</span><span class="p">,</span> <span class="n">bands</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="extract_psd_features"><a class="viewcode-back" href="../api/neodbs.html#Features.extract_psd_features">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">extract_psd_features</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">band</span><span class="p">,</span> <span class="n">bands</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Extracts features from spectral density, or coherence, methods. Returns dictionary. </span>
 
@@ -311,10 +294,7 @@
 
     <span class="k">return</span> <span class="n">info</span></div>
 
-
-<div class="viewcode-block" id="extract_timeline_features">
-<a class="viewcode-back" href="../api/neodbs.html#Features.extract_timeline_features">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">extract_timeline_features</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+<div class="viewcode-block" id="extract_timeline_features"><a class="viewcode-back" href="../api/neodbs.html#Features.extract_timeline_features">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">extract_timeline_features</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Extracts features from timeline recordings, returned into a dictionary. </span>
 
@@ -373,10 +353,7 @@
 
     <span class="k">return</span> <span class="n">info</span></div>
 
-
-<div class="viewcode-block" id="mean_power_all_bands">
-<a class="viewcode-back" href="../api/neodbs.html#Features.mean_power_all_bands">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">mean_power_all_bands</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">bands</span><span class="p">):</span>
+<div class="viewcode-block" id="mean_power_all_bands"><a class="viewcode-back" href="../api/neodbs.html#Features.mean_power_all_bands">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">mean_power_all_bands</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">bands</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Computes mean power for frequency bands over a stream of events.</span>
 
@@ -402,10 +379,7 @@
 
     <span class="k">return</span> <span class="n">power</span></div>
 
-
-<div class="viewcode-block" id="export_plot">
-<a class="viewcode-back" href="../api/neodbs.html#Features.export_plot">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">export_plot</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">plot_type</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">line_types</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span><span class="n">dpi</span><span class="o">=</span><span class="mi">600</span><span class="p">):</span>
+<div class="viewcode-block" id="export_plot"><a class="viewcode-back" href="../api/neodbs.html#Features.export_plot">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">export_plot</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">plot_type</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">line_types</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span><span class="n">dpi</span><span class="o">=</span><span class="mi">600</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Creates matplolib plot and exports it into png image, according to the prepared info in dearpygui.</span>
 <span class="sd">    </span>
@@ -541,7 +515,7 @@
             <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">n_signals</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="n">axs</span> <span class="o">=</span> <span class="p">[</span><span class="n">axs</span><span class="p">]</span>
-
+        <span class="n">axs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">axs</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">signal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">signals</span><span class="p">):</span>
             <span class="n">f</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">sxx</span> <span class="o">=</span> <span class="n">signal</span>
@@ -600,10 +574,7 @@
 
     <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="export_signals">
-<a class="viewcode-back" href="../api/neodbs.html#Features.export_signals">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">export_signals</span><span class="p">(</span><span class="n">info</span><span class="p">,</span><span class="n">filename</span><span class="p">,</span> <span class="n">tfd</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="export_signals"><a class="viewcode-back" href="../api/neodbs.html#Features.export_signals">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">export_signals</span><span class="p">(</span><span class="n">info</span><span class="p">,</span><span class="n">filename</span><span class="p">,</span> <span class="n">tfd</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Writes into &quot;Signals_{filename}.csv&quot; file, signals contained in info dictionary.</span>
 <span class="sd">    </span>
@@ -653,7 +624,6 @@
                 <span class="k">except</span><span class="p">:</span>
                     <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
-
 </pre></div>
 
            </div>

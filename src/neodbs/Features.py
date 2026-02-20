@@ -426,7 +426,7 @@ def export_plot(info, plot_type, size=None, line_types = None,dpi=600):
             sharex=True
         )
         if n_signals==1: axs = [axs]
-
+        axs = list(np.array(axs).flatten())
         fig.suptitle(title)
         for i, signal in enumerate(signals):
             f, t, sxx = signal

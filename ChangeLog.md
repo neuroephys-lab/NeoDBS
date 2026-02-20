@@ -1,5 +1,23 @@
 # NeoDBS
 
+## 20.02.2026
+
+### Debug
+
+* Before vs After PSD toggle buttons corrected
+
+## 16 e 18.02.2026
+
+### Debug
+
+* Timeline stimulation: plot both hemispheres w/ information about sensing band
+* Checked: fuso horario
+  * Correção de adicionar recs aos dias corretos nos sinais (dict) do timeline
+* Tooltip in change to dB button only when hide is activated
+* Impedance table with units
+* **update_plot_td**: uses x axis plotted, not the in memory saved in app_state
+* export_plot: multiple spectrograms (>2 ou >1 linha) was nesting lists of axes, not flattened and correctly exporting
+
 ## 13.02.2026
 
 ### Debug
@@ -637,7 +655,7 @@ Electrode tab/Group History for now deprecated while waiting for medtronic respo
 
 ## 10.11.2025
 
-## To Add:
+### To Add:
 
 - Event Summary tab (/being developed in temp)
 
