@@ -6,6 +6,12 @@
 
 * Before vs After PSD toggle buttons corrected
 
+### New
+
+- .exe is only for windows
+- build.yml will use GitHub Actions to create proper executable files for linux and mac
+- .icns file for icon in mac
+
 ## 16 e 18.02.2026
 
 ### Debug
