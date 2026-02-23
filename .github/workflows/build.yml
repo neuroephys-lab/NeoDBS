@@ -8,7 +8,15 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            name: windows
+          - os: ubuntu-latest
+            name: linux
+          - os: macos-13
+            name: mac-intel
+          - os: macos-14
+            name: mac-arm
 
     runs-on: ${{ matrix.os }}
 
@@ -24,14 +32,11 @@ jobs:
           pip install -r src/requirements.txt
           pip install pyinstaller
 
-      - name: Build using spec file
+      - name: Build
         run: pyinstaller NeoDBS.spec
-
-      - name: Show output
-        run: ls -R dist
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NeoDBS-${{ matrix.os }}
+          name: NeoDBS-${{ matrix.name }}
           path: dist/
