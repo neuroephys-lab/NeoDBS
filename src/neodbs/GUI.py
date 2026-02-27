@@ -7132,7 +7132,7 @@ def streaming_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
 
     with dpg.group(parent=tab_tag, label = f"{tab_tag}_group", horizontal=True):
 
-        with dpg.plot(label=f"{mode} Signals", height=470, width=600, tag=plot_tag):
+        with dpg.plot(label=f"{mode} Signals", height=400, width=600, tag=plot_tag):
             dpg.bind_colormap(plot_tag, 0)
             dpg.add_plot_legend(location=dpg.mvPlot_Location_NorthEast,no_buttons = True)
             dpg.add_plot_axis(dpg.mvXAxis, label="Time (s)", tag=f"x_axis_{tab_tag}")

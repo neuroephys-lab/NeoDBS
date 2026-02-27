@@ -193,7 +193,10 @@ After understanding what workspaces exist, here is a simple workflow for analysi
 .. image:: ../img/window.png
 
 5. Recordings can be accessed by clicking on the **respective recording mode button**. 
-6. **Each recording mode will have its respective tab**, with the associated recordings and functionalities. Preprocessing and spectral analysis methods will only be applied to the selected signals (visible on the main plot of tab).
+6. **Each recording mode will have its respective tab**, with the associated recordings and functionalities. 
+
+.. warning::
+   Preprocessing and spectral analysis methods will only be applied to the selected signals (visible on the main plot of tab).
 
 .. image:: ../img/tab.png
 
