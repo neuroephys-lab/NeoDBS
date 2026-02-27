@@ -25,12 +25,7 @@ jobs:
           pip install pyinstaller
 
       - name: Build
-        run: |
-          if [[ "$RUNNER_OS" == "macOS" ]]; then
-            pyinstaller --target-arch universal2 NeoDBS.spec
-          else
-            pyinstaller NeoDBS.spec
-          fi
+        run: pyinstaller NeoDBS.spec
 
       - uses: actions/upload-artifact@v4
         with:
