@@ -1,5 +1,10 @@
 # NeoDBS
 
+## 27.02.2026
+
+* try of constructing mac binary files
+* Timeline uses missing points in **circadian rhythm** and **analyze timeline events** if "Missing points" is checked
+
 ## 20.02.2026
 
 ### Debug

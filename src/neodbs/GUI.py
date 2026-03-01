@@ -5627,6 +5627,7 @@ def changeTimelinePlot(sender,app_data,user_data):
 
     for idx, signal in enumerate(signals):
         for tag in signal_tags.keys():
+            if 'series' not in tag: continue
             i = extract_idx_from_series_tag(tag)
             if i == idx and signal_tags[tag]==True:
                 if dpg.does_item_exist(f"{tag}_Left_added"): 
@@ -5669,12 +5670,24 @@ def circadian_rhythm(sender, app_data, user_data):
 
     tags = getActiveSeries(signal_tags)
 
+    if dpg.does_item_exist(f"{tab_tag}_missing_points"):
+        missing=dpg.get_value(f"{tab_tag}_missing_points")
+    else: missing=False
+
     days = {}
     mean, dates, circadian_tags = [], [], []
     #preparing streams
-    for tag in tags:
-        # signal = getSignalbyIdx(window_id,tab_tag,tag)
+    for idx,tag in enumerate(tags):
+        signal = getSignalbyIdx(extract_window_id(tab_tag),tab_tag,tag)
         old_x,old_y = dpg.get_value(tag)[:2]
+        if missing: 
+            dictionary = getDatabyTag(tag)
+            side = extract_side_from_series_tag(tag).capitalize()
+            if dictionary != None: 
+                extra = DH.correctMissingTimeline(dictionary, signal)[0][side]
+                old_x = [temp_x.timestamp() for temp_x in extra['X']]
+                old_y = extra['Y']
+
         label = dpg.get_item_label(tag)
         stim_info = DH.info_electrodes(getDatabyTag(tag))['Sense_frequency']
         dates.append(label[-10:])
@@ -5898,6 +5911,17 @@ def AnalyzeTimelineEvents(sender,app_data,user_data):
 
     timelines = [dpg.get_value(t)[:2] for t in signal_tags.keys()]
     timeline_labels = [dpg.get_item_label(t) for t in signal_tags.keys()]
+
+    if dpg.does_item_exist(f"{tab_tag}_missing_points") and dpg.get_value(f"{tab_tag}_missing_points"):
+        timelines = []
+        for tag in signal_tags.keys():
+            dictionary = getDatabyTag(tag)
+            signal = getSignalbyIdx(extract_window_id(tab_tag),tab_tag,tag)
+            side = extract_side_from_series_tag(tag).capitalize()
+            if dictionary != None: 
+                extra = DH.correctMissingTimeline(dictionary, signal)[0][side]
+                corrected_x = [temp_x.timestamp() for temp_x in extra['X']]
+                timeline.append([corrected_x,extra['Y']])
 
     segments, event_names, checkboxes, days, temp_tags = [], [], [], [], []
 
@@ -6841,7 +6865,7 @@ def timeline_tab(mode,tab_tag,window_id,plot_tag,signals,signal_tags):
                 dpg.add_separator()
                 a = dpg.add_text('Warning: There are missing points in Timeline', tag=f"{tab_tag}_wmp", parent=f"{tab_tag}_buttons")
                 dpg.bind_item_theme(a,change_text_color(1))
-                dpg.add_checkbox(label='Show missing points',parent=f"{tab_tag}_buttons", default_value=False, callback=changeTimelinePlot, user_data=(signal_tags, signals, data, y_left))
+                dpg.add_checkbox(label='Show missing points',parent=f"{tab_tag}_buttons", default_value=False, callback=changeTimelinePlot, user_data=(signal_tags, signals, data, y_left), tag=f"{tab_tag}_missing_points")
 
     add_timeline_features_buttons(tab_tag, signal_tags)
      
@@ -8177,7 +8201,7 @@ def comb_timeline_tab(mode,tab_tag,window_id,plot_tag,files,signal_tags):
                         for ocd in ocd_events:
                             toggleType(signal_tags,parent=f"{tab_tag}_buttons", user_data=(ocd, window_id, tab_tag)) #check hemisphere
             dpg.add_separator()
-            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",ploted_colors),tag=f"{plot_tag}_export_plot")
+            b1 = dpg.add_button(label = 'Export Plot Figure',width=-1,callback = filename_window,user_data =('2D', plot_tag, f"y_axis_{tab_tag}",ploted_colors),tag=f"{y_axis}_export_plot")
             b2 = dpg.add_button(label='Export Signals',width=-1,callback=filename_window,user_data=(y_axis,plot_tag,'2D'))
             add_exporting_tag(window_id,plot=b1,signal=b2)
             dpg.add_separator()

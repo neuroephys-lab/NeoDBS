@@ -107,9 +107,10 @@ def add_utc_conversion_to_dates(data, offset):
    
     if isinstance(data, dict):
         for key, value in data.items():
-            if 'Date' in key and isinstance(value, str):
+            if 'DateTime' in key and isinstance(value, str):
                 try:
-                    data[key] = utl.full_date2str(utl.parse_datetime(data[key]) + offset)
+                    new = utl.full_date2str(utl.parse_datetime(data[key]) - offset)
+                    data[key] = new
                 except Exception:
                     pass
             elif isinstance(value, (dict, list)):
@@ -877,4 +878,5 @@ def correctMissingTimeline(Data, Timeline, axis='X'):
             if date in new_timeline.keys():
                 Timeline[i][side][axis] = new_timeline[date]
                 Timeline[i][side][other_axis] = new_lfp[date]
+                
     return Timeline

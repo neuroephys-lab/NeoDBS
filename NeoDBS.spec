@@ -24,12 +24,12 @@ binaries = []
 hiddenimports = []
 
 # --- MNE (minimal, time_frequency-focused) ---
-hiddenimports += collect_submodules("mne.time_frequency")
-hiddenimports += collect_submodules("mne.utils")
-hiddenimports += collect_submodules("mne.filter")
-hiddenimports += collect_submodules("mne.baseline")
-hiddenimports += collect_submodules("mne.parallel")
-hiddenimports += collect_submodules("mne.externals")
+#hiddenimports += collect_submodules("mne.time_frequency")
+#hiddenimports += collect_submodules("mne.utils")
+#hiddenimports += collect_submodules("mne.filter")
+#hiddenimports += collect_submodules("mne.baseline")
+#hiddenimports += collect_submodules("mne.parallel")
+#hiddenimports += collect_submodules("mne.externals")
 
 # --- Required runtime data ---
 fonts_dir = ROOT / 'src' / 'fonts'
