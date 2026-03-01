@@ -49,6 +49,7 @@ excludes = [
     "pyvista",
     "vtk",
     "mne.viz",
+    "mne.utils._logging",
     "matplotlib.backends.backend_qt5agg",
 ]
 
