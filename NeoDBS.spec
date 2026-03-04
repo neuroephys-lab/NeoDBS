@@ -24,16 +24,34 @@ binaries = []
 hiddenimports = []
 
 # --- MNE (minimal, time_frequency-focused) ---
-hiddenimports += collect_submodules("mne.time_frequency")
-#hiddenimports += collect_submodules("mne.utils")
-#hiddenimports += collect_submodules("mne.filter")
-#hiddenimports += collect_submodules("mne.baseline")
-#hiddenimports += collect_submodules("mne.parallel")
-#hiddenimports += collect_submodules("mne.externals")
-#hiddenimports += collect_submodules("mne.utils._logging")
-hiddenimports += collect_submodules("mne")
-hiddenimports += collect_submodules("joblib")
-hiddenimports += collect_submodules("threadpoolctl")
+# hiddenimports += collect_submodules("mne.time_frequency")
+# hiddenimports += collect_submodules("mne.utils")
+# hiddenimports += collect_submodules("mne.filter")
+# hiddenimports += collect_submodules("mne.baseline")
+# hiddenimports += collect_submodules("mne.parallel")
+# hiddenimports += collect_submodules("mne.externals")
+# hiddenimports += collect_submodules("mne.utils._logging")
+# hiddenimports += collect_submodules("mne")
+# hiddenimports += collect_submodules("joblib")
+# hiddenimports += collect_submodules("threadpoolctl")
+
+hiddenimports = [
+    'mne.utils._logging',
+    'mne.time_frequency',
+    'mne.find_layout',
+    'mne.utils.set_log_file',
+    'mne.utils.set_log_level',
+    'mne.utils.warn',
+    'mne.utils.verbose',
+    'mne.utils.use_log_level',
+    'mne.utils.logger',
+    'mne.utils.get_config',
+    'mne.utils._validate_type',
+    'mne.utils._ensure_int',
+    'mne.utils.ProgressBar',
+    'mne.utils._check_option',
+    'joblib'
+]
 
 # --- Required runtime data ---
 fonts_dir = ROOT / 'src' / 'fonts'
