@@ -28,7 +28,7 @@ jobs:
       - name: Install DearPyGui from source (mac only)
         if: runner.os == 'macOS'
         run: |
-          pip install dearpygui==2.12.0
+          pip install dearpygui==2.2
 
       - name: Build
         run: |
