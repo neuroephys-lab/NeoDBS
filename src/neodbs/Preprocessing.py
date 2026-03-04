@@ -270,7 +270,6 @@ def get_required_params(func_name, module = 'ss'):
             required_params[name] = None  # No default value
         else:
             required_params[name] = param.default  # Default value exists
-
     return required_params
 
 def get_default_kwargs(func_name,module = 'ss'):

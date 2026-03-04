@@ -24,12 +24,16 @@ binaries = []
 hiddenimports = []
 
 # --- MNE (minimal, time_frequency-focused) ---
-#hiddenimports += collect_submodules("mne.time_frequency")
+hiddenimports += collect_submodules("mne.time_frequency")
 #hiddenimports += collect_submodules("mne.utils")
 #hiddenimports += collect_submodules("mne.filter")
 #hiddenimports += collect_submodules("mne.baseline")
 #hiddenimports += collect_submodules("mne.parallel")
 #hiddenimports += collect_submodules("mne.externals")
+#hiddenimports += collect_submodules("mne.utils._logging")
+hiddenimports += collect_submodules("mne")
+hiddenimports += collect_submodules("joblib")
+hiddenimports += collect_submodules("threadpoolctl")
 
 # --- Required runtime data ---
 fonts_dir = ROOT / 'src' / 'fonts'
@@ -49,7 +53,6 @@ excludes = [
     "pyvista",
     "vtk",
     "mne.viz",
-    "mne.utils._logging",
     "matplotlib.backends.backend_qt5agg",
 ]
 
@@ -77,7 +80,7 @@ exe = EXE(
     a.datas,
     [],
     name='NeoDBS',
-    debug=False,
+    debug=True,
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,
