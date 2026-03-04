@@ -21,13 +21,22 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r src/requirements.txt
-          pip install pyinstaller
+          pip install --upgrade pip --no-cache-dir
+          pip install -r src/requirements.txt --no-cache-dir
+          pip install pyinstaller --no-cache-dir
+
+      - name: Install DearPyGui from source (mac only)
+        if: runner.os == 'macOS'
+        run: |
+          pip uninstall -y dearpygui
+          pip install --no-binary :all: dearpygui --no-cache-dir
 
       - name: Build
-        run: pyinstaller NeoDBS.spec
+        run: |
+          pyinstaller --clean NeoDBS.spec
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
           name: NeoDBS-${{ matrix.os }}
           path: dist/

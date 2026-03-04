@@ -1,10 +1,13 @@
 import DataHandling as DH
+from GUI import *
 import dearpygui.dearpygui as dpg
 # import Features as ft
-import matplotlib.pyplot as plt
+from scipy import signal
+# from scipy.signal._wavelets import _cwt, _ricker
+# import matplotlib.pyplot as plt
 import numpy as np
 # from scipy.signal import spectrogram
-from datetime import datetime as dt
+# from datetime import datetime as dt
 # import Preprocessing as pre
 import utils as utl
 '''
@@ -30,8 +33,75 @@ file = "C:\\Users\\OCD\\Desktop\\DATA\\RN\\2024-11-11\\Report_Json_Session_Repor
 
 data = DH.getData(file)
 
-print(dt.fromtimestamp(1622172706.0))
+streaming = DH.getSignals(data,'Streaming')[0]
 
+x,y = streaming['X'],streaming['Y']
+
+# wavelet =_cwt(y,None,np.atleast_1d(np.asarray([100])))
+width = 7 
+freqs = np.arange(1, 100, 1)
+fs=250
+
+def morlet_wavelet(f, fs, n_cycles=7):
+    t = np.arange(-1, 1, 1/fs)
+    sigma = n_cycles / (2*np.pi*f)
+    wavelet = np.exp(2j*np.pi*f*t) * np.exp(-t**2/(2*sigma**2))
+    return wavelet
+
+def wavelet_transform(x, fs, freqs):
+    power = []
+    for f in freqs:
+        w = morlet_wavelet(f, fs)
+        conv = np.convolve(x, w, mode='same')
+        power.append(np.abs(conv)**2)
+    return np.array(power)
+
+fs = 250
+freqs = np.arange(1,100)
+power = wavelet_transform(y, fs, freqs)
+power = np.flipud(10 * np.log10(power)).flatten().tolist()
+
+parameter_values, documentation = fill_params_features('wavelet')
+mne_wav = apply_feat('wavelet',parameter_values,y)
+tfr = 10 * np.log10(mne_wav)
+tfr = np.flipud(tfr[0, 0, :, :])
+heatmap_data = tfr.flatten().tolist()
+
+miniii = min(min(heatmap_data),min(power))
+maxii = max(max(heatmap_data),max(power))
+
+
+dpg.create_context()
+with dpg.window():
+    mother = dpg.add_group(horizontal=True)
+    
+    dpg.add_colormap_scale(min_scale=miniii,max_scale=maxii,parent=mother,colormap=dpg.mvPlotColormap_Jet)
+    parent = dpg.add_group(horizontal=False,parent=mother)
+    with dpg.plot(parent=parent,label='MNE',tag='mne'):
+        dpg.add_plot_axis(dpg.mvXAxis,label='Time')
+        yy = dpg.add_plot_axis(dpg.mvYAxis,label='Frequency')
+
+        dpg.add_heat_series(heatmap_data, rows=tfr.shape[0], cols=tfr.shape[1], 
+                                        parent=yy, scale_max=maxii,scale_min=miniii, format="")#, bounds_min=[0,freqs[0]], bounds_max=[int(tfr.shape[1]/250),freqs[-1]])
+        dpg.bind_colormap('mne', dpg.mvPlotColormap_Jet)
+
+    with dpg.plot(parent=parent,label='SCIPY',tag='scipy'):
+        dpg.add_plot_axis(dpg.mvXAxis,label='Time')
+        yy = dpg.add_plot_axis(dpg.mvYAxis,label='Frequency')
+
+        dpg.add_heat_series(power, rows=100, cols=int(len(power)/100), 
+                                        parent=yy, scale_max=maxii,scale_min=miniii, format="")#, bounds_min=[0,freqs[0]], bounds_max=[int(tfr.shape[1]/250),freqs[-1]])
+        dpg.bind_colormap('scipy', dpg.mvPlotColormap_Jet)
+
+dpg.create_viewport(title='Temporario', width=800, height=600)
+dpg.setup_dearpygui()
+dpg.show_viewport()
+dpg.start_dearpygui()
+dpg.destroy_context()
+
+
+
+print('')
 
 
 
