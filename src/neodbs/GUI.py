@@ -1062,7 +1062,7 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None,plot_ta
     dates = []
     for signal in signals: 
         date = utl.parse_datetime(signal['DateInitial'])
-        date = f"day {date.month:02d}/{date.day:02d}"
+        date = f"{date.day:02d}/{date.month:02d}"
         dates.append(date)
 
     dates = sorted(np.unique(dates).tolist())
@@ -1077,7 +1077,7 @@ def toggleDisplay2(signals, signal_tags, window_id, tab_tag, tables=None,plot_ta
             #check days
             if len(dates)>1:
                 with dpg.child_window(height=cwh,width=cww,horizontal_scrollbar=True):
-                    dpg.add_text('By days \n (Month/Day):')
+                    dpg.add_text('By days \n (Day/Month):')
                     for day in dates:
                         toggleType(signal_tags,parent=f"{tab_tag}_buttons_day", user_data=(day, window_id, tab_tag)) 
 
@@ -1151,11 +1151,13 @@ def hide(sender,app_data,user_data):
     
     if checkboxes != [None]:
         if app_data == False:
+            
             for c in checkboxes:
                 dpg.set_value(c,True)
                 callback = dpg.get_item_callback(c)
                 ud = dpg.get_item_user_data(c)
-                if sender_name == 'Hide Days':
+
+                if sender_name == 'Hide Days': #what
                     ud = 'dont'
                 if callback:
                     callback(c, True, ud)
@@ -1571,6 +1573,8 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 if full_channel not in all_info.keys():
                     all_info[full_channel] = {}
 
+                if mode == 'segment':
+                    events_names.append(f"{stream['Type']}")
     	        #BEFORE AND AFTER PSD
                 if comparing == True:
                     temp = []
@@ -1600,7 +1604,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                     temp.append(p)
                     max_p = max(max_p,np.max(p['Y']))
 
-                    events_names.append(f"{stream['Type']}")
+                    
                     states = ['Before', 'After']
                     #TABLE CONTENT
                     full_power = np.sum(p['Y'])
@@ -2005,7 +2009,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                 
                 dpg.add_separator()
                 dpg.add_text('Toggle Streams')
-                with dpg.group(parent=f"{tab_label}_buttons", horizontal=True):   
+                with dpg.group(parent=f"{tab_label}_buttons", horizontal=True,tag=f"{tab_label}_bvabuttons"):   
                     with dpg.child_window(height=cwh,width=cww,horizontal_scrollbar=True): #Before and After
                         dpg.add_text('When:')
                         cc = dpg.add_checkbox(label='Before', default_value=True, callback=toggle, user_data=-1)
@@ -2013,18 +2017,23 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                         checkboxes.append(cc)
                         checkboxes.append(c)
                     
-                    with dpg.child_window(height=cwh,width=cww,horizontal_scrollbar=True): #Per Type of Event
-                        # events_type = [name.split(' ')[0] for name in events_names]
-                        events_type = np.unique(events_names)
-                        dpg.add_text('What:')
-                        for i, etype in enumerate(events_type):
-                            c = dpg.add_checkbox(label=etype, callback=toggle, default_value=True)
-                            checkboxes.append(c)
 
                 if dpg.does_item_exist(f"{tab_label}_hide"): dpg.set_item_user_data(f"{tab_label}_hide",(ploted_tags, checkboxes))
             
             channels = np.unique(channels)
             days = np.unique(days)
+            if mode == 'segment':
+                if dpg.does_item_exist(f"{tab_label}_bvabuttons"):
+                    this_parent = f"{tab_label}_bvabuttons"
+                else: 
+                    this_parent = f"{tab_label}_buttons"
+                with dpg.child_window(height=cwh,width=cww,horizontal_scrollbar=True, parent=this_parent): #Per Type of Event
+                    events_type = np.unique(events_names)
+                    dpg.add_text('Events:')
+                    for i, etype in enumerate(events_type):
+                        c = dpg.add_checkbox(label=etype, callback=choose_toggle, default_value=True)
+                        checkboxes.append(c)
+
             with dpg.group(horizontal=True):  
                 if len(channels)>1: 
                     with dpg.child_window(height=cwh,width=cww,horizontal_scrollbar=True): #channels
@@ -2032,6 +2041,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
                         for ch in channels: 
                             c = dpg.add_checkbox(label=ch, callback=choose_toggle, default_value=True)
                             checkboxes.append(c)
+                
                 if len(days)>1:
                     with dpg.child_window(height=cwh,width=cww,horizontal_scrollbar=True): #days
                         dpg.add_text('Recordings: ')
@@ -4178,7 +4188,9 @@ def different_combo(sender,app_data,user_data):
             other = dpg.get_value(combos[key])
     if atual == other:
         dpg.add_separator(parent=doc_container)
-        dpg.add_text('Recordings cannot be the same!', parent=doc_container, show=True, tag = f"{sender}_pac_w")
+        
+        e = dpg.add_text('Recordings cannot be the same!', parent=doc_container, show=True, tag = f"{sender}_pac_w")
+        dpg.bind_item_theme(e,change_text_color(1))
         return
 
 def resize_font(sender,app_data,user_data):
@@ -5173,6 +5185,7 @@ def DefaultFeatures(sender, app_data, user_data):
         parameter_values, documentation = fill_params_features('hilbert')
     else: parameter_values, documentation = fill_params_features(app_data)
 
+    
     func = app_data
 
     tags = getActiveSeries(signal_tags)
@@ -5627,7 +5640,7 @@ def changeTimelinePlot(sender,app_data,user_data):
 
     for idx, signal in enumerate(signals):
         for tag in signal_tags.keys():
-            if 'series' not in tag: continue
+            if isinstance(tag,int) or 'series' not in tag: continue
             i = extract_idx_from_series_tag(tag)
             if i == idx and signal_tags[tag]==True:
                 if dpg.does_item_exist(f"{tag}_Left_added"): 
@@ -5683,8 +5696,10 @@ def circadian_rhythm(sender, app_data, user_data):
         if missing: 
             dictionary = getDatabyTag(tag)
             side = extract_side_from_series_tag(tag).capitalize()
+            filtered = {side:{'X': [datetime.fromtimestamp(xx) for xx in old_x], 'Y':old_y},'Date':signal['Date']}
             if dictionary != None: 
-                extra = DH.correctMissingTimeline(dictionary, signal)[0][side]
+                # extra = DH.correctMissingTimeline(dictionary, signal)[0][side]
+                extra = DH.correctMissingTimeline(dictionary, filtered,days=filtered['Date'],filtered=filtered)[0][side]
                 old_x = [temp_x.timestamp() for temp_x in extra['X']]
                 old_y = extra['Y']
 

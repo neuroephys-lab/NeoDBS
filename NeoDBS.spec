@@ -10,9 +10,16 @@ import sys
 
 ROOT = Path(SPECPATH).resolve()
 
+# --- Datas (images, fonts, and package data) ---
+datas = [
+    (str(ROOT / 'src' / 'NeoDBS.png'), '.')
+]
 
-datas = [(str(ROOT / 'src' / 'NeoDBS.png'), '.')]
+# Include all fonts
+fonts_dir = ROOT / 'src' / 'fonts'
+datas += [(str(p), 'fonts') for p in fonts_dir.rglob('*') if p.is_file()]
 
+# --- Icon based on platform ---
 if sys.platform == "win32":
     icon_file = str(ROOT / "NeoDBS.ico")
 elif sys.platform == "darwin":
@@ -20,50 +27,16 @@ elif sys.platform == "darwin":
 else:
     icon_file = None  # Linux
 
-binaries = []
-hiddenimports = []
+# --- Collect MNE and DearPyGui ---
+mne_datas, mne_binaries, mne_hiddenimports = collect_all('mne')
+datas += mne_datas
+binaries = mne_binaries
+hiddenimports = mne_hiddenimports
 
-# --- MNE (minimal, time_frequency-focused) ---
-# hiddenimports += collect_submodules("mne.time_frequency")
-# hiddenimports += collect_submodules("mne.utils")
-# hiddenimports += collect_submodules("mne.filter")
-# hiddenimports += collect_submodules("mne.baseline")
-# hiddenimports += collect_submodules("mne.parallel")
-# hiddenimports += collect_submodules("mne.externals")
-# hiddenimports += collect_submodules("mne.utils._logging")
-# hiddenimports += collect_submodules("mne")
-# hiddenimports += collect_submodules("joblib")
-# hiddenimports += collect_submodules("threadpoolctl")
-
-hiddenimports = [
-    'mne.utils._logging',
-    'mne.time_frequency',
-    'mne.find_layout',
-    'mne.utils.set_log_file',
-    'mne.utils.set_log_level',
-    'mne.utils.warn',
-    'mne.utils.verbose',
-    'mne.utils.use_log_level',
-    'mne.utils.logger',
-    'mne.utils.get_config',
-    'mne.utils._validate_type',
-    'mne.utils._ensure_int',
-    'mne.utils.ProgressBar',
-    'mne.utils._check_option',
-    'joblib'
-]
-
-# --- Required runtime data ---
-fonts_dir = ROOT / 'src' / 'fonts'
-
-datas += [
-    (str(p), 'fonts')
-    for p in fonts_dir.rglob('*')
-    if p.is_file()
-]
-
-datas += collect_data_files("mne")
-datas += collect_data_files("dearpygui")
+dpg_datas, dpg_binaries, dpg_hiddenimports = collect_all('dearpygui')
+datas += dpg_datas
+binaries += dpg_binaries
+hiddenimports += dpg_hiddenimports
 
 # --- Exclusions ---
 excludes = [

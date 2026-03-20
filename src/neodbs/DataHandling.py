@@ -738,7 +738,7 @@ def getImpedance(Data):
             Right[type] = info['Hemisphere'][1]['SessionImpedance'][type]
     return status, Left, Right
 
-def MissingTimeline(data,side):
+def MissingTimeline(data,side,days=None,filtered=None):
     '''
     Checks missing points in timeline (missing point: when difference between points is >= than 11 minutes) and returns a new corrected timeline dict, correcting missing LFP values through mean interpolation.
     
@@ -754,8 +754,9 @@ def MissingTimeline(data,side):
     '''
     if side == 'Right': side = 'HemisphereLocationDef.Right'
     else: side = 'HemisphereLocationDef.Left'
-    
-    days_hemisphere_right=list(data['Timeline']['LFPTrendLogs'][side].keys())
+
+    if days: days_hemisphere_right=np.array(days).flatten().tolist()
+    else: days_hemisphere_right=list(data['Timeline']['LFPTrendLogs'][side].keys())
     days_of_search=days_hemisphere_right
     
     time_format_somado=[]
@@ -770,17 +771,22 @@ def MissingTimeline(data,side):
                     key_chosen_day = s
                     break 
 
-            info_chosen_day= data['Timeline']['LFPTrendLogs'][side][key_chosen_day]
+            if filtered: info_chosen_day=filtered[utl.after_point(side)]
+            else: info_chosen_day= data['Timeline']['LFPTrendLogs'][side][key_chosen_day]
 
             size_chosen_day = len(info_chosen_day)
             time_format=[0]*size_chosen_day
             LFP=[0]*size_chosen_day
             i=size_chosen_day
 
-            for t in info_chosen_day:
-                LFP[i-1]=int(t['LFP'])
-                time_format[i-1]=datetime.fromisoformat(t['DateTime'].rstrip('Z'))
-                i=i-1
+            if filtered:
+                LFP = info_chosen_day['Y']
+                time_format = info_chosen_day['X']
+            else:
+                for t in info_chosen_day:
+                    LFP[i-1]=int(t['LFP'])
+                    time_format[i-1]=datetime.fromisoformat(t['DateTime'].rstrip('Z'))
+                    i=i-1
 
             #adding the missing points
             index_n_pontos_extra=[]
@@ -825,7 +831,7 @@ def MissingTimeline(data,side):
             
     return new_dic
 
-def correctMissingTimeline(Data, Timeline, axis='X'):
+def correctMissingTimeline(Data, Timeline, axis='X',days=None,filtered=None):
     '''
     Corrects timeline recordings for both hemispheres.
     
@@ -846,7 +852,10 @@ def correctMissingTimeline(Data, Timeline, axis='X'):
     
     for side in ['Left','Right']:
 
-        added = MissingTimeline(Data, side)
+        if isinstance(Timeline,dict): Timeline = [Timeline]
+        if side not in Timeline[0].keys(): continue
+
+        added = MissingTimeline(Data, side,days=days,filtered=filtered)
         added_timeline[side] = added[axis]
         added_lfp[side] = added[other_axis]
 
@@ -862,7 +871,7 @@ def correctMissingTimeline(Data, Timeline, axis='X'):
             new_timeline[key].append(at)
             new_lfp[key].append(added_lfp[side][idx])
 
-        if isinstance(Timeline,dict): Timeline = [Timeline]
+        
         
         for i,day in enumerate(Timeline):
             date = day['Date']
