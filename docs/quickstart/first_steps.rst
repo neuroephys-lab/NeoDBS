@@ -2,7 +2,7 @@ First Steps
 ===========
 
 NeoDBS is an open-source Python platform made for researchers and clinicians. You can easily use NeoDBS by 
-downloading our platform in https://github.com/neuroephys-lab. 
+downloading our platform in **here**. 
 
 System Requirements
 -------------------
@@ -28,20 +28,22 @@ System Requirements
 **macOS**
 
 * macOS 11 (Big Sur) or newer
-* Intel **or** Apple Silicon (separate builds)
+* Apple Silicon 
 
 
 Installing
 ----------
 
-Download ``NeoDBS.exe`` and run it.  
+Gey your ready-to-use executables from: https://github.com/neuroephys-lab/NeoDBS 
 No Python installation is required.
 
-If the application does not start on Windows, ensure that the
-Microsoft Visual C++ Redistributable (x64) is installed.
+**Windows**: Go to Actions --> NeoDBS-windows-latest, and download "NeoDBS.exe" and open.
+**Linux**: Go to Actions --> NeoDBS-ubuntu-latest, and download "NeoDBS" and open.
+**macOS**: Go to Actions --> NeoDBS-macos-26, and download "NeoDBS", use the right button to open.
 
 
-**Tutorials**
+Tutorials
+---------
 
 Tutorials give a broad overview and working knowledge of NeoDBS.
 They do not cover every detail, so refer to the documentation
