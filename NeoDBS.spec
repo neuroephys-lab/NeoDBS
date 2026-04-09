@@ -12,7 +12,8 @@ ROOT = Path(SPECPATH).resolve()
 
 # --- Datas (images, fonts, and package data) ---
 datas = [
-    (str(ROOT / 'src' / 'NeoDBS.png'), '.')
+    (str(ROOT / 'src' / 'NeoDBS.png'), '.'),
+    (str(ROOT / 'src' / 'requirements.txt'), '.')
 ]
 
 # Include all fonts

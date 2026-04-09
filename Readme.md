@@ -14,16 +14,20 @@ This new platform was developed in order to facilitate the analysis of multiple 
 
 NeoDBS includes several open-source organized modules focused in data preparation (Data Handling), data processing - including filtering, segmentation, and method application - (Preprocessing) and feature extraction (Features). A collection of utility tools was also developed (Utils).
 
-All instructions for download and usage of NeoDBS can be found in [NeoDBS Documentation]().
+All instructions for download and usage of NeoDBS can be found in [NeoDBS Documentation](https://github.com/neuroephys-lab/NeoDBS-Documentation).
 
 ## Collaborators
 
-NeoDBS was developed by the [Neurophysiology and Neuroengineering Laboratory](`https://www.neuro-ephys.org/`) (Porto, Portugal). Article coming soon.
+NeoDBS was developed by the [Neurophysiology and Neuroengineering Laboratory](`https://www.neuro-ephys.org/`) (Porto, Portugal).  For any code requests ou doubts, contact [Larissa Rodrigues](https://github.com/larissafeup).
 
-For any code requests ou doubts, contact [Larissa Rodrigues](https://github.com/larissafeup)
+## Citing this Work
+
+If you used NeoDBS for your work, please cite our work (preprint):
+
+Larissa Rodrigues, Andreia Ferreira, Ines Pereira, Ricardo Moreira, Luis Jacinto (2026). NeoDBS: Open-Source Platform for Visualization and Analysis of Electrophysiological Recordings from Deep Brain Stimulation Systems.  *bioRxiv*, 2026.03.27.714691. doi: [https://doi.org/10.64898/2026.03.27.714691](https://doi.org/10.64898/2026.03.27.714691)
 
 ## License
 
 This work is licensed under a[ Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 
-![1774017539158](image/Readme/1774017539158.png)
+![Creative Commons License](image/Readme/cc.png)

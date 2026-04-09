@@ -2,7 +2,7 @@ First Steps
 ===========
 
 NeoDBS is an open-source Python platform made for researchers and clinicians. You can easily use NeoDBS by 
-downloading our platform in **here**. 
+downloading our platform in https://github.com/neuroephys-lab. 
 
 System Requirements
 -------------------

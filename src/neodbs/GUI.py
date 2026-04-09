@@ -5,50 +5,50 @@ import os
 import re
 import utils as utl
 
-def is_package_installed(package_name):
-    '''
-    Checks if package installed: tries to import package, if exception thrown return False (signalizes for package to be installed)
+# def is_package_installed(package_name):
+#     '''
+#     Checks if package installed: tries to import package, if exception thrown return False (signalizes for package to be installed)
     
-    :param package_name: str, package name
-    '''
-    try:
-        importlib.import_module(package_name)
-        return True
-    except ImportError:
-        return False
+#     :param package_name: str, package name
+#     '''
+#     try:
+#         importlib.import_module(package_name)
+#         return True
+#     except ImportError:
+#         return False
 
-def install_requirements_if_needed(requirements_file="requirements.txt"):
-    '''
-    Checks requirements, installs packages missing.
+# def install_requirements_if_needed(requirements_file="requirements.txt"):
+#     '''
+#     Checks requirements, installs packages missing.
     
-    :param requirements_file: .txt file, 
-    '''
-    requirements_file=utl.resource_path("requirements.txt")
-    if not os.path.exists(requirements_file):
-        print(f"{requirements_file} not found.")
-        return
+#     :param requirements_file: .txt file, 
+#     '''
+#     requirements_file=utl.resource_path("requirements.txt")
+#     if not os.path.exists(requirements_file):
+#         print(f"{requirements_file} not found.")
+#         return
 
-    with open(requirements_file, "r") as f:
-        lines = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+#     with open(requirements_file, "r") as f:
+#         lines = [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
-    missing = []
-    for line in lines:
-        package = re.split(r'[<>=]', line.strip())[0]
-        if not is_package_installed(package):
-            missing.append(line)
+#     missing = []
+#     for line in lines:
+#         package = re.split(r'[<>=]', line.strip())[0]
+#         if not is_package_installed(package):
+#             missing.append(line)
 
-    if missing:
-        print("Installing missing packages:", missing)
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
-            print("All missing requirements installed successfully.")
-        except subprocess.CalledProcessError as e:
-            print("Failed to install some requirements:", e)
-    else:
-        print("All required packages are already installed.")
+#     if missing:
+#         print("Installing missing packages:", missing)
+#         try:
+#             subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+#             print("All missing requirements installed successfully.")
+#         except subprocess.CalledProcessError as e:
+#             print("Failed to install some requirements:", e)
+#     else:
+#         print("All required packages are already installed.")
 
-# --- Run before your imports ---
-install_requirements_if_needed()
+# # --- Run before your imports ---
+# install_requirements_if_needed()
 
 from datetime import timedelta, datetime
 import dearpygui.dearpygui as dpg
