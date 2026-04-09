@@ -38,7 +38,7 @@ Gey your ready-to-use executables from: https://github.com/neuroephys-lab/NeoDBS
 No Python installation is required.
 
 **Windows**: Go to Actions --> NeoDBS-windows-latest, and download "NeoDBS.exe" and open.
-**Linux**: Go to Actions --> NeoDBS-ubuntu-latest, and download "NeoDBS" and open.
+**Linux**: Go to Actions --> NeoDBS-ubuntu-latest, and download "NeoDBS" and open. 
 **macOS**: Go to Actions --> NeoDBS-macos-26, and download "NeoDBS", use the right button to open.
 
 

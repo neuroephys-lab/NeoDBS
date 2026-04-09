@@ -7,16 +7,6 @@ In this tutorial, a simple workflow is given to perform the analysis of recordin
 After selecting the type of window and file(s) to be analyzed, you must choose the type of recording you want 
 to analyze, which will open a tab with the respective plotted signals and functionalities, as described in :doc:`First Usage <../quickstart/first_usage>`.
 
-In the case of *Setup* and *Survey* modes, more than one tab will open since different
-types of acquisitions and data are stored in those modes. 
-* *Setup* mode tabs:
-    * *Setup ON*: 21s of raw signals of segments/channels with stimulation **On**;
-    * *Setup OFF*: 21s of raw signals of segments/channels with stimulation **Off**;
-    * *Setup ARTIFACTS*: Medtronic's PSD estimation with **artifact check**; 
-* *Survey* mode tabs:
-    * *Survey*: 21s of raw signals of segments/channels with stimulation **Off**
-    * *Survey PSD*: Medtronic's PSD estimation and peak frequencies.
-
 +--------------------+---------------+-------------+--------------------------+
 | Mode               | Usage Context | Stimulation | Key Features             | 
 |                    |               | Status      |                          |                          
@@ -44,6 +34,18 @@ types of acquisitions and data are stored in those modes.
 |                    |               |             | mulation.                |                          
 |                    |               |             |                          |
 +--------------------+---------------+-------------+--------------------------+
+
+In the case of *Setup* and *Survey* modes, more than one tab will open since different
+types of acquisitions and data are stored in those modes. 
+
+* *Setup* mode tabs:
+    * *Setup ON*: 21s of raw signals of segments/channels with stimulation **ON**;
+    * *Setup OFF*: 21s of raw signals of segments/channels with stimulation **OFF**;
+    * *Setup ARTIFACTS*: Medtronic's PSD estimation with **artifact check**. 
+
+* *Survey* mode tabs:
+    * *Survey*: 21s of raw signals of segments/channels with stimulation **OFF**;
+    * *Survey PSD*: Medtronic's PSD estimation and peak frequencies.
 
 
 .. note::

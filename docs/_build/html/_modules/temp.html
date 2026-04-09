@@ -88,12 +88,15 @@
              
   <h1>Source code for temp</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">DataHandling</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">DH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">GUI</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">dearpygui.dearpygui</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dpg</span>
 <span class="c1"># import Features as ft</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">signal</span>
+<span class="c1"># from scipy.signal._wavelets import _cwt, _ricker</span>
+<span class="c1"># import matplotlib.pyplot as plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="c1"># from scipy.signal import spectrogram</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span> <span class="k">as</span> <span class="n">dt</span>
+<span class="c1"># from datetime import datetime as dt</span>
 <span class="c1"># import Preprocessing as pre</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">utl</span>
 <span class="sd">&#39;&#39;&#39;</span>
@@ -119,8 +122,75 @@
 
 <span class="n">data</span> <span class="o">=</span> <span class="n">DH</span><span class="o">.</span><span class="n">getData</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="mf">1622172706.0</span><span class="p">))</span>
+<span class="n">streaming</span> <span class="o">=</span> <span class="n">DH</span><span class="o">.</span><span class="n">getSignals</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="s1">&#39;Streaming&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
+<span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">streaming</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">],</span><span class="n">streaming</span><span class="p">[</span><span class="s1">&#39;Y&#39;</span><span class="p">]</span>
+
+<span class="c1"># wavelet =_cwt(y,None,np.atleast_1d(np.asarray([100])))</span>
+<span class="n">width</span> <span class="o">=</span> <span class="mi">7</span> 
+<span class="n">freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">fs</span><span class="o">=</span><span class="mi">250</span>
+
+<div class="viewcode-block" id="morlet_wavelet"><a class="viewcode-back" href="../api/temp.html#temp.morlet_wavelet">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">morlet_wavelet</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">fs</span><span class="p">,</span> <span class="n">n_cycles</span><span class="o">=</span><span class="mi">7</span><span class="p">):</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">fs</span><span class="p">)</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">n_cycles</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">wavelet</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="n">j</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">f</span><span class="o">*</span><span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">t</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">wavelet</span></div>
+
+<div class="viewcode-block" id="wavelet_transform"><a class="viewcode-back" href="../api/temp.html#temp.wavelet_transform">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">wavelet_transform</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">fs</span><span class="p">,</span> <span class="n">freqs</span><span class="p">):</span>
+    <span class="n">power</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">freqs</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">morlet_wavelet</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">fs</span><span class="p">)</span>
+        <span class="n">conv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span>
+        <span class="n">power</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">conv</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">power</span><span class="p">)</span></div>
+
+<span class="n">fs</span> <span class="o">=</span> <span class="mi">250</span>
+<span class="n">freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">power</span> <span class="o">=</span> <span class="n">wavelet_transform</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">fs</span><span class="p">,</span> <span class="n">freqs</span><span class="p">)</span>
+<span class="n">power</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">power</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+<span class="n">parameter_values</span><span class="p">,</span> <span class="n">documentation</span> <span class="o">=</span> <span class="n">fill_params_features</span><span class="p">(</span><span class="s1">&#39;wavelet&#39;</span><span class="p">)</span>
+<span class="n">mne_wav</span> <span class="o">=</span> <span class="n">apply_feat</span><span class="p">(</span><span class="s1">&#39;wavelet&#39;</span><span class="p">,</span><span class="n">parameter_values</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+<span class="n">tfr</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">mne_wav</span><span class="p">)</span>
+<span class="n">tfr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="n">tfr</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:])</span>
+<span class="n">heatmap_data</span> <span class="o">=</span> <span class="n">tfr</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+<span class="n">miniii</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">heatmap_data</span><span class="p">),</span><span class="nb">min</span><span class="p">(</span><span class="n">power</span><span class="p">))</span>
+<span class="n">maxii</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">heatmap_data</span><span class="p">),</span><span class="nb">max</span><span class="p">(</span><span class="n">power</span><span class="p">))</span>
+
+
+<span class="n">dpg</span><span class="o">.</span><span class="n">create_context</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">dpg</span><span class="o">.</span><span class="n">window</span><span class="p">():</span>
+    <span class="n">mother</span> <span class="o">=</span> <span class="n">dpg</span><span class="o">.</span><span class="n">add_group</span><span class="p">(</span><span class="n">horizontal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="n">dpg</span><span class="o">.</span><span class="n">add_colormap_scale</span><span class="p">(</span><span class="n">min_scale</span><span class="o">=</span><span class="n">miniii</span><span class="p">,</span><span class="n">max_scale</span><span class="o">=</span><span class="n">maxii</span><span class="p">,</span><span class="n">parent</span><span class="o">=</span><span class="n">mother</span><span class="p">,</span><span class="n">colormap</span><span class="o">=</span><span class="n">dpg</span><span class="o">.</span><span class="n">mvPlotColormap_Jet</span><span class="p">)</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">dpg</span><span class="o">.</span><span class="n">add_group</span><span class="p">(</span><span class="n">horizontal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">parent</span><span class="o">=</span><span class="n">mother</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">dpg</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;MNE&#39;</span><span class="p">,</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;mne&#39;</span><span class="p">):</span>
+        <span class="n">dpg</span><span class="o">.</span><span class="n">add_plot_axis</span><span class="p">(</span><span class="n">dpg</span><span class="o">.</span><span class="n">mvXAxis</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Time&#39;</span><span class="p">)</span>
+        <span class="n">yy</span> <span class="o">=</span> <span class="n">dpg</span><span class="o">.</span><span class="n">add_plot_axis</span><span class="p">(</span><span class="n">dpg</span><span class="o">.</span><span class="n">mvYAxis</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+
+        <span class="n">dpg</span><span class="o">.</span><span class="n">add_heat_series</span><span class="p">(</span><span class="n">heatmap_data</span><span class="p">,</span> <span class="n">rows</span><span class="o">=</span><span class="n">tfr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cols</span><span class="o">=</span><span class="n">tfr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> 
+                                        <span class="n">parent</span><span class="o">=</span><span class="n">yy</span><span class="p">,</span> <span class="n">scale_max</span><span class="o">=</span><span class="n">maxii</span><span class="p">,</span><span class="n">scale_min</span><span class="o">=</span><span class="n">miniii</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="c1">#, bounds_min=[0,freqs[0]], bounds_max=[int(tfr.shape[1]/250),freqs[-1]])</span>
+        <span class="n">dpg</span><span class="o">.</span><span class="n">bind_colormap</span><span class="p">(</span><span class="s1">&#39;mne&#39;</span><span class="p">,</span> <span class="n">dpg</span><span class="o">.</span><span class="n">mvPlotColormap_Jet</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">dpg</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;SCIPY&#39;</span><span class="p">,</span><span class="n">tag</span><span class="o">=</span><span class="s1">&#39;scipy&#39;</span><span class="p">):</span>
+        <span class="n">dpg</span><span class="o">.</span><span class="n">add_plot_axis</span><span class="p">(</span><span class="n">dpg</span><span class="o">.</span><span class="n">mvXAxis</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Time&#39;</span><span class="p">)</span>
+        <span class="n">yy</span> <span class="o">=</span> <span class="n">dpg</span><span class="o">.</span><span class="n">add_plot_axis</span><span class="p">(</span><span class="n">dpg</span><span class="o">.</span><span class="n">mvYAxis</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+
+        <span class="n">dpg</span><span class="o">.</span><span class="n">add_heat_series</span><span class="p">(</span><span class="n">power</span><span class="p">,</span> <span class="n">rows</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">power</span><span class="p">)</span><span class="o">/</span><span class="mi">100</span><span class="p">),</span> 
+                                        <span class="n">parent</span><span class="o">=</span><span class="n">yy</span><span class="p">,</span> <span class="n">scale_max</span><span class="o">=</span><span class="n">maxii</span><span class="p">,</span><span class="n">scale_min</span><span class="o">=</span><span class="n">miniii</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="c1">#, bounds_min=[0,freqs[0]], bounds_max=[int(tfr.shape[1]/250),freqs[-1]])</span>
+        <span class="n">dpg</span><span class="o">.</span><span class="n">bind_colormap</span><span class="p">(</span><span class="s1">&#39;scipy&#39;</span><span class="p">,</span> <span class="n">dpg</span><span class="o">.</span><span class="n">mvPlotColormap_Jet</span><span class="p">)</span>
+
+<span class="n">dpg</span><span class="o">.</span><span class="n">create_viewport</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Temporario&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
+<span class="n">dpg</span><span class="o">.</span><span class="n">setup_dearpygui</span><span class="p">()</span>
+<span class="n">dpg</span><span class="o">.</span><span class="n">show_viewport</span><span class="p">()</span>
+<span class="n">dpg</span><span class="o">.</span><span class="n">start_dearpygui</span><span class="p">()</span>
+<span class="n">dpg</span><span class="o">.</span><span class="n">destroy_context</span><span class="p">()</span>
+
+
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 
 
 

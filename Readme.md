@@ -14,7 +14,7 @@ This new platform was developed in order to facilitate the analysis of multiple 
 
 NeoDBS includes several open-source organized modules focused in data preparation (Data Handling), data processing - including filtering, segmentation, and method application - (Preprocessing) and feature extraction (Features). A collection of utility tools was also developed (Utils).
 
-All instructions for download and usage of NeoDBS can be found in [NeoDBS Documentation](https://neuroephys-lab/p.github.io/NeoDBS-Documentation/).
+All instructions for download and usage of NeoDBS can be found in [NeoDBS Documentation](https://neuroephys-lab.github.io/NeoDBS-Documentation/).
 
 ## Collaborators
 
