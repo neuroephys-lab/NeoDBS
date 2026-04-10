@@ -2075,7 +2075,7 @@ def plot_featured_signal(signal_tags, tab_label, func, tab_tag, parameter_values
 
 def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mode = None):
     '''
-    Computes and plots spectrogram of joined recordings, per channel.
+    Computes and plots spectrogram of merged recordings, per channel.
     
     :param tags: list, signals' id
     :param tab_label: str/id, tab id
@@ -2126,7 +2126,6 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
         X = signal['X']
         arr = np.array(X)
         
-
         if np.issubdtype(arr.dtype, np.number):
             valid = arr[~np.isnan(arr)]
             if len(valid) > 0:# and np.round(valid[0]) == 0:
@@ -2199,7 +2198,7 @@ def plot_spectrogram_joined(tags, tab_label, func, tab_tag, parameter_values, mo
 
             for channel in new_signal:
 
-                title =f"Joined Spectrogram - {channel}"
+                title =f"Merged Spectrogram - {channel}"
                 subplot_tag = f"{tab_label}_joined_{channel}"
 
                 with dpg.plot(label=title, width=800, height=400, tag=subplot_tag, parent=f"{tab_label}_subplots"):
@@ -3202,7 +3201,7 @@ def plot_spectrogram_og(tags, tab_label, func, tab_tag, parameter_values, mode =
            
 def choose(sender,app_data,user_data):
     '''
-    Buttons to choose between individual or joined spectrogram, or wavelet. 
+    Buttons to choose between individual or merged spectrogram, or wavelet. 
     Only appears in the case of there being more than 1 recording from the same channel
 
     tags: list, signals' id
@@ -3231,9 +3230,9 @@ def choose(sender,app_data,user_data):
         if all(e is None for e in events): mode = None 
         else: mode = 'segment'
 
-        #Mode to plot: joined or separate
+        #Mode to plot: merge or separate
         plot_mode = app_data
-        if plot_mode == 'Join Recordings': plot_mode = 'join'
+        if plot_mode == 'Merge Recordings': plot_mode = 'join'
         else: plot_mode = 'separate'
 
         #erase group if it already exists
@@ -3251,7 +3250,7 @@ def choose(sender,app_data,user_data):
 
 def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode = None):
     '''
-    Plots wavelet, computed for all recordings joined by channel.
+    Plots wavelet, computed for all recordings merged by channel.
 
     :param tags: Description
     :param tab_label: Description
@@ -3357,7 +3356,7 @@ def plot_wavelet_joined(tags, tab_label, func, tab_tag, parameter_values, mode =
         with dpg.subplots(rows=num_rows, columns=num_cols, label="Wavelet", width=800, height=400*num_rows, tag = f"{tab_label}_subplots"):
 
             for channel in new_signal:
-                title =f"Joined Wavelet - {channel}"
+                title =f"Merged Wavelet - {channel}"
                 subplot_tag = f"{tab_label}_joined_{channel}"
                 with dpg.plot(label=title, width=800, height=400, tag=subplot_tag, parent=f"{tab_label}_subplots"):
                     x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Time (DateTime)", scale= dpg.mvPlotScale_Time)
@@ -5212,7 +5211,7 @@ def DefaultFeatures(sender, app_data, user_data):
         dates.append(signal['Date'])
     dates = np.unique(dates)
     if len(dates)>1:
-        plot_modes = ['Join Recordings', 'Separate Recordings']
+        plot_modes = ['Merge Recordings', 'Separate Recordings']
     else: plot_modes = [None]  
 
     continue_flag = True
@@ -5264,7 +5263,7 @@ def CustomFeatures(sender,app_data,user_data):
     dates = np.unique(dates)
 
     if len(dates)>1:
-        plot_modes = ['Join Recordings', 'Separate Recordings']
+        plot_modes = ['Merge Recordings', 'Separate Recordings']
     else: plot_modes = [None]
 
     if dpg.does_item_exist(f"{tab_tag}_ft_input"):

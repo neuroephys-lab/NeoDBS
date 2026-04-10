@@ -386,7 +386,7 @@ window_id = user_data</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="GUI.choose">
 <span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">choose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#choose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.choose" title="Permalink to this definition">¶</a></dt>
-<dd><p>Buttons to choose between individual or joined spectrogram, or wavelet.
+<dd><p>Buttons to choose between individual or merged spectrogram, or wavelet.
 Only appears in the case of there being more than 1 recording from the same channel</p>
 <p>tags: list, signals' id
 tab_label: str/id, tab id
@@ -1152,7 +1152,7 @@ to signals identified by signal_tags, to be ploted in tab_label, child of tab_ta
 <dl class="py function">
 <dt class="sig sig-object py" id="GUI.plot_spectrogram_joined">
 <span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">plot_spectrogram_joined</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#plot_spectrogram_joined"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.plot_spectrogram_joined" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes and plots spectrogram of joined recordings, per channel.</p>
+<dd><p>Computes and plots spectrogram of merged recordings, per channel.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1230,7 +1230,7 @@ to signals identified by signal_tags, to be ploted in tab_label, child of tab_ta
 <dl class="py function">
 <dt class="sig sig-object py" id="GUI.plot_wavelet_joined">
 <span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">plot_wavelet_joined</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#plot_wavelet_joined"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.plot_wavelet_joined" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plots wavelet, computed for all recordings joined by channel.</p>
+<dd><p>Plots wavelet, computed for all recordings merged by channel.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

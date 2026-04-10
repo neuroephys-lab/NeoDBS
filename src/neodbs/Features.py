@@ -419,6 +419,10 @@ def export_plot(info, plot_type, size=None, line_types = None,dpi=600):
         else:
             rows, cols = n_signals, 1
 
+        if 'Merged' in info[1][0]: 
+            cols = 1
+            rows = n_signals
+
         fig, axs = plt.subplots(
             rows, cols,
             figsize=(size[0]*cols,size[1]*rows),

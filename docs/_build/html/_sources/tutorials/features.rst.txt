@@ -168,9 +168,9 @@ figure below we can see the example of the spectrogram being computed on an Indi
 
 .. image:: ../img/spectrogram.png
 
-2. If more than you recording per channel is visible, the user must select between **joined** or **separate** spectrogram of the signals. By pressing the **"Joined Recordings"**, the spectrogram will be computed for the joined recordings by channel. Else, if you press **Separate Recordings** an individual spectrogram will be computed per recording.
+2. If more than you recording per channel is visible, the user must select between **merged** or **separate** spectrogram(s) of the signals. By pressing the **"Merged Recordings"**, the spectrogram will be computed for the merged recordings by channel. Else, if you press **Separate Recordings** an individual spectrogram will be computed per recording.
 
-.. image:: ../img/join_or_ind.png
+.. image:: ../img/join_or_ind.jpg
 
 2. Toggle **"Synchronize Axis"** to synchronize axis between plots.
 3. To plot the band mean power over time, per recording, press **"Band Power Over Time"**. See more in :ref:`here <bpot>`.
