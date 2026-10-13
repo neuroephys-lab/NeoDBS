@@ -18,7 +18,7 @@ All instructions for download and usage of NeoDBS can be found in [NeoDBS Docume
 
 ## Collaborators
 
-NeoDBS was developed by the [Neurophysiology and Neuroengineering Laboratory](`https://www.neuro-ephys.org/`) (Porto, Portugal).  For any code requests ou doubts, contact [Larissa Rodrigues](https://github.com/larissafeup).
+NeoDBS was developed by the [Neurophysiology and Neuroengineering Laboratory](https://www.neuro-ephys.org/) (Porto, Portugal).  For any code requests ou doubts, contact [Larissa Rodrigues](https://github.com/larissafeup).
 
 ## Citing this Work
 
